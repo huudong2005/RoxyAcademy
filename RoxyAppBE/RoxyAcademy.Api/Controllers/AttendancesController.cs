@@ -20,16 +20,34 @@ public class AttendancesController(RoxyDbContext db) : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<AttendanceDto>>> GetAttendances([FromQuery] int scheduleId)
     {
-        var list = await db.Attendances
+        var schedule = await db.Schedules.Include(s => s.Class).FirstOrDefaultAsync(s => s.Id == scheduleId);
+        if (schedule == null) return NotFound(new { message = "Buổi học không tồn tại." });
+
+        if (Role == "BranchManager" && schedule.Class.BranchId != (User.GetBranchId() ?? -1))
+            return Forbid();
+
+        if (Role == "Teacher" && schedule.Class.TeacherId != UserId && schedule.SubstituteTeacherId != UserId)
+            return Forbid();
+
+        var q = db.Attendances
             .Include(a => a.StudentClass).ThenInclude(sc => sc.Student)
             .Include(a => a.MarkedByNavigation)
             .Where(a => a.ScheduleId == scheduleId)
-            .Select(a => new AttendanceDto(
-                a.Id, a.ScheduleId, a.StudentId, a.StudentClass.Student.FullName,
-                a.Status, a.Note, a.MarkedBy,
-                a.MarkedByNavigation != null ? a.MarkedByNavigation.FullName : null,
-                a.MarkedAt
-            )).ToListAsync();
+            .AsQueryable();
+
+        if (Role == "Parent")
+            q = q.Where(a => a.StudentClass.Student.ParentId == UserId);
+        else if (Role == "Student")
+            q = q.Where(a => a.StudentClass.Student.UserId == UserId);
+        else if (Role != "SuperAdmin" && Role != "BranchManager" && Role != "Teacher")
+            return Forbid();
+
+        var list = await q.Select(a => new AttendanceDto(
+            a.Id, a.ScheduleId, a.StudentId, a.StudentClass.Student.FullName,
+            a.Status, a.Note, a.MarkedBy,
+            a.MarkedByNavigation != null ? a.MarkedByNavigation.FullName : null,
+            a.MarkedAt
+        )).ToListAsync();
 
         return Ok(list);
     }
@@ -41,8 +59,16 @@ public class AttendancesController(RoxyDbContext db) : ControllerBase
         var schedule = await db.Schedules.Include(s => s.Class).FirstOrDefaultAsync(s => s.Id == req.ScheduleId);
         if (schedule == null) return BadRequest(new { message = "Buổi học không tồn tại." });
 
-        // Quyền điểm danh: Staff, Giáo viên chính, hoặc Giáo viên dạy thay buổi đó
-        if (!IsStaff && schedule.Class.TeacherId != UserId && schedule.SubstituteTeacherId != UserId)
+        // Chặn BranchManager điểm danh cho lớp thuộc chi nhánh khác
+        if (Role == "BranchManager")
+        {
+            var userBranchId = User.GetBranchId();
+            if (schedule.Class.BranchId != userBranchId)
+                return Forbid();
+        }
+
+        // Quyền điểm danh của Giáo viên: Giáo viên chính hoặc Giáo viên dạy thay buổi đó
+        if (Role == "Teacher" && schedule.Class.TeacherId != UserId && schedule.SubstituteTeacherId != UserId)
             return StatusCode(StatusCodes.Status403Forbidden, new { message = "Bạn không có quyền điểm danh buổi học này." });
 
         // Lấy danh sách học viên hiện đang ở trong lớp (tránh điểm danh cho người đã nghỉ)
