@@ -1,3 +1,0 @@
-Seed:AdminPassword = <Admin@123>
-Jwt:Key = RoxyAcademy_X7v9Km2pL4qR8wT1cN6bH3fJ5dG0yZ5A
-"phoneNumber": "0900000000"

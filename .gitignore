@@ -1,0 +1,43 @@
+# RoxyAcademy — .gitignore gốc (đặt ở thư mục gốc của repo)
+# Dùng cho: ASP.NET Core 9 (RoxyAppBE) + React/Vite admin (roxy-admin)
+
+# ===== Secret & cấu hình máy local — KHÔNG BAO GIỜ commit =====
+key.txt
+program.txt
+*.env
+*.env.*
+!.env.example
+appsettings.*.json
+!appsettings.json
+!appsettings.Development.json
+secrets.json
+*.pfx
+*.key
+*.pem
+
+# ===== Visual Studio / .NET =====
+.vs/
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.vspscc
+*.vssscc
+.vscode/
+*.log
+
+# ===== Node / React / Vite (roxy-admin) =====
+node_modules/
+dist/
+dist-ssr/
+*.local
+.vite/
+coverage/
+
+# ===== Hệ điều hành / tạm =====
+.DS_Store
+Thumbs.db
+*.tmp
+*.bak
