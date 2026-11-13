@@ -25,15 +25,26 @@ public class GradesController(RoxyDbContext db) : ControllerBase
             .Include(g => g.GradedByNavigation)
             .AsQueryable();
 
-        // Phân quyền dữ liệu
-        if (Role == "Parent")
-            q = q.Where(g => g.StudentClass!.Student!.ParentId == UserId); // Dùng dấu ! an toàn
-        else if (Role == "Teacher")
-            q = q.Where(g => g.StudentClass!.Class!.TeacherId == UserId);
-        else if (Role == "BranchManager")
+        // Phân quyền dữ liệu theo vai trò & chi nhánh
+        switch (Role)
         {
-            var branchId = User.GetBranchId();
-            q = q.Where(g => g.StudentClass!.Class!.BranchId == branchId);
+            case "SuperAdmin":
+                break;
+            case "BranchManager":
+                var branchId = User.GetBranchId() ?? -1;
+                q = q.Where(g => g.StudentClass!.Class!.BranchId == branchId);
+                break;
+            case "Teacher":
+                q = q.Where(g => g.StudentClass!.Class!.TeacherId == UserId);
+                break;
+            case "Parent":
+                q = q.Where(g => g.StudentClass!.Student!.ParentId == UserId);
+                break;
+            case "Student":
+                q = q.Where(g => g.StudentClass!.Student!.UserId == UserId);
+                break;
+            default:
+                return Forbid();
         }
 
         if (classId.HasValue) q = q.Where(g => g.ClassId == classId);
@@ -65,6 +76,9 @@ public class GradesController(RoxyDbContext db) : ControllerBase
 
         if (Role == "Teacher" && studentClass.Class!.TeacherId != UserId)
             return StatusCode(StatusCodes.Status403Forbidden, new { message = "Bạn không phụ trách lớp này." });
+
+        if (Role == "BranchManager" && studentClass.Class!.BranchId != User.GetBranchId())
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = "Không thể nhập điểm cho lớp học của cơ sở khác." });
 
         var grade = new Grade
         {
@@ -98,6 +112,9 @@ public class GradesController(RoxyDbContext db) : ControllerBase
 
         if (Role == "Teacher" && grade.StudentClass!.Class!.TeacherId != UserId)
             return StatusCode(StatusCodes.Status403Forbidden, new { message = "Bạn không phụ trách lớp này." });
+
+        if (Role == "BranchManager" && grade.StudentClass!.Class!.BranchId != User.GetBranchId())
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = "Không thể sửa điểm cho lớp học của cơ sở khác." });
 
         grade.ExamName = req.ExamName.Trim();
         grade.ExamType = req.ExamType;

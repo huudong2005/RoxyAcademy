@@ -26,27 +26,44 @@ public class MessagesController(RoxyDbContext db) : ControllerBase
 			.Include(m => m.Student)
 			.AsQueryable();
 
-		// Inbox: Tin nhắn gửi đích danh cho mình
-		if (type.ToLower() == "inbox")
+		var normalizedType = type?.Trim().ToLowerInvariant() ?? "inbox";
+		var branchId = User.GetBranchId() ?? -1;
+
+		// 1. Inbox: Tin nhắn gửi đích danh cho mình
+		if (normalizedType == "inbox")
 		{
 			q = q.Where(m => m.ReceiverId == UserId);
 		}
-		// Outbox: Tin nhắn do mình gửi đi
-		else if (type.ToLower() == "outbox")
+		// 2. Outbox: Tin nhắn do mình gửi đi
+		else if (normalizedType == "outbox")
 		{
 			q = q.Where(m => m.SenderId == UserId);
 		}
-		// Class: Thông báo chung của các lớp mình liên quan
-		else if (type.ToLower() == "class")
+		// 3. Class: Thông báo chung của các lớp mình liên quan
+		else if (normalizedType == "class")
 		{
-			if (Role == "Parent")
+			q = Role switch
 			{
-				q = q.Where(m => m.ClassId != null && db.StudentClasses.Any(sc => sc.ClassId == m.ClassId && sc.Student!.ParentId == UserId));
-			}
-			else if (Role == "Teacher")
+				"SuperAdmin" => q.Where(m => m.ClassId != null),
+				"BranchManager" => q.Where(m => m.ClassId != null && m.Class!.BranchId == branchId),
+				"Teacher" => q.Where(m => m.ClassId != null && m.Class!.TeacherId == UserId),
+				"Parent" => q.Where(m => m.ClassId != null && db.StudentClasses.Any(sc => sc.ClassId == m.ClassId && sc.Student!.ParentId == UserId)),
+				"Student" => q.Where(m => m.ClassId != null && db.StudentClasses.Any(sc => sc.ClassId == m.ClassId && sc.Student!.UserId == UserId)),
+				_ => q.Where(_ => false)
+			};
+		}
+		// 4. Mọi trường hợp khác (type=all, type lạ, default): PHẢI lọc theo user hiện tại, không bao giờ trả toàn bộ tin nhắn
+		else
+		{
+			q = Role switch
 			{
-				q = q.Where(m => m.ClassId != null && m.Class!.TeacherId == UserId);
-			}
+				"SuperAdmin" => q.Where(m => m.ReceiverId == UserId || m.SenderId == UserId || m.ClassId != null),
+				"BranchManager" => q.Where(m => m.ReceiverId == UserId || m.SenderId == UserId || (m.ClassId != null && m.Class!.BranchId == branchId)),
+				"Teacher" => q.Where(m => m.ReceiverId == UserId || m.SenderId == UserId || (m.ClassId != null && m.Class!.TeacherId == UserId)),
+				"Parent" => q.Where(m => m.ReceiverId == UserId || m.SenderId == UserId || (m.ClassId != null && db.StudentClasses.Any(sc => sc.ClassId == m.ClassId && sc.Student!.ParentId == UserId))),
+				"Student" => q.Where(m => m.ReceiverId == UserId || m.SenderId == UserId || (m.ClassId != null && db.StudentClasses.Any(sc => sc.ClassId == m.ClassId && sc.Student!.UserId == UserId))),
+				_ => q.Where(m => m.ReceiverId == UserId || m.SenderId == UserId)
+			};
 		}
 
 		var list = await q.OrderByDescending(m => m.CreatedAt)

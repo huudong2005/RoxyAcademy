@@ -19,24 +19,38 @@ public class TuitionsController(RoxyDbContext db) : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<TuitionDto>>> GetTuitions([FromQuery] int? studentId, [FromQuery] int? branchId)
     {
+        // Giáo viên không được xem học phí
+        if (Role == "Teacher")
+            return Forbid();
+
         var q = db.Tuitions
             .Include(t => t.Student)
             .Include(t => t.StudentClass)
-                .ThenInclude(sc => sc.Class) // Join sâu để lấy tên lớp học
+                .ThenInclude(sc => sc!.Class) // Join sâu để lấy tên lớp học
             .AsQueryable();
 
-        // Phân quyền: Phụ huynh chỉ thấy học phí của con mình
-        if (Role == "Parent")
-            q = q.Where(t => t.Student.ParentId == UserId);
-        // Quản lý cơ sở chỉ thấy học phí của cơ sở mình
-        else if (Role == "BranchManager")
+        switch (Role)
         {
-            var bId = User.GetBranchId();
-            q = q.Where(t => t.BranchId == bId);
+            case "SuperAdmin":
+                if (branchId.HasValue) q = q.Where(t => t.BranchId == branchId);
+                break;
+            case "BranchManager":
+                var bId = User.GetBranchId() ?? -1;
+                q = q.Where(t => t.BranchId == bId);
+                break;
+            case "Parent":
+                q = q.Where(t => t.Student.ParentId == UserId);
+                if (branchId.HasValue) q = q.Where(t => t.BranchId == branchId);
+                break;
+            case "Student":
+                q = q.Where(t => t.Student.UserId == UserId);
+                if (branchId.HasValue) q = q.Where(t => t.BranchId == branchId);
+                break;
+            default:
+                return Forbid();
         }
 
         if (studentId.HasValue) q = q.Where(t => t.StudentId == studentId);
-        if (branchId.HasValue) q = q.Where(t => t.BranchId == branchId);
 
         var list = await q.OrderByDescending(t => t.CreatedAt)
             .Select(t => new TuitionDto(
@@ -52,16 +66,28 @@ public class TuitionsController(RoxyDbContext db) : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<TuitionDto>> GetTuition(int id)
     {
+        // Giáo viên không được xem học phí
+        if (Role == "Teacher")
+            return Forbid();
+
         var t = await db.Tuitions
             .Include(t => t.Student)
-            .Include(t => t.StudentClass).ThenInclude(sc => sc.Class)
+            .Include(t => t.StudentClass).ThenInclude(sc => sc!.Class)
             .FirstOrDefaultAsync(t => t.Id == id);
 
         if (t == null) return NotFound(new { message = "Không tìm thấy khoản thu này." });
 
+        // Học viên chỉ được xem học phí của chính mình
+        if (Role == "Student" && t.Student.UserId != UserId)
+            return Forbid();
+
         // Chặn phụ huynh xem học phí con người khác
         if (Role == "Parent" && t.Student.ParentId != UserId)
-            return StatusCode(StatusCodes.Status403Forbidden);
+            return Forbid();
+
+        // Quản lý cơ sở chỉ được xem học phí cơ sở của mình
+        if (Role == "BranchManager" && t.BranchId != (User.GetBranchId() ?? -1))
+            return Forbid();
 
         return Ok(new TuitionDto(
             t.Id, t.StudentId, t.Student.FullName,

@@ -12,12 +12,19 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Thêm cấu hình CORS (Cho phép React và Zalo Mini App gọi API)
+// 1. Cấu hình CORS - Giới hạn đúng các origin hợp lệ của hệ thống (dev + production)
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? [
+        "http://localhost:5173",
+        "https://admin.roxy.edu.vn",
+        "https://roxy.edu.vn"
+    ];
+
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddPolicy("RoxyCors", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyMethod()
               .AllowAnyHeader();
     });
@@ -108,7 +115,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 // 3. Kích hoạt CORS (Phải đặt trước Auth)
-app.UseCors("AllowAll");
+app.UseCors("RoxyCors");
 
 // 4. Kích hoạt Authentication & Authorization
 app.UseAuthentication();

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RoxyAcademy.Api.Data;
 using RoxyAcademy.Api.Dtos;
+using RoxyAcademy.Api.Extensions;
 using RoxyAcademy.Api.Models;
 
 namespace RoxyAcademy.Api.Controllers;
@@ -12,10 +13,35 @@ namespace RoxyAcademy.Api.Controllers;
 [Authorize]
 public class ClassesController(RoxyDbContext db) : ControllerBase
 {
+    private string Role => User.GetRole();
+    private int UserId => User.GetUserId();
+
+    private IQueryable<Class> VisibleClasses()
+    {
+        var q = db.Classes.AsQueryable();
+
+        switch (Role)
+        {
+            case "SuperAdmin":
+                return q;
+            case "BranchManager":
+                var branchId = User.GetBranchId() ?? -1;
+                return q.Where(c => c.BranchId == branchId);
+            case "Teacher":
+                return q.Where(c => c.TeacherId == UserId);
+            case "Parent":
+                return q.Where(c => db.StudentClasses.Any(sc => sc.ClassId == c.Id && sc.Student!.ParentId == UserId));
+            case "Student":
+                return q.Where(c => db.StudentClasses.Any(sc => sc.ClassId == c.Id && sc.Student!.UserId == UserId));
+            default:
+                return q.Where(_ => false);
+        }
+    }
+
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ClassDto>>> GetClasses()
     {
-        var classes = await db.Classes
+        var classes = await VisibleClasses()
             .Include(c => c.Course)
             .Include(c => c.Branch)
             .Include(c => c.User)
@@ -34,7 +60,7 @@ public class ClassesController(RoxyDbContext db) : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<ClassDto>> GetClass(int id)
     {
-        var c = await db.Classes
+        var c = await VisibleClasses()
             .Include(cls => cls.Course)
             .Include(cls => cls.Branch)
             .Include(cls => cls.User)
@@ -45,7 +71,7 @@ public class ClassesController(RoxyDbContext db) : ControllerBase
         return Ok(new ClassDto(
             c.Id, c.ClassName,
             c.CourseId, c.Course.CourseName,
-            c.TeacherId, c.User!.FullName,
+            c.TeacherId, c.User != null ? c.User.FullName : null,
             c.BranchId, c.Branch.BranchName,
             c.ClassType, c.MaxStudents, c.StartDate, c.EndDate,
             c.TuitionFee, c.IsOpenForRegistration, c.Status, c.Note, c.CreatedAt));
@@ -125,8 +151,13 @@ public class ClassesController(RoxyDbContext db) : ControllerBase
         var cls = await db.Classes.FindAsync(id);
         if (cls == null) return NotFound(new { message = "Không tìm thấy lớp học này." });
 
-        // Database không có status Deleted, nên ta xóa cứng
-        db.Classes.Remove(cls);
+        // Xóa mềm: Models/Class.cs không có trường IsActive (chỉ có IsOpenForRegistration, Status, UpdatedAt)
+        // và DB có ràng buộc CK_Classes_Status CHECK (Status IN ('Upcoming','Ongoing','Finished')).
+        // Thực hiện xóa mềm bằng cách đóng đăng ký, cập nhật trạng thái 'Finished' và ghi nhận UpdatedAt.
+        cls.IsOpenForRegistration = false;
+        cls.Status = "Finished";
+        cls.UpdatedAt = DateTime.UtcNow;
+
         await db.SaveChangesAsync();
         return NoContent();
     }

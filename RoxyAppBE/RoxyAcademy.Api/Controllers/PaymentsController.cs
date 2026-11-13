@@ -20,19 +20,32 @@ public class PaymentsController(RoxyDbContext db) : ControllerBase
 	[HttpGet]
 	public async Task<ActionResult<IEnumerable<PaymentDto>>> GetPayments([FromQuery] int? tuitionId)
 	{
+		// Giáo viên không được xem thanh toán
+		if (Role == "Teacher")
+			return Forbid();
+
 		var q = db.Payments
 			.Include(p => p.Tuition)
 				.ThenInclude(t => t.Student)
 			.Include(p => p.ConfirmedByNavigation)
 			.AsQueryable();
 
-		// Phân quyền dữ liệu
-		if (Role == "Parent")
-			q = q.Where(p => p.Tuition.Student.ParentId == UserId);
-		else if (Role == "BranchManager")
+		switch (Role)
 		{
-			var branchId = User.GetBranchId();
-			q = q.Where(p => p.Tuition.BranchId == branchId);
+			case "SuperAdmin":
+				break;
+			case "BranchManager":
+				var branchId = User.GetBranchId() ?? -1;
+				q = q.Where(p => p.Tuition.BranchId == branchId);
+				break;
+			case "Parent":
+				q = q.Where(p => p.Tuition.Student.ParentId == UserId);
+				break;
+			case "Student":
+				q = q.Where(p => p.Tuition.Student.UserId == UserId);
+				break;
+			default:
+				return Forbid();
 		}
 
 		if (tuitionId.HasValue) q = q.Where(p => p.TuitionId == tuitionId);
@@ -46,6 +59,41 @@ public class PaymentsController(RoxyDbContext db) : ControllerBase
 			)).ToListAsync();
 
 		return Ok(list);
+	}
+
+	[HttpGet("{id}")]
+	public async Task<ActionResult<PaymentDto>> GetPayment(int id)
+	{
+		// Giáo viên không được xem thanh toán
+		if (Role == "Teacher")
+			return Forbid();
+
+		var p = await db.Payments
+			.Include(p => p.Tuition)
+				.ThenInclude(t => t.Student)
+			.Include(p => p.ConfirmedByNavigation)
+			.FirstOrDefaultAsync(p => p.Id == id);
+
+		if (p == null) return NotFound(new { message = "Không tìm thấy giao dịch thanh toán này." });
+
+		// Học viên chỉ được xem thanh toán của chính mình
+		if (Role == "Student" && p.Tuition.Student.UserId != UserId)
+			return Forbid();
+
+		// Phụ huynh chỉ được xem thanh toán của con mình
+		if (Role == "Parent" && p.Tuition.Student.ParentId != UserId)
+			return Forbid();
+
+		// Quản lý cơ sở chỉ được xem thanh toán của cơ sở mình
+		if (Role == "BranchManager" && p.Tuition.BranchId != (User.GetBranchId() ?? -1))
+			return Forbid();
+
+		return Ok(new PaymentDto(
+			p.Id, p.TuitionId, p.Amount, p.PaymentMethod, p.Status,
+			p.TransactionCode, p.ProofImageUrl, p.PaidAt,
+			p.ConfirmedBy, p.ConfirmedByNavigation != null ? p.ConfirmedByNavigation.FullName : null,
+			p.ConfirmedAt, p.Note, p.CreatedAt
+		));
 	}
 
 	[HttpPost]
