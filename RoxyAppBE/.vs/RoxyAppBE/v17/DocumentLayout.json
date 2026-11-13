@@ -1,0 +1,965 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\Job\\RoxyApp\\RoxyAppBE\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\NotificationsController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Controllers\\NotificationsController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\NotificationDtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Dtos\\NotificationDtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\Notification.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Models\\Notification.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\NewsfeedsController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Controllers\\NewsfeedsController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\NewsfeedDtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Dtos\\NewsfeedDtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\Newsfeed.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Models\\Newsfeed.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\MessagesController.cs||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Controllers\\MessagesController.cs||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\MessageDtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Dtos\\MessageDtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\Message.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Models\\Message.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\LeaveRequestsController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Controllers\\LeaveRequestsController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\LeaveRequestDtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Dtos\\LeaveRequestDtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\LeaveRequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Models\\LeaveRequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\LessonProgressesController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Controllers\\LessonProgressesController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\LessonProgressDtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Dtos\\LessonProgressDtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\LessonProgress.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Models\\LessonProgress.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\GradeDtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Dtos\\GradeDtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\GradesController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Controllers\\GradesController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\Grade.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Models\\Grade.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\HomeworkSubmissionsController.cs||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Controllers\\HomeworkSubmissionsController.cs||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\HomeworksController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Controllers\\HomeworksController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\HomeworkDtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Dtos\\HomeworkDtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\HomeworkSubmission.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Models\\HomeworkSubmission.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\Homework.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Models\\Homework.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\AttendancesController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Controllers\\AttendancesController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\SchedulesController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Controllers\\SchedulesController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\ScheduleAndAttendanceDtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Dtos\\ScheduleAndAttendanceDtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\Schedule.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Models\\Schedule.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\Attendance.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Models\\Attendance.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\TuitionsController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Controllers\\TuitionsController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\UsersController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Controllers\\UsersController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\TuitionDtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Dtos\\TuitionDtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\PaymentsController.cs||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Controllers\\PaymentsController.cs||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\StudentClassesController.cs||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Controllers\\StudentClassesController.cs||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\PaymentDtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Dtos\\PaymentDtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\Payment.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Models\\Payment.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\Tuition.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Models\\Tuition.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\StudentClassDtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Dtos\\StudentClassDtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\StudentClass.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Models\\StudentClass.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\StudentsController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Controllers\\StudentsController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\Student.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Models\\Student.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\StudentDtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Dtos\\StudentDtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\CoursesController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Controllers\\CoursesController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\CommonDtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Dtos\\CommonDtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\UserDtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Dtos\\UserDtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Extensions\\UserClaimsExtensions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Extensions\\UserClaimsExtensions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\ClassesController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Controllers\\ClassesController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\ClassDtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Dtos\\ClassDtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\CourseDtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Dtos\\CourseDtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\Class.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Models\\Class.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\Course.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Models\\Course.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\AuthDtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Dtos\\AuthDtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\BranchDtos.cs||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Dtos\\BranchDtos.cs||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\BranchesController.cs||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Controllers\\BranchesController.cs||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Services\\TokenService.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Services\\TokenService.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\AuthController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Controllers\\AuthController.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\RoxyAcademy.Api.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\RoxyAcademy.Api.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Data\\RoxyDbContext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:RoxyAcademy.Api\\Data\\RoxyDbContext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "NotificationsController.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\NotificationsController.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Controllers\\NotificationsController.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\NotificationsController.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Controllers\\NotificationsController.cs",
+              "ViewState": "AgIAAD8AAAAAAAAAAAAUwFoAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T08:59:53.596Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "NotificationDtos.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\NotificationDtos.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Dtos\\NotificationDtos.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\NotificationDtos.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Dtos\\NotificationDtos.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAUwBsAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T08:59:24.266Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "Notification.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\Notification.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Models\\Notification.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\Notification.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Models\\Notification.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABsAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T08:57:54.391Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "NewsfeedsController.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\NewsfeedsController.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Controllers\\NewsfeedsController.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\NewsfeedsController.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Controllers\\NewsfeedsController.cs",
+              "ViewState": "AgIAAGMAAAAAAAAAAAAUwH4AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T08:54:18.592Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "NewsfeedDtos.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\NewsfeedDtos.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Dtos\\NewsfeedDtos.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\NewsfeedDtos.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Dtos\\NewsfeedDtos.cs",
+              "ViewState": "AgIAAB8AAAAAAAAAAAAUwDoAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T08:53:50.914Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "Newsfeed.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\Newsfeed.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Models\\Newsfeed.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\Newsfeed.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Models\\Newsfeed.cs",
+              "ViewState": "AgIAAAoAAAAAAAAAAAAUwCUAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T08:52:06.299Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "MessagesController.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\MessagesController.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Controllers\\MessagesController.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\MessagesController.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Controllers\\MessagesController.cs",
+              "ViewState": "AgIAADkAAAAAAAAAAAAUwFoAAAACAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T08:26:49.454Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "MessageDtos.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\MessageDtos.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Dtos\\MessageDtos.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\MessageDtos.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Dtos\\MessageDtos.cs",
+              "ViewState": "AgIAAAQAAAAAAAAAAAAUwB8AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T08:26:26.434Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "Message.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\Message.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Models\\Message.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\Message.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Models\\Message.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAUwCEAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T08:24:01.487Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "LeaveRequestsController.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\LeaveRequestsController.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Controllers\\LeaveRequestsController.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\LeaveRequestsController.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Controllers\\LeaveRequestsController.cs",
+              "ViewState": "AgIAAI0AAAAAAAAAAAAUwJMAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T08:09:37.748Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "LeaveRequestDtos.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\LeaveRequestDtos.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Dtos\\LeaveRequestDtos.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\LeaveRequestDtos.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Dtos\\LeaveRequestDtos.cs",
+              "ViewState": "AgIAAB0AAAAAAAAAAAAUwDgAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T08:08:49.149Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "LeaveRequest.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\LeaveRequest.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Models\\LeaveRequest.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\LeaveRequest.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Models\\LeaveRequest.cs",
+              "ViewState": "AgIAABgAAAAAAAAAAAAUwDMAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T08:06:33.174Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "LessonProgressesController.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\LessonProgressesController.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Controllers\\LessonProgressesController.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\LessonProgressesController.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Controllers\\LessonProgressesController.cs",
+              "ViewState": "AgIAAGQAAAAAAAAAAAAUwH8AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T08:02:31.405Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "LessonProgressDtos.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\LessonProgressDtos.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Dtos\\LessonProgressDtos.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\LessonProgressDtos.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Dtos\\LessonProgressDtos.cs",
+              "ViewState": "AgIAAA8AAAAAAAAAAAAUwCoAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T08:01:20.852Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "LessonProgress.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\LessonProgress.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Models\\LessonProgress.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\LessonProgress.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Models\\LessonProgress.cs",
+              "ViewState": "AgIAAAQAAAAAAAAAAAAUwB8AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T07:57:26.614Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "GradesController.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\GradesController.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Controllers\\GradesController.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\GradesController.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Controllers\\GradesController.cs",
+              "ViewState": "AgIAAFgAAAAAAAAAAAAUwHMAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T07:48:49.997Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "GradeDtos.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\GradeDtos.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Dtos\\GradeDtos.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\GradeDtos.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Dtos\\GradeDtos.cs",
+              "ViewState": "AgIAACQAAAAAAAAAAAAUwD8AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T07:44:38.909Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "Grade.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\Grade.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Models\\Grade.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\Grade.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Models\\Grade.cs",
+              "ViewState": "AgIAAAgAAAAAAAAAAAAUwCMAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T07:42:17.766Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "HomeworkSubmissionsController.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\HomeworkSubmissionsController.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Controllers\\HomeworkSubmissionsController.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\HomeworkSubmissionsController.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Controllers\\HomeworkSubmissionsController.cs",
+              "ViewState": "AgIAAC4AAAAAAAAAAAAUwDgAAAA1AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T07:13:49.782Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "HomeworksController.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\HomeworksController.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Controllers\\HomeworksController.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\HomeworksController.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Controllers\\HomeworksController.cs",
+              "ViewState": "AgIAADQAAAAAAAAAAAAUwE8AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T07:13:21.117Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": "HomeworkDtos.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\HomeworkDtos.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Dtos\\HomeworkDtos.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\HomeworkDtos.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Dtos\\HomeworkDtos.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAEEAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T07:10:48.733Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 21,
+              "Title": "HomeworkSubmission.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\HomeworkSubmission.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Models\\HomeworkSubmission.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\HomeworkSubmission.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Models\\HomeworkSubmission.cs",
+              "ViewState": "AgIAAAQAAAAAAAAAAAAUwB8AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T07:09:19.434Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 22,
+              "Title": "Homework.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\Homework.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Models\\Homework.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\Homework.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Models\\Homework.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAUwCEAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T07:09:09.999Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 23,
+              "Title": "AttendancesController.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\AttendancesController.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Controllers\\AttendancesController.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\AttendancesController.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Controllers\\AttendancesController.cs",
+              "ViewState": "AgIAAEUAAAAAAAAAAAAUwGAAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T05:03:30.032Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 24,
+              "Title": "SchedulesController.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\SchedulesController.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Controllers\\SchedulesController.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\SchedulesController.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Controllers\\SchedulesController.cs",
+              "ViewState": "AgIAACsAAAAAAAAAAAAUwEYAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T05:02:45.934Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 25,
+              "Title": "ScheduleAndAttendanceDtos.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\ScheduleAndAttendanceDtos.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Dtos\\ScheduleAndAttendanceDtos.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\ScheduleAndAttendanceDtos.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Dtos\\ScheduleAndAttendanceDtos.cs",
+              "ViewState": "AgIAACsAAAAAAAAAAAAUwEYAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T05:01:47.376Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 26,
+              "Title": "Schedule.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\Schedule.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Models\\Schedule.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\Schedule.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Models\\Schedule.cs",
+              "ViewState": "AgIAAA4AAAAAAAAAAAAUwCkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T04:56:54.461Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 27,
+              "Title": "Attendance.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\Attendance.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Models\\Attendance.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\Attendance.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Models\\Attendance.cs",
+              "ViewState": "AgIAAAIAAAAAAAAAAAAUwB0AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T04:55:40.832Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 31,
+              "Title": "PaymentsController.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\PaymentsController.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Controllers\\PaymentsController.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\PaymentsController.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Controllers\\PaymentsController.cs",
+              "ViewState": "AgIAAFcAAAAAAAAAAAAUwHIAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T04:34:30.641Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 28,
+              "Title": "TuitionsController.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\TuitionsController.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Controllers\\TuitionsController.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\TuitionsController.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Controllers\\TuitionsController.cs",
+              "ViewState": "AgIAABQAAAAAAAAAAAAAACMAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T04:17:17.657Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 32,
+              "Title": "StudentClassesController.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\StudentClassesController.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Controllers\\StudentClassesController.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\StudentClassesController.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Controllers\\StudentClassesController.cs",
+              "ViewState": "AgIAAF0AAAAAAAAAAAAAAHgAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T04:02:17.586Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 30,
+              "Title": "TuitionDtos.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\TuitionDtos.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Dtos\\TuitionDtos.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\TuitionDtos.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Dtos\\TuitionDtos.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAATAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T04:14:08.962Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 29,
+              "Title": "UsersController.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\UsersController.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Controllers\\UsersController.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\UsersController.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Controllers\\UsersController.cs",
+              "ViewState": "AgIAAL0AAAAAAAAAAAAUwNgAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T02:41:39.246Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 33,
+              "Title": "PaymentDtos.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\PaymentDtos.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Dtos\\PaymentDtos.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\PaymentDtos.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Dtos\\PaymentDtos.cs",
+              "ViewState": "AgIAABkAAAAAAAAAAAAUwDQAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T04:33:59.576Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 34,
+              "Title": "Payment.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\Payment.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Models\\Payment.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\Payment.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Models\\Payment.cs",
+              "ViewState": "AgIAAAgAAAAAAAAAAAAUwCMAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T04:29:23.623Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 35,
+              "Title": "Tuition.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\Tuition.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Models\\Tuition.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\Tuition.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Models\\Tuition.cs",
+              "ViewState": "AgIAAAoAAAAAAAAAAAAUwCUAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T04:09:56.461Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 36,
+              "Title": "StudentClassDtos.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\StudentClassDtos.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Dtos\\StudentClassDtos.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\StudentClassDtos.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Dtos\\StudentClassDtos.cs",
+              "ViewState": "AgIAAAsAAAAAAAAAAAAUwBoAAAAXAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T03:57:48.324Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 37,
+              "Title": "StudentClass.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\StudentClass.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Models\\StudentClass.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\StudentClass.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Models\\StudentClass.cs",
+              "ViewState": "AgIAAAwAAAAAAAAAAAAUwCcAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T03:54:07.851Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 39,
+              "Title": "Student.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\Student.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Models\\Student.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\Student.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Models\\Student.cs",
+              "ViewState": "AgIAAB4AAAAAAAAAAAAAABUAAAAmAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T03:12:43.361Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 38,
+              "Title": "StudentsController.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\StudentsController.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Controllers\\StudentsController.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\StudentsController.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Controllers\\StudentsController.cs",
+              "ViewState": "AgIAACgBAAAAAAAAAAAUwEMBAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T03:08:49.821Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 40,
+              "Title": "StudentDtos.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\StudentDtos.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Dtos\\StudentDtos.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\StudentDtos.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Dtos\\StudentDtos.cs",
+              "ViewState": "AgIAAEMAAAAAAAAAAAAAAFgAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T03:04:31.433Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 42,
+              "Title": "CommonDtos.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\CommonDtos.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Dtos\\CommonDtos.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\CommonDtos.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Dtos\\CommonDtos.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAABUAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T02:41:05.789Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 41,
+              "Title": "CoursesController.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\CoursesController.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Controllers\\CoursesController.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\CoursesController.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Controllers\\CoursesController.cs",
+              "ViewState": "AgIAAD8AAAAAAAAAAAAjwFEAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-16T10:16:29.171Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 43,
+              "Title": "UserDtos.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\UserDtos.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Dtos\\UserDtos.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\UserDtos.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Dtos\\UserDtos.cs",
+              "ViewState": "AgIAADkAAAAAAAAAAAAUwFQAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T02:40:36.961Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 44,
+              "Title": "UserClaimsExtensions.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Extensions\\UserClaimsExtensions.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Extensions\\UserClaimsExtensions.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Extensions\\UserClaimsExtensions.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Extensions\\UserClaimsExtensions.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T02:36:49.192Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 45,
+              "Title": "ClassesController.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\ClassesController.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Controllers\\ClassesController.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\ClassesController.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Controllers\\ClassesController.cs",
+              "ViewState": "AgIAAGkAAAAAAAAAAAAUwIQAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T01:57:49.035Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 46,
+              "Title": "ClassDtos.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\ClassDtos.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Dtos\\ClassDtos.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\ClassDtos.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Dtos\\ClassDtos.cs",
+              "ViewState": "AgIAACIAAAAAAAAAAAAUwD0AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T01:57:25.271Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 48,
+              "Title": "Class.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\Class.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Models\\Class.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\Class.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Models\\Class.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAADkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-19T01:55:03.533Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 49,
+              "Title": "Course.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\Course.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Models\\Course.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Models\\Course.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Models\\Course.cs",
+              "ViewState": "AgIAAAIAAAAAAAAAAAAcwB0AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-16T10:26:05.799Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 47,
+              "Title": "CourseDtos.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\CourseDtos.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Dtos\\CourseDtos.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\CourseDtos.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Dtos\\CourseDtos.cs",
+              "ViewState": "AgIAAB0AAAAAAAAAAAAjwCYAAAA8AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-16T10:15:10.2Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 51,
+              "Title": "BranchDtos.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\BranchDtos.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Dtos\\BranchDtos.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\BranchDtos.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Dtos\\BranchDtos.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACEAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-16T09:24:39.449Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 55,
+              "Title": "TokenService.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Services\\TokenService.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Services\\TokenService.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Services\\TokenService.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Services\\TokenService.cs",
+              "ViewState": "AgIAACEAAAAAAAAAAAAcwCoAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-16T07:47:33.884Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 50,
+              "Title": "AuthDtos.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\AuthDtos.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Dtos\\AuthDtos.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Dtos\\AuthDtos.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Dtos\\AuthDtos.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAABTAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-16T07:46:26.479Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 56,
+              "Title": "AuthController.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\AuthController.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Controllers\\AuthController.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\AuthController.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Controllers\\AuthController.cs",
+              "ViewState": "AgIAAB4AAAAAAAAAAAAAADcAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-16T07:09:37.581Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 52,
+              "Title": "BranchesController.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\BranchesController.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Controllers\\BranchesController.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Controllers\\BranchesController.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Controllers\\BranchesController.cs",
+              "ViewState": "AgIAACoAAAAAAAAAAAAcwFcAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-16T04:54:57.523Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 53,
+              "Title": "Program.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Program.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Program.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Program.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Program.cs",
+              "ViewState": "AgIAAEIAAAAAAAAAAAAAAFQAAAAHAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-16T04:41:21.212Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 54,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\appsettings.json",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\appsettings.json",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\appsettings.json",
+              "RelativeToolTip": "RoxyAcademy.Api\\appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAYAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-10-16T04:38:59.558Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 57,
+              "Title": "RoxyAcademy.Api.csproj",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\RoxyAcademy.Api.csproj",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\RoxyAcademy.Api.csproj",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\RoxyAcademy.Api.csproj",
+              "RelativeToolTip": "RoxyAcademy.Api\\RoxyAcademy.Api.csproj",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2026-10-16T07:02:21.078Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 58,
+              "Title": "RoxyDbContext.cs",
+              "DocumentMoniker": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Data\\RoxyDbContext.cs",
+              "RelativeDocumentMoniker": "RoxyAcademy.Api\\Data\\RoxyDbContext.cs",
+              "ToolTip": "D:\\Job\\RoxyApp\\RoxyAppBE\\RoxyAcademy.Api\\Data\\RoxyDbContext.cs",
+              "RelativeToolTip": "RoxyAcademy.Api\\Data\\RoxyDbContext.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-10-16T04:43:29.208Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

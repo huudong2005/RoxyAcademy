@@ -1,0 +1,13 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\RoxyAcademy.Api",
+    "\\RoxyAcademy.Api\\Controllers",
+    "\\RoxyAcademy.Api\\Data",
+    "\\RoxyAcademy.Api\\Dtos",
+    "\\RoxyAcademy.Api\\Extensions",
+    "\\RoxyAcademy.Api\\Models",
+    "\\RoxyAcademy.Api\\Services"
+  ],
+  "PreviewInSolutionExplorer": false
+}
