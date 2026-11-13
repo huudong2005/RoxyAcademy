@@ -1,20 +1,19 @@
 import axios from 'axios';
 
-// Tạo một instance (bản sao) của axios với cấu hình mặc định
+// Sử dụng biến môi trường VITE_API_BASE_URL nếu có, mặc định là '/api' qua Vite proxy
+const baseURL = import.meta.env.VITE_API_BASE_URL || '/api';
+
 const axiosClient = axios.create({
-  baseURL: '/api', // Mặc định tự nối thêm /api (nhờ proxy Vite)
+  baseURL,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// INTERCEPTOR REQUEST: Trước khi gửi đi
+// INTERCEPTOR REQUEST: Tự động đính kèm Bearer Token nếu đã đăng nhập
 axiosClient.interceptors.request.use(
   (config) => {
-    // Lấy token từ LocalStorage
-    const token = localStorage.getItem('token');
-    
-    // Nếu có token, tự động gắn vào Header Authorization
+    const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -23,15 +22,17 @@ axiosClient.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// INTERCEPTOR RESPONSE: Khi nhận kết quả về
+// INTERCEPTOR RESPONSE: Tự động điều hướng khi phiên hết hạn (401)
 axiosClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Xử lý chung các lỗi (ví dụ 401 là chưa xác thực hoặc token hết hạn)
     if (error.response && error.response.status === 401) {
       localStorage.removeItem('token');
-      // Ép văng ra màn hình login ngay lập tức
-      window.location.href = '/login'; 
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('user');
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
