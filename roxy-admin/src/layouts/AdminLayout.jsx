@@ -65,10 +65,12 @@ export default function AdminLayout() {
         : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
     }`;
 
+  const isStaff = user.role === 'SuperAdmin' || user.role === 'BranchManager';
+
   const renderNavLinks = (onItemClick) => (
     <>
       <div className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-        Nghiệp vụ chính
+        Nghiệp vụ đào tạo
       </div>
       <NavLink to="/" end className={navItemClass} onClick={onItemClick}>
         <span className="text-base">📊</span>
@@ -91,20 +93,31 @@ export default function AdminLayout() {
         <span>Điểm danh</span>
       </NavLink>
 
-      <div className="pt-6 px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-        Phân hệ kế tiếp
-      </div>
-      <div className="flex items-center justify-between px-3.5 py-2 text-xs font-medium text-slate-400 opacity-60">
-        <span className="flex items-center gap-2">
-          <span>💰</span> Học phí &amp; Thu tiền
-        </span>
-        <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-500">Khóa</span>
+      {/* PHÂN HỆ TÀI CHÍNH: CHỈ HIỂN THỊ CHO SUPERADMIN VÀ BRANCHMANAGER (ẨN HOÀN TOÀN VỚI TEACHER) */}
+      {isStaff && (
+        <>
+          <div className="pt-4 px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+            Tài chính &amp; Sổ quỹ
+          </div>
+          <NavLink to="/tuitions" className={navItemClass} onClick={onItemClick}>
+            <span className="text-base">💰</span>
+            <span>Học phí</span>
+          </NavLink>
+          <NavLink to="/payments" className={navItemClass} onClick={onItemClick}>
+            <span className="text-base">💳</span>
+            <span>Thanh toán</span>
+          </NavLink>
+        </>
+      )}
+
+      <div className="pt-5 px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+        Phân hệ sắp tới
       </div>
       <div className="flex items-center justify-between px-3.5 py-2 text-xs font-medium text-slate-400 opacity-60">
         <span className="flex items-center gap-2">
           <span>📝</span> Bài tập &amp; Đánh giá
         </span>
-        <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-500">Khóa</span>
+        <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-500">Sắp mở</span>
       </div>
     </>
   );
@@ -225,6 +238,14 @@ export default function AdminLayout() {
                   ? 'Quản lý Học viên'
                   : location.pathname.startsWith('/classes')
                   ? 'Quản lý Lớp học'
+                  : location.pathname.startsWith('/schedules')
+                  ? 'Lịch học & Thời khóa biểu'
+                  : location.pathname.startsWith('/attendance')
+                  ? 'Điểm danh học viên'
+                  : location.pathname.startsWith('/tuitions')
+                  ? 'Quản lý Học phí & Công nợ'
+                  : location.pathname.startsWith('/payments')
+                  ? 'Quản lý Thanh toán & Sổ quỹ'
                   : 'Bảng Tổng Quan'}
               </h2>
             </div>

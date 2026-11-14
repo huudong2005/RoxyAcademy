@@ -230,3 +230,252 @@ Quản lý việc điểm danh học viên trong từng buổi học, hỗ trợ
     "message": "Điểm danh thành công!"
   }
   ```
+
+---
+
+## 4. PHÂN HỆ HỌC PHÍ (TUITIONS API)
+
+Quản lý danh sách các khoản phải thu (học phí khóa học, giáo trình, đồng phục...), theo dõi công nợ, tính toán số tiền đã nộp và số tiền còn thiếu.
+
+### 4.1. Lấy danh sách khoản thu — `GET /api/Tuitions`
+Hỗ trợ tìm kiếm, lọc theo học viên, lớp học, cơ sở và trạng thái công nợ.
+
+- **Quyền truy cập:**
+  - `Teacher`: **Bị cấm** (`403 Forbidden`) — Giáo viên không được can thiệp vào tài chính/học phí.
+  - `SuperAdmin`: Xem toàn bộ hệ thống hoặc lọc theo `branchId`.
+  - `BranchManager`: Tự động giới hạn trong cơ sở mình quản lý (`BranchId == userBranchId`).
+  - `Parent`: Chỉ xem khoản thu của con mình (`Student.ParentId == UserId`).
+  - `Student`: Chỉ xem khoản thu của chính mình (`Student.UserId == UserId`).
+
+- **Query Parameters (Tùy chọn):**
+  - `search` (string): Tìm kiếm theo tên học viên, mã học viên, tên lớp hoặc tiêu đề khoản thu.
+  - `studentId` (int): Lọc theo mã học viên.
+  - `classId` (int): Lọc theo lớp học cụ thể.
+  - `branchId` (int): Lọc theo mã cơ sở (chỉ `SuperAdmin` có thể chọn cơ sở tùy ý).
+  - `status` (string): Lọc trạng thái công nợ:
+    - `"Paid"`: Đã thanh toán đầy đủ (`paidAmount >= finalAmount`).
+    - `"Partial"` hoặc `"PartiallyPaid"`: Đã thanh toán một phần (`0 < paidAmount < finalAmount`).
+    - `"Unpaid"`: Chưa thanh toán (`paidAmount == 0`).
+    - `"Overdue"`: Quá hạn nộp học phí (`paidAmount < finalAmount` và `dueDate < today`).
+    - `"Cancelled"`: Khoản thu đã hủy (`isCancelled == true`).
+
+- **Response:** `200 OK`
+  ```json
+  [
+    {
+      "id": 15,
+      "studentId": 20,
+      "studentName": "Trần Bảo Nam",
+      "classId": 5,
+      "className": "Luyện chữ đẹp K01",
+      "branchId": 1,
+      "branchName": "Cơ sở Bình Trưng Tây",
+      "title": "Học phí Khóa Luyện chữ đẹp tháng 11/2026",
+      "amount": 2500000,
+      "totalAmount": 2500000,
+      "discount": 200000,
+      "finalAmount": 2300000,
+      "paidAmount": 1000000,
+      "remainingAmount": 1300000,
+      "status": "PartiallyPaid",
+      "isOverdue": false,
+      "dueDate": "2026-11-25",
+      "isCancelled": false,
+      "note": "Ưu đãi đăng ký sớm 200k",
+      "createdAt": "2026-11-10T08:00:00Z"
+    }
+  ]
+  ```
+
+---
+
+### 4.2. Lấy chi tiết khoản thu — `GET /api/Tuitions/{id}`
+- **Quyền truy cập:** Cùng phân quyền như `GET /api/Tuitions` (chặn Giáo viên, kiểm tra quyền sở hữu đối với Phụ huynh, Học viên và Quản lý cơ sở).
+- **Response:** `200 OK` (Cấu trúc tương tự item trong danh sách trên) hoặc `404 Not Found`, `403 Forbidden`.
+
+---
+
+### 4.3. Tạo khoản thu mới — `POST /api/Tuitions`
+- **Quyền truy cập:** `SuperAdmin`, `BranchManager`.
+- **Ràng buộc nghiệp vụ & bảo mật:**
+  - `BranchManager`: Bị chặn nếu tạo khoản thu cho học viên hoặc cơ sở khác (`403 Forbidden`).
+  - `amount >= 0`, `discount >= 0`, `discount <= amount`: Giảm giá không được vượt quá số tiền học phí.
+  - Nếu có chọn lớp (`classId`): Kiểm tra học viên bắt buộc phải đã ghi danh vào lớp (`StudentClasses`), và lớp phải thuộc chi nhánh quản lý nếu người tạo là `BranchManager`.
+  - Kiểm tra chi nhánh (`branchId`) phải tồn tại và đang hoạt động (`IsActive == true`).
+
+- **Request Body:**
+  ```json
+  {
+    "studentId": 20,
+    "classId": 5,
+    "branchId": 1,
+    "title": "Học phí Khóa Luyện chữ đẹp tháng 11/2026",
+    "amount": 2500000,
+    "discount": 200000,
+    "dueDate": "2026-11-25",
+    "note": "Ưu đãi đăng ký sớm"
+  }
+  ```
+
+- **Response:** `201 Created`
+  ```json
+  {
+    "id": 15,
+    "message": "Tạo khoản thu học phí thành công!"
+  }
+  ```
+
+---
+
+### 4.4. Cập nhật khoản thu — `PUT /api/Tuitions/{id}`
+- **Quyền truy cập:** `SuperAdmin`, `BranchManager` (chỉ chi nhánh mình).
+- **Ràng buộc nghiệp vụ:**
+  - `discount <= amount`.
+  - **Kiểm soát chống Overpay khi giảm học phí:** Số tiền thực thu sau khi cập nhật (`amount - discount`) **không được nhỏ hơn** tổng số tiền đã thanh toán trước đó (`paidAmount`). Nếu vi phạm, trả ngay `400 Bad Request` tiếng Việt kèm thông số chi tiết.
+
+- **Request Body:**
+  ```json
+  {
+    "title": "Học phí Khóa Luyện chữ đẹp tháng 11/2026 (Điều chỉnh)",
+    "amount": 2500000,
+    "discount": 300000,
+    "dueDate": "2026-11-30",
+    "isCancelled": false,
+    "note": "Thêm ưu đãi phụ huynh giới thiệu bạn"
+  }
+  ```
+
+- **Response:** `200 OK`
+  ```json
+  {
+    "message": "Cập nhật khoản thu thành công!"
+  }
+  ```
+
+---
+
+### 4.5. Xóa khoản thu — `DELETE /api/Tuitions/{id}`
+- **Quyền truy cập:** `SuperAdmin`, `BranchManager` (chỉ chi nhánh mình).
+- **Ràng buộc an toàn dữ liệu:**
+  - Nếu khoản thu **đã có giao dịch thanh toán** trong hệ thống (`Payments`), hệ thống sẽ chặn xóa và trả về `400 Bad Request`: `"Không thể xóa khoản học phí đã có lịch sử thanh toán. Bạn có thể chọn Hủy khoản thu (IsCancelled = true)."`
+  - Chỉ cho phép xóa khi khoản thu tạo nhầm và chưa phát sinh giao dịch nào.
+- **Response:** `204 No Content` khi xóa thành công.
+
+---
+
+## 5. PHÂN HỆ THANH TOÁN (PAYMENTS API)
+
+Quản lý việc thu tiền học phí, ghi nhận thanh toán (tiền mặt / chuyển khoản / ZaloPay), đối soát mã giao dịch, kiểm duyệt biên nhận và tự động thông báo tới phụ huynh.
+
+### 5.1. Lấy danh sách thanh toán — `GET /api/Payments`
+- **Quyền truy cập:**
+  - `Teacher`: **Bị cấm** (`403 Forbidden`).
+  - `SuperAdmin`: Xem tất cả giao dịch thanh toán.
+  - `BranchManager`: Chỉ xem các giao dịch thuộc học viên/khoản thu của cơ sở mình.
+  - `Parent`: Chỉ xem các giao dịch của con mình.
+  - `Student`: Chỉ xem các giao dịch của chính mình.
+
+- **Query Parameters (Tùy chọn):**
+  - `tuitionId` (int): Lọc theo mã khoản thu cụ thể.
+  - `paymentMethod` (string): Lọc theo phương thức (`BankTransfer`, `Cash`, `ZaloPay`, `Other`).
+  - `status` (string): Lọc theo trạng thái duyệt (`PendingConfirm`, `Confirmed`, `Rejected`).
+
+- **Response:** `200 OK`
+  ```json
+  [
+    {
+      "id": 50,
+      "tuitionId": 15,
+      "tuitionTitle": "Học phí Khóa Luyện chữ đẹp tháng 11/2026",
+      "studentName": "Trần Bảo Nam",
+      "amount": 1000000,
+      "paymentMethod": "BankTransfer",
+      "status": "Confirmed",
+      "transactionCode": "MB1234567890",
+      "proofImageUrl": "https://img.roxy.edu.vn/receipts/rec-50.jpg",
+      "paidAt": "2026-11-14T09:30:00Z",
+      "confirmedBy": 2,
+      "confirmedByName": "Quản lý Cơ sở 1",
+      "confirmedAt": "2026-11-14T09:35:00Z",
+      "note": "Đã khớp sao kê tài khoản trung tâm",
+      "createdAt": "2026-11-14T09:30:00Z"
+    }
+  ]
+  ```
+
+---
+
+### 5.2. Lấy chi tiết giao dịch thanh toán — `GET /api/Payments/{id}`
+- **Quyền truy cập:** Cùng phân quyền như `GET /api/Payments`.
+- **Response:** `200 OK` (Cấu trúc tương tự item trong danh sách trên) hoặc `404 Not Found`, `403 Forbidden`.
+
+---
+
+### 5.3. Ghi nhận giao dịch thanh toán mới — `POST /api/Payments`
+- **Quyền truy cập:** `SuperAdmin`, `BranchManager`, `Parent`, `Student`.
+- **Phân luồng trạng thái tự động theo vai trò:**
+  - **Nhân viên thu tiền trực tiếp (`SuperAdmin`, `BranchManager`):** Giao dịch tự động có trạng thái `"Confirmed"`, gán `confirmedBy` là tài khoản hiện tại, `confirmedAt` là thời điểm hiện tại. Hệ thống tự động tạo Thông báo (`Notification`) gửi vào chuông của Phụ huynh học viên.
+  - **Phụ huynh / Học viên nộp qua App (`Parent`, `Student`):** Giao dịch có trạng thái `"PendingConfirm"`, `confirmedBy: null` để Quản lý cơ sở kiểm tra sao kê ngân hàng và duyệt.
+- **Kiểm soát chặn Overpay nghiêm ngặt trước khi lưu DB:**
+  - Số tiền thanh toán `amount > 0`.
+  - Khoản thu phải tồn tại và chưa bị hủy (`IsCancelled == false`).
+  - Tính số tiền còn nợ: `remainingAmount = (Amount - Discount) - Tổng các khoản đã Confirmed`.
+  - Nếu `remainingAmount <= 0`: Trả ngay `400 Bad Request`: `"Khoản học phí này đã được thanh toán đầy đủ, không thể nộp thêm."`
+  - Nếu `amount > remainingAmount`: Trả ngay `400 Bad Request`: `"Số tiền thanh toán ({amount} đ) vượt quá số tiền còn nợ ({remainingAmount} đ)..."` — **chặn tuyệt đối việc phát sinh lỗi 500 từ SQL trigger `TR_Payments_NoOverpay`**.
+
+- **Request Body:**
+  ```json
+  {
+    "tuitionId": 15,
+    "amount": 1000000,
+    "paymentMethod": "BankTransfer",
+    "transactionCode": "MB1234567890",
+    "proofImageUrl": "https://img.roxy.edu.vn/receipts/rec-50.jpg",
+    "paidAt": "2026-11-14T09:30:00Z",
+    "note": "Phụ huynh chuyển khoản ngân hàng MB Bank"
+  }
+  ```
+
+- **Response:** `201 Created`
+  ```json
+  {
+    "id": 50,
+    "status": "Confirmed",
+    "amount": 1000000,
+    "message": "Ghi nhận thanh toán thành công!"
+  }
+  ```
+
+---
+
+### 5.4. Xác nhận / Từ chối giao dịch thanh toán — `PUT /api/Payments/{id}/confirm`
+Dành cho Quản lý chi nhánh hoặc SuperAdmin kiểm tra chứng từ/sao kê ngân hàng để duyệt giao dịch đang chờ (`PendingConfirm`).
+
+- **Quyền truy cập:** `SuperAdmin`, `BranchManager`.
+- **Ràng buộc nghiệp vụ & bảo mật:**
+  - `BranchManager`: Bị chặn nếu giao dịch thuộc học phí của cơ sở khác (`403 Forbidden`).
+  - Giao dịch phải đang ở trạng thái `"PendingConfirm"` (không thể duyệt lại giao dịch đã xử lý).
+  - Khoản học phí liên kết không bị hủy (`IsCancelled == false`).
+  - **Kiểm soát chống Overpay khi bấm duyệt (Confirm):**
+    - Nếu chọn `"Confirmed"`, hệ thống kiểm tra tổng tiền đã duyệt của khoản học phí + `payment.Amount`. Nếu vượt quá số tiền phải thu sau giảm giá, trả ngay `400 Bad Request` tiếng Việt nêu rõ số tiền nợ tối đa còn lại.
+  - Khi duyệt thành công:
+    - Lưu vết người duyệt (`confirmedBy`) và thời gian duyệt (`confirmedAt`).
+    - Tự động sinh Thông báo cá nhân (`Notification`) gửi tới tài khoản Phụ huynh thông báo kết quả duyệt thanh toán (kèm ghi chú nếu có).
+
+- **Request Body:**
+  ```json
+  {
+    "status": "Confirmed",
+    "note": "Đã kiểm tra sao kê ngân hàng MB Bank, khớp giao dịch."
+  }
+  ```
+  *(Hoặc `status: "Rejected"` kèm lý do từ chối nếu không thấy tiền vào tài khoản)*
+
+- **Response:** `200 OK`
+  ```json
+  {
+    "id": 50,
+    "status": "Confirmed",
+    "message": "Xác nhận thanh toán thành công!"
+  }
+  ```

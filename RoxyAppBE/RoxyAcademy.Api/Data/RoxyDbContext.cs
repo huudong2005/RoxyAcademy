@@ -415,7 +415,11 @@ public partial class RoxyDbContext : DbContext
 
         modelBuilder.Entity<Payment>(entity =>
         {
-            entity.ToTable(tb => tb.HasTrigger("TR_Payments_NoOverpay"));
+            entity.ToTable(tb =>
+            {
+                tb.HasTrigger("TR_Payments_NoOverpay");
+                tb.UseSqlOutputClause(false);
+            });
 
             entity.HasIndex(e => e.TransactionCode, "IX_Payments_TransactionCode").HasFilter("([TransactionCode] IS NOT NULL)");
 

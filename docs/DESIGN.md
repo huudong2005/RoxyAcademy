@@ -807,3 +807,508 @@ Frontend và QA đối chiếu nghiệm thu 2 màn hình mới theo danh sách k
 - [ ] **Trạng Thái Lưu Điểm Danh:** Nút `Lưu điểm danh` hiển thị spinner loading xoay tròn, vô hiệu hóa nút chống submit kép, gọi API bulk thành công và tự động chuyển buổi học sang `Completed`.
 - [ ] **Phân Quyền Điểm Danh Nghiêm Ngặt:** Chỉ giáo viên phụ trách/dạy thay của buổi học đó hoặc quản lý mới có nút lưu; người dùng không có quyền truy cập chỉ xem ở chế độ Read-Only với badge tĩnh.
 - [ ] **Thanh Bottom Bar Cố Định Trên Mobile:** Trang điểm danh trên điện thoại hiển thị thẻ học viên to rõ và thanh lưu neo cố định ở đáy màn hình với hiệu ứng kính mờ `backdrop-blur-md`.
+
+---
+
+## 9. BỔ SUNG GIAI ĐOẠN 1D — QUẢN LÝ HỌC PHÍ (`/tuitions`) & LỊCH SỬ THANH TOÁN (`/payments`)
+
+> **Phân hệ nghiệp vụ:** Tài chính, Thu học phí, Quản lý công nợ & Đối soát giao dịch thanh toán.  
+> **Cơ sở dữ liệu:** Bảng `Tuitions`, `Payments`, View `vw_TuitionSummary`, Ràng buộc Trigger `TR_Payments_NoOverpay`.  
+> **Áp dụng bắt buộc:** Skill **Apple Design** (*Designing Fluid Interfaces*) & Skill **Emil Kowalski** (*Design Engineering / Polish UI*).
+
+---
+
+### 9.1. TỔNG QUAN PHÂN HỆ TÀI CHÍNH & TRIẾT LÝ THIẾT KẾ
+
+Phân hệ Tài chính là "xương sống" bảo đảm dòng tiền vận hành của 2 cơ sở Roxy Academy. Thiết kế giao diện tài chính đặt nặng yếu tố **Độ chính xác tuyệt đối (Zero Error Margin)**, **Minh bạch công nợ (Clear Debt Visibility)** và **Tốc độ ghi nhận thu tiền (Swift Operations)**.
+
+#### 1. Triết lý Thiết kế Kế toán & Motion Tinh gọn (Emil & Apple Guidelines):
+- **Số liệu dạng Tabular Numbers:** Toàn bộ số tiền (VND), mã hóa đơn, mã giao dịch ngân hàng và tỷ lệ phần trăm đều sử dụng thuộc tính phông chữ `font-mono tracking-tight tabular-nums` để các chữ số có bề rộng bằng nhau, thẳng hàng dọc theo từng cột, giúp mắt quét đối chiếu công nợ nhanh và không bị mỏi.
+- **Ràng buộc hiển thị trước Backend (Preventive UI Validation):** Giao diện chủ động ngăn chặn các lỗi vi phạm nghiệp vụ (như nộp tiền vượt quá dư nợ còn lại làm kích hoạt Trigger Rollback `TR_Payments_NoOverpay`, hay chọn học viên chưa ghi danh vào lớp làm vỡ FK `FK_Tuitions_Enrolled`). Thông báo lỗi xuất hiện mượt mà ngay tại chỗ mà không làm dịch chuyển bố cục (Zero Layout Shift).
+- **Phản hồi tức thì & Chuyển động vật lý:** Thao tác chạm nút ghi nhận, xác nhận thanh toán, mở modal sử dụng phản hồi pointer-down (`scale(0.98)` trong 100ms) kết hợp Spring critically damped (`damping: 1.0, response: 0.25s`) tạo cảm giác tin cậy, chắc chắn như phím bấm của máy đếm tiền hiện đại.
+
+#### 2. Bảng Đánh giá & Chuẩn hóa Trải nghiệm Tài chính (Emil Kowalski Review Table):
+
+| Trước khi chuẩn hóa (Before) | Sau khi áp dụng Skill (After) | Lý do nghiệp vụ & Cảm giác sử dụng (Why) |
+| :--- | :--- | :--- |
+| Số tiền hiển thị phông chữ thường, không định dạng (`1500000`) | Định dạng phân cách hàng nghìn rõ ràng kèm ký hiệu: `1.500.000 đ` (`font-mono tabular-nums font-semibold`) | Chống nhìn nhầm số 0, tránh thất thoát tiền bạc, đối chiếu kế toán nhanh hơn 3 lần |
+| Cột còn nợ dùng màu xám lẫn lộn với tổng tiền | Cột **Còn nợ** nổi bật với tone đỏ/hổ phách `text-rose-700 font-bold` kèm thanh Mini Progress Bar tiến độ | Báo động tức thì công nợ cần thu, quản lý nắm bắt ngay học viên nào chưa hoàn thành nghĩa vụ học phí |
+| Nhập số tiền thanh toán vượt số nợ, đợi ấn "Lưu" mới nhận lỗi 500 từ SQL Trigger | Ô nhập tiền kiểm tra real-time; nếu `Amount > Remaining`, viền hóa đỏ ngay, nút "Lưu" bị vô hiệu hóa (`disabled`) | Chặn lỗi ngay tại đầu ngón tay, tôn trọng thời gian của nhân viên, không làm fail API |
+| Nhân viên phải tự gõ lại từng con số nợ lẻ vào ô thanh toán | Bổ sung nút bấm 1 chạm: `⚡ Điền đủ số nợ (xxx.xxx đ)` ngay trên bàn phím/form | Tiết kiệm 90% thao tác gõ số khi phụ huynh thanh toán tròn khoản nợ |
+| Bấm vào xem ảnh chứng từ bị mở tab mới hoặc load lại trang | Modal Lightbox Popup mở tại chỗ với nền mờ kính `backdrop-blur-md`, có nút phóng to và đóng bằng Esc / click nền | Giữ nguyên ngữ cảnh làm việc của nhân viên, kiểm tra chứng từ nhanh chóng |
+| Menu hiển thị mục "Học phí" cho toàn bộ giáo viên | Menu "Học phí" và "Thanh toán" **ẨN HOÀN TOÀN** với vai trò `Teacher` | Bảo mật tài chính trung tâm; chỉ `SuperAdmin` và `BranchManager` có quyền truy cập |
+
+---
+
+### 9.2. MA TRẬN PHÂN QUYỀN VAI TRÒ (RBAC) PHÂN HỆ TÀI CHÍNH
+
+Tuân thủ nghiêm ngặt quy định tại `GEMINI.md`, `TuitionsController.cs` và `PaymentsController.cs`:
+
+| Vai trò người dùng | Truy cập Menu & Đường dẫn (`/tuitions`, `/payments`) | Phạm vi dữ liệu (Data Scope) | Thao tác trên Khoản thu (`Tuitions`) | Thao tác trên Thanh toán (`Payments`) |
+| :--- | :---: | :--- | :--- | :--- |
+| **SuperAdmin** 👑 | **TOÀN QUYỀN** | Xem toàn bộ chi nhánh. Có dropdown chọn chi nhánh linh hoạt. | - Tạo khoản thu mới cho mọi cơ sở.<br>- Sửa thông tin khoản thu.<br>- Hủy/Xóa khoản thu. | - Tạo phiếu thu tiền trực tiếp (tự động duyệt `Confirmed`).<br>- Duyệt (`Confirm`) / Từ chối (`Reject`) thanh toán `PendingConfirm`. |
+| **BranchManager** 🏢 | **TOÀN QUYỀN TẠI CƠ SỞ** | **Khóa cứng chi nhánh** quản lý (`BranchId == User.BranchId`). Không xem được cơ sở khác. | - Tạo khoản thu cho học viên cơ sở mình.<br>- Sửa khoản thu thuộc cơ sở mình.<br>- Không được xóa cứng. | - Tạo phiếu thu tiền (tự động `Confirmed`).<br>- Duyệt / Từ chối thanh toán phụ huynh gửi thuộc cơ sở mình. |
+| **Teacher** 👩‍🏫 | 🚫 **BỊ CẤM HOÀN TOÀN (FORBIDDEN)** | **Ẩn hoàn toàn** 2 mục trên Sidebar Menu. Nếu gõ URL trực tiếp → Chặn 403 hoặc tự động redirect về `/classes`. | Không được xem, không được tạo, không được sửa. | Không được xem, không được duyệt. |
+
+---
+
+### 9.3. ĐẶC TẢ CHI TIẾT MÀN HÌNH QUẢN LÝ HỌC PHÍ (`/tuitions`)
+
+#### 1. Bố Cục Tổng Thể & Thẻ Thống Kê Tài Chính Nhanh (KPI Summary Cards)
+
+Phía trên cùng của trang `/tuitions` là 4 thẻ chỉ số tóm tắt dòng tiền giúp quản lý nắm ngay bức tranh công nợ trong tháng:
+
+```
++-------------------------------------------------------------------------------------------------------------------+
+|  💰 QUẢN LÝ HỌC PHÍ & CÔNG NỢ                                                                 [ + Tạo khoản thu ] |
+|  Theo dõi khoản phải thu, tình trạng đóng học phí và nhắc nợ học viên theo cơ sở.                                 |
++-------------------------------------------------------------------------------------------------------------------+
+| [ Tổng học phí phải thu ]  [ Đã thu thực tế ]        [ Tổng công nợ còn lại ]      [ Khoản thu quá hạn ]          |
+|    128.500.000 đ              92.300.000 đ               36.200.000 đ                   4 khoản (8.400.000 đ)     |
+|    72 khoản thu               Tiến độ: 71.8%             24 học viên còn nợ             Cần gửi thông báo nhắc    |
++-------------------------------------------------------------------------------------------------------------------+
+```
+
+- **Thẻ 1: Tổng học phí phải thu (`NetAmount`):** Nền trắng, viền `border-slate-200`, số tiền `text-slate-900 font-bold text-xl font-mono`.
+- **Thẻ 2: Đã thu thực tế (`PaidAmount`):** Nền xanh lá nhạt `bg-emerald-50/60`, viền `border-emerald-200`, số tiền `text-emerald-700 font-bold text-xl font-mono`. Kèm thanh mini progress bar màu xanh ngọc.
+- **Thẻ 3: Tổng công nợ còn lại (`RemainingAmount`):** Nền hổ phách ấm `bg-amber-50/70`, viền `border-amber-200`, số tiền `text-amber-800 font-bold text-xl font-mono`. Kèm số lượng học viên chưa thanh toán.
+- **Thẻ 4: Khoản thu quá hạn (`IsOverdue == 1`):** Nền đỏ nhạt `bg-rose-50/70`, viền `border-rose-200`, số tiền `text-rose-700 font-bold text-xl font-mono`. Icon cảnh báo `⚠️` nhấp nháy tinh tế.
+
+---
+
+#### 2. Thanh Công Cụ & Bộ Lọc Đa Chiều (Toolbar & Filters)
+
+```
++-------------------------------------------------------------------------------------------------------------------+
+| [ 🔍 Tìm tên bé, mã STU, tiêu đề... ] [ Chọn học viên ▼ ] [ Tất cả lớp học ▼ ] [ Cơ sở: Nguyễn Duy Trinh 🔒]    |
+| [ Trạng thái: Tất cả (72) | Chưa đóng (16) | Đóng một phần (8) | Đã xong (44) | Quá hạn (4) ]                   |
++-------------------------------------------------------------------------------------------------------------------+
+```
+
+1. **Ô Tìm kiếm thông minh (`Search Input`):**
+   - Class: `h-10 pl-10 pr-4 text-sm bg-white border border-slate-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 placeholder:text-slate-400 w-full sm:w-72 transition-all duration-150`.
+   - Tìm kiếm kết hợp: Họ tên học viên, Mã học viên (`#STU-xxx`), Tiêu đề khoản thu, Số điện thoại phụ huynh.
+2. **Bộ lọc Học viên (`Filter by Student`):** Dropdown hỗ trợ tìm kiếm nhanh tên bé.
+3. **Bộ lọc Lớp học (`Filter by Class`):** Danh sách các lớp học hiện có tại cơ sở.
+4. **Bộ lọc Chi nhánh (`Filter by Branch`):**
+   - Với `SuperAdmin`: Dropdown cho phép chọn `Tất cả cơ sở`, `Cơ sở 1 - Nguyễn Duy Trinh`, `Cơ sở 2 - Bình Trưng Đông`.
+   - Với `BranchManager`: Khóa cố định chi nhánh sở tại (`disabled`), hiển thị icon ổ khóa `🔒` và nhãn cơ sở rõ ràng, ngăn chặn việc chọn nhầm cơ sở khác.
+5. **Thanh lọc trạng thái (Segmented Pill Filter):**
+   - Bộ nút viên thuốc (Pill Tabs) trượt ngang:
+     * `Tất cả` (All)
+     * `Chưa thanh toán` (`Unpaid` - Xám)
+     * `Thanh toán một phần` (`Partial` - Vàng cam)
+     * `Đã thanh toán` (`Paid` - Xanh lá)
+     * `Quá hạn` (`Overdue` - Đỏ)
+     * `Đã hủy` (`Cancelled` - Gạch ngang)
+   - Badge số lượng đính kèm trên từng pill cập nhật real-time theo danh sách lọc.
+6. **Nút `+ Tạo khoản thu` (Primary CTA):**
+   - Chỉ xuất hiện với `SuperAdmin` và `BranchManager`.
+   - Styling: `inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-semibold text-sm rounded-lg shadow-xs hover:bg-blue-700 active:scale-[0.98] transition-all duration-150`.
+
+---
+
+#### 3. Bảng Danh Sách Khoản Thu Học Phí (Desktop Data Grid)
+
+Bảng dữ liệu hỗ trợ cuộn ngang (`overflow-x-auto`) với các cột được bố trí chặt chẽ, hiển thị đầy đủ thông số tài chính:
+
+```
++---------------------------------------------------------------------------------------------------------------------------------------------------+
+| HỌC VIÊN              | KHOẢN THU & LỚP           | CƠ SỞ       | PHẢI THU      | ĐÃ ĐÓNG       | CÒN NỢ (NỔI BẬT) | HẠN NỘP    | TRẠNG THÁI | THAO TÁC   |
++---------------------------------------------------------------------------------------------------------------------------------------------------+
+| [Avatar] Bảo Ngọc     | Học phí Tiền TH - T11     | Cơ sở 1     | 2.500.000 đ   | 1.000.000 đ   | 1.500.000 đ      | 20/11/2026 | [Đóng 1 phần| [👁] [✏] [⚡]|
+| #STU-102 • Mẹ Lan     | Lớp: Họa Mi 1 (3 buổi/tuần)| (Bình Trưng)| (Gốc: 2.700k) | [======    ]  | (Cần thu thêm)   | (Còn 6 ngày)|            |            |
++---------------------------------------------------------------------------------------------------------------------------------------------------+
+| [Avatar] Minh Khang   | Luyện chữ đẹp K12         | Cơ sở 1     | 1.800.000 đ   | 0 đ           | 1.800.000 đ      | 10/11/2026 | [Quá hạn]  | [👁] [✏] [⚡]|
+| #STU-105 • Bố Hùng    | Lớp: Nét Chữ Xinh 2       | (Bình Trưng)| (Ưu đãi: 0đ)  | [          ]  | (Chưa đóng)      | ⚠️ Quá 4 ngày|            |            |
++---------------------------------------------------------------------------------------------------------------------------------------------------+
+| [Avatar] Tuấn Kiệt    | Tư duy logic Toán - T11   | Cơ sở 2     | 3.200.000 đ   | 3.200.000 đ   | 0 đ              | 25/11/2026 | [Đã đóng]  | [👁] [—] [—]|
+| #STU-110 • Mẹ Thảo    | Lớp: Toán Tư Duy A        | (Bình Trưng)| (Ưu đãi: 200k)| [==========]  | ✓ Hoàn thành     | (Đã tất toán)|           |            |
++---------------------------------------------------------------------------------------------------------------------------------------------------+
+```
+
+##### Chi tiết quy cách từng cột:
+1. **Cột Học viên:**
+   - Avatar chữ cái viết tắt tròn `w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold text-xs`.
+   - Họ và tên học viên in đậm `font-semibold text-slate-900 text-sm`.
+   - Phụ đề bên dưới: Mã học viên `#STU-xxx` kèm thông tin phụ huynh liên hệ (`Mẹ Lan - 0912...`).
+2. **Cột Khoản thu & Lớp:**
+   - Tiêu đề khoản thu (`Title`): `text-slate-800 font-medium text-sm`.
+   - Badge Lớp học: `bg-slate-100 text-slate-700 text-xs px-2 py-0.5 rounded border border-slate-200 mt-1 inline-block`. Nếu khoản thu không gắn với lớp (phí vật dụng, dã ngoại), hiển thị badge xám `Khoản thu ngoài lớp`.
+3. **Cột Chi nhánh:**
+   - Tên cơ sở ngắn gọn kèm ký hiệu màu định danh cơ sở.
+4. **Cột Tổng phải thu (`NetAmount`):**
+   - Giá trị thực thu (`Amount - Discount`): `font-mono font-semibold text-slate-900 text-sm`.
+   - Nếu có giảm giá (`Discount > 0`), hiển thị giá gốc gạch ngang nhỏ bên dưới: `<span class="line-through text-slate-400 text-xs">2.700.000 đ</span> <span class="text-emerald-600 text-[11px]">(-200k)</span>`.
+5. **Cột Đã đóng (`PaidAmount`):**
+   - Số tiền đã duyệt thành công: `font-mono font-medium text-emerald-700 text-sm`.
+   - Mini Progress Bar tiến độ: Chiều rộng 100%, cao 4px, bo góc `rounded-full bg-slate-100 overflow-hidden mt-1`. Thanh tiến độ xanh lá `bg-emerald-500` chạy theo tỷ lệ `(PaidAmount / NetAmount) * 100%`.
+6. **Cột CÒN NỢ (ĐIỂM NHẤN TRỌNG TÂM):**
+   - **Khi còn nợ (`RemainingAmount > 0`):**
+     * Con số nợ in đậm nổi bật: `font-mono font-bold text-base text-rose-600 tracking-tight`.
+     * Nhãn phụ: Nếu chưa đóng đồng nào hiển thị `Chưa đóng`, nếu đã đóng 1 phần hiển thị `Còn thiếu xxx đ`.
+   - **Khi đã tất toán (`RemainingAmount == 0`):**
+     * Hiển thị: `font-mono font-medium text-slate-400 text-sm` với icon `✓ 0 đ (Hoàn thành)`.
+7. **Cột Hạn nộp & Cảnh báo quá hạn:**
+   - Ngày hạn nộp: `DD/MM/YYYY`.
+   - Khi `IsOverdue == 1`: Chữ ngày màu đỏ, kèm badge cảnh báo đỏ nhỏ `⚠️ Quá hạn X ngày` rung nhẹ khi hover.
+   - Khi chưa quá hạn nhưng còn dưới 3 ngày: Badge cảnh báo vàng `⏱ Sắp đến hạn`.
+8. **Cột Trạng thái (Status Badges):**
+   - Áp dụng hệ thống badge chuẩn hóa tại Mục 3.1 & 9.4:
+     * `Paid` (Đã đóng đủ): `bg-emerald-50 border-emerald-300 text-emerald-800` + dot xanh lá.
+     * `PartiallyPaid` / `Partial` (Đóng một phần): `bg-amber-50 border-amber-300 text-amber-800` + dot hổ phách.
+     * `Unpaid` (Chưa đóng): `bg-slate-100 border-slate-300 text-slate-700` + dot xám.
+     * `Overdue` (Quá hạn): `bg-rose-50 border-rose-300 text-rose-700` + dot đỏ nhấp nháy.
+     * `Cancelled` (Đã hủy): `bg-slate-100 border-slate-200 text-slate-400 line-through`.
+9. **Cột Thao tác (Action Buttons):**
+   - **Nút Xem chi tiết (`View Detail`):** Icon mắt `👁️` hoặc kính lúp, mở Modal Chi tiết khoản thu và lịch sử thanh toán.
+   - **Nút Sửa (`Edit`):** Icon bút chì `✏️`, cho phép cập nhật tiêu đề, hạn nộp, ghi chú (chỉ mở cho Staff; nếu đã có giao dịch thanh toán xác nhận thì khóa sửa số tiền).
+   - **Nút Đóng tiền nhanh (`Quick Pay` - Điểm nhấn nghiệp vụ):**
+     * Styling: `inline-flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white border border-blue-200 font-semibold text-xs rounded-md shadow-2xs active:scale-95 transition-all duration-100`.
+     * Nhãn: `⚡ Thu tiền` hoặc icon `💳`.
+     * Khi bấm: Mở ngay **Modal Ghi nhận thanh toán (`RecordPaymentModal`)** với `TuitionId` đã được chọn sẵn, số tiền tự động điền bằng đúng số dư nợ còn lại (`RemainingAmount`). Giúp nhân viên hoàn tất thao tác thu tiền chỉ trong 2 cú click chuột!
+
+---
+
+#### 4. Modal Xem Chi Tiết Khoản Thu & Lịch Sử Các Lần Thanh Toán (`TuitionDetailModal`)
+
+Modal thiết kế rộng (`max-w-3xl`), có phân vùng thông tin rõ ràng:
+
+```
++---------------------------------------------------------------------------------------------------+
+|  CHI TIẾT KHOẢN THU #TUI-204                                                                 [ ✕ ]|
+|  Học phí Tiền tiểu học Tháng 11/2026 • Lớp Họa Mi 1 (Cơ sở 1)                                     |
++---------------------------------------------------------------------------------------------------+
+|  [THÔNG TIN HỌC VIÊN]                        |  [TỔNG HỢP TÀI CHÍNH]                              |
+|  • Học viên: Trần Bảo Ngọc (#STU-102)        |  • Mức học phí gốc:       2.700.000 đ              |
+|  • Phụ huynh: Lê Thị Lan (0912 345 678)      |  • Miễn giảm / Ưu đãi:     -200.000 đ (Anh em học) |
+|  • Lớp học: Tiền TH Họa Mi 1 - Phòng 201     |  • Số tiền thực thu:      2.500.000 đ              |
+|  • Ngày tạo khoản: 01/11/2026                |  • Đã thanh toán:         1.000.000 đ (40%)        |
+|  • Hạn đóng: 20/11/2026 (Còn 6 ngày)         |  • CÒN NỢ LẠI:            1.500.000 đ (Nổi bật đỏ) |
+|  • Trạng thái: [ Đang đóng một phần ]        |                                                    |
++---------------------------------------------------------------------------------------------------+
+|  LỊCH SỬ CÁC LẦN THANH TOÁN (PAYMENTS)                           [ + Ghi nhận thanh toán mới ]   |
+|  +---------------------------------------------------------------------------------------------+  |
+|  | MÃ GD      | NGÀY ĐÓNG         | SỐ TIỀN       | P.THỨC      | NGƯỜI THU/DUYỆT  | TRẠNG THÁI  |  |
+|  +---------------------------------------------------------------------------------------------+  |
+|  | #TX-8831   | 05/11/2026 14:20  | 1.000.000 đ   | CK Ngân hàng| QL. Nguyễn Thảo  | [Đã xác nhận|  |
+|  |            | Techcombank MB... |               | [Xem ảnh CK]| Lúc: 05/11 14:25 |             |  |
+|  +---------------------------------------------------------------------------------------------+  |
+|  (Nếu chưa có giao dịch nào: Hiển thị minh họa trống "Chưa có lượt thanh toán nào được ghi nhận")|
++---------------------------------------------------------------------------------------------------+
+|  Ghi chú nội bộ: Phụ huynh xin đóng đợt 1 trước 1 triệu, đợt 2 đóng trước ngày 20/11.             |
++---------------------------------------------------------------------------------------------------+
+|  [ In phiếu thu ]                                                [ Sửa khoản thu ]   [ Đóng ]     |
++---------------------------------------------------------------------------------------------------+
+```
+
+- **Tính liên kết dữ liệu:** Nếu khoản thu còn nợ (`RemainingAmount > 0`), modal hiển thị ngay nút `+ Ghi nhận thanh toán mới` ở góc phải tiêu đề lịch sử giao dịch. Bấm nút này sẽ mở đè hoặc chuyển tiếp sang form thanh toán mà không làm mất thông tin gốc.
+- **Xem chứng từ nhanh:** Mỗi dòng thanh toán có link `[Xem ảnh CK]`; click sẽ mở cửa sổ Lightbox xem trước biên lai chuyển khoản.
+
+---
+
+#### 5. Modal Tạo / Sửa Khoản Thu Học Phí (`CreateEditTuitionModal`)
+
+Modal tạo mới tuân thủ nghiêm ngặt các quy tắc ràng buộc logic database để tránh lỗi backend:
+
+```
++---------------------------------------------------------------------------------------------------+
+|  TẠO KHOẢN THU HỌC PHÍ MỚI                                                                   [ ✕ ]|
+|  Thiết lập khoản thu cho học viên theo lớp học hoặc thu phí hoạt động giáo dục ngoại khóa.        |
++---------------------------------------------------------------------------------------------------+
+|  Cơ sở áp dụng: (*)                                                                               |
+|  [ Cơ sở 1 - Nguyễn Duy Trinh (Bình Trưng Đông)                                         🔒/▼ ]    |
+|                                                                                                   |
+|  Chọn học viên: (*)                                                                               |
+|  [ 🔍 Tìm theo tên hoặc mã học viên (VD: Bảo Ngọc, #STU-102)...                        ▼ ]        |
+|                                                                                                   |
+|  Lớp học liên kết: (Tùy chọn)                                                                     |
+|  [ -- Chọn lớp bé đang theo học (Chỉ hiển thị các lớp bé đã đăng ký) --                 ▼ ]        |
+|  ℹ️ Hệ thống tự động lọc các lớp học viên đã ghi danh để đảm bảo tính toàn vẹn dữ liệu.           |
+|                                                                                                   |
+|  Tiêu đề khoản thu: (*)                                                                           |
+|  [ Học phí Tháng 11/2026 - Khóa Tiền tiểu học Họa Mi 1                                          ] |
+|                                                                                                   |
+|  +---------------------------------------+  +---------------------------------------+             |
+|  | Mức học phí gốc (VNĐ): (*)            |  | Miễn giảm / Học bổng (VNĐ):           |             |
+|  | [ 2.700.000                         ] |  | [ 200.000                           ] |             |
+|  +---------------------------------------+  +---------------------------------------+             |
+|                                                                                                   |
+|  +---------------------------------------------------------------------------------------------+  |
+|  | SỐ TIỀN THỰC THU (Tự động tính):  2.500.000 đ (Hai triệu năm trăm nghìn đồng)               |  |
+|  | Công thức: Mức học phí gốc (2.700.000 đ) - Miễn giảm (200.000 đ)                            |  |
+|  +---------------------------------------------------------------------------------------------+  |
+|                                                                                                   |
+|  Hạn đóng học phí: (*)                                                                            |
+|  [ 20/11/2026                                                                               📅 ]  |
+|                                                                                                   |
+|  Ghi chú: (Tùy chọn)                                                                              |
+|  [ Phụ huynh đăng ký đóng theo tháng, có áp dụng ưu đãi gia đình 2 con học...                   ] |
++---------------------------------------------------------------------------------------------------+
+|  [ Hủy bỏ ]                                                                  [ Lưu khoản thu ]    |
++---------------------------------------------------------------------------------------------------+
+```
+
+##### Ràng buộc & Validation trên Form (Apple & Emil Guidelines):
+1. **Kiểm tra hợp lệ Học viên & Lớp học (Chặn lỗi FK `FK_Tuitions_Enrolled`):**
+   - Khi chọn học viên, dropdown `Lớp học` sẽ tự động gọi API lấy danh sách lớp bé đã đăng ký (`StudentClasses` có trạng thái `Active`/`Pending`).
+   - Nếu chọn 1 lớp mà học viên chưa ghi danh, form cảnh báo vàng ngay: `"Học viên chưa ghi danh vào lớp này. Khoản thu sẽ được lưu ở dạng 'Phí tự do' không liên kết lớp."`.
+2. **Định dạng tiền tệ thời gian thực (Real-time Currency Formatter):**
+   - Khi người dùng gõ số, ô input tự động thêm dấu phân cách hàng nghìn (VD gõ `2700000` hiển thị thành `2.700.000`).
+   - Phía dưới hiển thị phiên âm tiếng Việt: `Hai triệu bảy trăm nghìn đồng` để nhân viên rà soát không bị gõ thừa/thiếu số 0.
+3. **Validate Miễn giảm (`Discount`):**
+   - Ràng buộc: `0 <= Discount <= Amount`.
+   - Nếu nhân viên gõ `Discount > Amount`, hiển thị viền đỏ và thông báo lỗi: `"Số tiền miễn giảm không được lớn hơn học phí gốc!"`, đồng thời vô hiệu hóa nút Lưu.
+4. **Hạn đóng (`DueDate`):**
+   - Mặc định gợi ý: `Ngày hiện tại + 7 ngày` hoặc ngày 15 của tháng.
+
+---
+
+### 9.4. ĐẶC TẢ CHI TIẾT MÀN HÌNH LỊCH SỬ THANH TOÁN (`/payments`)
+
+Màn hình `/payments` đóng vai trò là "Sổ quỹ thu tiền" và trung tâm đối soát giao dịch tài chính cho toàn bộ học phí nộp qua ngân hàng, ZaloPay hoặc tiền mặt.
+
+#### 1. Bố Cục Tổng Thể & Thanh Công Cụ
+
+```
++-------------------------------------------------------------------------------------------------------------------+
+|  💳 QUẢN LÝ THANH TOÁN & SỔ QUỸ                                                  [ + Ghi nhận thanh toán mới ]    |
+|  Lịch sử giao dịch đóng học phí, đối soát biên lai ngân hàng và phê duyệt thanh toán trực tuyến.                  |
++-------------------------------------------------------------------------------------------------------------------+
+| [ 🔍 Tìm mã GD, tên học viên, khoản thu... ] [ Khoản thu: Tất cả ▼ ] [ P.Thức: Tất cả ▼ ] [ Trạng thái: Tất cả ▼]  |
++-------------------------------------------------------------------------------------------------------------------+
+```
+
+- **Thanh tìm kiếm:** Tìm theo Mã giao dịch (`TransactionCode` ngân hàng), Tên học viên, Tên khoản thu.
+- **Lọc Phương thức thanh toán (`PaymentMethod`):**
+  * `Tất cả phương thức`
+  * `Chuyển khoản ngân hàng` (`BankTransfer` - icon 🏦)
+  * `Tiền mặt tại cơ sở` (`Cash` - icon 💵)
+  * `Ví ZaloPay` (`ZaloPay` - icon 📱)
+  * `Phương thức khác` (`Other` - icon 🏷️)
+- **Lọc Trạng thái thanh toán (`Status` - Khớp DB):**
+  * `Tất cả trạng thái`
+  * `Chờ xác nhận` (`PendingConfirm` - dành cho giao dịch phụ huynh gửi chuyển khoản cần đối soát)
+  * `Đã duyệt thành công` (`Confirmed` - tiền đã vào tài khoản / thu quỹ)
+  * `Đã từ chối` (`Rejected` - sai thông tin, không nhận được tiền)
+
+---
+
+#### 2. Bảng Danh Sách Giao Dịch Thanh Toán (Desktop Data Grid)
+
+```
++-------------------------------------------------------------------------------------------------------------------------------------------------------+
+| MÃ GIAO DỊCH         | HỌC VIÊN & KHOẢN THU        | SỐ TIỀN       | PHƯƠNG THỨC    | CHỨNG TỪ     | TRẠNG THÁI     | NGƯỜI DUYỆT / TẠO | THAO TÁC     |
++-------------------------------------------------------------------------------------------------------------------------------------------------------+
+| #TX-98421            | Trần Bảo Ngọc (#STU-102)    | 1.000.000 đ   | 🏦 Ngân hàng   | [🖼️ Xem ảnh] | [ Đã xác nhận] | Thu bởi: QL.Thảo  | [👁] [🧾]    |
+| 13/11 09:15          | Thu: HP Tiền TH Tháng 11    | (Đúng số nợ)  | MBBank...1294  | (Biên lai)   |                | 13/11 09:20       | (In biên nhận|
++-------------------------------------------------------------------------------------------------------------------------------------------------------+
+| #TX-98420            | Nguyễn Minh Khang (#STU-105)| 1.800.000 đ   | 🏦 Ngân hàng   | [🖼️ Xem ảnh] | [ Chờ duyệt ]  | Phụ huynh nộp     | [✓ Duyệt]    |
+| 13/11 08:30          | Thu: Luyện chữ đẹp K12      | (Toàn phần)   | Vietcombank... | (Biên lai)   | (Cần đối soát) | Qua ứng dụng      | [✕ Từ chối]  |
++-------------------------------------------------------------------------------------------------------------------------------------------------------+
+| #TX-98415            | Lê Tuấn Kiệt (#STU-110)     | 3.200.000 đ   | 💵 Tiền mặt    | —            | [ Đã xác nhận] | Thu bởi: QL.Bình  | [👁] [🧾]    |
+| 12/11 16:45          | Thu: Tư duy logic T11       | (Toàn phần)   | Nộp tại quầy CS2| (Không có)   |                | 12/11 16:45       | (In biên nhận|
++-------------------------------------------------------------------------------------------------------------------------------------------------------+
+| #TX-98402            | Hoàng Gia Bảo (#STU-114)    | 500.000 đ     | 📱 ZaloPay     | [🖼️ Xem ảnh] | [ Đã từ chối ] | Duyệt bởi: QL.Thảo| [👁 Chi tiết]|
+| 11/11 11:10          | Thu: Ngoại khóa Vẽ tranh    | (Tạm ứng)     | Mã ZP: 832910  | (Biên lai)   | (Lý do: Sai số)| 11/11 11:30       | (Xem lý do)  |
++-------------------------------------------------------------------------------------------------------------------------------------------------------+
+```
+
+##### Chi tiết quy cách các cột:
+1. **Mã giao dịch & Thời gian:**
+   - Mã giao dịch: `font-mono font-semibold text-blue-700 text-sm`. Nếu là mã chuyển khoản ngân hàng do phụ huynh gửi, hiển thị thêm mã đối soát bên dưới.
+   - Thời gian thanh toán (`PaidAt`): `HH:mm, DD/MM/YYYY` màu `text-slate-500 text-xs`.
+2. **Học viên & Khoản thu liên kết:**
+   - Họ tên học viên in đậm + Mã `#STU-xxx`.
+   - Tên khoản thu: `text-slate-600 text-xs truncate max-w-[200px]`.
+3. **Số tiền đóng:**
+   - Số tiền in to rõ: `font-mono font-bold text-slate-900 text-base`.
+   - Phụ đề: `Đóng toàn phần` hoặc `Đóng một phần (còn nợ xxx đ)`.
+4. **Phương thức thanh toán:**
+   - Huy hiệu có icon định danh:
+     * `🏦 Chuyển khoản`: `bg-sky-50 text-sky-800 border-sky-200`.
+     * `💵 Tiền mặt`: `bg-emerald-50 text-emerald-800 border-emerald-200`.
+     * `📱 ZaloPay`: `bg-blue-50 text-blue-800 border-blue-200`.
+5. **Chứng từ / Biên lai chuyển khoản (`ProofImageUrl`):**
+   - Nếu có ảnh: Hiển thị thumbnail nhỏ `w-10 h-10 rounded-md border border-slate-200 object-cover cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all shadow-2xs`. Click chuột sẽ bung Popup Lightbox xem toàn màn hình.
+   - Nếu không có ảnh (thu tiền mặt): Hiển thị dấu gạch ngang mờ `—`.
+6. **Trạng thái & Thao tác Duyệt nhanh (Pending Approval Flow):**
+   - **Khi ở trạng thái `PendingConfirm` (Chờ duyệt):**
+     * Badge trạng thái: Màu vàng hổ phách nhấp nháy nhẹ `bg-amber-50 border-amber-300 text-amber-800 font-semibold`.
+     * **Cột thao tác hiển thị 2 nút duyệt nhanh:**
+       + **Nút `✓ Xác nhận`:** `px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-md shadow-xs active:scale-95 transition-all duration-100`. Click gọi API `PUT /api/payments/{id}/confirm` với `{ status: 'Confirmed' }`, cập nhật ngay tức thì không cần reload trang.
+       + **Nút `✕ Từ chối`:** `px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold rounded-md active:scale-95 transition-all duration-100`. Click mở popover/dialog nhỏ yêu cầu nhập lý do từ chối (lưu vào `Note`).
+   - **Khi ở trạng thái `Confirmed` (Đã duyệt):**
+     * Badge xanh lá `bg-emerald-50 border-emerald-300 text-emerald-800 font-medium`.
+     * Thao tác: Nút in biên nhận thu tiền `🧾 In phiếu thu` và nút xem chi tiết.
+   - **Khi ở trạng thái `Rejected` (Đã từ chối):**
+     * Badge đỏ `bg-rose-50 border-rose-300 text-rose-800 font-medium`.
+     * Hover hiển thị tooltip lý do từ chối đã nhập.
+
+---
+
+#### 3. Modal Ghi Nhận Thanh Toán Mới (`RecordPaymentModal`)
+
+Modal này dùng để nhân viên ghi nhận tiền đóng trực tiếp tại trung tâm hoặc nhập thông tin chuyển khoản từ phụ huynh.
+
+> [!IMPORTANT]
+> **RÀNG BUỘC KỸ THUẬT QUAN TRỌNG NHẤT (ZERO RUNTIME DATABASE ROLLBACK):**  
+> Database có trigger `TR_Payments_NoOverpay` sẽ tự động hủy giao dịch và ném lỗi SQL Exception nếu `Tổng tiền đóng > Số tiền phải thu của khoản học phí`.  
+> Do đó, Modal này **BẮT BUỘC** phải tích hợp tính năng kiểm soát số dư nợ theo thời gian thực (Client-side Real-time Overpay Protection) như thiết kế dưới đây:
+
+```
++---------------------------------------------------------------------------------------------------+
+|  GHI NHẬN THANH TOÁN MỚI                                                                     [ ✕ ]|
+|  Nhập thông tin thanh toán học phí từ phụ huynh qua chuyển khoản hoặc tiền mặt.                  |
++---------------------------------------------------------------------------------------------------+
+|  Chọn khoản thu học phí: (*)                                                                      |
+|  [ 🔍 Tìm theo tên học viên, mã STU, tên khoản thu...                                   ▼ ]        |
+|                                                                                                   |
+|  +---------------------------------------------------------------------------------------------+  |
+|  | THÔNG TIN DƯ NỢ CỦA KHOẢN THU:                                                              |  |
+|  | • Học viên: Trần Bảo Ngọc (#STU-102) - Lớp: Tiền TH Họa Mi 1 (Cơ sở 1)                      |  |
+|  | • Tổng học phí thực thu:   2.500.000 đ                                                      |  |
+|  | • Đã thanh toán trước đó:  1.000.000 đ                                                      |  |
+|  | • CÒN NỢ CẦN THU:          1.500.000 đ  [ ⚡ Điền nhanh 1.500.000 đ ]                        |  |
+|  +---------------------------------------------------------------------------------------------+  |
+|                                                                                                   |
+|  Số tiền thanh toán (VNĐ): (*)                                                                    |
+|  [ 1.500.000                                                                                    ] |
+|  (Một triệu năm trăm nghìn đồng)                                                                  |
+|  <!-- KHI NGƯỜI DÙNG NHẬP VƯỢT QUÁ 1.500.000 Đ -> BÁO ĐỎ TỨC THÌ: -->                            |
+|  <p class="text-xs text-rose-600 font-medium mt-1">                                               |
+|    ⚠️ Số tiền thanh toán không được vượt quá số còn nợ (Tối đa: 1.500.000 đ).                      |
+|  </p>                                                                                             |
+|                                                                                                   |
+|  Phương thức thanh toán: (*)                                                                      |
+|  [ 🏦 Chuyển khoản ngân hàng (Active) ] [ 💵 Tiền mặt ] [ 📱 ZaloPay ] [ 🏷️ Khác ]              |
+|                                                                                                   |
+|  +---------------------------------------+  +---------------------------------------+             |
+|  | Mã giao dịch ngân hàng / Đối soát:    |  | Thời gian thanh toán: (*)             |             |
+|  | [ MBB1293847291                     ] |  | [ 13/11/2026, 09:30                📅 ] |             |
+|  +---------------------------------------+  +---------------------------------------+             |
+|                                                                                                   |
+|  Ảnh chụp biên lai / Chứng từ chuyển khoản:                                                       |
+|  [ Link URL ảnh hoặc tải lên biên lai chuyển khoản...                                         📁 ]|
+|  [Thumbnail preview ảnh: 64x64px có nút xóa ✕]                                                    |
+|                                                                                                   |
+|  Ghi chú thu tiền: (Tùy chọn)                                                                     |
+|  [ Phụ huynh chuyển qua Internet Banking MBBank, nội dung: STU102 Bao Ngoc nop hoc phi...      ] |
++---------------------------------------------------------------------------------------------------+
+|  Trạng thái ghi nhận: Tự động đánh dấu "Đã xác nhận" (Confirmed) vì thao tác bởi Cán bộ quản lý.  |
++---------------------------------------------------------------------------------------------------+
+|  [ Hủy bỏ ]                                                    [ ✓ Lưu & Xác nhận thanh toán ]    |
+|                                                  (Nút bị DISABLED và mờ đi nếu số tiền vượt nợ)   |
++---------------------------------------------------------------------------------------------------+
+```
+
+##### Chi tiết tính năng nổi bật:
+1. **Nút 1 chạm "⚡ Điền nhanh số nợ":**
+   - Nằm ngay cạnh dòng hiển thị "CÒN NỢ CẦN THU". Click vào nút này sẽ tự động điền chính xác `RemainingAmount` vào ô số tiền, tiết kiệm tối đa thời gian gõ phím.
+2. **Logic chặn thanh toán vượt nợ (Overpay Blocker):**
+   - Giả sử số còn nợ là `1.500.000 đ`. Nếu người dùng gõ `1.600.000 đ`:
+     * Viền ô input đổi ngay sang đỏ: `border-rose-500 ring-2 ring-rose-200 bg-rose-50/30`.
+     * Dòng cảnh báo đỏ xuất hiện mượt mà: `opacity: 1, transform: translateY(0)` trong 150ms.
+     * Nút `Lưu & Xác nhận thanh toán` chuyển sang trạng thái: `disabled opacity-40 cursor-not-allowed pointer-events-none`.
+     * Khi người dùng sửa số tiền `<= 1.500.000 đ`, viền xanh trở lại và nút Lưu lập tức được kích hoạt trở lại.
+3. **Phân quyền tự động gán trạng thái (`Status Automation`):**
+   - Đúng logic của `PaymentsController.cs` dòng 115: Khi Staff (`SuperAdmin` hoặc `BranchManager`) tạo phiếu thu, backend tự động gán `Status = "Confirmed"`, `ConfirmedBy = UserId`, `ConfirmedAt = Now`. Giao diện hiển thị ghi chú minh bạch để nhân viên yên tâm rằng giao dịch này có hiệu lực ngay lập tức.
+
+---
+
+#### 4. Trải Nghiệm Lightbox Xem Chứng Từ Chuyển Khoản (Receipt Lightbox Modal)
+
+Khi nhân viên bấm vào thumbnail hoặc nút `[Xem ảnh CK]`:
+- **Chuyển động mở:** Nền tối mờ kính phủ toàn màn hình (`fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center p-4`).
+- **Khung ảnh:** Phóng to nhẹ từ `scale(0.95)` lên `scale(1)` với đường cong `cubic-bezier(0.16, 1, 0.3, 1)` trong 200ms.
+- **Tiện ích:**
+  * Nút `✕ Đóng` ở góc trên bên phải (hỗ trợ phím tắt `Esc`).
+  * Nút `Mở trong tab mới` và nút `Tải ảnh xuống`.
+  * Click bất kỳ vào vùng ngoài ảnh sẽ đóng modal mượt mà.
+
+---
+
+### 9.5. THIẾT KẾ RESPONSIVE TRÊN MOBILE (`375px – 414px`)
+
+Trên màn hình điện thoại (khi quản lý kiểm tra doanh thu cơ sở tại quầy lễ tân hoặc trên đường di chuyển):
+
+#### 1. Màn hình Học phí trên Mobile (`/tuitions`):
+- **4 Thẻ thống kê đầu trang:** Thu gọn thành dạng thanh trượt ngang vuốt mượt (Horizontal Scroll Snap Pill Cards) hoặc lưới 2x2 gọn gàng.
+- **Bảng danh sách chuyển thành Dạng Thẻ Học Phí (Tuition Card Stack):**
+
+```
++-------------------------------------------------------+
+|  🎓 Nguyễn Minh Khang (#STU-105)         [ Quá hạn ]  |
+|  Học phí Luyện chữ đẹp K12 • Cơ sở 1                  |
+|  +-------------------------------------------------+  |
+|  | Phải thu: 1.800.000 đ    | Đã đóng: 0 đ         |  |
+|  | CÒN NỢ:   1.800.000 đ (Đỏ đậm)                  |  |
+|  | Hạn nộp:  10/11/2026 (⚠️ Đã quá hạn 4 ngày)     |  |
+|  +-------------------------------------------------+  |
+|  [ 👁 Chi tiết ]   [ ✏ Sửa ]    [ ⚡ Thu tiền (44px) ] |
++-------------------------------------------------------+
+```
+
+- Nút bấm `⚡ Thu tiền` cao tối thiểu `min-h-[44px]` chuẩn Apple HIG để dễ thao tác bằng ngón tay cái.
+
+#### 2. Màn hình Thanh toán trên Mobile (`/payments`):
+- Các giao dịch hiển thị dưới dạng Thẻ giao dịch (Transaction Cards).
+- Với giao dịch `Chờ duyệt` (`PendingConfirm`): Cụm 2 nút `✓ Duyệt` (xanh) và `✕ Từ chối` (đỏ) dàn đều ở đáy thẻ với chiều cao `h-11 (44px)`, bấm rung phản hồi nhẹ.
+- Các modal (`Tạo khoản thu`, `Ghi nhận thanh toán`) tự động chuyển thành **Bottom Sheet trượt từ đáy màn hình lên** (`rounded-t-2xl max-h-[92vh] overflow-y-auto`) kèm thanh kéo drag handle tiện dụng.
+
+---
+
+### 9.6. BẢNG MÃ TOKENS & BADGES BỔ SUNG CHO GIAI ĐOẠN 1D
+
+#### 1. Tokens Màu Sắc Nghiệp Vụ Tài Chính (Financial Tokens):
+
+| Mã Token | Mã Màu Hex | Tailwind 4 Utility Class | Ý nghĩa áp dụng |
+| :--- | :--- | :--- | :--- |
+| `finance-paid-bg` | `#ECFDF5` | `bg-emerald-50` | Nền trạng thái đã hoàn thành học phí, thanh toán thành công |
+| `finance-paid-text` | `#047857` | `text-emerald-700` | Chữ số tiền đã thu thực tế |
+| `finance-debt-bg` | `#FFFBEB` | `bg-amber-50` | Nền trạng thái còn nợ một phần |
+| `finance-debt-text` | `#B45309` | `text-amber-700` | Chữ số tiền còn nợ nhẹ |
+| `finance-overdue-bg` | `#FFF1F2` | `bg-rose-50` | Nền cảnh báo quá hạn đóng học phí |
+| `finance-overdue-text`| `#BE123C` | `text-rose-700` | Chữ số tiền quá hạn, cảnh báo nguy cơ công nợ xấu |
+| `finance-pending-bg` | `#FEF3C7` | `bg-amber-100` | Nền giao dịch thanh toán đang chờ đối soát |
+
+#### 2. Badges Trạng Thái Khớp 100% CSDL (`vw_TuitionSummary` & `Payments`):
+
+| Nghiệp vụ / Bảng | Giá trị Mã CSDL | Nhãn Tiếng Việt trên UI | Styling Badge (Tailwind 4) | Dot chỉ thị |
+| :--- | :--- | :--- | :--- | :---: |
+| **Khoản thu học phí** | `Paid` | **Đã thanh toán** | `bg-emerald-50 text-emerald-800 border border-emerald-300 font-semibold px-2.5 py-0.5 rounded-full text-xs` | `bg-emerald-500` |
+| **Khoản thu học phí** | `PartiallyPaid` / `Partial` | **Đóng một phần** | `bg-amber-50 text-amber-800 border border-amber-300 font-semibold px-2.5 py-0.5 rounded-full text-xs` | `bg-amber-500` |
+| **Khoản thu học phí** | `Unpaid` | **Chưa thanh toán** | `bg-slate-100 text-slate-700 border border-slate-300 font-medium px-2.5 py-0.5 rounded-full text-xs` | `bg-slate-400` |
+| **Khoản thu học phí** | `IsOverdue == 1` | **⚠️ Quá hạn đóng** | `bg-rose-50 text-rose-800 border border-rose-300 font-bold px-2.5 py-0.5 rounded-full text-xs animate-pulse` | `bg-rose-500` |
+| **Khoản thu học phí** | `IsCancelled == 1` | **Đã hủy khoản thu** | `bg-slate-100 text-slate-400 border border-slate-200 line-through px-2.5 py-0.5 rounded-full text-xs` | `bg-slate-300` |
+| **Giao dịch thanh toán**| `PendingConfirm` | **Chờ xác nhận** | `bg-amber-50 text-amber-800 border border-amber-300 font-semibold px-2.5 py-0.5 rounded-full text-xs` | `bg-amber-500` |
+| **Giao dịch thanh toán**| `Confirmed` | **Đã xác nhận** | `bg-emerald-50 text-emerald-800 border border-emerald-300 font-semibold px-2.5 py-0.5 rounded-full text-xs` | `bg-emerald-500` |
+| **Giao dịch thanh toán**| `Rejected` | **Đã từ chối** | `bg-rose-50 text-rose-800 border border-rose-300 font-medium px-2.5 py-0.5 rounded-full text-xs` | `bg-rose-500` |
+
+---
+
+### 9.7. TIÊU CHUẨN NGHIỆM THU CHO GIAI ĐOẠN 1D (ACCEPTANCE CHECKLIST)
+
+Frontend Developer và QA đối chiếu nghiệm thu 2 màn hình mới theo danh sách kiểm tra chi tiết sau:
+
+- [ ] **Phân Quyền Vai Trò Nghiêm Ngặt (RBAC):**
+  - Tài khoản `Teacher`: Không nhìn thấy mục `Học phí` và `Thanh toán` trên Sidebar Desktop và Mobile Drawer. Cố tình truy cập `/tuitions` hoặc `/payments` bị chặn lại và chuyển hướng an toàn.
+  - Tài khoản `BranchManager`: Bị khóa cứng chi nhánh sở tại; dropdown chi nhánh bị disable và chỉ tải dữ liệu thuộc cơ sở mình quản lý.
+  - Tài khoản `SuperAdmin`: Có đầy đủ quyền lọc tất cả chi nhánh và thực hiện mọi thao tác tài chính.
+- [ ] **Màn Hình Học Phí (`/tuitions`):**
+  - [ ] Hiển thị đủ 4 thẻ KPI tóm tắt đầu trang (Tổng phải thu, Đã thu, Còn nợ, Quá hạn).
+  - [ ] Bảng danh sách hiển thị đúng các cột: Học viên, Khoản thu & Lớp, Cơ sở, Phải thu, Đã đóng (kèm mini progress bar), **Còn nợ nổi bật** (`text-rose-600 font-bold`), Hạn nộp, Trạng thái, Thao tác.
+  - [ ] Nút `⚡ Thu tiền` trên từng hàng mở ngay Modal thanh toán với số dư nợ được điền sẵn chính xác.
+  - [ ] Modal Xem chi tiết khoản thu: Hiển thị đầy đủ thông tin tài chính và **bảng lịch sử các lần thanh toán** thuộc khoản thu đó.
+  - [ ] Modal Tạo khoản thu: Dropdown lớp học chỉ hiển thị các lớp học viên đã ghi danh (chống lỗi FK CSDL).
+  - [ ] Ô nhập số tiền tự động định dạng phân cách hàng nghìn (`1.500.000 đ`) và phiên âm tiếng Việt.
+- [ ] **Màn Hình Thanh Toán (`/payments`):**
+  - [ ] Bộ lọc phương thức thanh toán (`BankTransfer`, `Cash`, `ZaloPay`, `Other`) và trạng thái (`PendingConfirm`, `Confirmed`, `Rejected`) hoạt động chính xác.
+  - [ ] Cột chứng từ hiển thị thumbnail ảnh chuyển khoản; bấm vào bung Lightbox xem toàn màn hình mượt mà.
+  - [ ] Duyệt thanh toán nhanh: Giao dịch `PendingConfirm` có 2 nút `✓ Duyệt` và `✕ Từ chối`. Bấm duyệt gọi API cập nhật trạng thái ngay không reload trang.
+  - [ ] **Validation Chống Vượt Nợ (Overpay Protection):** Modal ghi nhận thanh toán tự động kiểm tra số tiền nhập với số còn nợ. Nếu `Số tiền > Số còn nợ` → viền đỏ, hiển thị thông báo lỗi và **vô hiệu hóa nút Lưu**.
+  - [ ] Nút bấm `⚡ Điền nhanh số nợ` tự động điền đúng số dư nợ còn lại chỉ với 1 chạm.
+- [ ] **Chuẩn Responsive Mobile (`375px – 414px`):**
+  - [ ] Bảng cuộn ngang mượt mà hoặc chuyển đổi mượt sang dạng danh sách thẻ học phí / giao dịch.
+  - [ ] Chiều cao các nút thao tác chạm (Thu tiền, Duyệt, Lưu) đạt tối thiểu `44px` theo chuẩn Apple HIG.
+  - [ ] Modals trên mobile chuyển sang dạng Bottom Sheet trượt từ đáy màn hình lên với hiệu ứng trượt êm ái.

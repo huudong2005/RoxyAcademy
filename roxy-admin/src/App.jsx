@@ -5,6 +5,8 @@ import Students from './pages/Students';
 import ClassList from './pages/ClassList';
 import Schedules from './pages/Schedules';
 import Attendance from './pages/Attendance';
+import Tuitions from './pages/Tuitions';
+import Payments from './pages/Payments';
 import AdminLayout from './layouts/AdminLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -22,6 +24,8 @@ export default function App() {
             <Route path="/classes" element={<ClassList />} />
             <Route path="/schedules" element={<Schedules />} />
             <Route path="/attendance" element={<Attendance />} />
+            <Route path="/tuitions" element={<Tuitions />} />
+            <Route path="/payments" element={<Payments />} />
           </Route>
         </Route>
 
