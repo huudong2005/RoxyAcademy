@@ -1841,3 +1841,387 @@ Frontend Developer và QA đối chiếu nghiệm thu tính năng theo danh sác
   - [ ] Danh sách bài tập chuyển thành dạng thẻ có chiều cao phím bấm tối thiểu `44px` theo chuẩn Apple HIG.
   - [ ] Giao diện chấm bài trên mobile chuyển thành Bottom Sheet trượt từ đáy màn hình lên kèm thanh drag handle trực quan.
 
+---
+
+## 11. BỔ SUNG GIAI ĐOẠN 1F — QUẢN LÝ ĐƠN XIN NGHỈ PHÉP (`/leave-requests`)
+
+> **Phân hệ nghiệp vụ:** Quản lý vắng học, vắng dạy, phê duyệt phép và đồng bộ trạng thái điểm danh học tập.  
+> **Cơ sở dữ liệu:** Bảng `LeaveRequests`, Bảng `Attendances` (trạng thái `ExcusedAbsent`), Bảng `Schedules`, Bảng `Students`, Bảng `Classes`, Bảng `Users`.  
+> **Áp dụng bắt buộc:** Skill **Apple Design** (*Designing Fluid Interfaces* — WWDC) & Skill **Emil Kowalski** (*Design Engineering / Polish UI*).
+
+---
+
+### 11.1. TỔNG QUAN PHÂN HỆ NGHỈ PHÉP & ĐÁNH GIÁ THIẾT KẾ KỸ THUẬT
+
+Phân hệ Đơn xin nghỉ phép (`/leave-requests`) giải quyết bài toán giao tiếp hàng ngày giữa Phụ huynh, Học viên, Giáo viên và Ban điều hành 2 cơ sở Roxy Academy. Thiết kế giao diện hướng đến **Sự tiện lợi tối đa khi gửi đơn (Frictionless Requesting)**, **Minh bạch tiến trình duyệt (Clear Status Tracking)** và **Tự động hóa đồng bộ điểm danh (Auto Attendance Synchronization)**.
+
+#### 1. Bảng Đánh giá & Chuẩn hóa Trải nghiệm Nghỉ phép (Emil Kowalski Polish Review Table):
+
+| Trước khi chuẩn hóa (Before) | Sau khi áp dụng Skill (After) | Lý do kỹ thuật & Trải nghiệm người dùng (Why) |
+| :--- | :--- | :--- |
+| Form tạo đơn bắt mọi người dùng phải tự chọn role "Student" hay "Teacher" | **Tự động nhận diện vai trò (Role-Adaptive Form)**: Phụ huynh chỉ thấy danh sách con, Học viên/Giáo viên tự điền chính mình | Giảm 100% lỗi gửi nhầm đối tượng, loại bỏ bước thừa, phụ huynh không phải bối rối phân loại |
+| Đơn duyệt xong giáo viên vẫn phải vào trang điểm danh tích tay "Nghỉ có phép" | **Tự động gắn cờ `ExcusedAbsent`** trên bảng điểm danh `/attendance` cho buổi học tương ứng khi đơn được `Approved` | Tự động hóa luồng nghiệp vụ sư phạm, ngăn chặn việc báo nhầm "Vắng không phép" gây lo lắng cho phụ huynh |
+| Dropdown chọn trạng thái đơn trong form duyệt tốn nhiều nhịp click | **2 Phím Duyệt nhanh 1 chạm (`✓ Duyệt` / `✕ Từ chối`)** kèm ô nhập ghi chú tại chỗ | Tối ưu thao tác quản trị cho Giám đốc / Quản lý cơ sở; xử lý 1 đơn chỉ mất đúng 3 giây |
+| Học viên và Giáo viên hiển thị chung màu sắc, khó phân biệt trên danh sách | **Hệ thống Badge phân loại độc lập**: 🎓 Học viên (Sky Blue) vs 👩‍🏫 Giáo viên (Indigo Purple) | Giúp ban quản lý quét nhanh danh sách bằng mắt; ưu tiên tìm người dạy thay nếu có giáo viên xin nghỉ |
+| Bảng ép co cụm các cột ngày giờ trên điện thoại gây tràn khung nhìn | **Responsive Card Stack kết hợp Mobile Bottom Sheet** chuẩn Apple HIG với diện tích chạm `>= 44px` | Đảm bảo phụ huynh gửi đơn bằng 1 tay trên điện thoại thuận tiện tại sảnh chờ hoặc trên đường |
+| Modal xuất hiện đột ngột hoặc bung to từ `scale(0)` | Modal xuất hiện từ `scale(0.96) + opacity: 0` chuyển sang `scale(1) + opacity: 1` (`180ms ease-out`) | Tuân thủ triết lý Emil Kowalski: vật thể không sinh ra từ hư vô; tạo cảm giác đầm chắc, tin cậy |
+
+#### 2. Các Nguyên lý Apple Design Ứng Dụng Chuyên Biệt Cho Màn Hình Nghỉ Phép:
+
+1. **Phản hồi tức thì trên Pointer-Down (Response - Kill Latency):** Nút gửi đơn, nút duyệt, nút từ chối phản hồi ngay lập tức (`active:scale-[0.98]` trong 100ms), không đợi nhả chuột mới đổi màu.
+2. **Tiết chế chuyển động (Restraint & Purpose):** Không lạm dụng hiệu ứng nảy (bounce) trên giao diện quản trị công việc. Dùng Spring critically damped (`damping: 1.0, response: 0.35s`) tạo cảm giác êm ái, chuyên nghiệp.
+3. **Neo điểm trung tâm cho Hộp thoại (Centered Modals):** Hộp thoại chi tiết và hộp thoại tạo đơn neo tại vị trí trung tâm màn hình (`transform-origin: center`), phủ nền mờ kính `bg-slate-900/40 backdrop-blur-[2px]`.
+4. **Phân cấp quang học & Typography (Optical Hierarchy):** Mã đơn `#LR-{id}` và ngày xin nghỉ sử dụng phông chữ `font-mono tracking-tight tabular-nums font-semibold` để mắt quét ngày tháng không bị lệch nhịp. Tiêu đề lớn áp dụng tracking âm nhẹ (`-0.02em`).
+5. **Hỗ trợ tùy chọn giảm chuyển động (Accessibility & Reduced Motion):** Khi phát hiện `@media (prefers-reduced-motion: reduce)`, toàn bộ chuyển động trượt và co giãn tự động chuyển về dạng crossfade mờ thuần túy `opacity: 150ms ease`.
+
+---
+
+### 11.2. MA TRẬN PHÂN QUYỀN VAI TRÒ (RBAC MATRIX) TRÊN MÀN HÌNH NGHỈ PHÉP
+
+Hệ thống tuân thủ chặt chẽ các ràng buộc phân quyền tại `GEMINI.md` và mã nguồn backend `LeaveRequestsController.cs`:
+
+| Vai trò người dùng | Quyền xem danh sách đơn (`GetLeaveRequests`) | Quyền gửi đơn mới (`CreateLeaveRequest`) | Quyền duyệt / từ chối đơn (`ReviewLeaveRequest`) | Phạm vi dữ liệu chi nhánh |
+| :--- | :--- | :--- | :--- | :--- |
+| **SuperAdmin** 👑 | Toàn bộ đơn xin nghỉ trong toàn hệ sinh thái | Gửi đơn cho bất kỳ Học viên hoặc Giáo viên nào | **Toàn quyền duyệt / từ chối** mọi đơn xin nghỉ | Không giới hạn cơ sở (có dropdown lọc chi nhánh) |
+| **BranchManager** 🏢 | Xem toàn bộ đơn thuộc cơ sở mình quản lý | Gửi đơn cho Học viên / Giáo viên thuộc cơ sở mình | **Duyệt / từ chối** các đơn thuộc cơ sở mình quản lý | **Khóa cứng chi nhánh** quản lý (`BranchId == User.BranchId`) |
+| **Teacher** 👩‍🏫 | Xem đơn của chính mình + đơn của học sinh trong các lớp mình dạy | Gửi đơn xin nghỉ dạy của **chính mình** | Xem xét đơn của học sinh lớp mình dạy (theo dõi thông tin) | Thuộc các lớp mình được phân công giảng dạy |
+| **Parent** 👨‍👩‍👦 | Chỉ xem các đơn xin nghỉ của **con mình** | Gửi đơn xin nghỉ học cho **con mình** | 🚫 Không có quyền duyệt | Giới hạn theo hồ sơ học viên của con |
+| **Student** 🎓 | Chỉ xem các đơn xin nghỉ của **chính mình** | Gửi đơn xin nghỉ học cho **chính mình** | 🚫 Không có quyền duyệt | Giới hạn theo hồ sơ học viên của bản thân |
+
+---
+
+### 11.3. THANH CÔNG CỤ & BỘ LỌC ĐA NĂNG (FILTER TOOLBAR)
+
+Thanh công cụ đầu trang hỗ trợ tìm kiếm linh hoạt, kết hợp lọc đa tiêu chí giúp cán bộ quản trị và giáo viên nhanh chóng tra cứu đơn từ:
+
+```
++---------------------------------------------------------------------------------------------------------------------------------------------------+
+|  📋 QUẢN LÝ ĐƠN XIN NGHỈ PHÉP                                                                                               [ + Gửi đơn xin nghỉ ]|
+|  Theo dõi, tiếp nhận và xét duyệt đơn xin nghỉ học của học viên và nghỉ dạy của giáo viên tại các chi nhánh.                                      |
++---------------------------------------------------------------------------------------------------------------------------------------------------+
+| [ 🔍 Tìm tên người xin, người gửi, lý do... ] [ Đối tượng: Tất cả ▼ ] [ Học viên: Tất cả ▼ ] [ Lớp: Tất cả ▼ ] [ Cơ sở: Cơ sở 1 🔒 ]             |
+| [ Trạng thái: Tất cả (24) | ⏳ Chờ duyệt (5) | ✓ Đã duyệt (16) | ✕ Từ chối (3) ]   [ Khoảng ngày: Từ 10/11/2026 📅  đến  20/11/2026 📅 ]          |
++---------------------------------------------------------------------------------------------------------------------------------------------------+
+```
+
+#### Chi tiết các thành phần bộ lọc:
+
+1. **Ô Tìm kiếm thông minh (`Search Input`):**
+   - Lớp CSS: `h-10 pl-10 pr-4 text-sm bg-white border border-slate-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 placeholder:text-slate-400 w-full sm:w-72 transition-all duration-150`.
+   - Tìm kiếm đồng thời: Họ tên học viên, Họ tên giáo viên, Tên phụ huynh gửi đơn, Nội dung lý do xin nghỉ. Độ trễ debounce: `300ms`.
+2. **Bộ lọc Phân loại đối tượng (`RequesterType`):**
+   - Dropdown gồm: `Tất cả đối tượng`, `🎓 Học viên xin nghỉ` (`RequesterType = 'Student'`), `👩‍🏫 Giáo viên xin nghỉ` (`RequesterType = 'Teacher'`).
+3. **Bộ lọc Học viên (`StudentId`):**
+   - Dropdown chọn học viên cụ thể (chỉ kích hoạt khi chọn xem đối tượng Học viên, tự động lọc theo chi nhánh/lớp học).
+4. **Bộ lọc Lớp học (`ClassId`):**
+   - Danh sách các lớp học đang hoạt động tại cơ sở.
+5. **Bộ lọc Chi nhánh (`BranchId`):**
+   - **Đối với `SuperAdmin`:** Dropdown tự do: `Tất cả cơ sở`, `Cơ sở 1 - Bình Trưng`, `Cơ sở 2 - Nguyễn Duy Trinh`.
+   - **Đối với `BranchManager`:** Khóa cố định (`disabled`), hiển thị icon ổ khóa `🔒` kèm tên cơ sở quản lý.
+   - **Đối với `Teacher`:** Hiển thị cơ sở thuộc các lớp đang giảng dạy.
+6. **Thanh lọc Trạng thái nhanh (Segmented Status Pills):**
+   - Bộ nút viên thuốc chuyển đổi tức thì:
+     * `Tất cả` (All)
+     * `⏳ Chờ duyệt` (`Pending` - Nền vàng cam hổ phách, có dot nhấp nháy chỉ thị đơn mới cần xử lý)
+     * `✓ Đã duyệt` (`Approved` - Nền xanh lá)
+     * `✕ Từ chối` (`Rejected` - Nền đỏ hồng)
+   - Mỗi pill có huy hiệu số lượng đính kèm cập nhật real-time theo kết quả lọc.
+7. **Bộ lọc Khoảng ngày (`fromDate` – `toDate` / `LeaveDate`):**
+   - Cặp ô chọn ngày (`type="date"`) giúp lọc các đơn có ngày nghỉ nằm trong khoảng thời gian mong muốn (VD: tuần này, tháng này).
+8. **Nút Primary Action `+ Gửi đơn xin nghỉ`:**
+   - **Phân quyền hiển thị:** Hiển thị cho **CẢ 5 VAI TRÒ** (`Parent`, `Student`, `Teacher`, `SuperAdmin`, `BranchManager`).
+   - Lớp CSS: `inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-semibold text-sm rounded-lg shadow-xs hover:bg-blue-700 active:scale-[0.98] transition-all duration-150`.
+   - Nhấn vào mở **Modal Tạo đơn xin nghỉ mới** với form tự động nhận diện vai trò.
+
+---
+
+### 11.4. BẢNG DANH SÁCH ĐƠN XIN NGHỈ (DESKTOP DATA GRID)
+
+Bảng dữ liệu trên Desktop được bao bọc trong container `w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xs`, cho phép cuộn ngang `overflow-x-auto` mượt mà khi màn hình hẹp:
+
+```
++---------------------------------------------------------------------------------------------------------------------------------------------------+
+| NGƯỜI XIN NGHỈ & VAI TRÒ   | LỚP & BUỔI HỌC / NGÀY NGHỈ        | LÝ DO XIN NGHỈ             | TRẠNG THÁI     | NGƯỜI DUYỆT & GHI CHÚ   | THAO TÁC     |
++---------------------------------------------------------------------------------------------------------------------------------------------------+
+| [Avatar] Trần Bảo Ngọc     | Tiền TH Họa Mi 1 (Phòng 102)      | "Bé bị sốt siêu vi từ tối  | [ ⏳ Chờ duyệt ]| —                       | [✓ Duyệt]    |
+| [🎓 Học viên] #STU-102     | Buổi 4: Thứ Sáu, 14/11/2026       | qua, bác sĩ dặn nghỉ ngơi  | (Đơn mới gửi)  | (Đang chờ ban quản lý   | [✕ Từ chối]  |
+| Gửi bởi: Mẹ Lan (0912...)  | (08:00 - 09:30)                   | 2 ngày để theo dõi ạ."     |                | xét duyệt)              | [👁 Chi tiết]|
++---------------------------------------------------------------------------------------------------------------------------------------------------+
+| [Avatar] Nguyễn Minh Khang | Luyện chữ đẹp K12 (Phòng 105)     | "Gia đình có việc hiếu ở   | [ ✓ Đã duyệt ] | Duyệt bởi: QL.Thảo      | [👁 Chi tiết]|
+| [🎓 Học viên] #STU-105     | Buổi 8: Thứ Tư, 12/11/2026        | quê, xin phép cô cho bé    | (Đã điểm danh  | Lúc: 11/11 15:30        |              |
+| Gửi bởi: Bố Hùng (0903...) | (17:30 - 19:00)                   | nghỉ buổi học Thứ Tư."     | ExcusedAbsent) | Note: Đã dặn bài về nhà |              |
++---------------------------------------------------------------------------------------------------------------------------------------------------+
+| [Avatar] Cô Mai Anh        | Lớp Tiền TH Họa Mi 1              | "Tôi đi tập huấn chuyên môn| [ ✓ Đã duyệt ] | Duyệt bởi: SuperAdmin   | [👁 Chi tiết]|
+| [👩‍🏫 Giáo viên]           | Thứ Hai, 17/11/2026               | giáo dục mầm non Sở GD&ĐT  | (Đã phân công  | Lúc: 13/11 09:00        |              |
+| Gửi bởi: Chính giáo viên   | Cả ngày (2 ca dạy)                | cả ngày Thứ Hai."          | Thầy Tuấn dạy) | Note: Đã bố trí GV thay |              |
++---------------------------------------------------------------------------------------------------------------------------------------------------+
+| [Avatar] Lê Tuấn Kiệt      | Toán Tư Duy A (Phòng 201)         | "Bé đi du lịch cùng ba mẹ  | [ ✕ Từ chối ]  | Từ chối: QL.Bình        | [👁 Chi tiết]|
+| [🎓 Học viên] #STU-110     | Buổi 6: Thứ Bảy, 08/11/2026       | cuối tuần."                |                | Lúc: 07/11 16:00        |              |
+| Gửi bởi: Mẹ Thảo (0988...) | (08:30 - 10:00)                   |                            |                | Note: Trùng lịch thi... |              |
++---------------------------------------------------------------------------------------------------------------------------------------------------+
+```
+
+#### Quy cách hiển thị từng cột:
+
+1. **Cột 1: Người xin nghỉ & Vai trò:**
+   - **Đối với Học viên:**
+     * Avatar tròn chữ cái tắt nền xanh dương nhạt `bg-sky-100 text-sky-700 font-bold text-xs`.
+     * Họ tên in đậm `text-slate-900 font-semibold text-sm`.
+     * Badge định danh vai trò: `bg-sky-50 text-sky-700 border border-sky-200 text-[11px] font-semibold px-2 py-0.5 rounded-full inline-flex items-center gap-1`.
+     * Mã hồ sơ `#STU-{id}`.
+     * Dòng phụ: Tên người tạo đơn (`RequestedByName`) kèm số điện thoại liên hệ (VD: `Gửi bởi: Mẹ Lan - 0912...`).
+   - **Đối với Giáo viên:**
+     * Avatar tròn chữ cái tắt nền chàm tím `bg-indigo-100 text-indigo-700 font-bold text-xs`.
+     * Họ tên giáo viên in đậm `text-slate-900 font-semibold text-sm`.
+     * Badge định danh vai trò: `bg-indigo-50 text-indigo-700 border border-indigo-200 text-[11px] font-semibold px-2 py-0.5 rounded-full inline-flex items-center gap-1`.
+     * Dòng phụ: `Đơn xin nghỉ dạy do chính giáo viên gửi`.
+2. **Cột 2: Lớp & Buổi học / Ngày nghỉ:**
+   - Tên lớp học: `text-slate-900 font-medium text-sm`.
+   - Nếu có buổi học cụ thể (`ScheduleId`): Hiển thị số thứ tự buổi, thời gian học (`08:00 - 09:30`), phòng học (`Phòng 102`).
+   - Ngày xin nghỉ (`LeaveDate`): Định dạng nổi bật `Thứ X, DD/MM/YYYY` màu `text-blue-700 font-semibold`.
+   - Nếu không gắn buổi cụ thể: Hiển thị badge xám `Nghỉ cả ngày`.
+3. **Cột 3: Lý do xin nghỉ:**
+   - Nội dung lý do do người gửi điền: `text-slate-700 text-sm italic`.
+   - Giới hạn hiển thị 2 dòng kèm `line-clamp-2`, click chuột hoặc hover hiển thị tooltip xem đầy đủ văn bản.
+4. **Cột 4: Trạng thái đơn (`Status`):**
+   - **`Pending` (Chờ duyệt):** Badge vàng hổ phách `bg-amber-50 border-amber-300 text-amber-800 font-semibold px-2.5 py-0.5 rounded-full text-xs inline-flex items-center gap-1.5` kèm chấm tròn màu hổ phách có animation `animate-pulse`.
+   - **`Approved` (Đã duyệt):** Badge xanh lá `bg-emerald-50 border-emerald-300 text-emerald-800 font-semibold px-2.5 py-0.5 rounded-full text-xs inline-flex items-center gap-1.5` kèm chấm xanh lá `bg-emerald-500`. Dòng phụ nhỏ bên dưới: `✓ Đã đồng bộ điểm danh`.
+   - **`Rejected` (Từ chối):** Badge đỏ hồng `bg-rose-50 border-rose-300 text-rose-800 font-semibold px-2.5 py-0.5 rounded-full text-xs inline-flex items-center gap-1.5` kèm chấm đỏ `bg-rose-500`.
+5. **Cột 5: Người duyệt & Ghi chú duyệt:**
+   - Khi đã duyệt hoặc từ chối: Hiển thị tên cán bộ duyệt (`ReviewedByName`), thời gian duyệt (`ReviewedAt` định dạng `DD/MM HH:mm`), kèm trích đoạn ghi chú phản hồi (`ReviewNote`).
+   - Khi đang chờ duyệt: Hiển thị text mờ `— (Đang chờ xét duyệt)`.
+6. **Cột 6: Thao tác hành động (Actions):**
+   - **Nút Xem chi tiết (`View Detail`):** Icon mắt `👁️` hoặc nhãn `Chi tiết`, mở Modal Xem chi tiết đơn xin nghỉ.
+   - **Nhóm Nút Duyệt nhanh (Quick Approval Buttons):**
+     * **Điều kiện hiển thị:** CHỈ hiển thị khi người dùng là `SuperAdmin` hoặc `BranchManager` VÀ đơn đang ở trạng thái `Pending`. (Ẩn hoàn toàn với `Parent`, `Student`).
+     * **Nút `✓ Duyệt`:** `inline-flex items-center gap-1 px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-md shadow-2xs active:scale-95 transition-all duration-100`. Bấm sẽ mở popover xác nhận hoặc duyệt nhanh với ghi chú mặc định `"Đồng ý phê duyệt"`.
+     * **Nút `✕ Từ chối`:** `inline-flex items-center gap-1 px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold rounded-md active:scale-95 transition-all duration-100`. Bấm mở popup yêu cầu nhập lý do từ chối.
+
+---
+
+### 11.5. MODAL TẠO ĐƠN XIN NGHỈ MỚI (`CreateLeaveRequestModal`)
+
+Modal được thiết kế với khả năng **Tự thích ứng thông minh theo vai trò của tài khoản đang đăng nhập (Role-Adaptive Form)**, giúp loại bỏ các bước thừa và ngăn chặn lỗi gửi sai dữ liệu:
+
+```
++---------------------------------------------------------------------------------------------------+
+|  TẠO ĐƠN XIN NGHỈ PHÉP MỚI                                                                   [ ✕ ]|
+|  Gửi đơn xin nghỉ học hoặc nghỉ dạy đến Ban quản trị trung tâm Roxy Academy.                       |
++---------------------------------------------------------------------------------------------------+
+|  <!-- TRƯỜNG HỢP 1: TÀI KHOẢN PHỤ HUYNH (PARENT) -->                                              |
+|  Chọn học viên xin nghỉ: (*)                                                                      |
+|  [ 🎓 Trần Bảo Ngọc (#STU-102) - Lớp Tiền TH Họa Mi 1                                       ▼ ]  |
+|  (Hệ thống tự động hiển thị danh sách các con của bạn đã đăng ký học tại trung tâm)               |
+|                                                                                                   |
+|  <!-- TRƯỜNG HỢP 2: TÀI KHOẢN HỌC VIÊN (STUDENT) -->                                              |
+|  Học viên xin nghỉ: (*)                                                                           |
+|  [ 🎓 Nguyễn Tuấn Kiệt (#STU-110)                                                           🔒 ]  |
+|  (Tự động điền tài khoản học viên của bạn)                                                        |
+|                                                                                                   |
+|  <!-- TRƯỜNG HỢP 3: TÀI KHOẢN GIÁO VIÊN (TEACHER) -->                                             |
+|  Giáo viên xin nghỉ dạy: (*)                                                                      |
+|  [ 👩‍🏫 Cô Nguyễn Mai Anh - Cơ sở 1                                                           🔒 ]  |
+|  (Tự động tạo đơn xin nghỉ dạy của chính bạn)                                                     |
+|                                                                                                   |
+|  <!-- TRƯỜNG HỢP 4: TÀI KHOẢN SUPERADMIN / BRANCHMANAGER -->                                      |
+|  Loại đối tượng xin nghỉ: (*)                                                                     |
+|  (●) 🎓 Học viên xin nghỉ học          ( ) 👩‍🏫 Giáo viên xin nghỉ dạy                             |
+|  Chọn người xin nghỉ: (*)                                                                         |
+|  [ 🔍 Tìm tên học viên hoặc mã STU...                                                       ▼ ]  |
+|                                                                                                   |
+|  -----------------------------------------------------------------------------------------------  |
+|  Lớp học liên quan: (Tùy chọn)                                                                    |
+|  [ Lớp Tiền TH Họa Mi 1 (Cơ sở 1 - Phòng 102)                                               ▼ ]  |
+|  ℹ️ Chọn lớp học để hệ thống hỗ trợ lọc buổi học cụ thể và đồng bộ bảng điểm danh.                 |
+|                                                                                                   |
+|  Ngày xin nghỉ: (*)                                                                               |
+|  [ 14/11/2026                                                                               📅 ]  |
+|                                                                                                   |
+|  Buổi học xin nghỉ cụ thể: (Khuyên dùng)                                                          |
+|  [ Buổi 4: Thứ Sáu, 14/11/2026 (08:00 - 09:30) • Phòng 102 • Cô Mai Anh                      ▼ ]  |
+|  (Hoặc tích chọn: [ ] Xin nghỉ cả ngày / không theo buổi cụ thể)                                  |
+|                                                                                                   |
+|  Lý do xin nghỉ phép: (*) (Tối đa 500 ký tự)                                                      |
+|  +---------------------------------------------------------------------------------------------+  |
+|  | Bé bị sốt siêu vi từ tối qua, bác sĩ chỉ định nghỉ ngơi theo dõi 2 ngày tại nhà...          |  |
+|  |                                                                                             |  |
+|  +---------------------------------------------------------------------------------------------+  |
+|  Gợi ý lý do nhanh:                                                                               |
+|  [⚡ Bị ốm / Khám bệnh]  [⚡ Việc gia đình]  [⚡ Trùng lịch thi ở trường]  [⚡ Đi công tác / du lịch] |
++---------------------------------------------------------------------------------------------------+
+|  [ Hủy bỏ ]                                                                 [ 📤 Gửi đơn xin nghỉ ]|
++---------------------------------------------------------------------------------------------------+
+```
+
+#### Ràng buộc & Logic nghiệp vụ trên Form:
+
+1. **Khớp nối DTO & Schema CSDL:**
+   - Form gửi payload chuẩn `CreateLeaveRequest` lên endpoint `POST /api/LeaveRequests`:
+     * `RequesterType`: `"Student"` hoặc `"Teacher"`.
+     * `StudentId`: `int` (khi RequesterType là Student, TeacherId phải là null để thỏa mãn ràng buộc `CK_Leave_OneRequester`).
+     * `TeacherId`: `int` (khi RequesterType là Teacher, StudentId phải là null).
+     * `ClassId`: `int?` (lớp học liên quan).
+     * `ScheduleId`: `int?` (buổi học cụ thể, chỉ hợp lệ khi `ClassId` có giá trị theo ràng buộc `CK_Leave_ScheduleNeedsClass`).
+     * `LeaveDate`: `DateOnly` định dạng `YYYY-MM-DD`.
+     * `Reason`: `string` (tối đa 500 ký tự).
+2. **Bộ nút 1 chạm gợi ý lý do nhanh (Quick Reason Pills):**
+   - Click vào một gợi ý (như `⚡ Bị ốm / Khám bệnh`) sẽ tự động chèn câu mẫu lịch sự vào ô văn bản:
+     * `Bị ốm`: *"Bé có triệu chứng ốm sốt, gia đình xin phép cho bé nghỉ để đi khám và điều trị."*
+     * `Việc gia đình`: *"Gia đình có việc bận đột xuất nên xin phép cho bé tạm nghỉ buổi học này."*
+     * `Trùng lịch thi`: *"Học viên trùng lịch thi học kỳ tại trường phổ thông, xin phép nghỉ buổi học."*
+     * `Đi công tác`: *"Giáo viên có lịch công tác / tập huấn chuyên môn đột xuất của cơ quan."*
+3. **Phản hồi khi Submit Form:**
+   - Nút `Gửi đơn xin nghỉ` chuyển sang loading spinner, khóa nút chống nhấp đúp (`disabled pointer-events-none`).
+   - Gửi thành công: Hiện Toast thông báo xanh `"Gửi đơn xin nghỉ thành công! Ban quản lý sẽ sớm phản hồi."` và đóng modal trong 180ms.
+
+---
+
+### 11.6. MODAL XEM CHI TIẾT & DUYỆT / TỪ CHỐI ĐƠN (`LeaveRequestDetailModal`)
+
+Modal này hiển thị toàn diện thông tin đơn, lịch sử phê duyệt và cung cấp công cụ thẩm định trực tiếp cho Ban giám đốc (`SuperAdmin`) và Quản lý cơ sở (`BranchManager`):
+
+```
++---------------------------------------------------------------------------------------------------+
+|  CHI TIẾT ĐƠN XIN NGHỈ PHÉP #LR-108                                                          [ ✕ ]|
+|  Ngày gửi: 13/11/2026, 20:15 • Mã đơn: #LR-108                                                    |
++---------------------------------------------------------------------------------------------------+
+|  THÔNG TIN NGƯỜI XIN NGHỈ                                                                         |
+|  • Đối tượng:         [🎓 Học viên] Trần Bảo Ngọc (#STU-102) • 6 tuổi                             |
+|  • Người gửi đơn:     Lê Thị Lan (Phụ huynh bảo hộ - SĐT: 0912 345 678) [📞 Gọi điện]             |
+|  • Chi nhánh cơ sở:   Cơ sở 1 - Bình Trưng Đông                                                   |
+|  • Lớp học liên quan: Tiền TH Họa Mi 1 (Phòng 102)                                                |
+|  • Buổi học xin nghỉ: Buổi 4: Thứ Sáu, 14/11/2026 (08:00 - 09:30)                                 |
+|  • Giáo viên lớp:     Cô Nguyễn Mai Anh (0908 123 456)                                            |
+|                                                                                                   |
+|  LÝ DO XIN NGHỈ TỪ PHỤ HUYNH:                                                                     |
+|  +---------------------------------------------------------------------------------------------+  |
+|  | "Dạ thưa cô và trung tâm, bé Bảo Ngọc tối qua bị sốt cao 39 độ, bác sĩ chẩn đoán sốt siêu   |  |
+|  |  vi cần theo dõi tại nhà 2 ngày. Mẹ xin phép cho bé nghỉ buổi học sáng Thứ Sáu này ạ.         |  |
+|  |  Nhờ cô gửi giúp bài tập về nhà để bé khỏi quên bài. Mẹ cảm ơn cô và trung tâm nhiều!"       |  |
+|  +---------------------------------------------------------------------------------------------+  |
+|                                                                                                   |
+|  ⚡ CƠ CHẾ ĐỒNG BỘ ĐIỂM DANH TỰ ĐỘNG (AUTO EXCUSED-ABSENT NOTICE):                                |
+|  +---------------------------------------------------------------------------------------------+  |
+|  | ℹ️ LƯU Ý NGHIỆP VỤ SƯ PHẠM:                                                                 |  |
+|  | Khi đơn xin nghỉ này được "DUYỆT" (Approved), hệ thống sẽ TỰ ĐỘNG đánh dấu học viên          |  |
+|  | Trần Bảo Ngọc ở trạng thái "Nghỉ có phép" (ExcusedAbsent) trên bảng điểm danh Buổi 4          |  |
+|  | ngày 14/11/2026. Giáo viên phụ trách không cần thao tác thủ công lại trên trang /attendance.  |  |
+|  +---------------------------------------------------------------------------------------------+  |
+|                                                                                                   |
+|  <!-- KHU VỰC PHÊ DUYỆT (CHỈ DÀNH CHO SUPERADMIN & BRANCHMANAGER KHI STATUS == 'PENDING') -->    |
+|  XÉT DUYỆT ĐƠN XIN NGHỈ: (*)                                                                      |
+|  Ghi chú / Lời nhắn phản hồi phụ huynh: (Tùy chọn)                                                |
+|  +---------------------------------------------------------------------------------------------+  |
+|  | Chúc bé Ngọc mau khỏe nhé mẹ! Cô Mai Anh sẽ chuẩn bị phiếu bài tập gửi mẹ kèm bé sau ạ.     |  |
+|  +---------------------------------------------------------------------------------------------+  |
+|  [⚡ Gợi ý phản hồi: "Đã duyệt, chúc bé mau khỏe"]  [⚡ Gợi ý: "Đã duyệt, cô sẽ gửi bài tập"]   |
++---------------------------------------------------------------------------------------------------+
+|  [ Đóng ]                                    [ ✕ Từ chối đơn ]               [ ✓ Phê duyệt đơn ]  |
++---------------------------------------------------------------------------------------------------+
+```
+
+#### Chi tiết tính năng phê duyệt & Đồng bộ điểm danh:
+
+1. **Khối Thông Báo Cơ Chế Tự Động Điểm Danh (Auto ExcusedAbsent Synchronization):**
+   - Đóng khung màu xanh dương nhạt sư phạm: `bg-blue-50/70 border-2 border-blue-200 rounded-xl p-3.5 text-blue-900 text-xs leading-relaxed`.
+   - Nêu rõ nguyên lý: Việc duyệt đơn (`Approved`) sẽ tự động liên kết với bản ghi `Attendances` tương ứng trong CSDL với trạng thái `Status = 'ExcusedAbsent'`. Điều này đảm bảo tính toàn vẹn dữ liệu giữa đơn xin nghỉ và sổ điểm danh, đồng thời giúp phụ huynh kiểm tra học bạ thấy rõ ngày nghỉ là có phép, không bị tính vắng vô cớ.
+2. **Xử lý Nút `✓ Phê duyệt đơn`:**
+   - Styling: `px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm rounded-lg shadow-xs active:scale-[0.98] transition-all duration-150`.
+   - Khi bấm: Gửi request `PUT /api/LeaveRequests/{id}/review` với payload `{ status: "Approved", reviewNote: "..." }`.
+   - Backend cập nhật `Status = "Approved"`, ghi nhận `ReviewedBy = UserId` và `ReviewedAt = UtcNow`.
+3. **Xử lý Nút `✕ Từ chối đơn`:**
+   - Styling: `px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 font-semibold text-sm rounded-lg active:scale-[0.98] transition-all duration-150`.
+   - Yêu cầu bắt buộc phải có `ReviewNote` (Lý do từ chối, ví dụ: *"Trùng lịch thi kết thúc học phần bắt buộc, phụ huynh vui lòng liên hệ văn phòng"*). Nếu để trống, ô textarea báo viền đỏ và con trỏ focus vào ngay lập tức.
+   - Gửi request `PUT /api/LeaveRequests/{id}/review` với payload `{ status: "Rejected", reviewNote: "..." }`.
+4. **Giao diện khi đơn đã có kết quả (Read-only banner):**
+   - Khi đơn đã là `Approved` hoặc `Rejected`, khu vực xét duyệt biến mất, thay bằng **Huy hiệu kết quả phê duyệt trang trọng**:
+     * Banner xanh lá cho đơn `Approved`: `bg-emerald-50 border border-emerald-200 p-4 rounded-xl text-emerald-900 text-sm`. Hiển thị: *"Đơn đã được phê duyệt bởi [Tên người duyệt] vào lúc [Ngày giờ]. Ghi chú: [...]"*.
+     * Banner đỏ cho đơn `Rejected`: `bg-rose-50 border border-rose-200 p-4 rounded-xl text-rose-900 text-sm`. Hiển thị: *"Đơn đã bị từ chối bởi [Tên người duyệt] vào lúc [Ngày giờ]. Lý do từ chối: [...]"*.
+
+---
+
+### 11.7. THIẾT KẾ RESPONSIVE TRÊN MOBILE (`375px – 414px`)
+
+Trên màn hình điện thoại di động (khi phụ huynh mở Zalo/Web gửi đơn hoặc cán bộ quản lý đi lại giữa 2 cơ sở duyệt đơn bằng smartphone):
+
+#### 1. Bảng danh sách chuyển thành Dạng Thẻ Nghỉ Phép (Leave Request Card Stack):
+
+```
++-------------------------------------------------------+
+|  🎓 Trần Bảo Ngọc (#STU-102)           [ ⏳ Chờ duyệt]|
+|  Tiền TH Họa Mi 1 • Cơ sở 1                           |
+|  +-------------------------------------------------+  |
+|  | 📅 Nghỉ ngày: Thứ Sáu, 14/11/2026 (08:00-09:30)  |  |
+|  | 💬 Lý do: "Bé bị sốt siêu vi từ tối qua..."     |  |
+|  | 👤 Gửi bởi: Mẹ Lan (0912 345 678)              |  |
+|  +-------------------------------------------------+  |
+|  [ 👁 Xem chi tiết (44px) ]    [ ✓ Duyệt ] [ ✕ Hủy ]  |
++-------------------------------------------------------+
+```
+
+- **Quy chuẩn Apple HIG:**
+  - Khoảng cách giữa các thẻ: `gap-3.5`.
+  - Chiều cao các nút thao tác đạt chuẩn `min-h-[44px]` để ngón tay cái bấm chính xác 100%, không bị chạm nhầm nút hủy hoặc duyệt.
+
+#### 2. Trải nghiệm Bottom Sheet Chi Tiết Trên Mobile:
+- Nhấn vào một thẻ sẽ mở **Bottom Sheet trượt từ đáy màn hình lên** (`fixed inset-x-0 bottom-0 max-h-[90vh] rounded-t-2xl bg-white shadow-2xl overflow-y-auto`):
+  - Thanh gạt vuốt xuống (Drag Handle): `w-12 h-1.5 bg-slate-300 rounded-full mx-auto my-2.5`.
+  - Phụ huynh có thể vuốt kéo xuống để đóng sheet (Velocity dismiss gesture).
+  - Thanh nút bấm Xét duyệt / Đóng cố định ở đáy màn hình với khoảng đệm an toàn `pb-[env(safe-area-inset-bottom,16px)]`.
+
+---
+
+### 11.8. BẢNG MÃ TOKENS & BADGES BỔ SUNG CHO GIAI ĐOẠN 1F
+
+#### 1. Badges Trạng thái Đơn xin nghỉ (Khớp 100% CSDL `LeaveRequests.Status`):
+
+| Giá trị CSDL | Nhãn Tiếng Việt trên UI | Styling Badge (Tailwind CSS 4) | Dot chỉ thị | Ý nghĩa nghiệp vụ |
+| :--- | :--- | :--- | :---: | :--- |
+| `Pending` | **Chờ duyệt** | `bg-amber-50 text-amber-800 border border-amber-300 font-semibold px-2.5 py-0.5 rounded-full text-xs` | `bg-amber-500 animate-pulse` | Đơn mới tạo, đang chờ Quản lý chi nhánh hoặc SuperAdmin xét duyệt |
+| `Approved` | **Đã duyệt** | `bg-emerald-50 text-emerald-800 border border-emerald-300 font-semibold px-2.5 py-0.5 rounded-full text-xs` | `bg-emerald-500` | Đơn đã được chấp thuận; tự động đồng bộ sang trạng thái `ExcusedAbsent` |
+| `Rejected` | **Từ chối** | `bg-rose-50 text-rose-800 border border-rose-300 font-semibold px-2.5 py-0.5 rounded-full text-xs` | `bg-rose-500` | Đơn bị từ chối; kèm theo ghi chú giải thích lý do cụ thể |
+| `Cancelled` | **Đã hủy** | `bg-slate-100 text-slate-500 border border-slate-200 font-medium px-2.5 py-0.5 rounded-full text-xs line-through` | `bg-slate-400` | Người gửi chủ động hủy đơn trước khi ban quản lý xét duyệt |
+
+#### 2. Badges Phân loại Người xin nghỉ (`RequesterType`):
+
+| Giá trị CSDL | Nhãn hiển thị Tiếng Việt | Styling Badge | Icon định danh |
+| :--- | :--- | :--- | :---: |
+| `Student` | **Học viên** | `bg-sky-50 text-sky-800 border border-sky-200 text-xs font-semibold px-2.5 py-0.5 rounded-full` | 🎓 |
+| `Teacher` | **Giáo viên** | `bg-indigo-50 text-indigo-800 border border-indigo-200 text-xs font-semibold px-2.5 py-0.5 rounded-full` | 👩‍🏫 |
+
+---
+
+### 11.9. TIÊU CHUẨN NGHIỆM THU CHO GIAI ĐOẠN 1F (ACCEPTANCE CHECKLIST)
+
+Frontend Developer và QA đối chiếu nghiệm thu tính năng theo danh sách kiểm tra chi tiết sau:
+
+- [ ] **Phân Quyền Vai Trò Nghiêm Ngặt (RBAC Matrix):**
+  - [ ] Nút `+ Gửi đơn xin nghỉ` hiển thị cho cả 5 vai trò (`Parent`, `Student`, `Teacher`, `SuperAdmin`, `BranchManager`).
+  - [ ] Phụ huynh (`Parent`): Form chỉ cho phép chọn con của mình; danh sách đơn chỉ hiển thị các đơn của con mình.
+  - [ ] Học viên (`Student`): Tự động điền thông tin chính mình, không sửa đổi sang học viên khác.
+  - [ ] Giáo viên (`Teacher`): Tự động điền chính mình khi xin nghỉ dạy; xem được đơn của học sinh trong các lớp mình dạy.
+  - [ ] Quản lý cơ sở (`BranchManager`): Bị khóa cứng cơ sở của mình (`BranchId == User.BranchId`); chỉ xem và duyệt đơn thuộc cơ sở mình.
+  - [ ] Cán bộ quản trị (`SuperAdmin`): Toàn quyền xem, gửi đơn và duyệt đơn cho mọi cơ sở.
+- [ ] **Thanh Công Cụ & Bộ Lọc Đa Năng (`/leave-requests`):**
+  - [ ] Tìm kiếm tức thì theo tên người xin nghỉ, người gửi, lý do với độ trễ debounce `300ms`.
+  - [ ] Bộ lọc trạng thái (`Tất cả`, `Chờ duyệt`, `Đã duyệt`, `Từ chối`) phản hồi mượt mà không reload trang.
+  - [ ] Bộ lọc khoảng ngày (`fromDate` – `toDate`) lọc đúng theo ngày xin nghỉ (`LeaveDate`).
+- [ ] **Bảng Danh Sách Đơn Xin Nghỉ:**
+  - [ ] Cột người xin nghỉ phân biệt rõ ràng bằng Badge và Icon (🎓 Học viên màu xanh dương vs 👩‍🏫 Giáo viên màu chàm tím).
+  - [ ] Hiển thị đầy đủ thông tin: Lớp học, Buổi học, Ngày nghỉ, Lý do vắng, Trạng thái đơn, Người duyệt kèm ngày giờ và ghi chú.
+  - [ ] Đơn ở trạng thái `Pending`: Hiển thị 2 nút duyệt nhanh `✓ Duyệt` và `✕ Từ chối` cho `SuperAdmin` và `BranchManager`.
+- [ ] **Modal Tạo Đơn Xin Nghỉ Mới:**
+  - [ ] Giao diện tự động điều chỉnh theo vai trò (Role-Adaptive Form) chuẩn xác.
+  - [ ] Tự động tải danh sách lớp học và buổi học theo ngày xin nghỉ đã chọn.
+  - [ ] Cung cấp các nút 1 chạm gợi ý lý do phổ biến (Bị ốm, Việc gia đình, Lịch thi, Công tác).
+  - [ ] Gửi payload đúng quy cách backend: `RequesterType`, `StudentId` hoặc `TeacherId`, `ClassId`, `ScheduleId`, `LeaveDate`, `Reason`.
+- [ ] **Modal Xem Chi Tiết & Duyệt / Từ Chối Đơn:**
+  - [ ] Hiển thị đầy đủ thông tin đơn, liên hệ người gửi và nội dung lý do chi tiết.
+  - [ ] Hiển thị khối thông báo nghiệp vụ: Khi duyệt thành công (`Approved`), hệ thống tự động ghi nhận học viên là `Nghỉ có phép (ExcusedAbsent)` trên bảng điểm danh `/attendance`.
+  - [ ] Thao tác duyệt: Bấm `✓ Duyệt` gửi trạng thái `Approved`; Bấm `✕ Từ chối` bắt buộc nhập lý do từ chối gửi `Rejected`.
+- [ ] **Chuẩn Responsive Mobile (`375px – 414px`):**
+  - [ ] Bảng máy tính chuyển thành Danh sách Thẻ xếp dọc dễ nhìn.
+  - [ ] Chiều cao các nút thao tác đạt chuẩn Apple HIG tối thiểu `44px`.
+  - [ ] Chi tiết đơn trên di động mở dạng Bottom Sheet vuốt kéo mượt mà có thanh drag handle.
+
+

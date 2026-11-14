@@ -664,3 +664,155 @@ Dành cho Giáo viên phụ trách lớp hoặc Quản lý chi nhánh chấm bà
   - `400 Bad Request`: Nếu `score < 0` hoặc `score > 10` ("Điểm số phải từ 0 đến 10"), hoặc trạng thái chấm bài không hợp lệ.
   - `403 Forbidden`: Nếu giáo viên không phụ trách lớp hoặc Quản lý cơ sở truy cập lớp thuộc cơ sở khác.
   - `404 Not Found`: Nếu hồ sơ nộp bài không tồn tại.
+
+---
+
+## 7. PHÂN HỆ ĐƠN XIN NGHỈ PHÉP (LEAVE REQUESTS API)
+
+Quản lý đơn xin nghỉ học của học viên và nghỉ phép của giáo viên; phân quyền duyệt đơn theo chi nhánh; tự động liên kết trạng thái Điểm danh (`ExcusedAbsent` - Nghỉ có phép) cho học viên khi đơn được duyệt.
+
+### 7.1. Lấy danh sách đơn xin nghỉ phép — `GET /api/LeaveRequests`
+- **Quyền truy cập:** Đã đăng nhập (`SuperAdmin`, `BranchManager`, `Teacher`, `Parent`, `Student`).
+- **Phân quyền dữ liệu (Scoping):**
+  - `SuperAdmin`: Xem toàn bộ đơn xin nghỉ trong hệ thống.
+  - `BranchManager`: Xem tất cả đơn thuộc chi nhánh mình quản lý: đơn của học viên trong chi nhánh, đơn của lớp thuộc chi nhánh, hoặc đơn nghỉ của giáo viên thuộc chi nhánh (kể cả khi giáo viên xin nghỉ phép cả ngày với `ClassId == null`).
+  - `Teacher`: Xem đơn do chính mình tạo (`TeacherId == userId`) và đơn của học sinh trong các lớp mình phụ trách giảng dạy (`Class.TeacherId == userId`).
+  - `Parent`: Chỉ xem đơn xin nghỉ của các con mình (`Student.ParentId == userId`).
+  - `Student`: Chỉ xem đơn xin nghỉ của chính mình (`Student.UserId == userId` hoặc do chính mình tạo).
+- **Query Parameters (Tất cả là optional):**
+  - `studentId` (int, optional): Lọc theo mã học viên.
+  - `classId` (int, optional): Lọc theo mã lớp học.
+  - `branchId` (int, optional): Lọc theo mã chi nhánh (`SuperAdmin` lọc tùy ý; `BranchManager` tự động giới hạn ở chi nhánh mình).
+  - `status` (string, optional): Lọc theo trạng thái (`Pending`, `Approved`, `Rejected`, `Cancelled`).
+  - `fromDate` (DateOnly, format `YYYY-MM-DD`, optional): Từ ngày xin nghỉ.
+  - `toDate` (DateOnly, format `YYYY-MM-DD`, optional): Đến ngày xin nghỉ.
+  - `requesterType` (string, optional): Lọc theo loại đối tượng (`Student` hoặc `Teacher`).
+- **Response:** `200 OK`
+  ```json
+  [
+    {
+      "id": 15,
+      "requesterType": "Student",
+      "studentId": 24,
+      "studentName": "Trần Bảo Nam",
+      "teacherId": null,
+      "teacherName": null,
+      "classId": 5,
+      "className": "Luyện chữ đẹp K01",
+      "branchId": 1,
+      "branchName": "Cơ sở Bình Trưng Tây",
+      "scheduleId": 101,
+      "leaveDate": "2026-11-20",
+      "reason": "Học sinh bị sốt cao cần đi khám bác sĩ",
+      "status": "Pending",
+      "requestedBy": 18,
+      "requestedByName": "Trần Văn An (Phụ huynh)",
+      "reviewedBy": null,
+      "reviewedByName": null,
+      "reviewedAt": null,
+      "reviewNote": null,
+      "createdAt": "2026-11-14T08:30:00Z"
+    }
+  ]
+  ```
+
+---
+
+### 7.2. Lấy chi tiết đơn xin nghỉ theo ID — `GET /api/LeaveRequests/{id}`
+- **Quyền truy cập:** Cả 5 vai trò (kiểm tra phân quyền tương tự `GET /api/LeaveRequests`).
+- **Response:** `200 OK` (Cấu trúc tương tự item trong danh sách trên).
+- **Lỗi có thể trả về:**
+  - `403 Forbidden`: Người dùng không có quyền xem đơn này.
+  - `404 Not Found`: Không tìm thấy đơn xin nghỉ.
+
+---
+
+### 7.3. Tạo đơn xin nghỉ mới — `POST /api/LeaveRequests`
+- **Quyền truy cập & Đối tượng tạo:**
+  - `Parent`: Chỉ tạo đơn cho học viên là con mình (`Student.ParentId == userId`).
+  - `Student`: Chỉ tạo đơn cho chính mình (`Student.UserId == userId`).
+  - `Teacher`: Chỉ tạo đơn xin nghỉ cho chính mình (`TeacherId = userId`).
+  - `BranchManager`: Tạo đơn cho học viên hoặc giáo viên thuộc chi nhánh quản lý.
+  - `SuperAdmin`: Tạo đơn cho bất kỳ học viên hoặc giáo viên nào.
+- **Quy tắc nghiệp vụ & Ràng buộc toàn vẹn dữ liệu:**
+  - `requesterType`: Tự động nhận diện nếu không gửi (`"Student"` cho Parent/Student, `"Teacher"` cho Teacher).
+  - Khi `requesterType = "Student"`, `StudentId` là bắt buộc, `TeacherId` tự động set `null` (đảm bảo check constraint `CK_Leave_OneRequester`).
+  - Khi `requesterType = "Teacher"`, `TeacherId` là bắt buộc, `StudentId` tự động set `null`.
+  - Nếu có chọn buổi học (`ScheduleId`): tự động điền `ClassId` và `LeaveDate` tương ứng với buổi học đó nếu client không gửi kèm.
+  - Nếu có chọn lớp (`ClassId`): kiểm tra học viên đã đăng ký vào lớp đó chưa (`StudentClasses`), ngăn lỗi FK `FK_Leave_Enrolled`.
+  - Chống gửi trùng: Từ chối nếu đã có đơn xin nghỉ ở trạng thái `Pending` cho cùng ngày/buổi học đó (`400 Bad Request`).
+- **Request Body:**
+  ```json
+  {
+    "requesterType": "Student",
+    "studentId": 24,
+    "classId": 5,
+    "scheduleId": 101,
+    "leaveDate": "2026-11-20",
+    "reason": "Học sinh bị sốt cao cần đi khám bác sĩ"
+  }
+  ```
+  *(Đơn của giáo viên xin nghỉ cả ngày:)*
+  ```json
+  {
+    "requesterType": "Teacher",
+    "leaveDate": "2026-11-22",
+    "reason": "Nghỉ việc gia đình có việc riêng"
+  }
+  ```
+- **Response:** `201 Created`
+  ```json
+  {
+    "message": "Gửi đơn xin nghỉ thành công!",
+    "id": 15
+  }
+  ```
+- **Lỗi có thể trả về:**
+  - `400 Bad Request`: Thiếu lý do, ngày nghỉ, học viên/giáo viên không tồn tại, hoặc đã có đơn Pending trùng lặp.
+  - `403 Forbidden`: Phụ huynh/học sinh tạo đơn cho người khác, giáo viên tạo đơn cho học viên, hoặc Quản lý cơ sở tạo đơn ngoài phạm vi chi nhánh.
+
+---
+
+### 7.4. Duyệt hoặc Từ chối đơn xin nghỉ — `PUT /api/LeaveRequests/{id}/review`
+- **Quyền truy cập:** Chỉ `SuperAdmin` và `BranchManager`.
+- **Phân quyền duyệt theo chi nhánh:**
+  - `BranchManager` chỉ duyệt đơn thuộc chi nhánh mình (kiểm tra cả `Class.BranchId`, `Student.BranchId` và `Teacher.BranchId` để duyệt được cả đơn của Giáo viên khi `ClassId == null`). Vi phạm trả về `403 Forbidden`.
+  - Chỉ duyệt đơn đang ở trạng thái `Pending` (`400 Bad Request` nếu đơn đã duyệt hoặc hủy).
+- **Quy tắc Tự động liên kết Điểm danh (`ExcusedAbsent`):**
+  - Khi đơn xin nghỉ của học viên (`StudentId != null`) được **Duyệt (`status = "Approved"`)**:
+    - Nếu đơn có chỉ định buổi học (`ScheduleId`): Tìm buổi học đó (đảm bảo học viên đang học `Active` trong lớp).
+    - Nếu đơn không chỉ định buổi học cụ thể: Tìm tất cả các buổi học trong ngày `leaveDate` mà học viên đang theo học `Active` (thuộc lớp `classId` nếu đơn có chỉ định lớp, hoặc tất cả các lớp của học viên nếu không chọn lớp).
+    - Với mỗi buổi học tìm được:
+      - Nếu buổi học **đã có bản ghi điểm danh** cho học viên: Tự động cập nhật `Status = "ExcusedAbsent"`, cập nhật `Note = "Nghỉ phép có phép (Đơn #...)"`, `MarkedBy = UserId`, `MarkedAt = DateTime.UtcNow`.
+      - Nếu buổi học **chưa có bản ghi điểm danh**: Tự động tạo mới bản ghi `Attendances` với `Status = "ExcusedAbsent"`, `Note = "Nghỉ phép có phép (Đơn #...)"`, `MarkedBy = UserId`, `MarkedAt = DateTime.UtcNow`.
+    - Khi giáo viên mở màn hình điểm danh hoặc gọi `GET /api/Attendances`, học viên sẽ hiển thị ngay trạng thái `ExcusedAbsent` (Nghỉ có phép).
+- **Request Body:**
+  ```json
+  {
+    "status": "Approved",
+    "reviewNote": "Đồng ý cho học viên nghỉ phép"
+  }
+  ```
+- **Response:** `200 OK`
+  ```json
+  {
+    "message": "Đã duyệt đơn xin nghỉ và tự động cập nhật điểm danh (Nghỉ có phép)!"
+  }
+  ```
+- **Lỗi có thể trả về:**
+  - `400 Bad Request`: Trạng thái không phải `Approved` hoặc `Rejected`, hoặc đơn không ở trạng thái `Pending`.
+  - `403 Forbidden`: `BranchManager` cố tình duyệt đơn thuộc chi nhánh khác, hoặc vai trò không phải Admin/Manager.
+  - `404 Not Found`: Không tìm thấy đơn xin nghỉ.
+
+---
+
+### 7.5. Hủy đơn xin nghỉ — `PUT /api/LeaveRequests/{id}/cancel`
+- **Quyền truy cập:** Người tạo đơn (`RequestedBy == userId`), `SuperAdmin` hoặc `BranchManager`.
+- **Ràng buộc:** Chỉ hủy được đơn đang ở trạng thái `Pending`.
+- **Response:** `200 OK`
+  ```json
+  {
+    "message": "Đã hủy đơn xin nghỉ thành công."
+  }
+  ```
+

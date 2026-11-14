@@ -96,6 +96,10 @@ export default function AdminLayout() {
         <span className="text-base">📚</span>
         <span>Bài tập</span>
       </NavLink>
+      <NavLink to="/leave-requests" className={navItemClass} onClick={onItemClick}>
+        <span className="text-base">📝</span>
+        <span>Xin nghỉ phép</span>
+      </NavLink>
 
       {/* PHÂN HỆ TÀI CHÍNH: CHỈ HIỂN THỊ CHO SUPERADMIN VÀ BRANCHMANAGER (ẨN HOÀN TOÀN VỚI TEACHER) */}
       {isStaff && (
