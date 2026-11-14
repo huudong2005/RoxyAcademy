@@ -442,3 +442,368 @@ Khi triển khai code thực tế, Frontend và QA đối chiếu theo bảng ki
 - [ ] **Xóa Sạch Dữ Liệu Bịa:** Màn hình Dashboard không còn con số 120 / 15 / 45tr; hiển thị giao diện chờ dữ liệu sạch sẽ.
 - [ ] **Form Tạo Lớp Hoạt Động 100%:** Modal tạo lớp có ô chọn Giáo viên bắt buộc (`TeacherId`), trường `MaxStudents`, gửi dữ liệu lên backend thành công (không còn lỗi 400).
 - [ ] **Bộ Lọc Phân Quyền Học Viên:** Giáo viên chỉ xem học sinh lớp mình; nút `+ Thêm học viên` ẩn hoàn toàn với vai trò Giáo viên.
+
+---
+
+## 8. THIẾT KẾ CHI TIẾT GIAI ĐOẠN 1C: LỊCH HỌC & ĐIỂM DANH (SCHEDULES & ATTENDANCE)
+
+> [!NOTE]
+> Giai đoạn 1C bổ sung 2 màn hình tác nghiệp cốt lõi mỗi ngày của trung tâm: **Lịch học (`/schedules`)** và **Điểm danh (`/attendance`)**.  
+> Thiết kế tuân thủ nghiêm ngặt hai bộ kỹ năng:
+> - **Apple Design Guidelines** (*Designing Fluid Interfaces* — WWDC): Phản hồi tức thì trên pointer-down, direct manipulation 1 chạm, spring critically damped (damping 1.0), tiêu chuẩn cảm ứng ngón tay mobile (`min-h-[44px]`), thanh tác vụ cố định bottom-sheet glass.
+> - **Emil Kowalski Philosophy** (*UI Polish & Design Engineering*): Tiết chế chuyển động (Restraint), không bao giờ animate từ scale 0 (`scale(0.96) -> scale(1)`), custom easing `cubic-bezier(0.23, 1, 0.32, 1)`, tốc độ micro-interaction <= 200ms, tối ưu hóa thao tác lặp lại cao (high-frequency).
+> - **Nguyên tắc ưu tiên:** Brand và luật phân quyền trong `GEMINI.md` / `PROJECT.md` luôn thắng phong cách chung.
+
+### 8.1. Đánh giá Thiết kế Kỹ thuật (Emil Kowalski Polish Review)
+
+| Trước (Mẫu chung chung / AI Slop) | Sau (Roxy Academy Polish UI) | Lý do kỹ thuật & Trải nghiệm |
+| :--- | :--- | :--- |
+| Dùng Dropdown Select để chọn điểm danh từng em | **Segmented Control 4 nút bấm 1 chạm** (`Có mặt`, `Đi trễ`, `Có phép`, `Không phép`) | Thao tác diễn ra 20–30 lần mỗi lớp; dropdown tốn 2 nhịp click mở/đóng, segmented button chỉ tốn đúng 1 chạm (`pointer-down: scale(0.97)`). |
+| Bảng lịch tuần 7 cột ép ngang co cụm trên mobile 375px (cột ~45px) | **Day Picker Pill Tabs** cuộn ngang kết hợp **Thẻ buổi học xếp dọc** | Màn hình di động không đủ không gian cho 7 cột; giải pháp mobile-native tách chọn ngày giúp diện tích chạm đạt chuẩn Apple HIG (`>= 44px`). |
+| Modal phóng to từ giữa màn hình `scale(0)` | Modal xuất hiện từ `scale(0.96) + opacity: 0` lên `scale(1) + opacity: 1` (`180ms ease-out`) | Không vật thể nào trong thế giới thực sinh ra từ hư vô; xuất hiện từ `scale(0.96)` tạo cảm giác tự nhiên, đầm chắc. |
+| Giáo viên phải cuộn trang lên đầu mới bấm được nút "Lưu điểm danh" | **Sticky Bottom Action Bar** neo cố định ở đáy màn hình điện thoại kèm hiệu ứng kính mờ (`backdrop-blur-md`) | Tối ưu công thái học ngón tay cái (Thumb Zone); giáo viên vừa lướt danh sách vừa có thể chốt lưu bất kỳ lúc nào. |
+| Form tạo lịch cho phép chọn lớp chưa có giáo viên dẫn tới lỗi DB | Dropdown **Disable lớp chưa có GV** + hiển thị cảnh báo hướng dẫn sang Quản lý Lớp gán GV | Ngăn chặn lỗi từ cấp độ giao diện (Guardrail UX), không để người dùng gửi request rồi mới nhận lỗi 400. |
+| Hiệu ứng nảy (bounce) trên toàn bộ nút và thẻ | **Critically Damped Springs (Damping 1.0, không nảy)** cho mọi thao tác công cụ | Giao diện quản trị giáo dục cần độ tin cậy và chính xác cao; chỉ dùng vi mô 150ms `ease-out`, nói KHÔNG với nảy cợt nhả. |
+
+---
+
+### 8.2. Màn Hình Lịch Học (`/schedules`)
+
+Màn hình hiển thị thời khóa biểu giảng dạy theo tuần, hỗ trợ tra cứu nhanh theo cơ sở, lớp học và giáo viên.
+
+#### 1. Thanh Công Cụ & Điều Hướng Tuần (Calendar Toolbar)
+
+```
++-------------------------------------------------------------------------------------------------------------------+
+|  [ < ] [ Hôm nay ] [ > ]   Tuần 46 • 10/11/2026 – 16/11/2026       [Cơ sở: Cơ sở 1 ▼] [Lớp: Tất cả ▼] [+ Tạo buổi học] |
++-------------------------------------------------------------------------------------------------------------------+
+```
+
+- **Bộ điều hướng tuần (Week Navigator):**
+  - Cụm 3 nút bấm nhóm lại:
+    - Nút `Tuần trước` (Icon `<` ChevronLeft): `p-2 text-slate-600 hover:bg-slate-100 rounded-lg active:scale-95 transition-transform duration-100`.
+    - Nút `Hôm nay`: `px-3 py-1.5 text-xs font-semibold bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-lg active:scale-95 transition-transform duration-100`. Nhấn vào sẽ tự động đưa tầm nhìn về tuần chứa ngày hiện tại.
+    - Nút `Tuần sau` (Icon `>` ChevronRight): `p-2 text-slate-600 hover:bg-slate-100 rounded-lg active:scale-95 transition-transform duration-100`.
+  - Nhãn hiển thị tuần: `Tuần [W] • [DD/MM/YYYY] – [DD/MM/YYYY]` (Ví dụ: `Tuần 46 • 10/11/2026 – 16/11/2026`), font chữ `text-sm font-semibold text-slate-900`.
+  - **Chuyển động chuyển tuần:** Grid nội dung lịch đổi dữ liệu với hiệu ứng crossfade trượt ngang tinh tế `opacity: 0.85 -> 1`, `transform: translateX(8px) -> translateX(0)` trong `150ms cubic-bezier(0.23, 1, 0.32, 1)`.
+
+- **Bộ lọc đa tiêu chí (Filter Bar):**
+  - **Lọc theo Chi nhánh (`BranchId`):**
+    - `SuperAdmin`: Select chọn `Tất cả cơ sở`, `Cơ sở 1 - Bình Trưng`, `Cơ sở 2 - Bình Trưng`.
+    - `BranchManager`: Bị khóa cứng (disabled select) hoặc hiển thị text badge cơ sở của mình (không được xem/sửa cơ sở khác theo `GEMINI.md`).
+    - `Teacher`: Cố định cơ sở của các lớp mình đang phụ trách.
+  - **Lọc theo Lớp học (`ClassId`):** Dropdown tải danh sách các lớp thuộc chi nhánh đang chọn. Mặc định: `Tất cả lớp học`.
+  - **Lọc theo Giáo viên (`TeacherId`):** Dropdown tải danh sách giáo viên của trung tâm. Mặc định: `Tất cả giáo viên`.
+
+- **Nút CTA `+ Tạo buổi học`:**
+  - **Phân quyền nghiêm ngặt:**
+    - `SuperAdmin` & `BranchManager`: **HIỂN THỊ** nút Primary Blue nổi bật (`bg-blue-600 text-white font-medium hover:bg-blue-700 active:scale-[0.98] rounded-lg shadow-xs min-h-[40px] px-4`).
+    - `Teacher`, `Parent`, `Student`: **ẨN HOÀN TOÀN** nút này.
+
+---
+
+#### 2. Bố Cục Lịch Theo Tuần Trên Desktop (`lg: >= 1024px`)
+
+Lưới 7 cột cố định đại diện cho 7 ngày từ Thứ Hai đến Chủ Nhật.
+
+```
++---------------+---------------+---------------+---------------+---------------+---------------+---------------+
+|  Thứ 2 (10/11)|  Thứ 3 (11/11)|  Thứ 4 (12/11)|  Thứ 5 (13/11)|  Thứ 6 (14/11)|  Thứ 7 (15/11)|  Chủ Nhật(16) |
+|               |               |               |   [HÔM NAY]   |               |               |               |
++---------------+---------------+---------------+---------------+---------------+---------------+---------------+
+| +-----------+ | +-----------+ | (Trống)       | +-----------+ | +-----------+ | +-----------+ | (Trống)       |
+| | 08:00-09:30| | | 17:30-19:00| |               | | 08:00-09:30| | | 17:30-19:00| | | 08:30-10:00| |               |
+| | Tiền TH 1 | | | ToánLogic1| |               | | Tiền TH 1 | | | ToánLogic1| | | Vẽ Sáng Tạo | |               |
+| | P.102     | | | P.105     | |               | | P.102     | | | P.105     | | | P.201     | |               |
+| | Cô Mai Anh| | | Thầy Tuấn | |               | | Cô Mai Anh| | | Thầy Tuấn | | | Cô Lan     | |               |
+| | [Scheduled| | | [Completed| |               | | [Scheduled| | | [Scheduled| | | [Cancelled] | |               |
+| | [Điểm danh| | | [Điểm danh| |               | | [Điểm danh| | | [Điểm danh| | | [Chi tiết]  | |               |
+| +-----------+ | +-----------+ |               | +-----------+ | +-----------+ | +-----------+ |               |
++---------------+---------------+---------------+---------------+---------------+---------------+---------------+
+```
+
+- **Header cột ngày:**
+  - Tiêu đề thứ: `Thứ 2`, `Thứ 3`... `Chủ Nhật` (`text-xs font-semibold uppercase tracking-wider text-slate-500`).
+  - Ngày trong tháng: Số ngày to rõ `text-sm font-bold text-slate-900`.
+  - **Cột ngày hôm nay (`Today`):**
+    - Đường viền đỉnh nổi bật `border-t-4 border-blue-600`.
+    - Số ngày nằm trong vòng tròn xanh `bg-blue-600 text-white w-6 h-6 rounded-full inline-flex items-center justify-center text-xs font-bold`.
+    - Nền cột có ánh xanh nhạt tinh tế: `bg-blue-50/20`.
+- **Cột ngày trống:** Hiển thị khoảng đệm tối thiểu `min-h-[140px] rounded-lg border border-dashed border-slate-200/80 bg-slate-50/50 flex items-center justify-center text-xs text-slate-400`.
+
+---
+
+#### 3. Thẻ Buổi Học (Schedule Card Component)
+
+Mỗi buổi học là một thẻ độc lập nằm trong cột ngày, kích thước gọn, bố cục khoa học:
+
+```
++-------------------------------------------------------+
+| 🕒 08:00 – 09:30                 ● Đã lên lịch (Blue)  |
+| Lớp Tiền tiểu học - Họa Mi 1                          |
+| 🚪 Phòng 102 • 🏢 Cơ sở 1                             |
+| 👩‍🏫 GV: Cô Mai Anh                                   |
+| [⚠️ Dạy thay: Thầy Tuấn Anh]                          |
+| ----------------------------------------------------- |
+| [✓ Điểm danh nhanh]         [✏ Sửa]  [🗑 Hủy buổi]     |
++-------------------------------------------------------+
+```
+
+- **Quy chuẩn styling thẻ:**
+  - Container: `bg-white rounded-lg p-3 border border-slate-200 shadow-xs hover:border-blue-300 hover:shadow-sm transition-all duration-150 flex flex-col gap-1.5`.
+  - Hàng 1 (Giờ học & Trạng thái):
+    - Khung giờ: `text-xs font-semibold text-slate-700 flex items-center gap-1`.
+    - Badge Trạng thái buổi học (Khớp 100% DB Constraint `CK_Schedules_Status`):
+      * `Scheduled` (Đã lên lịch): `bg-blue-50 text-blue-700 border border-blue-200 text-[11px] px-2 py-0.5 rounded-full font-medium inline-flex items-center gap-1` (Dot `bg-blue-500 w-1.5 h-1.5 rounded-full`).
+      * `Completed` (Đã hoàn thành / Đã điểm danh): `bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] px-2 py-0.5 rounded-full font-medium inline-flex items-center gap-1` (Dot `bg-emerald-500 w-1.5 h-1.5 rounded-full`).
+      * `Cancelled` (Đã hủy buổi): `bg-rose-50 text-rose-700 border border-rose-200 line-through text-[11px] px-2 py-0.5 rounded-full font-medium inline-flex items-center gap-1` (Dot `bg-rose-500 w-1.5 h-1.5 rounded-full`).
+  - Hàng 2 (Tên lớp học): `font-semibold text-blue-700 text-sm leading-snug hover:underline cursor-pointer`.
+  - Hàng 3 (Phòng học & Cơ sở): `text-xs text-slate-500 flex items-center gap-2`.
+  - Hàng 4 (Giáo viên phụ trách):
+    - Giáo viên chính: `text-xs text-slate-600 flex items-center gap-1`.
+    - **Giáo viên dạy thay (`SubstituteTeacherId`):** Nếu có người dạy thay, hiển thị badge màu hổ phách cảnh báo nổi bật: `bg-amber-50 text-amber-800 border border-amber-200 rounded px-1.5 py-0.5 text-[11px] font-medium flex items-center gap-1`.
+  - Hàng 5 (Thanh hành động nhanh trên Card):
+    - **Nút `✓ Điểm danh nhanh`:**
+      - Nút viền xanh lá nhạt: `inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 text-xs font-medium rounded-md active:scale-95 transition-all`.
+      - Bấm vào sẽ mở thẳng trang `/attendance?scheduleId={id}` để thực hiện điểm danh buổi học này.
+    - **Nút `Sửa` (Bút chì) & `Xóa/Hủy` (Thùng rác):**
+      - CHỈ HIỂN THỊ cho `SuperAdmin` và `BranchManager`.
+      - Bị ẩn hoàn toàn đối với giáo viên và các vai trò khác.
+
+---
+
+#### 4. Bố Cục Responsive Trên Mobile (`375px – 414px`)
+
+Trên màn hình điện thoại, chế độ 7 cột ngang bị loại bỏ để tránh vỡ chữ. Thay vào đó, áp dụng mẫu **Apple Calendar Mobile**:
+
+```
++-------------------------------------------------------+
+|  < Tuần 46 • 10/11 - 16/11 >         [+ Tạo buổi học] |
+|                                                       |
+|  [T2, 10]  [T3, 11]  [T4, 12]  [T5, 13]* [T6, 14] ... |
+|   (Trắng)   (Trắng)   (Trắng)   (BLUE)    (Trắng)     |
++-------------------------------------------------------+
+|  LỊCH HỌC HÔM NAY (Thứ Năm, 13/11/2026):              |
+|                                                       |
+|  +-------------------------------------------------+  |
+|  | 🕒 08:00 – 09:30             ● Đã lên lịch      |  |
+|  | Lớp Tiền tiểu học - Họa Mi 1                    |  |
+|  | 🚪 Phòng 102 • 🏢 Cơ sở 1 • Cô Mai Anh          |  |
+|  | [✓ Điểm danh nhanh (Touch target 44px)]         |  |
+|  +-------------------------------------------------+  |
+|  +-------------------------------------------------+  |
+|  | 🕒 17:30 – 19:00             ● Đã lên lịch      |  |
+|  | Lớp Toán Tư Duy Logic B1                        |  |
+|  | 🚪 Phòng 105 • 🏢 Cơ sở 1 • Thầy Tuấn Anh       |  |
+|  | [✓ Điểm danh nhanh (Touch target 44px)]         |  |
+|  +-------------------------------------------------+  |
++-------------------------------------------------------+
+```
+
+- **Thanh Day Picker Pill Tabs (Cuộn ngang đầu trang):**
+  - Chứa 7 pill button đại diện cho 7 ngày trong tuần.
+  - Mỗi Pill hiển thị: Tên thứ rút gọn (`T2`, `T3`... `CN`) + Số ngày (`10`, `11`...).
+  - Pill ngày đang chọn: `bg-blue-600 text-white font-semibold rounded-xl min-w-[50px] py-2 shadow-sm text-center active:scale-95 transition-transform duration-100`.
+  - Pill ngày khác: `bg-white text-slate-700 border border-slate-200 rounded-xl min-w-[50px] py-2 text-center active:scale-95`.
+  - Có dấu chấm nhỏ (dot status) bên dưới số ngày nếu ngày đó có ít nhất 1 buổi học.
+- **Danh sách buổi học theo ngày (Vertical Card Stack):**
+  - Các thẻ buổi học hiển thị chiếm 100% chiều rộng màn hình di động (`w-full`).
+  - Mọi nút bấm tương tác (Điểm danh nhanh, Sửa) đều có chiều cao tối thiểu `min-h-[44px]` đạt chuẩn Apple HIG, không bị chạm nhầm.
+
+---
+
+#### 5. Modal Tạo / Sửa Buổi Học (`ScheduleModal`)
+
+- **Hiệu ứng chuyển động (Emil Kowalski Modal Specs):**
+  - Entry: `opacity: 0, scale: 0.96` chuyển sang `opacity: 1, scale: 1` trong `180ms cubic-bezier(0.23, 1, 0.32, 1)`. Tâm biến đổi: `transform-origin: center`.
+  - Scrim: `bg-slate-900/40 backdrop-blur-[2px] transition-opacity duration-180`.
+
+- **Các trường nhập liệu & Ràng buộc logic (Validation Guardrails):**
+  1. **Chọn Lớp học (`ClassId` — BẮT BUỘC):**
+     - Dropdown select chọn các lớp đang kích hoạt (`Ongoing` hoặc `Upcoming`).
+     - **RÀNG BUỘC SỐ 1 (CHẶN LỖI LỚP CHƯA CÓ GIÁO VIÊN):**
+       * Hệ thống kiểm tra trường `TeacherId` của lớp.
+       * Nếu lớp **chưa có giáo viên phụ trách** (`TeacherId == null` hoặc chưa gán):
+         - Tùy chọn trong Dropdown bị khóa cứng (disabled option) có nhãn: `[Chưa gán GV] Lớp Vẽ Cọ Nhí (Không thể chọn)`.
+         - Khi hover hoặc chọn trúng, hiển thị thông báo hổ phách:  
+           `⚠️ Lớp này chưa được phân công giáo viên phụ trách. Vui lòng vào trang "Quản lý Lớp học" để phân công giáo viên trước khi xếp lịch.`
+  2. **Ngày học (`StudyDate` — BẮT BUỘC):**
+     - Ô chọn ngày `type="date"`, định dạng `YYYY-MM-DD`. Mặc định lấy theo ngày người dùng vừa nhấn trên lịch.
+  3. **Giờ bắt đầu (`StartTime`) & Giờ kết thúc (`EndTime`) — BẮT BUỘC:**
+     - Ô nhập giờ `type="time"`, định dạng `HH:mm`.
+     - **Ràng buộc nghiệp vụ:** Bắt buộc `EndTime > StartTime` (Khớp DB check constraint `CK_Schedules_Time`). Nếu người dùng chọn giờ kết thúc nhỏ hơn hoặc bằng giờ bắt đầu, hiển thị báo lỗi màu đỏ ngay lập tức: `Giờ kết thúc phải diễn ra sau giờ bắt đầu.`
+  4. **Phòng học (`Room` — Tùy chọn):**
+     - Input text, placeholder: `VD: Phòng 101, Phòng Vẽ B, Sân đa năng`. Tối đa 50 ký tự.
+  5. **Giáo viên dạy thay (`SubstituteTeacherId` — Tùy chọn):**
+     - Dropdown chọn giáo viên dạy thay từ danh sách Users có vai trò `Teacher` thuộc cùng cơ sở.
+     - Mặc định: `Không (Giáo viên chính của lớp phụ trách: [Tên GV chính])`.
+     - Ghi chú phụ: *Chỉ chọn khi giáo viên chính bận việc hoặc nghỉ phép đột xuất.*
+  6. **Trạng thái buổi học (`Status` — Chỉ hiển thị khi Chỉnh sửa):**
+     - Select: `Scheduled` (Đã lên lịch), `Completed` (Đã hoàn thành), `Cancelled` (Đã hủy).
+  7. **Ghi chú buổi học (`Note` — Tùy chọn):**
+     - Textarea 2 dòng, placeholder: `Dặn dò chuẩn bị bài vở, đồ dùng học tập...` (Tối đa 500 ký tự).
+- **Chân Modal:**
+  - Nút `Hủy` (Secondary Button) + Nút `Lưu buổi học` (Primary Blue CTA có trạng thái spinner `animate-spin`).
+
+---
+
+### 8.3. Màn Hình Điểm Danh (`/attendance`)
+
+Màn hình tác vụ cao (high-frequency) của giáo viên và cán bộ quản lý, thiết kế tối ưu hóa tốc độ ghi nhận với cơ chế **1 chạm (Single-Tap)**, loại bỏ hoàn toàn độ trễ.
+
+#### 1. Thanh Lựa Chọn Buổi Học & Thống Kê (Attendance Selector Bar)
+
+```
++-------------------------------------------------------------------------------------------------------------------+
+|  Ngày học: [ 13/11/2026 📅 ] [ Hôm nay ]   |   Buổi học: [ 08:00 - 09:30 • Tiền TH Họa Mi 1 • P.102 • Cô Mai Anh ▼ ] |
+|  ---------------------------------------------------------------------------------------------------------------  |
+|  Sĩ số lớp: 20 học viên  •  Tiến độ: [✓ 18 Có mặt]  [⏱ 1 Đi trễ]  [✉ 1 Có phép]  [✕ 0 Không phép]                    |
++-------------------------------------------------------------------------------------------------------------------+
+```
+
+- **Bộ chọn ngày (`StudyDate`):** Ô nhập `type="date"`, mặc định là Ngày hôm nay. Có nút `Hôm nay` để nhảy nhanh về ngày thực tế.
+- **Bộ chọn buổi học trong ngày (`ScheduleId`):**
+  - Dropdown hiển thị danh sách các buổi học diễn ra trong ngày đã chọn.
+  - Định dạng từng dòng option: `[HH:mm - HH:mm] • [Tên Lớp] • [Phòng] • [Tên GV]` kèm chỉ thị `[Đã điểm danh]` hoặc `[Chưa điểm danh]`.
+  - **Tự động nhận diện từ URL:** Nếu người dùng bấm `Điểm danh nhanh` từ trang `/schedules?scheduleId=123`, trang Điểm danh sẽ tự động load đúng ngày và chọn sẵn buổi học đó.
+- **Dải chỉ số thống kê nhanh (Metric Pills):**
+  - Đếm tự động theo thời gian thực tổng số học viên hiện diện, đi trễ, nghỉ phép giúp giáo viên nắm bắt sĩ số tức thì trước khi bắt đầu dạy.
+
+---
+
+#### 2. Bảng Danh Sách Học Viên & Bộ Chọn Trạng Thái 1 Chạm (Attendance Roster)
+
+- Nguồn dữ liệu: Chỉ tải danh sách học viên có trạng thái đang học (`StudentClasses.Status = 'Active'`) trong lớp của buổi học đó.
+- Cấu trúc từng hàng học viên:
+
+```
++----+-----------------------------+------------------------------------------------------+-------------------------+
+| STT| Học viên                    | Trạng thái điểm danh (1 Chạm - Segmented Control)    | Ghi chú ngắn            |
++----+-----------------------------+------------------------------------------------------+-------------------------+
+| 01 | (Avatar) Nguyễn Minh Khang  | [ ✓ Có mặt ]  [ ⏱ Đi trễ ]  [ ✉ Có phép ] [ ✕ K.phép ]| [ Đi trễ 10p kẹt xe... ]|
+|    | #STU-102 • 7 tuổi           |   (EMERALD)      (Muted)       (Muted)      (Muted)  |                         |
++----+-----------------------------+------------------------------------------------------+-------------------------+
+| 02 | (Avatar) Trần Bảo Ngọc      | [ ✓ Có mặt ]  [ ⏱ Đi trễ ]  [ ✉ Có phép ] [ ✕ K.phép ]| [ Bé sốt nhẹ, mẹ xin.. ]|
+|    | #STU-105 • 7 tuổi           |    (Muted)       (Muted)       (BLUE)       (Muted)  |                         |
++----+-----------------------------+------------------------------------------------------+-------------------------+
+```
+
+- **Đặc tả Bộ chọn Trạng thái 1 Chạm (Single-Tap Segmented Control):**
+  - Khung bao ngoài: `inline-flex p-1 bg-slate-100 rounded-lg border border-slate-200 gap-1`.
+  - 4 nút bấm trạng thái xếp ngang, tương ứng với 4 giá trị của DB Constraint `CK_Attendances_Status`:
+    1. **Có mặt (`Present`):**
+       - Mặc định / Chưa chọn: `px-3 py-1.5 text-xs text-slate-600 hover:text-slate-900 hover:bg-white/60 rounded-md transition-all`.
+       - **KHI ĐƯỢC CHỌN (Active):** `px-3 py-1.5 text-xs font-semibold bg-emerald-600 text-white rounded-md shadow-xs active:scale-95 transition-all duration-100`.
+       - Nhãn & Icon: `✓ Có mặt`.
+    2. **Đi trễ (`Late`):**
+       - **KHI ĐƯỢC CHỌN (Active):** `px-3 py-1.5 text-xs font-semibold bg-amber-500 text-white rounded-md shadow-xs active:scale-95 transition-all duration-100`.
+       - Nhãn & Icon: `⏱ Đi trễ`.
+    3. **Nghỉ có phép (`ExcusedAbsent`):**
+       - **KHI ĐƯỢC CHỌN (Active):** `px-3 py-1.5 text-xs font-semibold bg-blue-600 text-white rounded-md shadow-xs active:scale-95 transition-all duration-100`.
+       - Nhãn & Icon: `✉ Có phép`.
+    4. **Nghỉ không phép (`UnexcusedAbsent`):**
+       - **KHI ĐƯỢC CHỌN (Active):** `px-3 py-1.5 text-xs font-semibold bg-rose-600 text-white rounded-md shadow-xs active:scale-95 transition-all duration-100`.
+       - Nhãn & Icon: `✕ Không phép`.
+  - **Phản hồi tức thì:** Thao tác chạm đổi màu và cập nhật thống kê ngay lập tức (`100ms ease-out`), không có độ trễ bấm.
+- **Ô ghi chú ngắn (`Note`):**
+  - Input text: `h-9 px-3 text-xs bg-white border border-slate-200 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-100 placeholder:text-slate-400 w-full`.
+  - Placeholder: `Lý do vắng / biểu hiện học tập (tối đa 300 ký tự)`.
+
+---
+
+#### 3. Thanh Hành Động Hàng Loạt & Lưu Điểm Danh (Action Bar)
+
+```
++-------------------------------------------------------------------------------------------------------------------+
+|  [✓ Đánh dấu tất cả Có mặt]                                          [ Hủy thay đổi ]  [ Lưu điểm danh (Primary) ]|
++-------------------------------------------------------------------------------------------------------------------+
+```
+
+- **Nút `Đánh dấu tất cả Có mặt` (Quick Fill All Present):**
+  - Styling: `inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-50 text-emerald-700 border border-emerald-300 hover:bg-emerald-100 font-medium text-sm rounded-lg active:scale-[0.98] transition-transform duration-100`.
+  - Ý nghĩa nghiệp vụ: Đa phần các buổi học học sinh đều đi học đủ. Nút này cho phép 1 chạm đặt toàn bộ danh sách thành `Present`. Giáo viên chỉ việc đổi trạng thái cho 1-2 em vắng/trễ, rút ngắn thời gian điểm danh từ 2 phút xuống còn 5 giây.
+- **Nút `Lưu điểm danh` (Primary CTA Save):**
+  - Styling: `inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 text-white font-semibold text-sm rounded-lg shadow-sm hover:bg-blue-700 active:scale-[0.98] transition-all duration-150`.
+  - **Trạng thái đang lưu (Loading State):**
+    - Vô hiệu hóa nút (`pointer-events-none opacity-80`).
+    - Spinner xoay tròn mượt mà (Emil Kowalski fast spin: `animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full`).
+    - Nhãn chuyển sang: `Đang lưu điểm danh...`.
+    - Khi thành công: Hiển thị thông báo Toast xanh lá `✓ Đã lưu điểm danh thành công!` và tự động đổi trạng thái buổi học trên lịch sang `Completed`.
+
+---
+
+#### 4. Phân Quyền Vai Trò & Chế Độ Chỉ Xem (RBAC & Read-Only Specs)
+
+Tuân thủ nghiêm ngặt quy định tại `GEMINI.md` và logic của `AttendancesController.cs`:
+
+| Vai trò người dùng | Quyền hạn đối với buổi học | Giao diện hiển thị |
+| :--- | :--- | :--- |
+| **Giáo viên chính** (`Class.TeacherId == UserId`) | Toàn quyền điểm danh & lưu | Hiển thị đầy đủ bộ 4 nút bấm, nút `Đánh dấu tất cả Có mặt` và nút `Lưu điểm danh`. |
+| **Giáo viên dạy thay** (`SubstituteTeacherId == UserId`) | Toàn quyền điểm danh & lưu | Hiển thị đầy đủ tính năng điểm danh như giáo viên chính. |
+| **SuperAdmin** & **BranchManager** (đúng cơ sở) | Quản trị, duyệt & chỉnh sửa | Hiển thị đầy đủ bộ nút điểm danh và nút lưu. |
+| **Giáo viên khác** / **Staff cơ sở khác** | Không có quyền điểm danh | **CHẾ ĐỘ CHỈ XEM (READ-ONLY):**<br>- Ẩn nút `Lưu điểm danh` và nút `Đánh dấu tất cả Có mặt`.<br>- Cụm 4 nút bấm chuyển thành **1 Badge tĩnh duy nhất** hiển thị trạng thái đã điểm danh.<br>- Banners thông báo: `ℹ️ Chế độ xem: Bạn không có quyền chỉnh sửa điểm danh của buổi học này.` |
+| **Phụ huynh (`Parent`)** / **Học sinh (`Student`)** | Chỉ xem kết quả của con mình | Chỉ hiển thị dòng thông tin điểm danh của đúng học viên đó, không thấy các bạn khác trong lớp. |
+
+- **Thông tin dấu vết kiểm toán (Audit Trail):**  
+  Ở góc dưới bảng điểm danh hiển thị rõ: `Điểm danh lần cuối bởi: [MarkedByName] lúc [MarkedAt: HH:mm, DD/MM/YYYY]`.
+
+---
+
+#### 5. Bố Cục Responsive Trên Mobile (`375px – 414px`)
+
+Giáo viên thường sử dụng điện thoại trực tiếp tại lớp học. Thiết kế chuyển từ bảng sang **Thẻ học viên (Student Cards)** kết hợp **Thanh tác vụ đáy dính kính mờ (Sticky Glass Bottom Bar)**:
+
+```
++-------------------------------------------------------+
+|  < Điểm danh • Lớp Tiền TH Họa Mi 1                   |
+|  🕒 08:00 - 09:30 • 13/11/2026 • 20 học viên          |
++-------------------------------------------------------+
+|                                                       |
+|  +-------------------------------------------------+  |
+|  | (Avatar) Nguyễn Minh Khang        #STU-102      |  |
+|  | +---------------------------------------------+ |  |
+|  | | [✓ Có mặt] [⏱ Trễ]  [✉ Có phép] [✕ K.phép]  | |  |
+|  | +---------------------------------------------+ |  |
+|  | [ Ghi chú: Đi trễ 10p kẹt xe...               ] |  |
+|  +-------------------------------------------------+  |
+|                                                       |
+|  +-------------------------------------------------+  |
+|  | (Avatar) Trần Bảo Ngọc            #STU-105      |  |
+|  | +---------------------------------------------+ |  |
+|  | | [✓ Có mặt] [⏱ Trễ]  [✉ Có phép] [✕ K.phép]  | |  |
+|  | +---------------------------------------------+ |  |
+|  | [ Ghi chú: Bé sốt nhẹ...                      ] |  |
+|  +-------------------------------------------------+  |
+|                                                       |
++-------------------------------------------------------+
+|  [✓ Tất cả có mặt]        [  Lưu điểm danh (44px)  ]  |
+|  (STICKY BOTTOM BAR - bg-white/95 backdrop-blur-md)   |
++-------------------------------------------------------+
+```
+
+- **Thẻ học viên di động:**
+  - Tiêu đề thẻ: Avatar tròn + Họ tên đậm `text-base` + Mã học viên.
+  - Cụm 4 nút trạng thái: Dàn đều 4 nút (hoặc lưới 2x2) với chiều cao mỗi nút `min-h-[44px]` chuẩn Apple HIG, dễ ấn bằng ngón tay cái mà không sợ trượt.
+  - Ô ghi chú: Chiều rộng 100% thẻ (`w-full`), chiều cao `h-10`.
+- **Thanh tác vụ đáy kính mờ (Sticky Bottom Action Bar):**
+  - Cố định ở đáy màn hình điện thoại: `sticky bottom-0 left-0 right-0 p-3 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-lg flex gap-2 z-20`.
+  - Giáo viên cuộn danh sách đến đâu cũng có thể nhấn `Lưu điểm danh` ngay lập tức mà không cần cuộn ngược lên đầu trang.
+
+---
+
+### 8.4. Tiêu Chuẩn Nghiệm Thu Bổ Sung Cho Giai Đoạn 1C (Acceptance Checklist)
+
+Frontend và QA đối chiếu nghiệm thu 2 màn hình mới theo danh sách kiểm tra sau:
+
+- [ ] **Điều hướng Tuần Mượt Mà (`/schedules`):** Các nút `Tuần trước`, `Hôm nay`, `Tuần sau` chuyển tuần tức thì, có hiệu ứng chuyển cảnh nhẹ `150ms ease-out`, hiển thị đúng khoảng ngày từ Thứ 2 đến Chủ nhật.
+- [ ] **Lưới 7 Cột Chuẩn Mực:** Desktop hiển thị đủ 7 ngày; ngày hiện tại (`Today`) được đánh dấu nổi bật với viền xanh và nền tint nhẹ.
+- [ ] **Card Buổi Học Đủ Thông Tin:** Card hiển thị đúng giờ học, tên lớp, phòng học, giáo viên chính, trạng thái (`Scheduled`/`Completed`/`Cancelled`), và badge màu hổ phách khi có giáo viên dạy thay.
+- [ ] **Nút Điểm Danh Nhanh:** Bấm vào nút `Điểm danh nhanh` trên card sẽ chuyển hướng mượt mà sang `/attendance?scheduleId={id}` và tự động chọn đúng buổi học đó.
+- [ ] **Responsive Lịch Học Trên Mobile:** Màn hình di động `375px - 414px` chuyển sang thanh Day Picker Pill Tabs cuộn ngang và danh sách thẻ xếp dọc; chiều cao nút bấm đạt chuẩn tối thiểu 44px.
+- [ ] **Ràng Buộc Chặt Chẽ Form Tạo Lịch:** Modal tạo buổi học disable hoặc cảnh báo các lớp chưa có giáo viên phụ trách; kiểm tra hợp lệ `EndTime > StartTime`.
+- [ ] **Phân Quyền Nút Tạo Buổi Học:** Chỉ `SuperAdmin` và `BranchManager` nhìn thấy nút `+ Tạo buổi học`; ẩn hoàn toàn với `Teacher`.
+- [ ] **Điểm Danh 1 Chạm Tức Thì (`/attendance`):** 4 nút Segmented Control đổi màu ngay khi chạm (`:active:scale-[0.96]`), không dùng dropdown chọn trạng thái.
+- [ ] **Nút "Đánh dấu tất cả Có mặt":** 1 chạm gán tất cả học viên trong lớp thành `Present` nhanh chóng.
+- [ ] **Trạng Thái Lưu Điểm Danh:** Nút `Lưu điểm danh` hiển thị spinner loading xoay tròn, vô hiệu hóa nút chống submit kép, gọi API bulk thành công và tự động chuyển buổi học sang `Completed`.
+- [ ] **Phân Quyền Điểm Danh Nghiêm Ngặt:** Chỉ giáo viên phụ trách/dạy thay của buổi học đó hoặc quản lý mới có nút lưu; người dùng không có quyền truy cập chỉ xem ở chế độ Read-Only với badge tĩnh.
+- [ ] **Thanh Bottom Bar Cố Định Trên Mobile:** Trang điểm danh trên điện thoại hiển thị thẻ học viên to rõ và thanh lưu neo cố định ở đáy màn hình với hiệu ứng kính mờ `backdrop-blur-md`.

@@ -156,7 +156,7 @@ export default function ClassList() {
     setFormData({
       className: '',
       courseId: courses.length > 0 ? courses[0].id : '',
-      teacherId: teachers.length > 0 ? teachers[0].id : '',
+      teacherId: '',
       branchId: branches.length > 0 ? branches[0].id : '',
       classType: 'Group',
       maxStudents: 15,

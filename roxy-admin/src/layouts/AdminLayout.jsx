@@ -82,15 +82,17 @@ export default function AdminLayout() {
         <span className="text-base">🏫</span>
         <span>Lớp học</span>
       </NavLink>
+      <NavLink to="/schedules" className={navItemClass} onClick={onItemClick}>
+        <span className="text-base">📅</span>
+        <span>Lịch học</span>
+      </NavLink>
+      <NavLink to="/attendance" className={navItemClass} onClick={onItemClick}>
+        <span className="text-base">📋</span>
+        <span>Điểm danh</span>
+      </NavLink>
 
       <div className="pt-6 px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-        Phân hệ kế tiếp (Giai đoạn 1C)
-      </div>
-      <div className="flex items-center justify-between px-3.5 py-2 text-xs font-medium text-slate-400 opacity-60">
-        <span className="flex items-center gap-2">
-          <span>📅</span> Lịch học &amp; Điểm danh
-        </span>
-        <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-500">Khóa</span>
+        Phân hệ kế tiếp
       </div>
       <div className="flex items-center justify-between px-3.5 py-2 text-xs font-medium text-slate-400 opacity-60">
         <span className="flex items-center gap-2">

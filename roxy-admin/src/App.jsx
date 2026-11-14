@@ -3,6 +3,8 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Students from './pages/Students';
 import ClassList from './pages/ClassList';
+import Schedules from './pages/Schedules';
+import Attendance from './pages/Attendance';
 import AdminLayout from './layouts/AdminLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -18,6 +20,8 @@ export default function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/students" element={<Students />} />
             <Route path="/classes" element={<ClassList />} />
+            <Route path="/schedules" element={<Schedules />} />
+            <Route path="/attendance" element={<Attendance />} />
           </Route>
         </Route>
 
