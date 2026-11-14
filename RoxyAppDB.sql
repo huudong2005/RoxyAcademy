@@ -242,10 +242,12 @@ CREATE TABLE HomeworkSubmissions (
     SubmittedAt     DATETIME2(0)  NULL,
     TeacherFeedback NVARCHAR(1000) NULL,
     ReviewedAt      DATETIME2(0)  NULL,
+    Score           DECIMAL(5,2)  NULL,
     CONSTRAINT FK_HwSub_Homeworks FOREIGN KEY (HomeworkId, ClassId) REFERENCES Homeworks(Id, ClassId) ON DELETE CASCADE,  -- CASCADE #1
     CONSTRAINT FK_HwSub_Enrolled  FOREIGN KEY (StudentId, ClassId)  REFERENCES StudentClasses(StudentId, ClassId),
     CONSTRAINT UQ_HwSub UNIQUE (HomeworkId, StudentId),
-    CONSTRAINT CK_HwSub_Status CHECK (Status IN ('Pending','Submitted','Reviewed'))
+    CONSTRAINT CK_HwSub_Status CHECK (Status IN ('Pending','Submitted','Reviewed')),
+    CONSTRAINT CK_HwSub_Score CHECK (Score IS NULL OR (Score >= 0 AND Score <= 10))
 );
 CREATE INDEX IX_HwSub_StudentId ON HomeworkSubmissions(StudentId);
 GO

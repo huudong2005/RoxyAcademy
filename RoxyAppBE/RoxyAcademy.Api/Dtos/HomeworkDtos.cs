@@ -71,7 +71,8 @@ public record HomeworkSubmissionDto(
     string? TeacherFeedback,
     DateTime? ReviewedAt,
     string? HomeworkTitle = null,
-    DateTime? DueDate = null
+    DateTime? DueDate = null,
+    decimal? Score = null
 );
 
 public class SubmitHomeworkRequest
@@ -88,6 +89,9 @@ public class ReviewHomeworkRequest
     [Required(ErrorMessage = "Trạng thái chấm bài là bắt buộc")]
     [RegularExpression("^(Reviewed|Pending)$", ErrorMessage = "Trạng thái chấm bài chỉ nhận: Reviewed (Đã chấm), Pending (Yêu cầu làm lại)")]
     public string Status { get; set; } = "Reviewed";
+
+    [Range(0, 10, ErrorMessage = "Điểm số phải từ 0 đến 10")]
+    public decimal? Score { get; set; }
 
     [StringLength(1000, ErrorMessage = "Nhận xét của giáo viên tối đa 1000 ký tự")]
     public string? TeacherFeedback { get; set; }

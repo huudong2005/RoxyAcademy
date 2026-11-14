@@ -226,6 +226,7 @@ public partial class RoxyDbContext : DbContext
             entity.HasIndex(e => new { e.HomeworkId, e.StudentId }, "UQ_HwSub").IsUnique();
 
             entity.Property(e => e.ReviewedAt).HasPrecision(0);
+            entity.Property(e => e.Score).HasColumnType("decimal(5, 2)");
             entity.Property(e => e.Status)
                 .HasMaxLength(20)
                 .IsUnicode(false)

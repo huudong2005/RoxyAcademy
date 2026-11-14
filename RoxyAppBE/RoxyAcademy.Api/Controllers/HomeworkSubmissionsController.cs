@@ -92,7 +92,8 @@ public class HomeworkSubmissionsController(RoxyDbContext db) : ControllerBase
                 s.TeacherFeedback,
                 s.ReviewedAt,
                 s.Homework.Title,
-                s.Homework.DueDate
+                s.Homework.DueDate,
+                s.Score
             ))
             .ToListAsync();
 
@@ -157,7 +158,8 @@ public class HomeworkSubmissionsController(RoxyDbContext db) : ControllerBase
             sub.TeacherFeedback,
             sub.ReviewedAt,
             sub.Homework.Title,
-            sub.Homework.DueDate
+            sub.Homework.DueDate,
+            sub.Score
         );
 
         return Ok(dto);
@@ -188,6 +190,9 @@ public class HomeworkSubmissionsController(RoxyDbContext db) : ControllerBase
         sub.StudentNote = req.StudentNote?.Trim();
         sub.Status = "Submitted"; // Chuyển trạng thái sang Đã nộp
         sub.SubmittedAt = DateTime.UtcNow;
+        sub.Score = null;
+        sub.TeacherFeedback = null;
+        sub.ReviewedAt = null;
 
         await db.SaveChangesAsync();
         return Ok(new { message = "Nộp bài thành công!" });
@@ -232,9 +237,10 @@ public class HomeworkSubmissionsController(RoxyDbContext db) : ControllerBase
         // Chuẩn hóa status khớp DB check constraint: ('Pending','Submitted','Reviewed')
         sub.Status = string.Equals(req.Status, "Pending", StringComparison.OrdinalIgnoreCase) ? "Pending" : "Reviewed";
         sub.TeacherFeedback = req.TeacherFeedback?.Trim();
+        sub.Score = req.Score;
         sub.ReviewedAt = DateTime.UtcNow;
 
         await db.SaveChangesAsync();
-        return Ok(new { message = "Chấm bài thành công!", status = sub.Status });
+        return Ok(new { message = "Chấm bài thành công!", status = sub.Status, score = sub.Score });
     }
 }

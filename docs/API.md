@@ -479,3 +479,188 @@ Dành cho Quản lý chi nhánh hoặc SuperAdmin kiểm tra chứng từ/sao k�
     "message": "Xác nhận thanh toán thành công!"
   }
   ```
+
+---
+
+## 6. QUẢN LÝ BÀI TẬP VỀ NHÀ & CHẤM BÀI (HOMEWORKS & SUBMISSIONS)
+
+### 6.1. Danh sách bài tập — `GET /api/Homeworks`
+- **Quyền truy cập:** `SuperAdmin`, `BranchManager` (chi nhánh mình), `Teacher` (lớp mình dạy / dạy thay), `Parent` (lớp con học), `Student` (lớp mình học).
+- **Query Params:**
+  - `classId` (int, tùy chọn): Lọc theo lớp học.
+  - `scheduleId` (int, tùy chọn): Lọc theo buổi học cụ thể.
+  - `branchId` (int, tùy chọn): Lọc theo cơ sở (chỉ SuperAdmin / BM hợp lệ).
+  - `page` (int, mặc định 1), `pageSize` (int, mặc định 20).
+- **Response:** `200 OK`
+  ```json
+  {
+    "totalItems": 1,
+    "page": 1,
+    "pageSize": 20,
+    "totalPages": 1,
+    "items": [
+      {
+        "id": 1,
+        "classId": 5,
+        "className": "Luyện chữ đẹp K01",
+        "scheduleId": 12,
+        "title": "Bài tập luyện nét thanh nét đậm tuần 2",
+        "description": "Viết 2 trang vở bài tập số 3",
+        "attachmentUrl": "https://cdn.roxy.edu.vn/homework/bai-tap-t2.pdf",
+        "dueDate": "2026-11-20T17:00:00Z",
+        "createdBy": 3,
+        "createdByName": "Cô Lan Hương",
+        "createdAt": "2026-11-14T08:00:00Z",
+        "branchId": 1,
+        "branchName": "Cơ sở Bình Trưng Tây",
+        "totalSubmissions": 15,
+        "submittedCount": 12,
+        "reviewedCount": 8
+      }
+    ]
+  }
+  ```
+
+---
+
+### 6.2. Lấy chi tiết bài tập — `GET /api/Homeworks/{id}`
+- **Quyền truy cập:** Tương tự danh sách (áp dụng kiểm tra quyền theo vai trò).
+- **Response:** `200 OK` (Cấu trúc như DTO bài tập) hoặc `404 Not Found`, `403 Forbidden`.
+
+---
+
+### 6.3. Tạo bài tập mới — `POST /api/Homeworks`
+- **Quyền truy cập:** `SuperAdmin`, `BranchManager`, `Teacher` (phụ trách lớp).
+- **Ràng buộc:** Tự động khởi tạo bản ghi `HomeworkSubmissions` với trạng thái `"Pending"` cho toàn bộ học viên đang theo học (`Active`) trong lớp.
+- **Request Body:**
+  ```json
+  {
+    "classId": 5,
+    "scheduleId": 12,
+    "title": "Luyện viết chữ O, Ô, Ơ",
+    "description": "Viết mỗi chữ 3 dòng vào vở ô ly",
+    "attachmentUrl": "https://cdn.roxy.edu.vn/homework/de-bai-o-o-o.pdf",
+    "dueDate": "2026-11-20T23:59:00Z"
+  }
+  ```
+- **Response:** `201 Created`
+
+---
+
+### 6.4. Cập nhật bài tập — `PUT /api/Homeworks/{id}`
+- **Quyền truy cập:** `SuperAdmin`, `BranchManager`, `Teacher` (chỉ người tạo hoặc giáo viên phụ trách).
+- **Request Body:**
+  ```json
+  {
+    "scheduleId": 12,
+    "title": "Luyện viết chữ O, Ô, Ơ (Gia hạn)",
+    "description": "Viết mỗi chữ 3 dòng vào vở ô ly. Hạn nộp mở rộng thêm 2 ngày.",
+    "attachmentUrl": "https://cdn.roxy.edu.vn/homework/de-bai-o-o-o.pdf",
+    "dueDate": "2026-11-22T23:59:00Z"
+  }
+  ```
+- **Response:** `200 OK`
+
+---
+
+### 6.5. Xóa bài tập — `DELETE /api/Homeworks/{id}`
+- **Quyền truy cập:** `SuperAdmin`, `BranchManager`, `Teacher` (chỉ người tạo hoặc giáo viên phụ trách).
+- **Ràng buộc CASCADE:** Xóa bài tập sẽ tự động xóa các bản ghi nộp bài liên quan (`HomeworkSubmissions`) theo FK ON DELETE CASCADE trong DB.
+- **Response:** `204 No Content`
+
+---
+
+### 6.6. Lấy danh sách bài nộp — `GET /api/HomeworkSubmissions`
+- **Quyền truy cập:**
+  - `SuperAdmin`: Toàn bộ.
+  - `BranchManager`: Học viên thuộc chi nhánh quản lý.
+  - `Teacher`: Học viên thuộc lớp phụ trách.
+  - `Parent`: Chỉ xem bài tập của con mình.
+  - `Student`: Chỉ xem bài tập của bản thân.
+- **Query Params:**
+  - `homeworkId` (int, tùy chọn): Lọc theo bài tập.
+  - `classId` (int, tùy chọn): Lọc theo lớp.
+  - `studentId` (int, tùy chọn): Lọc theo học viên (chỉ staff).
+  - `status` (string, tùy chọn): `Pending`, `Submitted`, `Reviewed`.
+- **Response:** `200 OK`
+  ```json
+  [
+    {
+      "id": 101,
+      "homeworkId": 1,
+      "classId": 5,
+      "studentId": 10,
+      "studentName": "Nguyễn Hoàng Nam",
+      "status": "Reviewed",
+      "submissionUrl": "https://cdn.roxy.edu.vn/submissions/nam-bai-tap.jpg",
+      "studentNote": "Em đã hoàn thành bài tập viết chữ đẹp",
+      "submittedAt": "2026-11-15T10:00:00Z",
+      "teacherFeedback": "Nét chữ đều và đẹp, chú ý dấu thanh chữ Ơ",
+      "reviewedAt": "2026-11-15T15:30:00Z",
+      "homeworkTitle": "Bài tập luyện nét thanh nét đậm tuần 2",
+      "dueDate": "2026-11-20T17:00:00Z",
+      "score": 9.5
+    }
+  ]
+  ```
+
+---
+
+### 6.7. Lấy chi tiết bài nộp — `GET /api/HomeworkSubmissions/{id}`
+- **Quyền truy cập:** Lọc theo phân quyền tương tự danh sách bài nộp (`403 Forbidden` nếu không đúng thẩm quyền).
+- **Response:** `200 OK` (Cấu trúc DTO bài nộp kèm trường `score`).
+
+---
+
+### 6.8. Nộp bài tập — `PUT /api/HomeworkSubmissions/{id}/submit`
+Dành cho Phụ huynh hoặc Học viên nộp bài làm hoặc nộp lại bài khi bị yêu cầu làm lại.
+- **Quyền truy cập:** `SuperAdmin`, `Parent` (chỉ được nộp cho con mình), `Student` (chỉ nộp cho bản thân).
+- **Hành vi khi nộp / nộp lại bài:**
+  - Cập nhật trạng thái `status = "Submitted"`, ghi nhận `submittedAt = UTC`.
+  - Nếu bài nộp đã từng được giáo viên chấm trước đó, **tự động reset**:
+    - `score = null`
+    - `teacherFeedback = null`
+    - `reviewedAt = null`
+- **Request Body:**
+  ```json
+  {
+    "submissionUrl": "https://cdn.roxy.edu.vn/submissions/bai-tap-moi.pdf",
+    "studentNote": "Em xin gửi lại bài nộp đã sửa lỗi"
+  }
+  ```
+- **Response:** `200 OK`
+  ```json
+  {
+    "message": "Nộp bài thành công!"
+  }
+  ```
+
+---
+
+### 6.9. Chấm bài & Cho điểm — `PUT /api/HomeworkSubmissions/{id}/review`
+Dành cho Giáo viên phụ trách lớp hoặc Quản lý chi nhánh chấm bài và nhận xét bài nộp của học viên.
+- **Quyền truy cập:** `SuperAdmin`, `BranchManager`, `Teacher` (phụ trách lớp).
+- **Ràng buộc:**
+  - `status`: Bắt buộc, nhận giá trị `"Reviewed"` (Đã chấm) hoặc `"Pending"` (Yêu cầu làm lại).
+  - `score`: Nullable (không bắt buộc), nếu nhập phải từ `0` đến `10` (thang điểm 10, tối đa 2 chữ số thập phân).
+  - Nếu `score = null`, giáo viên chỉ để lại nhận xét bằng lời (`teacherFeedback`).
+- **Request Body:**
+  ```json
+  {
+    "status": "Reviewed",
+    "score": 9.5,
+    "teacherFeedback": "Bài viết rất tiến bộ, trình bày sạch sẽ!"
+  }
+  ```
+- **Response:** `200 OK`
+  ```json
+  {
+    "message": "Chấm bài thành công!",
+    "status": "Reviewed",
+    "score": 9.5
+  }
+  ```
+- **Lỗi có thể trả về:**
+  - `400 Bad Request`: Nếu `score < 0` hoặc `score > 10` ("Điểm số phải từ 0 đến 10"), hoặc trạng thái chấm bài không hợp lệ.
+  - `403 Forbidden`: Nếu giáo viên không phụ trách lớp hoặc Quản lý cơ sở truy cập lớp thuộc cơ sở khác.
+  - `404 Not Found`: Nếu hồ sơ nộp bài không tồn tại.

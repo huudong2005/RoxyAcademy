@@ -25,6 +25,8 @@ public partial class HomeworkSubmission
 
     public DateTime? ReviewedAt { get; set; }
 
+    public decimal? Score { get; set; }
+
     public virtual Homework Homework { get; set; } = null!;
 
     public virtual StudentClass StudentClass { get; set; } = null!;

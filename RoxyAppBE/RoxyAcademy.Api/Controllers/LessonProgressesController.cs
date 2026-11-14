@@ -95,7 +95,7 @@ public class LessonProgressesController(RoxyDbContext db) : ControllerBase
                 lp.Title,
                 lp.Content,
                 lp.CreatedBy,
-                lp.CreatedByNavigation.FullName,
+                lp.CreatedByNavigation != null ? lp.CreatedByNavigation.FullName : null,
                 lp.CreatedAt,
                 lp.UpdatedAt
             ))
@@ -167,7 +167,7 @@ public class LessonProgressesController(RoxyDbContext db) : ControllerBase
             lp.Title,
             lp.Content,
             lp.CreatedBy,
-            lp.CreatedByNavigation.FullName,
+            lp.CreatedByNavigation?.FullName,
             lp.CreatedAt,
             lp.UpdatedAt
         );

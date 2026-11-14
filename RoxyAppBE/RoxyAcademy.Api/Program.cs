@@ -90,25 +90,37 @@ if (app.Environment.IsDevelopment())
             PreferredSecurityScheme = "Bearer"
         };
     });
+}
 
-    using var scope = app.Services.CreateScope();
-    var db = scope.ServiceProvider.GetRequiredService<RoxyDbContext>();
-    var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<User>>();
-    var seedPassword = app.Configuration["Seed:AdminPassword"];
-
-    if (!string.IsNullOrEmpty(seedPassword) && !db.Users.Any(u => u.Role == "SuperAdmin"))
+// Seed tài khoản SuperAdmin ban đầu nếu có cấu hình Seed:AdminPassword và DB chưa có SuperAdmin
+var seedPassword = app.Configuration["Seed:AdminPassword"];
+if (!string.IsNullOrWhiteSpace(seedPassword))
+{
+    try
     {
-        var admin = new User
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<RoxyDbContext>();
+        var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<User>>();
+
+        if (!db.Users.Any(u => u.Role == "SuperAdmin"))
         {
-            PhoneNumber = "0900000000",
-            FullName = "Super Admin",
-            Role = "SuperAdmin",
-            PreferredLanguage = "vi",
-            IsActive = true
-        };
-        admin.PasswordHash = hasher.HashPassword(admin, seedPassword);
-        db.Users.Add(admin);
-        db.SaveChanges();
+            var admin = new User
+            {
+                PhoneNumber = "0900000000",
+                FullName = "Super Admin",
+                Role = "SuperAdmin",
+                PreferredLanguage = "vi",
+                IsActive = true
+            };
+            admin.PasswordHash = hasher.HashPassword(admin, seedPassword);
+            db.Users.Add(admin);
+            db.SaveChanges();
+            app.Logger.LogInformation("Đã khởi tạo tài khoản SuperAdmin mặc định (SĐT: 0900000000).");
+        }
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogWarning(ex, "Không thể seed SuperAdmin khi khởi động ứng dụng (có thể DB chưa khởi tạo bảng hoặc lỗi kết nối).");
     }
 }
 
