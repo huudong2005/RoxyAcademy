@@ -92,6 +92,10 @@ export default function AdminLayout() {
         <span className="text-base">📋</span>
         <span>Điểm danh</span>
       </NavLink>
+      <NavLink to="/homeworks" className={navItemClass} onClick={onItemClick}>
+        <span className="text-base">📚</span>
+        <span>Bài tập</span>
+      </NavLink>
 
       {/* PHÂN HỆ TÀI CHÍNH: CHỈ HIỂN THỊ CHO SUPERADMIN VÀ BRANCHMANAGER (ẨN HOÀN TOÀN VỚI TEACHER) */}
       {isStaff && (
@@ -115,9 +119,9 @@ export default function AdminLayout() {
       </div>
       <div className="flex items-center justify-between px-3.5 py-2 text-xs font-medium text-slate-400 opacity-60">
         <span className="flex items-center gap-2">
-          <span>📝</span> Bài tập &amp; Đánh giá
+          <span>📱</span> Zalo Mini App
         </span>
-        <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-500">Sắp mở</span>
+        <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-500">Giai đoạn 2</span>
       </div>
     </>
   );
@@ -242,6 +246,8 @@ export default function AdminLayout() {
                   ? 'Lịch học & Thời khóa biểu'
                   : location.pathname.startsWith('/attendance')
                   ? 'Điểm danh học viên'
+                  : location.pathname.startsWith('/homeworks')
+                  ? 'Quản lý Bài tập về nhà'
                   : location.pathname.startsWith('/tuitions')
                   ? 'Quản lý Học phí & Công nợ'
                   : location.pathname.startsWith('/payments')

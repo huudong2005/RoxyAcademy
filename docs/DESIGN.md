@@ -1312,3 +1312,532 @@ Frontend Developer và QA đối chiếu nghiệm thu 2 màn hình mới theo da
   - [ ] Bảng cuộn ngang mượt mà hoặc chuyển đổi mượt sang dạng danh sách thẻ học phí / giao dịch.
   - [ ] Chiều cao các nút thao tác chạm (Thu tiền, Duyệt, Lưu) đạt tối thiểu `44px` theo chuẩn Apple HIG.
   - [ ] Modals trên mobile chuyển sang dạng Bottom Sheet trượt từ đáy màn hình lên với hiệu ứng trượt êm ái.
+
+---
+
+## 10. THIẾT KẾ CHI TIẾT GIAI ĐOẠN 1E — BÀI TẬP VỀ NHÀ, BÀI NỘP & TIẾN ĐỘ BÀI HỌC (`/homeworks`, `/homeworks/:id`, `LessonProgress`)
+
+### 10.1. TỔNG QUAN NGHIỆP VỤ & PHÂN QUYỀN (RBAC MATRIX)
+
+Giai đoạn 1E số hóa toàn bộ chu trình học tập tương tác cốt lõi giữa Trung tâm - Giáo viên - Học viên/Phụ huynh, bao gồm:
+1. **Quản lý Bài tập về nhà (`Homeworks`):** Giáo viên giao bài rèn luyện (viết chữ đẹp, bài tập tư duy toán, bài vẽ hoặc bài tập kỹ năng sống) theo Lớp học (`ClassId`) và Buổi học cụ thể (`ScheduleId`).
+2. **Theo dõi Bài nộp & Chấm bài (`HomeworkSubmissions`):** Hệ thống tự động khởi tạo danh sách nộp bài cho toàn bộ học sinh đang học trong lớp. Giáo viên chấm bài tập trung, phản hồi lời nhận xét sư phạm tỉ mỉ và cho điểm.
+3. **Tiến độ bài học (`LessonProgress`):** Nhật ký giảng dạy từng buổi của lớp học, lưu lại nội dung trọng tâm và tình hình tiếp thu để ban quản lý cơ sở và phụ huynh cùng theo dõi.
+
+#### Ma Trận Phân Quyền (RBAC) Giai đoạn 1E:
+
+| Chức năng / Thao tác | `SuperAdmin` (👑) | `BranchManager` (🏢) | `Teacher` (👩‍🏫) | `Parent` (👨‍👩‍👧) | `Student` (🎒 Lớp 6+) |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Xem danh sách bài tập** | Toàn bộ cơ sở | Chỉ lớp thuộc cơ sở mình | Chỉ lớp mình được phân công | Chỉ bài tập lớp con đang học | Chỉ bài tập lớp mình đang học |
+| **Giao bài tập mới (`+ Giao bài tập`)** | ✓ Toàn quyền | ✓ Các lớp trong cơ sở | ✓ Các lớp mình phụ trách | ✕ Không | ✕ Không |
+| **Sửa / Xóa bài tập** | ✓ Toàn quyền | ✓ Các lớp trong cơ sở | ✓ Bài tập do mình tạo | ✕ Không | ✕ Không |
+| **Xem danh sách bài nộp của cả lớp** | ✓ Xem tất cả | ✓ Lớp thuộc cơ sở | ✓ Lớp mình phụ trách | ✕ Chỉ xem bài của con | ✕ Chỉ xem bài của mình |
+| **Chấm bài & Phản hồi (`Review`)** | ✓ Toàn quyền | ✓ Lớp thuộc cơ sở | ✓ Lớp mình phụ trách | ✕ Không | ✕ Không |
+| **Nộp bài tập (`Submit`)** | ✓ (Hỗ trợ nộp hộ) | ✕ | ✕ | ✓ Nộp bài cho con | ✓ Tự nộp bài làm của mình |
+| **Xem tiến độ bài học (`LessonProgress`)**| ✓ Tất cả lớp | ✓ Lớp thuộc cơ sở | ✓ Lớp mình phụ trách | ✓ Lớp con đang học | ✓ Lớp mình đang học |
+| **Ghi nhận / Sửa tiến độ bài học** | ✓ Toàn quyền | ✓ Lớp thuộc cơ sở | ✓ Lớp mình phụ trách | ✕ Không | ✕ Không |
+
+> [!NOTE]
+> **TÍNH TỰ ĐỘNG HÓA KHI TẠO BÀI TẬP (AUTOMATION LIFECYCLE):**  
+> Ngay khi Giáo viên bấm "Giao bài tập", backend `HomeworksController.cs` tự động quét bảng `StudentClasses` để tìm tất cả học viên có trạng thái `Active` trong lớp đó và tạo trước các bản ghi `HomeworkSubmissions` với trạng thái ban đầu là `Pending` (Chưa nộp).  
+> Giao diện Admin hiển thị ngay sĩ số `0 / N đã nộp` mà giáo viên không cần phải thêm học sinh thủ công.
+
+---
+
+### 10.2. NGUYÊN LÝ THIẾT KẾ & TƯƠNG TÁC ÁP DỤNG (APPLE DESIGN & EMIL KOWALSKI)
+
+Áp dụng chặt chẽ 2 bộ skill `apple-design` và `emil-design-eng` vào công việc chấm bài và theo dõi học tập:
+
+| STT | Nguyên lý | Đặc tả ứng dụng cụ thể trên Roxy Admin (Giai đoạn 1E) |
+| :-: | :--- | :--- |
+| **1** | **Tối ưu Tốc độ Chấm bài (High-Velocity Grading Flow)** | Giáo viên thường phải chấm liên tục 15–20 bài tập sau mỗi buổi học. Thiết kế sử dụng bố cục **Split-View** (Bên trái: Danh sách bài nộp; Bên phải: Trình xem bài & Form chấm điểm). Bấm chuyển học viên phản hồi tức thì (`0ms DOM switch`, micro cross-fade `opacity: 120ms ease-out`). Bổ sung nút bấm 1 chạm `⚡ Lưu & Sang bé tiếp theo` kèm phím tắt `Cmd/Ctrl + Enter`. |
+| **2** | **Phản hồi tức thì trên Pointer-Down (Response - Kill Latency)** | Các nút chuyển bộ lọc trạng thái bài nộp (`Pending`, `Submitted`, `Reviewed`), nút mở file đính kèm và nút Lưu điểm đều áp dụng phản hồi scale nhẹ `:active:scale-[0.98]` trong `100ms`, mang lại cảm giác chắc chắn, vật lý như ứng dụng native trên iPad/macOS. |
+| **3** | **Thị giác Cảnh báo Hạn nộp theo Mức độ Khẩn cấp (Optical Urgency)** | Hạn nộp (`DueDate`) phân hóa trực quan bằng màu sắc và biểu tượng quang học: <br>• **Còn trên 24h:** Xanh lá / Xám trung tính (`text-slate-600`, icon 📅)<br>• **Sắp hết hạn (dưới 24h):** Vàng hổ phách cảnh báo (`text-amber-700 bg-amber-50`, icon ⏳)<br>• **Đã quá hạn nộp:** Đỏ cảnh báo khẩn (`text-rose-700 bg-rose-50 font-bold`, icon ⚠️). |
+| **4** | **Tính nhất quán không gian của Drawer & Lightbox (Spatial Consistency)** | Drawer Chi tiết bài nộp & Chấm bài luôn trượt từ cạnh phải màn hình (`translate-x-full` → `translate-x-0` trong `200ms cubic-bezier(0.16, 1, 0.3, 1)`). Khi đóng cũng rút lui về cạnh phải. Lightbox xem ảnh bài làm học sinh bung từ tâm trung tâm (`scale(0.96) + opacity: 0` → `scale(1) + opacity: 1`). |
+| **5** | **Trạng thái Rỗng Tinh tế & Ý nghĩa (Emil Kowalski's Tasteful Empty State)** | Khối tiến độ bài học hoặc danh sách bài tập khi chưa có dữ liệu không được để trống trơn hay hiển thị bảng rỗng trơ trọi. Sử dụng hình minh họa nhẹ nhàng, lời hướng dẫn sư phạm thân thiện và nút hành động nhanh giúp giáo viên định hình ngay việc cần làm. |
+| **6** | **Chống lỗi Database Constraint (Zero-Runtime DB Rollback)** | Trong CSDL `RoxyAppDB.sql`, `HomeworkSubmissions.Status` có ràng buộc: `CHECK (Status IN ('Pending','Submitted','Reviewed'))`. Mặc dù DTO backend có ghi `Evaluated|Rejected`, giao diện Frontend **BẮT BUỘC** chuẩn hóa gửi đúng mã `'Reviewed'` khi hoàn tất chấm bài, ngăn chặn triệt để lỗi SQL 500 runtime. |
+
+---
+
+### 10.3. ĐẶC TẢ CHI TIẾT MÀN HÌNH BÀI TẬP VỀ NHÀ (`/homeworks`)
+
+Màn hình `/homeworks` là trung tâm quản lý toàn bộ bài tập được giao cho các lớp học tại trung tâm.
+
+#### 1. Bố Cục Tổng Thể & Thanh Công Cụ (Filter Toolbar)
+
+```
++-------------------------------------------------------------------------------------------------------------------+
+|  📝 BÀI TẬP VỀ NHÀ                                                                             [ + Giao bài tập ] |
+|  Quản lý danh sách bài tập, hạn nộp và theo dõi tiến độ nộp bài của học viên từng lớp.                           |
++-------------------------------------------------------------------------------------------------------------------+
+| [ 🔍 Tìm tiêu đề bài tập... ] [ Lớp: Tất cả ▼ ] [ Buổi học: Tất cả ▼ ] [ Hạn nộp: Tất cả ▼ ] [ Xóa bộ lọc ]       |
++-------------------------------------------------------------------------------------------------------------------+
+```
+
+- **Tiêu đề trang (H1):** `font-bold text-slate-900 text-xl md:text-2xl tracking-tight`.
+- **Nút CTA `+ Giao bài tập`:** 
+  - Chỉ hiển thị cho vai trò `SuperAdmin`, `BranchManager`, `Teacher`.
+  - Phụ huynh (`Parent`) và Học sinh (`Student`) truy cập sẽ tự động ẩn nút này.
+  - Styling: `bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm px-4 py-2 rounded-lg shadow-xs active:scale-[0.98] transition-all duration-150`.
+- **Các bộ lọc tương tác tức thì:**
+  - **Ô tìm kiếm (`search`):** Tìm kiếm theo tiêu đề bài tập, tên lớp học. Có icon kính lúp bên trái, nút `✕` xóa nhanh bên phải.
+  - **Lọc theo Lớp học (`classFilter`):**
+    - Với `Teacher`: Chỉ hiển thị danh sách các lớp do giáo viên đang đăng nhập giảng dạy (`cls.teacherId === currentUser.id`).
+    - Với `BranchManager`: Dropdown các lớp thuộc cơ sở mình quản lý.
+    - Với `SuperAdmin`: Hiển thị tất cả lớp học trong toàn hệ thống.
+  - **Lọc theo Buổi học (`scheduleFilter`):**
+    - Phụ thuộc động: Chỉ kích hoạt khi đã chọn 1 Lớp học cụ thể.
+    - Hiển thị danh sách buổi học của lớp: `[Ngày DD/MM/YYYY] • [HH:mm - HH:mm] • [Phòng]`.
+  - **Lọc theo Tình trạng Hạn nộp (`dueStatusFilter`):**
+    - `Tất cả`
+    - `Đang mở / Còn hạn` (DueDate >= Now)
+    - `Sắp hết hạn (< 24 giờ)` (DueDate - Now <= 24h)
+    - `Đã quá hạn` (DueDate < Now)
+  - **Nút `Xóa bộ lọc`:** Nút phụ xuất hiện khi có bất kỳ bộ lọc nào khác mặc định, click để reset trạng thái tìm kiếm về ban đầu.
+
+---
+
+#### 2. Bảng Danh Sách Bài Tập (Desktop Data Grid)
+
+Container bảng: `w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xs overflow-x-auto`.
+
+```
++-----------------------------------------------------------------------------------------------------------------------------------------------+
+| BÀI TẬP & NGƯỜI GIAO       | LỚP & BUỔI HỌC          | HẠN NỘP BÀI             | TÀI LIỆU ĐÍNH KÈM   | TIẾN ĐỘ NỘP & CHẤM    | THAO TÁC       |
++-----------------------------------------------------------------------------------------------------------------------------------------------+
+| Luyện nét khuyết trên & dưới| Tiền TH Họa Mi 1        | 16/11/2026, 21:00       | 📎 [De-bai-tap-1.pdf]| [ 18 / 20 Học viên ]  | [ 👁 Chấm bài ] |
+| #HW-104 • Cô Mai Anh        | Buổi 4 (14/11/2026)     | (⏳ Còn 2 ngày)         | (Tải về: 2.4 MB)    | [██████████░░] 90%    | [ ✏ Sửa ]      |
+| Tạo lúc: 14/11 10:30        | Cơ sở 1 - P.102         | [ Còn hạn ]             |                     | (14 đã chấm • 4 chờ)  | [ 🗑 Xóa ]      |
++-----------------------------------------------------------------------------------------------------------------------------------------------+
+| Bài tập tư duy Toán logic   | Toán Logic K08          | 13/11/2026, 23:59       | 🔗 [Link Drive bài]  | [ 15 / 15 Học viên ]  | [ 👁 Chấm bài ] |
+| #HW-101 • Thầy Hoàng Nam    | Buổi 8 (12/11/2026)     | (⚠️ Quá hạn 1 ngày)     | (drive.google.com)  | [████████████] 100%   | [ ✏ Sửa ]      |
+| Tạo lúc: 12/11 15:00        | Cơ sở 2 - P.201         | [ ⚠️ Quá hạn ]          |                     | (15/15 đã chấm xong)  | [ 🗑 Xóa ]      |
++-----------------------------------------------------------------------------------------------------------------------------------------------+
+| Vẽ tranh phong cảnh quê hương| Lớp Vẽ Nghệ Thuật V03   | 18/11/2026, 18:00       | —                   | [ 5 / 12 Học viên ]   | [ 👁 Chấm bài ] |
+| #HW-098 • Cô Bích Phương    | Không gắn buổi riêng    | (⏳ Còn 4 ngày)         | (Không có file)     | [████░░░░░░░░] 42%    | [ ✏ Sửa ]      |
+| Tạo lúc: 11/11 09:00        | Cơ sở 1 - P.105         | [ Còn hạn ]             |                     | (2 đã chấm • 3 chờ)   | [ 🗑 Xóa ]      |
++-----------------------------------------------------------------------------------------------------------------------------------------------+
+```
+
+##### Đặc tả chi tiết từng cột:
+1. **Cột 1: Bài tập & Người giao:**
+   - Tiêu đề: `text-sm font-bold text-slate-900 hover:text-blue-600 cursor-pointer transition-colors`. Click tiêu đề mở nhanh màn hình chi tiết bài tập.
+   - Mã bài tập định danh: `text-[11px] font-mono text-slate-400`.
+   - Người giao: Icon `👩‍🏫` hoặc avatar tròn 18px + Tên giáo viên (`CreatedByName`) + Thời gian tạo `HH:mm DD/MM`.
+2. **Cột 2: Lớp học & Buổi học liên kết:**
+   - Tên lớp học: `text-sm font-semibold text-blue-700`.
+   - Buổi học liên kết: Nếu có `ScheduleId`, hiển thị rõ `Buổi [X] ([Ngày]) • [Phòng]`. Nếu không gắn buổi riêng, hiển thị nhãn nhẹ `Toàn khóa học`.
+   - Cơ sở: Badge nhỏ `text-slate-500 bg-slate-100 rounded px-1.5 py-0.5 text-xs`.
+3. **Cột 3: Hạn nộp bài (`DueDate`):**
+   - Thời gian chi tiết: `HH:mm, DD/MM/YYYY` định dạng 24h.
+   - Nhãn thời gian tương đối: `(Còn 2 ngày)` hoặc `(⚠️ Quá hạn 1 ngày)`.
+   - Badge trạng thái hạn nộp:
+     * **Còn hạn:** `bg-emerald-50 text-emerald-800 border-emerald-200 text-xs font-semibold px-2 py-0.5 rounded-full`.
+     * **Sắp hết hạn (< 24h):** `bg-amber-50 text-amber-800 border-amber-300 text-xs font-bold px-2 py-0.5 rounded-full animate-pulse`.
+     * **Quá hạn:** `bg-rose-50 text-rose-800 border-rose-300 text-xs font-bold px-2 py-0.5 rounded-full`.
+4. **Cột 4: Tài liệu đính kèm đề bài (`AttachmentUrl`):**
+   - Nếu là file URL (PDF, Word, ảnh): Hiển thị icon `📎` kèm tên rút gọn hoặc nút `[Xem đề]`, hover mở liên kết tab mới an toàn `target="_blank" rel="noopener noreferrer"`.
+   - Nếu là link Drive/Web: Hiển thị icon `🔗` kèm tên miền rút gọn (`drive.google.com`).
+   - Nếu không có file: Ký hiệu dấu gạch ngang mờ `—`.
+5. **Cột 5: Tiến độ Nộp & Chấm bài (`Submissions Ratio`):**
+   - Tỷ lệ học viên: `font-mono text-xs font-bold text-slate-900` dạng `18 / 20 Học viên đã nộp`.
+   - **Thanh Progress Bar Phân Tầng 3 Đoạn (Stacked Mini Progress Bar):**
+     * Chiều cao `h-2`, bo tròn `rounded-full`, nền xám nhạt `bg-slate-100`.
+     * Đoạn 1 (Xanh lá `bg-emerald-500`): Tỷ lệ bài đã chấm (`Reviewed`).
+     * Đoạn 2 (Xanh dương `bg-blue-500`): Tỷ lệ bài đã nộp đang chờ chấm (`Submitted`).
+     * Đoạn 3 (Nền xám `bg-slate-200`): Tỷ lệ học viên chưa nộp (`Pending`).
+   - Dòng chú thích chi tiết bên dưới: `text-[11px] text-slate-500` (VD: *14 đã chấm • 4 chờ chấm • 2 chưa nộp*).
+6. **Cột 6: Thao tác (Action Buttons):**
+   - **Nút `👁 Chấm bài` (Primary Row Action):** `inline-flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 text-xs font-semibold rounded-lg active:scale-95 transition-all`. Mở trang chi tiết bài tập & drawer chấm bài.
+   - **Nút `✏ Sửa`:** Chỉ hiển thị cho SuperAdmin, BranchManager hoặc chính Giáo viên tạo bài.
+   - **Nút `🗑 Xóa`:** Nút icon thùng rác màu hồng nhạt `text-rose-600 hover:bg-rose-50 p-1.5 rounded-lg active:scale-95 transition-all`. Có dialog xác nhận trước khi xóa vĩnh viễn đề bài và toàn bộ bài nộp liên quan (xóa cascading).
+
+---
+
+#### 3. Modal Giao / Sửa Bài Tập Về Nhà (`CreateEditHomeworkModal`)
+
+Modal mở ra từ giữa màn hình theo nguyên tắc Emil Kowalski (`scale(0.96) + opacity: 0` → `scale(1) + opacity: 1` trong 180ms).
+
+```
++---------------------------------------------------------------------------------------------------+
+|  📝 GIAO BÀI TẬP VỀ NHÀ MỚI                                                                  [ ✕ ]|
+|  Bài tập sẽ được tự động giao cho tất cả học viên đang học trong lớp đã chọn.                    |
++---------------------------------------------------------------------------------------------------+
+|  Lớp học áp dụng: (*)                                                                             |
+|  [ Tiền TH Họa Mi 1 - Cơ sở 1 (Cô Mai Anh phụ trách)                                    🔒/▼ ]    |
+|                                                                                                   |
+|  Buổi học liên kết: (Tùy chọn)                                                                    |
+|  [ -- Buổi 4: Thứ Sáu, 14/11/2026 (08:00 - 09:30) • P.102 --                            ▼ ]        |
+|  ℹ️ Gắn bài tập vào buổi học cụ thể giúp phụ huynh theo dõi sát lộ trình từng ngày.               |
+|                                                                                                   |
+|  Tiêu đề bài tập: (*)                                                                             |
+|  [ Luyện nét khuyết trên & khuyết dưới - Vở thực hành Trang 12-14                                ] |
+|                                                                                                   |
+|  Hạn nộp bài: (*)                                                                                 |
+|  [ 16/11/2026, 21:00                                                                        📅 ]  |
+|  [⚡ Gợi ý: +2 ngày (Tối Chủ Nhật) ]  [⚡ Gợi ý: Trước buổi học kế tiếp ]                         |
+|                                                                                                   |
+|  Tài liệu / Đề bài đính kèm: (Tùy chọn)                                                           |
+|  [ https://drive.google.com/file/d/1A2b3c... hoặc link tải file PDF bài mẫu                   🔗 ]|
+|  Phụ đề: Hỗ trợ link Google Drive, OneDrive hoặc đường dẫn ảnh/tài liệu bài giảng.                |
+|                                                                                                   |
+|  Nội dung hướng dẫn & Đề bài chi tiết:                                                            |
+|  +---------------------------------------------------------------------------------------------+  |
+|  | - Các con viết nắn nót 3 dòng nét khuyết trên và 3 dòng nét khuyết dưới vào vở ô ly.       |  |
+|  | - Chú ý điểm dừng bút ở đường kẻ ngang số 2 và lưng nét chữ thẳng thớm.                     |  |
+|  | - Ba mẹ chụp ảnh bài viết gửi lên hệ thống trước 21h tối Chủ Nhật để cô kịp chấm điểm nhé!  |  |
+|  |                                                                                             |  |
+|  +---------------------------------------------------------------------------------------------+  |
+|                                                                                                   |
+|  +---------------------------------------------------------------------------------------------+  |
+|  | ℹ️ TỰ ĐỘNG KHỞI TẠO:                                                                        |  |
+|  | Khi bấm "Giao bài tập", hệ thống sẽ tự động tạo 20 chỗ nộp bài (HomeworkSubmissions)         |  |
+|  | cho toàn bộ 20 học viên đang học trong lớp "Tiền TH Họa Mi 1".                              |  |
+|  +---------------------------------------------------------------------------------------------+  |
++---------------------------------------------------------------------------------------------------+
+|  [ Hủy bỏ ]                                                                  [ ✓ Giao bài tập ]   |
++---------------------------------------------------------------------------------------------------+
+```
+
+##### Ràng buộc & Validation trên Form:
+1. **Lọc lớp phụ thuộc vai trò:**
+   - Giáo viên (`Teacher`) chỉ thấy danh sách các lớp do mình phụ trách trong dropdown.
+   - Nếu truy cập từ trang chi tiết lớp học (`ClassList`), trường `Lớp học` được điền sẵn và khóa lại để tránh chọn nhầm.
+2. **Buổi học liên kết (`ScheduleId`):**
+   - Khi chọn một lớp, dropdown tự động tải danh sách các buổi học của lớp đó từ API `GET /api/Schedules?classId={classId}`.
+   - Giáo viên có thể để trống nếu bài tập dành cho cả tuần hoặc dự án dài kỳ.
+3. **Phím chọn nhanh Hạn nộp (Quick Due Date Pills):**
+   - Nút `⚡ +2 ngày`: Tự động điền ngày hiện tại + 2 ngày, giờ mặc định `21:00`.
+   - Nút `⚡ Trước buổi học kế`: Tự động tìm ngày diễn ra buổi học tiếp theo và đặt hạn nộp là `21:00` của đêm hôm trước.
+4. **Tự động trim ký tự:** Tiêu đề và nội dung tự động cắt tỉa khoảng trắng đầu/cuối trước khi gửi API.
+
+---
+
+### 10.4. ĐẶC TẢ CHI TIẾT TRANG & DRAWER CHẤM BÀI TẬP (`/homeworks/:id`)
+
+Đây là màn hình trọng tâm giúp giáo viên chấm bài nhanh chóng, xem bài làm học viên và gửi phản hồi sư phạm đến phụ huynh. Màn hình có thể mở dạng toàn trang (`/homeworks/:id`) hoặc dạng Slide-Over Drawer từ danh sách bài tập.
+
+#### 1. Bố Cục Tổng Thể: Tóm Tắt Đề Bài & Bộ Lọc Nộp Bài
+
+```
++-------------------------------------------------------------------------------------------------------------------+
+|  [ ← Quay lại danh sách ]          MÃ BÀI TẬP: #HW-104                          [ ✏ Sửa đề bài ]  [ 🗑 Xóa bài ] |
+|  LUYỆN NÉT KHUYẾT TRÊN & KHUYẾT DƯỚI - TRANG 12-14                                                                |
+|  Lớp: Tiền TH Họa Mi 1 • Cơ sở 1 | Giao bởi: Cô Mai Anh • Tạo lúc: 14/11 10:30 | Hạn nộp: 16/11, 21:00 (Còn 2 ngày) |
+|  Tài liệu: 📎 [De-bai-tap-1.pdf] | Hướng dẫn: Viết nắn nót 3 dòng nét khuyết trên và 3 dòng nét khuyết dưới...   |
++-------------------------------------------------------------------------------------------------------------------+
+|  TIẾN ĐỘ CHUNG:                                                                                                   |
+|  [ Tổng: 20 học viên ]   [ ✉ Chưa nộp: 2 ]   [ 📥 Chờ chấm: 4 ]   [ ✓ Đã chấm: 14 ]   (Đã hoàn thành 70%)         |
++-------------------------------------------------------------------------------------------------------------------+
+|  BỘ LỌC BÀI NỘP:                                                                                                  |
+|  [ Tất cả (20) ]  [ 📥 Đã nộp chờ chấm (4) (Active) ]  [ ✓ Đã chấm (14) ]  [ ⏳ Chưa nộp (2) ]  [ 🔍 Tìm học viên ] |
++-------------------------------------------------------------------------------------------------------------------+
+```
+
+- **Thanh điều hướng quay lại (`Back Link`):** `text-slate-600 hover:text-blue-600 inline-flex items-center gap-1.5 text-sm font-medium`.
+- **Dải thẻ KPI tiến độ (Submission Status Cards):**
+  - Giúp giáo viên nắm bắt ngay bao nhiêu bé đã nộp, bao nhiêu bé chưa chấm để ưu tiên xử lý.
+- **Thanh Segmented Control phân loại bài nộp:**
+  - `Tất cả`: Xem toàn bộ danh sách 20 học sinh trong lớp.
+  - `Đã nộp chờ chấm`: Lọc nhanh danh sách các bài học sinh đã gửi bài làm (`Status = 'Submitted'`) cần cô nhận xét ngay.
+  - `Đã chấm`: Các bài đã có điểm và nhận xét (`Status = 'Reviewed'`).
+  - `Chưa nộp`: Các bé chưa gửi bài (`Status = 'Pending'`).
+
+---
+
+#### 2. Giao Diện Chấm Bài Tập Trung (Grading Split-View) Cho Giáo Viên & Staff
+
+Bố cục 2 cột Split-View trên máy tính bàn và máy tính bảng:
+
+```
++----------------------------------------------------+--------------------------------------------------------------+
+|  DANH SÁCH BÀI NỘP TRONG LỚP (4 bài chờ chấm)      |  CHI TIẾT BÀI NỘP & CHẤM ĐIỂM HỌC VIÊN                      |
++----------------------------------------------------+--------------------------------------------------------------+
+| [✓] Trần Bảo Ngọc (#STU-102)          [ Chờ chấm ] | 🎓 Học viên: Trần Bảo Ngọc (#STU-102) • 6 tuổi               |
+|     Nộp lúc: 15/11 14:20 (Đúng hạn)                | Trạng thái: [ 📥 Đã nộp bài ] • Nộp lúc: 15/11/2026, 14:20   |
+|     Bài làm: 🖼️ 2 ảnh bài viết vở ô ly             | ------------------------------------------------------------ |
+|     (Đang chọn - Viền xanh đậm active)             | 💬 Lời nhắn từ phụ huynh / bé:                               |
+|                                                    | "Dạ mẹ gửi bài tập của bé Ngọc, hôm nay bé tự ngồi viết      |
+| [ ] Nguyễn Minh Khang (#STU-105)      [ Chờ chấm ] |  hết 3 dòng rất chăm chỉ ạ!"                                 |
+|     Nộp lúc: 15/11 16:45 (Đúng hạn)                |                                                              |
+|     Bài làm: 🔗 Link Google Drive                  | 📎 BÀI LÀM CỦA BÉ:                                           |
+|                                                    | +----------------------------------------------------------+ |
+| [ ] Lê Tuấn Kiệt (#STU-110)           [ Chờ chấm ] | | [🖼️ Thumbnail ảnh bài viết trang 12 - Bấm xem lớn 🔍]    | |
+|     Nộp lúc: 16/11 08:10 (Đúng hạn)                | | Link file: https://cdn.roxy.edu.vn/submissions/stu102.jpg| |
+|     Bài làm: 🖼️ 1 ảnh chụp                          | +----------------------------------------------------------+ |
+|                                                    |                                                              |
+| [ ] Hoàng Gia Bảo (#STU-114)          [ Chờ chấm ] | 👩‍🏫 GIÁO VIÊN CHẤM BÀI & NHẬN XÉT:                           |
+|     Nộp lúc: 16/11 09:30 (Đúng hạn)                |                                                              |
+|     Bài làm: 🖼️ 1 ảnh chụp                          | Điểm số đánh giá: (*)                                        |
+| -------------------------------------------------- | [ 9.5  ] / Thang điểm 10.0  [ ⚡ Cho 10 ]  [ ⚡ Cho 9 ]       |
+|                                                    | (Hoặc: [ ✓ Đạt yêu cầu ]  [ ✕ Chưa đạt ] cho khối Mầm non)   |
+| [✓ Đã chấm: 14 học viên - Nhấp để xem]             |                                                              |
+| [⏳ Chưa nộp: 2 học viên - Nhấp để xem]             | Nhận xét sư phạm của cô giáo: (*) (Tối đa 1000 ký tự)        |
+|                                                    | +----------------------------------------------------------+ |
+|                                                    | | Bé Ngọc viết nét khuyết trên rất đều tay, độ cao 2.5 ô ly| |
+|                                                    | | chuẩn nét. Nét khuyết dưới ở dòng 2 hơi lệch một chút,   | |
+|                                                    | | buổi sau cô sẽ rèn thêm cho con nhé. Cô khen bé rất nỗ   | |
+|                                                    | | lực! ⭐⭐⭐⭐⭐                                          | |
+|                                                    | +----------------------------------------------------------+ |
+|                                                    | [⚡ Mẫu nhận xét: Khen ngợi ] [⚡ Mẫu nhận xét: Cần rèn thêm ]|
+|                                                    |                                                              |
+|                                                    | [ Yêu cầu nộp lại bài ]        [ ✓ Lưu & Chấm bé tiếp theo ] |
+|                                                    |                             (Phím tắt: Ctrl + Enter / ⌘Enter)|
++----------------------------------------------------+--------------------------------------------------------------+
+```
+
+##### Chi tiết tính năng Split-View:
+1. **Cột trái — Danh sách học viên nộp bài (`Submissions Sidebar`):**
+   - Độ rộng cố định `w-80 md:w-96`, cuộn dọc độc lập `overflow-y-auto`.
+   - Mỗi item thẻ học viên hiển thị: Tên học viên in đậm, mã `#STU-xxx`, thời gian nộp, badge trạng thái (`Pending` xám, `Submitted` vàng chờ duyệt, `Reviewed` xanh lá kèm điểm số).
+   - Thẻ đang được chọn (Active Item): Nền `bg-blue-50/70`, viền trái `border-l-4 border-blue-600`, bóng đổ nhẹ.
+2. **Cột phải — Trình chấm điểm & Phản hồi (`Grading Pane`):**
+   - **Khu vực xem bài làm:** 
+     * Nếu là ảnh (JPG, PNG, WebP): Hiển thị ảnh xem trước sắc nét với nút "🔍 Phóng to toàn màn hình" (bung Lightbox modal) giúp cô giáo soi rõ từng ô ly và nét mực của học sinh.
+     * Nếu là liên kết (Google Drive, YouTube bài đọc, file PDF): Nút bấm mở link trong tab mới kèm icon định dạng.
+   - **Trường nhập Điểm số (`Score`):**
+     * Ô nhập số thực từ `0.0` đến `10.0` (`step="0.5"`), chữ số to rõ `text-lg font-mono font-bold text-blue-700 w-24 text-center`.
+     * Bộ nút 1 chạm điền nhanh: `[⚡ 10 điểm]`, `[⚡ 9 điểm]`, `[⚡ 8 điểm]`.
+     * Với các lớp Tiền tiểu học hoặc Can thiệp đặc biệt: Có thể chuyển đổi sang chế độ đánh giá định tính `[✓ Đạt]` / `[✕ Cần rèn thêm]`.
+     * *Lưu ý kỹ thuật:* Do bảng `HomeworkSubmissions` lưu phản hồi trong `TeacherFeedback` (1000 ký tự), giao diện tự động lưu trữ điểm số vào đầu nội dung nhận xét (VD: `[Điểm: 9.5/10] Bé viết rất nắn nót...`) để đảm bảo không lỗi schema CSDL.
+   - **Trường Nhận xét của Giáo viên (`TeacherFeedback`):**
+     * Textarea chiều cao tối thiểu 120px, có bộ đếm ký tự `... / 1000`.
+     * Thư viện mẫu nhận xét nhanh (Quick Feedback Templates): Bấm 1 chạm để chèn nhanh các câu nhận xét mẫu thân thiện, giúp giáo viên tiết kiệm 80% thời gian gõ phím.
+   - **Nút bấm Hành động:**
+     * **Nút `✓ Lưu & Chấm bé tiếp theo` (Primary Action):** Lưu kết quả chấm bài (`PUT /api/HomeworkSubmissions/{id}/review`), cập nhật trạng thái `Reviewed`, đồng thời tự động chuyển tiêu điểm sang bài nộp chờ chấm của học viên tiếp theo trong danh sách. Hỗ trợ phím tắt `Ctrl + Enter` (hoặc `Cmd + Enter` trên Mac).
+     * **Nút `Yêu cầu nộp lại bài`:** Gửi phản hồi yêu cầu học sinh làm lại kèm lý do (VD: *Ảnh chụp bài bị mờ nét, ba mẹ chụp lại giúp cô nhé*).
+
+---
+
+#### 3. Giao Diện Nộp Bài Dành Cho Phụ Huynh / Học Sinh (`Student/Parent Submission View`)
+
+Khi Phụ huynh đăng nhập (hoặc Học sinh lớp 6+ tự truy cập) xem chi tiết bài tập:
+- Giao diện **TUYỆT ĐỐI KHÔNG HIỂN THỊ** danh sách các học viên khác trong lớp (Tuân thủ nghiêm ngặt quy định bảo mật riêng tư sư phạm tại `GEMINI.md`).
+- Chỉ hiển thị duy nhất thông tin bài nộp của chính học viên đó:
+
+```
++---------------------------------------------------------------------------------------------------+
+|  🎓 BÀI TẬP VỀ NHÀ: Luyện nét khuyết trên & khuyết dưới                                           |
+|  Lớp: Tiền TH Họa Mi 1 • Hạn nộp: 16/11/2026, 21:00 (⏳ Còn 2 ngày)                               |
++---------------------------------------------------------------------------------------------------+
+|  ĐỀ BÀI CỦA CÔ GIÁO:                                                                              |
+|  Các con viết 3 dòng nét khuyết trên và 3 dòng nét khuyết dưới vào vở ô ly trang 12...            |
+|  Tài liệu kèm theo: 📎 [De-bai-tap-1.pdf]                                                         |
++---------------------------------------------------------------------------------------------------+
+|  HỒ SƠ NỘP BÀI CỦA BÉ: Trần Bảo Ngọc (#STU-102)                                                   |
+|                                                                                                   |
+|  Trạng thái bài làm: [ ⏳ Chưa nộp bài ]                                                           |
+|                                                                                                   |
+|  Đường dẫn bài làm / Ảnh chụp bài viết: (*)                                                       |
+|  [ https://drive.google.com/file/d/your-homework-image.jpg                                    🔗 ]|
+|  ℹ️ Ba mẹ tải ảnh bài làm của bé lên Google Drive / Zalo rồi dán đường dẫn vào đây nhé!           |
+|                                                                                                   |
+|  Lời nhắn gửi cô giáo: (Tùy chọn)                                                                 |
+|  [ Bé Ngọc hôm nay viết bài rất tập trung, mẹ chụp gửi cô chấm giúp bé ạ...                     ] |
++---------------------------------------------------------------------------------------------------+
+|                                                                             [ 📤 Gửi bài tập ]    |
++---------------------------------------------------------------------------------------------------+
+```
+
+- **Khi giáo viên đã chấm xong (`Status = 'Reviewed'`):**
+  - Khung form nộp bài chuyển thành **Thẻ Kết quả Chấm bài** trang trọng:
+    * Điểm số to nổi bật: `font-mono text-3xl font-extrabold text-emerald-600 bg-emerald-50 px-4 py-2 rounded-xl inline-block`.
+    * Lời nhận xét ấm áp của cô giáo đóng trong khung viền xanh nhạt `border-blue-200 bg-blue-50/50 p-4 rounded-xl`.
+    * Ngày giờ cô chấm: `Đã chấm lúc 15/11/2026, 17:30 bởi Cô Mai Anh`.
+    * Nút `Nộp lại bài mới` (nếu cô cho phép nộp cải thiện điểm).
+
+---
+
+### 10.5. ĐẶC TẢ KHỐI TIẾN ĐỘ BÀI HỌC (`LessonProgress`) TRONG CHI TIẾT LỚP HỌC (`ClassList`)
+
+Nhật ký bài học (`LessonProgress`) là công cụ phản ánh thực tế giảng dạy của từng buổi học. Trong trang Quản lý Lớp học (`ClassList`), khi người dùng bấm vào một lớp học hoặc mở **Drawer Chi tiết Lớp (`ClassDetailDrawer`)**, Tab **"Tiến độ bài học"** sẽ hiển thị khối này.
+
+#### 1. Dòng Thời Gian Nhật Ký Bài Học (Lesson Progress Timeline)
+
+```
++-------------------------------------------------------------------------------------------------------------------+
+|  [ Thông tin chung ]   [ Danh sách học viên (18) ]   [ 📖 Tiến độ bài học (Active) ]   [ 💰 Học phí lớp ]         |
++-------------------------------------------------------------------------------------------------------------------+
+|  NHẬT KÝ TIẾN ĐỘ BÀI DẠY THEO BUỔI                                             [ + Ghi nhận tiến độ mới ]        |
+|  Theo dõi nội dung giảng dạy thực tế, mức độ tiếp thu và dặn dò sau từng buổi học của lớp.                        |
++-------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                   |
+|  (●) BUỔI 4: Thứ Sáu, 14/11/2026 • 08:00 - 09:30 • Phòng 102                                                      |
+|   |  Tiêu đề: Luyện viết nhóm nét khuyết trên & khuyết dưới                                                        |
+|   |  Người ghi nhận: Cô Mai Anh • Cập nhật lúc: 14/11 10:15                                                       |
+|   |  +---------------------------------------------------------------------------------------------------------+  |
+|   |  | NỘI DUNG GIẢNG DẠY:                                                                                     |  |
+|   |  | 1. Ôn tập nhóm nét móc xuôi, móc ngược và nét móc hai đầu (15 phút).                                   |  |
+|   |  | 2. Hướng dẫn kỹ thuật rê bút viết nét khuyết trên: điểm bắt đầu tại đường kẻ ngang 2, lượn cong qua góc.|  |
+|   |  | 3. Cho cả lớp thực hành viết bảng con, sau đó chuyển sang viết vở bài tập trang 12.                     |  |
+|   |  | TÌNH HÌNH TIẾP THU CHUNG:                                                                               |  |
+|   |  | - Đa số các bé (15/18) nắm vững điểm giao nhau của nét khuyết.                                          |  |
+|   |  | - Bé Khang và bé Bảo viết hơi vội nên nét khuyết dưới bị méo, cô đã kèm riêng 10 phút cuối giờ.        |  |
+|   |  | DẶN DÒ: Đã giao bài tập #HW-104 về nhà, hạn nộp 21h Chủ Nhật.                                          |  |
+|   |  +---------------------------------------------------------------------------------------------------------+  |
+|   |  [ ✏ Sửa nội dung ]   [ 🗑 Xóa ]                                                                              |
+|   |                                                                                                               |
+|  (●) BUỔI 3: Thứ Tư, 12/11/2026 • 08:00 - 09:30 • Phòng 102                                                      |
+|   |  Tiêu đề: Rèn tư thế ngồi viết chuẩn & kỹ thuật cầm bút 3 ngón                                                |
+|   |  Người ghi nhận: Cô Mai Anh • Cập nhật lúc: 12/11 10:00                                                       |
+|   |  +---------------------------------------------------------------------------------------------------------+  |
+|   |  | NỘI DUNG GIẢNG DẠY:                                                                                     |  |
+|   |  | - Chỉnh sửa tư thế ngồi: lưng thẳng, không tì ngực vào cạnh bàn, khoảng cách mắt từ 25 - 30cm.          |  |
+|   |  | - Luyện cầm bút bằng 3 ngón (cái, trỏ, giữa), cổ tay thả lỏng linh hoạt.                                 |  |
+|   |  +---------------------------------------------------------------------------------------------------------+  |
+|   |  [ ✏ Sửa nội dung ]   [ 🗑 Xóa ]                                                                              |
+|                                                                                                                   |
++-------------------------------------------------------------------------------------------------------------------+
+```
+
+- **Cấu trúc trục thời gian (Timeline Axis):**
+  - Trục dọc màu xanh xám `border-l-2 border-slate-200 ml-4 pl-6 relative space-y-8`.
+  - Nốt tròn chỉ thị buổi học: `absolute -left-[9px] w-4 h-4 rounded-full bg-blue-600 border-2 border-white ring-2 ring-blue-100`.
+  - Khung nội dung từng buổi: `bg-slate-50 border border-slate-200 rounded-xl p-4 shadow-2xs hover:bg-slate-50/80 transition-all`.
+- **Thao tác nhanh cho giáo viên:**
+  - Nút `+ Ghi nhận tiến độ mới`: Mở modal nhập nhật ký bài dạy.
+  - Nút `✏ Sửa` và `🗑 Xóa`: Có quyền phân bổ theo RBAC (chỉ GV phụ trách lớp hoặc Quản lý chi nhánh được sửa).
+
+---
+
+#### 2. Trạng Thái Rỗng Tinh Tế (Tasteful Clean Empty State)
+
+Khi lớp học mới mở hoặc chưa có buổi nào được ghi nhận nhật ký:
+> Áp dụng triết lý của **Emil Kowalski**: Không hiển thị hộp xám trơ trọi, trạng thái rỗng phải có tính thẩm mỹ, ấm áp và định hướng thao tác tiếp theo.
+
+```
++---------------------------------------------------------------------------------------------------+
+|                                                                                                   |
+|                                         📖                                                        |
+|                       Chưa có ghi nhận tiến độ bài học nào                                       |
+|                                                                                                   |
+|           Giáo viên phụ trách lớp sẽ cập nhật nội dung giảng dạy, mức độ tiếp thu                 |
+|           của các bé và dặn dò phụ huynh sau mỗi buổi học tại trung tâm.                         |
+|                                                                                                   |
+|                             [ + Ghi nhận tiến độ buổi đầu tiên ]                                  |
+|                                                                                                   |
++---------------------------------------------------------------------------------------------------+
+```
+
+- Icon trang vở mở nhẹ nhàng: `text-4xl text-blue-400 p-4 bg-blue-50 rounded-full inline-block`.
+- Tiêu đề rỗng: `text-base font-semibold text-slate-800 mt-3`.
+- Mô tả định hướng: `text-xs text-slate-500 max-w-md mx-auto text-center leading-relaxed`.
+- Nút CTA nhanh: `bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded-lg active:scale-95 transition-all mt-4` (Ẩn đối với vai trò `Parent`/`Student`).
+
+---
+
+#### 3. Modal Thêm / Sửa Tiến Độ Bài Học (`CreateEditLessonProgressModal`)
+
+```
++---------------------------------------------------------------------------------------------------+
+|  📖 GHI NHẬN TIẾN ĐỘ BÀI HỌC MỚI                                                             [ ✕ ]|
+|  Lớp học: Tiền TH Họa Mi 1 (Cơ sở 1 - Bình Trưng Đông)                                            |
++---------------------------------------------------------------------------------------------------+
+|  Ngày diễn ra buổi học: (*)                                                                       |
+|  [ 14/11/2026                                                                               📅 ]  |
+|                                                                                                   |
+|  Buổi học trong lịch: (Khuyên dùng)                                                               |
+|  [ Buổi 4: Thứ Sáu, 14/11/2026 (08:00 - 09:30) • P.102 • Cô Mai Anh                      ▼ ]        |
+|  ℹ️ Chọn buổi học tương ứng để hệ thống đồng bộ với lịch học và bảng điểm danh.                   |
+|                                                                                                   |
+|  Tiêu đề tóm tắt buổi dạy: (Tùy chọn)                                                             |
+|  [ Luyện viết nhóm nét khuyết trên & nét khuyết dưới                                            ] |
+|                                                                                                   |
+|  Nội dung bài dạy & Tình hình học tập: (*)                                                        |
+|  +---------------------------------------------------------------------------------------------+  |
+|  | - Nội dung đã dạy: ...                                                                      |  |
+|  | - Đánh giá tiếp thu của học sinh trong lớp: ...                                             |  |
+|  | - Bài tập / Nhiệm vụ dặn dò về nhà: ...                                                     |  |
+|  |                                                                                             |  |
+|  +---------------------------------------------------------------------------------------------+  |
+|  Phụ đề: Hỗ trợ xuống dòng và các gạch đầu dòng để nội dung dễ đọc.                               |
++---------------------------------------------------------------------------------------------------+
+|  [ Hủy bỏ ]                                                                  [ ✓ Lưu tiến độ ]    |
++---------------------------------------------------------------------------------------------------+
+```
+
+---
+
+### 10.6. THIẾT KẾ RESPONSIVE TRÊN MOBILE (`375px – 414px`)
+
+Trên màn hình điện thoại di động (khi giáo viên mở điện thoại kiểm tra bài nộp hoặc phụ huynh kiểm tra bài tập về nhà của con):
+
+#### 1. Màn hình Bài tập trên Mobile (`/homeworks`):
+- Bảng desktop chuyển thành **Danh sách Thẻ Bài tập (Homework Card Stack)**:
+
+```
++-------------------------------------------------------+
+|  📝 Luyện nét khuyết trên & dưới          [ Còn hạn ] |
+|  Tiền TH Họa Mi 1 • Buổi 4 (14/11/2026)               |
+|  +-------------------------------------------------+  |
+|  | ⏰ Hạn: 16/11, 21:00 (Còn 2 ngày)                |  |
+|  | 📎 Đề bài: [De-bai-tap-1.pdf]                    |  |
+|  | Tiến độ: 18/20 đã nộp (14 đã chấm)               |  |
+|  | [██████████████░░] 90%                           |  |
+|  +-------------------------------------------------+  |
+|  [ 👁 Chấm bài (44px) ]      [ ✏ Sửa ]    [ 🗑 ]       |
++-------------------------------------------------------+
+```
+
+- Chiều cao các nút thao tác chạm đạt chuẩn tối thiểu `min-h-[44px]` (Apple HIG) để bấm dễ dàng bằng ngón tay cái mà không bị chạm nhầm nút bên cạnh.
+
+#### 2. Trải nghiệm Chấm bài trên Mobile:
+- Split-View desktop tự động chuyển thành **Luồng 2 Bước trên Mobile**:
+  - **Bước 1:** Danh sách thẻ học viên nộp bài cuộn dọc mượt mà.
+  - **Bước 2:** Chạm vào học viên sẽ mở **Bottom Sheet Chấm bài trượt từ đáy màn hình lên** (`fixed inset-x-0 bottom-0 max-h-[92vh] rounded-t-2xl bg-white shadow-2xl overflow-y-auto`):
+    * Có thanh kéo vuốt xuống (Drag Handle: `w-12 h-1.5 bg-slate-300 rounded-full mx-auto my-2`).
+    * Xem ảnh bài làm với cử chỉ zoom 2 ngón tay.
+    * Form nhập điểm và nhận xét với bàn phím số tối ưu (`inputmode="decimal"`).
+    * Nút `✓ Lưu kết quả` cố định ở đáy màn hình (Sticky Bottom Bar `safe-area-inset-bottom`).
+
+---
+
+### 10.7. BẢNG MÃ TOKENS & BADGES BỔ SUNG CHO GIAI ĐOẠN 1E
+
+#### 1. Badges Trạng thái Bài nộp (Khớp 100% CSDL `HomeworkSubmissions.Status`):
+
+| Giá trị Mã CSDL | Nhãn Tiếng Việt trên UI | Styling Badge (Tailwind CSS 4) | Dot chỉ thị | Ý nghĩa nghiệp vụ |
+| :--- | :--- | :--- | :---: | :--- |
+| `Pending` | **Chưa nộp** | `bg-slate-100 text-slate-600 border border-slate-300 font-medium px-2.5 py-0.5 rounded-full text-xs` | `bg-slate-400` | Hệ thống tự động tạo khi giao bài, học viên chưa gửi bài |
+| `Submitted` | **Đã nộp bài** | `bg-blue-50 text-blue-800 border border-blue-300 font-semibold px-2.5 py-0.5 rounded-full text-xs` | `bg-blue-500` | Học sinh/Phụ huynh đã gửi link/ảnh bài làm, chờ giáo viên chấm |
+| `Reviewed` | **Đã chấm điểm** | `bg-emerald-50 text-emerald-800 border border-emerald-300 font-semibold px-2.5 py-0.5 rounded-full text-xs` | `bg-emerald-500` | Giáo viên đã nhận xét và ghi điểm thành công |
+
+#### 2. Badges Trạng thái Hạn nộp Đề bài (`DueDate Status`):
+
+| Phân loại hạn nộp | Nhãn hiển thị Tiếng Việt | Styling Badge | Icon chỉ thị |
+| :--- | :--- | :--- | :---: |
+| Còn trên 24 giờ | **Còn hạn** | `bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-semibold px-2.5 py-0.5 rounded-full` | ⏳ |
+| Còn dưới 24 giờ | **Sắp hết hạn** | `bg-amber-50 text-amber-800 border border-amber-300 text-xs font-bold px-2.5 py-0.5 rounded-full animate-pulse` | ⚠️ |
+| Đã quá thời hạn | **Đã quá hạn** | `bg-rose-50 text-rose-800 border border-rose-300 text-xs font-bold px-2.5 py-0.5 rounded-full` | 🚨 |
+
+---
+
+### 10.8. TIÊU CHUẨN NGHIỆM THU CHO GIAI ĐOẠN 1E (ACCEPTANCE CHECKLIST)
+
+Frontend Developer và QA đối chiếu nghiệm thu tính năng theo danh sách kiểm tra chi tiết sau:
+
+- [ ] **Phân Quyền Vai Trò Nghiêm Ngặt (RBAC Matrix):**
+  - [ ] Nút `+ Giao bài tập` chỉ hiển thị cho `SuperAdmin`, `BranchManager`, `Teacher`. Phụ huynh và học sinh hoàn toàn không thấy nút này.
+  - [ ] Tài khoản `Teacher`: Dropdown chọn lớp chỉ hiển thị các lớp do mình giảng dạy; chỉ xem/chấm bài nộp của lớp mình.
+  - [ ] Tài khoản `BranchManager`: Bị khóa cứng dữ liệu theo chi nhánh mình quản lý.
+  - [ ] Tài khoản `Parent` / `Student`: Chỉ xem được đề bài và thông tin bài nộp của chính mình/con mình. Không thấy danh sách hay bài làm của học sinh khác.
+- [ ] **Màn Hình Bài Tập Về Nhà (`/homeworks`):**
+  - [ ] Thanh tìm kiếm và bộ lọc theo Lớp học, Buổi học, Tình trạng hạn nộp hoạt động chính xác.
+  - [ ] Bảng danh sách hiển thị đầy đủ thông tin: Tiêu đề bài tập, Người tạo, Lớp & Buổi học, Hạn nộp kèm cảnh báo thời gian tương đối, File/Link đính kèm.
+  - [ ] Cột tiến độ nộp & chấm hiển thị đúng tỷ lệ học viên (`x / y`) kèm thanh mini progress bar phân màu chuẩn xác.
+  - [ ] Modal Giao bài tập: Khi tạo thành công, hệ thống tự động sinh bản ghi nộp bài `Pending` cho mọi học viên đang học trong lớp.
+- [ ] **Chi Tiết Bài Tập & Giao Diện Chấm Bài (`/homeworks/:id`):**
+  - [ ] Khung tóm tắt đề bài hiển thị rõ nội dung, link file tải về và thời gian đếm ngược hạn nộp.
+  - [ ] Bộ lọc trạng thái bài nộp (`Tất cả`, `Chưa nộp`, `Đã nộp chờ chấm`, `Đã chấm`) phản hồi tức thì không reload trang.
+  - [ ] Chấm bài Split-View: Chuyển đổi giữa các học sinh mượt mà; hiển thị thumbnail bài làm và link xem bài ngoài.
+  - [ ] Form chấm bài: Cho phép nhập Điểm số (`Score`), Nhận xét (`TeacherFeedback`), bấm `Lưu` gọi API cập nhật trạng thái `Reviewed` thành công.
+  - [ ] Phím tắt `Cmd/Ctrl + Enter` hỗ trợ "Lưu & Chuyển sang bé tiếp theo" vận hành chuẩn xác.
+- [ ] **Tiến Độ Bài Học (`LessonProgress`) Trong Chi Tiết Lớp (`ClassList`):**
+  - [ ] Dòng thời gian hiển thị danh sách các buổi học đã dạy theo thứ tự mới nhất lên đầu.
+  - [ ] Nội dung chi tiết buổi dạy, người ghi nhận và thời gian cập nhật hiển thị rõ ràng.
+  - [ ] Trạng thái rỗng (Empty state) hiển thị tinh tế, đẹp mắt khi lớp học chưa có buổi ghi nhận nào.
+  - [ ] Modal Thêm/Sửa tiến độ: Chọn được ngày dạy, buổi học liên kết và nhập nội dung bài học thuận tiện.
+- [ ] **Chuẩn Responsive Mobile (`375px – 414px`):**
+  - [ ] Danh sách bài tập chuyển thành dạng thẻ có chiều cao phím bấm tối thiểu `44px` theo chuẩn Apple HIG.
+  - [ ] Giao diện chấm bài trên mobile chuyển thành Bottom Sheet trượt từ đáy màn hình lên kèm thanh drag handle trực quan.
+

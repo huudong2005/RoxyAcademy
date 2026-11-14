@@ -17,44 +17,162 @@ public class LessonProgressesController(RoxyDbContext db) : ControllerBase
     private int UserId => User.GetUserId();
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<LessonProgressDto>>> GetProgresses([FromQuery] int classId)
+    public async Task<ActionResult<IEnumerable<LessonProgressDto>>> GetProgresses(
+        [FromQuery] int? classId = null,
+        [FromQuery] int? branchId = null,
+        [FromQuery] DateOnly? fromDate = null,
+        [FromQuery] DateOnly? toDate = null)
     {
         var q = db.LessonProgresses
-            .Include(lp => lp.Class)
+            .Include(lp => lp.Class).ThenInclude(c => c.Branch)
             .Include(lp => lp.CreatedByNavigation)
-            .Where(lp => lp.ClassId == classId)
+            .Include(lp => lp.Schedule)
             .AsQueryable();
 
-        // Phân quyền dữ liệu xem
-        if (Role == "Teacher")
+        // 1. Phân quyền dữ liệu xem (Role-based scope)
+        switch (Role)
         {
-            q = q.Where(lp => lp.Class!.TeacherId == UserId);
+            case "SuperAdmin":
+                break;
+
+            case "BranchManager":
+                var userBranchId = User.GetBranchId() ?? -1;
+                q = q.Where(lp => lp.Class.BranchId == userBranchId);
+                break;
+
+            case "Teacher":
+                q = q.Where(lp => lp.Class.TeacherId == UserId
+                    || (lp.ScheduleId != null && lp.Schedule!.SubstituteTeacherId == UserId)
+                    || db.Schedules.Any(s => s.ClassId == lp.ClassId && s.SubstituteTeacherId == UserId));
+                break;
+
+            case "Parent":
+                q = q.Where(lp => db.StudentClasses.Any(sc =>
+                    sc.ClassId == lp.ClassId &&
+                    sc.Student.ParentId == UserId &&
+                    sc.Status == "Active"));
+                break;
+
+            case "Student":
+                q = q.Where(lp => db.StudentClasses.Any(sc =>
+                    sc.ClassId == lp.ClassId &&
+                    sc.Student.UserId == UserId &&
+                    sc.Status == "Active"));
+                break;
+
+            default:
+                return Forbid();
         }
-        else if (Role == "BranchManager")
+
+        // 2. Bộ lọc động theo tham số
+        if (classId.HasValue)
         {
-            var branchId = User.GetBranchId();
-            q = q.Where(lp => lp.Class!.BranchId == branchId);
+            q = q.Where(lp => lp.ClassId == classId.Value);
         }
-        else if (Role == "Parent")
+
+        if (branchId.HasValue && Role != "BranchManager")
         {
-            // Phụ huynh chỉ xem được nếu con đang học lớp này
-            q = q.Where(lp => db.StudentClasses.Any(sc => sc.ClassId == classId && sc.Student!.ParentId == UserId && sc.Status == "Active"));
+            q = q.Where(lp => lp.Class.BranchId == branchId.Value);
         }
-        else if (Role == "Student")
+
+        if (fromDate.HasValue)
         {
-            // Học sinh chỉ xem được nếu mình đang học lớp này
-            q = q.Where(lp => db.StudentClasses.Any(sc => sc.ClassId == classId && sc.Student!.UserId == UserId && sc.Status == "Active"));
+            q = q.Where(lp => lp.LessonDate >= fromDate.Value);
+        }
+
+        if (toDate.HasValue)
+        {
+            q = q.Where(lp => lp.LessonDate <= toDate.Value);
         }
 
         var list = await q.OrderByDescending(lp => lp.LessonDate).ThenByDescending(lp => lp.CreatedAt)
             .Select(lp => new LessonProgressDto(
-                lp.Id, lp.ClassId, lp.Class!.ClassName, lp.ScheduleId,
-                lp.LessonDate, lp.Title, lp.Content,
-                lp.CreatedBy, lp.CreatedByNavigation!.FullName,
-                lp.CreatedAt, lp.UpdatedAt
-            )).ToListAsync();
+                lp.Id,
+                lp.ClassId,
+                lp.Class.ClassName,
+                lp.ScheduleId,
+                lp.LessonDate,
+                lp.Title,
+                lp.Content,
+                lp.CreatedBy,
+                lp.CreatedByNavigation.FullName,
+                lp.CreatedAt,
+                lp.UpdatedAt
+            ))
+            .ToListAsync();
 
         return Ok(list);
+    }
+
+    [HttpGet("{id}")]
+    public async Task<ActionResult<LessonProgressDto>> GetProgressById(int id)
+    {
+        var lp = await db.LessonProgresses
+            .Include(lp => lp.Class).ThenInclude(c => c.Branch)
+            .Include(lp => lp.CreatedByNavigation)
+            .Include(lp => lp.Schedule)
+            .FirstOrDefaultAsync(lp => lp.Id == id);
+
+        if (lp == null)
+            return NotFound(new { message = "Không tìm thấy ghi nhận tiến độ này." });
+
+        // Phân quyền xem
+        switch (Role)
+        {
+            case "SuperAdmin":
+                break;
+
+            case "BranchManager":
+                var userBranchId = User.GetBranchId() ?? -1;
+                if (lp.Class.BranchId != userBranchId)
+                    return Forbid();
+                break;
+
+            case "Teacher":
+                bool isTeacher = lp.Class.TeacherId == UserId
+                    || (lp.ScheduleId != null && lp.Schedule?.SubstituteTeacherId == UserId)
+                    || await db.Schedules.AnyAsync(s => s.ClassId == lp.ClassId && s.SubstituteTeacherId == UserId);
+                if (!isTeacher)
+                    return Forbid();
+                break;
+
+            case "Parent":
+                bool hasChild = await db.StudentClasses.AnyAsync(sc =>
+                    sc.ClassId == lp.ClassId &&
+                    sc.Student.ParentId == UserId &&
+                    sc.Status == "Active");
+                if (!hasChild)
+                    return Forbid();
+                break;
+
+            case "Student":
+                bool isEnrolled = await db.StudentClasses.AnyAsync(sc =>
+                    sc.ClassId == lp.ClassId &&
+                    sc.Student.UserId == UserId &&
+                    sc.Status == "Active");
+                if (!isEnrolled)
+                    return Forbid();
+                break;
+
+            default:
+                return Forbid();
+        }
+
+        var dto = new LessonProgressDto(
+            lp.Id,
+            lp.ClassId,
+            lp.Class.ClassName,
+            lp.ScheduleId,
+            lp.LessonDate,
+            lp.Title,
+            lp.Content,
+            lp.CreatedBy,
+            lp.CreatedByNavigation.FullName,
+            lp.CreatedAt,
+            lp.UpdatedAt
+        );
+
+        return Ok(dto);
     }
 
     [HttpPost]
@@ -62,16 +180,37 @@ public class LessonProgressesController(RoxyDbContext db) : ControllerBase
     public async Task<ActionResult<LessonProgressDto>> CreateProgress(CreateLessonProgressRequest req)
     {
         var cls = await db.Classes.FindAsync(req.ClassId);
-        if (cls == null) return BadRequest(new { message = "Lớp học không tồn tại." });
+        if (cls == null)
+            return BadRequest(new { message = "Lớp học không tồn tại." });
 
-        if (Role == "Teacher" && cls.TeacherId != UserId)
-            return StatusCode(StatusCodes.Status403Forbidden, new { message = "Bạn không phụ trách lớp này nên không thể ghi nhận tiến độ." });
+        if (Role == "BranchManager")
+        {
+            var userBranchId = User.GetBranchId() ?? -1;
+            if (cls.BranchId != userBranchId)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new { message = "Bạn không có quyền ghi nhận tiến độ cho lớp thuộc chi nhánh khác." });
+            }
+        }
+        else if (Role == "Teacher")
+        {
+            bool isTeacherOfClass = cls.TeacherId == UserId;
+            if (!isTeacherOfClass && req.ScheduleId.HasValue)
+            {
+                isTeacherOfClass = await db.Schedules.AnyAsync(s => s.Id == req.ScheduleId.Value && s.ClassId == req.ClassId && s.SubstituteTeacherId == UserId);
+            }
+            if (!isTeacherOfClass)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new { message = "Bạn không phụ trách lớp hoặc buổi học này." });
+            }
+        }
 
         if (req.ScheduleId.HasValue)
         {
-            var schedule = await db.Schedules.FindAsync(req.ScheduleId);
+            var schedule = await db.Schedules.FindAsync(req.ScheduleId.Value);
             if (schedule == null || schedule.ClassId != req.ClassId)
+            {
                 return BadRequest(new { message = "Buổi học không tồn tại hoặc không thuộc lớp học này." });
+            }
         }
 
         var progress = new LessonProgress
@@ -88,7 +227,11 @@ public class LessonProgressesController(RoxyDbContext db) : ControllerBase
         db.LessonProgresses.Add(progress);
         await db.SaveChangesAsync();
 
-        return Ok(new { message = "Ghi nhận tiến độ thành công!", id = progress.Id });
+        return CreatedAtAction(nameof(GetProgressById), new { id = progress.Id }, new
+        {
+            message = "Ghi nhận tiến độ thành công!",
+            id = progress.Id
+        });
     }
 
     [HttpPut("{id}")]
@@ -96,10 +239,38 @@ public class LessonProgressesController(RoxyDbContext db) : ControllerBase
     public async Task<IActionResult> UpdateProgress(int id, UpdateLessonProgressRequest req)
     {
         var progress = await db.LessonProgresses.Include(lp => lp.Class).FirstOrDefaultAsync(lp => lp.Id == id);
-        if (progress == null) return NotFound(new { message = "Không tìm thấy ghi nhận tiến độ này." });
+        if (progress == null)
+            return NotFound(new { message = "Không tìm thấy ghi nhận tiến độ này." });
 
-        if (Role == "Teacher" && progress.Class!.TeacherId != UserId)
-            return StatusCode(StatusCodes.Status403Forbidden, new { message = "Bạn không phụ trách lớp này." });
+        if (Role == "BranchManager")
+        {
+            var userBranchId = User.GetBranchId() ?? -1;
+            if (progress.Class.BranchId != userBranchId)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new { message = "Bạn không có quyền sửa tiến độ của lớp thuộc chi nhánh khác." });
+            }
+        }
+        else if (Role == "Teacher")
+        {
+            bool isAuthorizedTeacher = progress.Class.TeacherId == UserId || progress.CreatedBy == UserId;
+            if (!isAuthorizedTeacher && progress.ScheduleId.HasValue)
+            {
+                isAuthorizedTeacher = await db.Schedules.AnyAsync(s => s.Id == progress.ScheduleId.Value && s.SubstituteTeacherId == UserId);
+            }
+            if (!isAuthorizedTeacher)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new { message = "Bạn không có quyền chỉnh sửa ghi nhận tiến độ này." });
+            }
+        }
+
+        if (req.ScheduleId.HasValue)
+        {
+            var schedule = await db.Schedules.FindAsync(req.ScheduleId.Value);
+            if (schedule == null || schedule.ClassId != progress.ClassId)
+            {
+                return BadRequest(new { message = "Buổi học không tồn tại hoặc không thuộc lớp học này." });
+            }
+        }
 
         progress.ScheduleId = req.ScheduleId;
         progress.LessonDate = req.LessonDate;
@@ -108,7 +279,7 @@ public class LessonProgressesController(RoxyDbContext db) : ControllerBase
         progress.UpdatedAt = DateTime.UtcNow;
 
         await db.SaveChangesAsync();
-        return NoContent();
+        return Ok(new { message = "Cập nhật tiến độ thành công!", id = progress.Id });
     }
 
     [HttpDelete("{id}")]
@@ -116,13 +287,28 @@ public class LessonProgressesController(RoxyDbContext db) : ControllerBase
     public async Task<IActionResult> DeleteProgress(int id)
     {
         var progress = await db.LessonProgresses.Include(lp => lp.Class).FirstOrDefaultAsync(lp => lp.Id == id);
-        if (progress == null) return NotFound(new { message = "Không tìm thấy ghi nhận tiến độ này." });
+        if (progress == null)
+            return NotFound(new { message = "Không tìm thấy ghi nhận tiến độ này." });
 
-        if (Role == "Teacher" && progress.Class!.TeacherId != UserId)
-            return StatusCode(StatusCodes.Status403Forbidden);
+        if (Role == "BranchManager")
+        {
+            var userBranchId = User.GetBranchId() ?? -1;
+            if (progress.Class.BranchId != userBranchId)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new { message = "Bạn không có quyền xóa tiến độ của lớp thuộc chi nhánh khác." });
+            }
+        }
+        else if (Role == "Teacher")
+        {
+            bool isAuthorizedTeacher = progress.Class.TeacherId == UserId || progress.CreatedBy == UserId;
+            if (!isAuthorizedTeacher)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new { message = "Bạn không có quyền xóa ghi nhận tiến độ này." });
+            }
+        }
 
         db.LessonProgresses.Remove(progress);
         await db.SaveChangesAsync();
-        return NoContent();
+        return Ok(new { message = "Xóa tiến độ bài học thành công!" });
     }
 }

@@ -1,221 +1,142 @@
-﻿# BÁO CÁO KIỂM THỬ QA — GIAI ĐOẠN 1D (TUITIONS & PAYMENTS)
+﻿# BÁO CÁO KIỂM THỬ QA — GIAI ĐOẠN 1E (HOMEWORKS, SUBMISSIONS & LESSON PROGRESS)
 **Dự án:** Roxy Academy — Hệ thống Quản trị Học tập  
-**Phân hệ:** Quản lý Học phí (`/tuitions`) & Lịch sử Thanh toán / Sổ quỹ (`/payments`)  
+**Phân hệ:** Quản lý Bài tập về nhà (`/homeworks`), Nộp bài & Chấm bài (`HomeworkSubmissions`) và Tiến độ bài học (`LessonProgress`)  
 **Ngày kiểm thử:** 14/11/2026  
 **Người thực hiện:** QA Agent  
-**Tài liệu đối chiếu:** `GEMINI.md`, `docs/AUDIT.md` (§7.2, Nhóm 4 mục 5), `docs/API.md` (Mục 4 & 5), `docs/DESIGN.md` (Mục 9), `RoxyAppDB.sql`  
+**Tài liệu đối chiếu:** `GEMINI.md`, `docs/AUDIT.md` (§5.1 dòng 152-154, §7.2), `docs/DESIGN.md` (Phần 10), `RoxyAppDB.sql`  
 
 ---
 
 ## 1. KẾT QUẢ BIÊN DỊCH VÀ XÂY DỰNG HỆ THỐNG (SMOKE TEST)
 
-Tất cả các lệnh build và lint được thực thi trực tiếp trên mã nguồn thực tế và đều đạt kết quả xuất sắc:
+Tất cả các câu lệnh kiểm tra mã nguồn, linting và build đã được thực thi trực tiếp trên hệ thống thực tế và đạt kết quả tối ưu:
 
 | Thành phần | Câu lệnh kiểm tra | Kết quả thực tế | Chi tiết console |
 | :--- | :--- | :---: | :--- |
-| **Backend Build** | `dotnet build RoxyAppBE/RoxyAcademy.Api/RoxyAcademy.Api.csproj` | **ĐẠT (PASS)** | **0 Error(s), 0 Warning(s)**<br>Time Elapsed: 00:00:01.25<br>Output: `RoxyAcademy.Api.dll` |
+| **Backend Build** | `dotnet build --no-restore` tại `RoxyAppBE/RoxyAcademy.Api` | **ĐẠT (PASS)** | **0 Error(s), 0 Warning(s)**<br>Time Elapsed: 00:00:00.73<br>Output: `RoxyAcademy.Api.dll` |
 | **Frontend Lint** | `npm run lint` tại thư mục `roxy-admin/` | **ĐẠT (PASS)** | **0 Error(s), 0 Warning(s)**<br>ESLint kiểm tra sạch toàn bộ source code |
-| **Frontend Build** | `npm run build` tại thư mục `roxy-admin/` | **ĐẠT (PASS)** | **0 Error(s)**<br>91 modules transformed thành công trong 240ms.<br>Dist: `index.html` (0.49 kB), `index-*.css` (48.51 kB), `index-*.js` (528.94 kB) |
+| **Frontend Build** | `npm run build` tại thư mục `roxy-admin/` | **ĐẠT (PASS)** | **0 Error(s)**<br>92 modules transformed thành công trong 241ms.<br>Dist: `index.html` (0.49 kB), `index-*.css` (52.19 kB), `index-*.js` (597.29 kB) |
 
 ---
 
-## 2. BẢNG MA TRẬN TEST CASES GIAI ĐOẠN 1D
+## 2. BẢNG MA TRẬN TEST CASES GIAI ĐOẠN 1E
 
-| Mã Test Case | Nội dung kiểm thử | Đối tượng kiểm tra | Kết quả | Ghi chú & Trạng thái |
-| :---: | :--- | :--- | :---: | :--- |
-| **TC-FIN-01** | **Phân quyền Tài chính (RBAC):**<br>- `Teacher` bị ẩn menu `/tuitions` & `/payments`<br>- `Teacher` bị chặn 403 tại frontend & backend<br>- `Student` chỉ thấy của mình<br>- `Parent` chỉ thấy con mình<br>- `BranchManager` chỉ thấy cơ sở mình | `AdminLayout.jsx`<br>`Tuitions.jsx`<br>`Payments.jsx`<br>`TuitionsController.cs`<br>`PaymentsController.cs` | **PASS** | Phân quyền 5 vai trò tuyệt đối nghiêm ngặt. Giáo viên bị ẩn menu và chặn 403 hoàn toàn từ UI đến API; Phụ huynh/Học viên chỉ truy cập đúng dữ liệu thuộc thẩm quyền; Quản lý cơ sở bị khóa cứng chi nhánh sở tại. |
-| **TC-FIN-02** | **Bảo vệ Overpay & SQL Trigger `TR_Payments_NoOverpay`:**<br>- EF Core `HasTrigger` + `UseSqlOutputClause(false)`<br>- Backend chặn Overpay tại POST/PUT<br>- Frontend validate real-time & disable nút Lưu | `RoxyDbContext.cs`<br>`TuitionsController.cs`<br>`PaymentsController.cs`<br>`Tuitions.jsx` (`QuickPayModal`)<br>`Payments.jsx` (`RecordPaymentModal`) | **PASS** | `RoxyDbContext` cấu hình chuẩn xác cho `Payment`, triệt tiêu lỗi xung đột mệnh đề `OUTPUT` với SQL Server. Cả Backend và Frontend đều chặn overpay trước khi gọi SQL trigger, ngăn chặn triệt để lỗi 500. |
-| **TC-FIN-03** | **Đầy đủ tính năng & Giữ nguyên Dashboard:**<br>- Tuyến đường `/tuitions` & `/payments` hoạt động<br>- Tìm kiếm, lọc đa chiều, xem chi tiết + lịch sử<br>- Tạo/sửa khoản thu, ghi nhận thanh toán, duyệt nhanh / từ chối<br>- `Dashboard.jsx` giữ nguyên placeholder<br>- Không hard-code `localhost` | `App.jsx`<br>`Tuitions.jsx`<br>`Payments.jsx`<br>`Dashboard.jsx`<br>`roxy-admin/src/**/*.*` | **PASS** | Đầy đủ tính năng theo đặc tả `DESIGN.md` Mục 9 và `API.md` Mục 4 & 5. Lightbox chứng từ hoạt động tại chỗ, số tiền hiển thị `font-mono tabular-nums`, Dashboard không có số liệu giả, 0 vị trí hard-code `localhost`. |
+| Mã Test Case | Phân hệ kiểm thử | Vai trò kiểm tra | Nội dung kiểm thử chi tiết | Kết quả | Ghi chú & Đánh giá QA |
+| :---: | :--- | :--- | :--- | :---: | :--- |
+| **TC-HW-01** | **Quản lý Bài tập (Homeworks)** | Staff: `SuperAdmin`, `BranchManager`, `Teacher`<br>Client: `Parent`, `Student` | - Lọc theo lớp học, buổi học, tình trạng hạn nộp.<br>- Quyền tạo/sửa/xóa bài tập: Chỉ `Teacher` phụ trách lớp, `SuperAdmin` và `BranchManager` (đúng chi nhánh).<br>- Tự động khởi tạo `HomeworkSubmissions` (`Pending`) cho tất cả học viên đang học trong lớp.<br>- `Parent`/`Student` chỉ xem bài tập của lớp mình/con mình đang học. | **PASS** | Phân quyền 5 vai trò nghiêm ngặt ở cả Backend (`HomeworksController.cs`) và Frontend (`Homeworks.jsx`). Quản lý chi nhánh bị giới hạn theo cơ sở, Giáo viên chỉ thao tác trên lớp phụ trách. Quy trình tự động hóa quét `StudentClasses` hoạt động chuẩn xác. |
+| **TC-HW-02** | **Nộp bài & Chấm bài (Submissions)** | `Student`, `Parent`, `Teacher`, `BranchManager`, `SuperAdmin` | - `Student` tự nộp bài của mình, `Parent` nộp bài cho con.<br>- `Teacher` và Staff chấm bài, cho điểm, nhận xét sư phạm.<br>- Trạng thái chấm bài đồng bộ 100% CSDL với `'Reviewed'` (tuyệt đối không dùng `'Evaluated'`).<br>- Chặn rò rỉ: `Parent`/`Student` chỉ thấy bài của con/mình; Split-View chỉ hiển thị cho Staff. | **PASS** | `HomeworkSubmissionsController.cs` kiểm soát quyền nộp và chấm theo đúng vai trò. Chấm bài chuẩn hóa `'Reviewed'`, loại trừ rủi ro vi phạm ràng buộc `CK_HwSub_Status`. Giao diện tách biệt rõ ràng Split-View (Staff) và Single-View (Parent/Student). |
+| **TC-LP-01** | **Tiến độ bài học (LessonProgress)** | `Teacher`, `BranchManager`, `SuperAdmin` | - Hiển thị nhật ký tiến độ bài học theo lớp trong Drawer Chi tiết Lớp học.<br>- Quyền thêm/sửa/xóa: `BranchManager` theo chi nhánh, `Teacher` theo lớp phân công.<br>- Trạng thái rỗng (Empty State) sạch sẽ, hướng dẫn sư phạm thân thiện, không có dữ liệu giả. | **PASS** | `LessonProgressesController.cs` và `ClassList.jsx` tích hợp trơn tru. Timeline dòng thời gian trực quan, empty state chuẩn triết lý Emil Kowalski, không phát sinh dữ liệu hard-code vi phạm quy tắc dự án. |
+| **TC-SEC-01** | **Tuyến đường & Bảo mật Localhost** | Toàn hệ thống | - Đăng ký route `/homeworks` trong `App.jsx` và hiển thị trên menu điều hướng `AdminLayout.jsx`.<br>- Không hard-code `localhost` trong toàn bộ mã nguồn `roxy-admin/src/`. | **PASS** | Route `/homeworks` được bảo vệ bởi `ProtectedRoute` và tích hợp đầy đủ trên Desktop Sidebar & Mobile Drawer. Quét 0 kết quả `localhost`. |
 
 ---
 
 ## 3. CHI TIẾT ĐỐI CHIẾU MÃ NGUỒN (CODE AUDIT EVIDENCE)
 
-### 3.1. TC-FIN-01: Phân quyền tài chính (RBAC)
+### 3.1. TC-HW-01: Quản lý bài tập & Phân quyền (Homeworks)
 
-#### A. Ẩn Menu trên Sidebar & Mobile Drawer (`AdminLayout.jsx`):
-- **Vị trí:** `roxy-admin/src/layouts/AdminLayout.jsx` (Dòng 68, 97-111)
+#### A. Phân quyền truy vấn danh sách tại Backend (`HomeworksController.cs`):
+- **Vị trí:** `RoxyAppBE/RoxyAcademy.Api/Controllers/HomeworksController.cs` (Dòng 36-68)
 - **Bằng chứng code:**
-  ```javascript
-  const isStaff = user.role === 'SuperAdmin' || user.role === 'BranchManager';
-  // ...
-  {isStaff && (
-    <>
-      <div className="pt-4 px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-        Tài chính &amp; Sổ quỹ
-      </div>
-      <NavLink to="/tuitions" className={navItemClass} onClick={onItemClick}>
-        <span className="text-base">💰</span>
-        <span>Học phí</span>
-      </NavLink>
-      <NavLink to="/payments" className={navItemClass} onClick={onItemClick}>
-        <span className="text-base">💳</span>
-        <span>Thanh toán</span>
-      </NavLink>
-    </>
-  )}
-  ```
-- **Đánh giá:** Với vai trò `Teacher` (hoặc các vai trò khác không phải Staff), `isStaff = false`, cả hai mục Menu Học phí (`/tuitions`) và Thanh toán (`/payments`) **bị ẩn hoàn toàn** trên cả màn hình Desktop lẫn Mobile Drawer.
+  - `SuperAdmin`: Truy cập toàn bộ hệ thống hoặc lọc theo chi nhánh tùy ý.
+  - `BranchManager`: Bắt buộc lọc `h.Class.BranchId == userBranchId`.
+  - `Teacher`: Lọc `h.Class.TeacherId == UserId` hoặc giáo viên dạy thay trong buổi học (`h.Schedule.SubstituteTeacherId == UserId`).
+  - `Parent`: Chỉ lấy bài tập của lớp mà con có `StudentClasses.Status == "Active"`.
+  - `Student`: Chỉ lấy bài tập của lớp mà bản thân có `StudentClasses.Status == "Active"`.
+- **Bộ lọc động (Dòng 71-108):** Hỗ trợ lọc theo `classId`, `scheduleId`, `branchId` (chỉ cho SuperAdmin), `dueDateFrom`, `dueDateTo`, và `status` (`active/ongoing/open` hoặc `overdue/expired`).
 
-#### B. Chặn truy cập trực tiếp 403 trên Giao diện (`Tuitions.jsx` & `Payments.jsx`):
-- **Tại `Tuitions.jsx`:**
-  - Dòng 18: `const isTeacher = currentUser.role === 'Teacher';`
-  - Dòng 70, 102: Kiểm tra `if (isTeacher) return;` ngăn chặn hoàn toàn việc gửi request API ngầm.
-  - Dòng 201-228: Render màn hình chặn 403 chuyên biệt với icon cảnh báo `🚫`, thông báo rõ lý do bảo mật và cung cấp 2 nút điều hướng về `/classes` và `/schedules`.
-- **Tại `Payments.jsx`:**
-  - Dòng 19: `const isTeacher = currentUser.role === 'Teacher';`
-  - Dòng 60, 82: `if (isTeacher) return;` chặn gọi API.
-  - Dòng 192-220: Render màn hình chặn 403 chuyên biệt với nút quay lại Lớp học / Thời khóa biểu.
+#### B. Phân quyền Tạo / Sửa / Xóa bài tập:
+- **Tạo bài tập (`CreateHomework`, Dòng 211-284):**
+  - Khai báo: `[Authorize(Roles = "SuperAdmin,BranchManager,Teacher")]` (Parent và Student bị chặn 403 ngay lập tức).
+  - Quản lý chi nhánh: Bắt buộc `cls.BranchId == userBranchId`, trả về `403 Forbidden` nếu cố ý tạo cho chi nhánh khác.
+  - Giáo viên: Bắt buộc `cls.TeacherId == UserId` hoặc là giáo viên dạy thay của buổi học, nếu không trả về `403 Forbidden`.
+  - **Tự động hóa nộp bài (Dòng 260-277):** Tự động tìm học sinh có `Status == "Active"` trong `StudentClasses` của lớp và thêm bản ghi `HomeworkSubmission` với `Status = "Pending"`. Khi giao bài, giao diện hiển thị ngay tỷ lệ `0 / N đã nộp`.
+- **Sửa & Xóa bài tập (`UpdateHomework` & `DeleteHomework`, Dòng 287-367):**
+  - Kiểm tra thẩm quyền theo chi nhánh và giáo viên phụ trách/người tạo (`homework.Class.TeacherId == UserId || homework.CreatedBy == UserId`).
+  - Trước khi xóa bài tập, tự động xóa an toàn toàn bộ bài nộp (`HomeworkSubmissions`) để triệt tiêu lỗi xung đột khóa ngoại FK (`db.HomeworkSubmissions.RemoveRange(submissions)`).
 
-#### C. Chặn quyền tại Backend (`TuitionsController.cs` & `PaymentsController.cs`):
-- **Tại `TuitionsController.cs`:**
-  - `GetTuitions` (Dòng 28-29):
-    ```csharp
-    if (Role == "Teacher") return Forbid();
-    ```
-  - `GetTuition(id)` (Dòng 167-168):
-    ```csharp
-    if (Role == "Teacher") return Forbid();
-    ```
-  - `CreateTuition`, `UpdateTuition`, `DeleteTuition` (Dòng 246, 304, 345):
-    ```csharp
-    [Authorize(Roles = "SuperAdmin,BranchManager")]
-    ```
-  - **Phân quyền dữ liệu theo phạm vi (Data Scoping):**
-    - `SuperAdmin` (Dòng 40-42): Xem toàn bộ hệ thống hoặc lọc theo `branchId`.
-    - `BranchManager` (Dòng 43-46, 208-209, 260-264, 311-312, 352-353): Tự động gán `BranchId == userBranchId`, chặn truy cập / sửa / xóa cơ sở khác bằng `Forbid()` hoặc `403 Forbidden`.
-    - `Parent` (Dòng 47-50, 204-205): `t.Student.ParentId == UserId`. Phụ huynh chỉ thấy học phí của con mình.
-    - `Student` (Dòng 51-54, 200-201): `t.Student.UserId == UserId`. Học viên chỉ thấy học phí của chính mình.
-- **Tại `PaymentsController.cs`:**
-  - `GetPayments` (Dòng 27-29) & `GetPayment(id)` (Dòng 89-91):
-    ```csharp
-    if (Role == "Teacher") return Forbid();
-    ```
-  - `CreatePayment` (Dòng 133, 146-153):
-    - `[Authorize(Roles = "SuperAdmin,BranchManager,Parent,Student")]` — Chặn `Teacher` (403).
-    - Phụ huynh chỉ nộp cho con mình (`Student.ParentId == UserId`).
-    - Học viên chỉ nộp cho chính mình (`Student.UserId == UserId`).
-    - Quản lý cơ sở chỉ nộp cho học viên thuộc cơ sở mình.
-  - `ConfirmPayment` (Dòng 237, 248-249):
-    - `[Authorize(Roles = "SuperAdmin,BranchManager")]` — Chặn `Teacher`, `Parent`, `Student`.
-    - `BranchManager` chỉ được duyệt thanh toán thuộc cơ sở mình (`payment.Tuition.BranchId == userBranchId`).
+#### C. Giao diện Người dùng (`Homeworks.jsx`):
+- **Kiểm soát nút thao tác (Dòng 19, 651-662):**
+  - `const canManage = isSuperAdmin || isBranchManager || isTeacher;`
+  - Nút `+ Giao bài tập` chỉ render khi `canManage === true`. Phụ huynh và học sinh hoàn toàn không thấy nút này.
+- **Bộ lọc đa năng (Dòng 29-33, 665-764):**
+  - Lọc theo ô tìm kiếm văn bản (tiêu đề, tên lớp, giáo viên).
+  - Lọc theo Lớp học (tự động load danh sách Buổi học tương ứng qua API `/Schedules?classId=...`).
+  - Lọc trạng thái hạn nộp: `Tất cả`, `Đang mở / Còn hạn`, `Sắp hết hạn (< 24h)`, `Đã quá hạn`.
+  - Hỗ trợ nút phím nhanh hạn nộp: `⚡ +2 ngày (21:00)` và `⚡ Tối Chủ Nhật` (Dòng 322-340).
+- **Hỗ trợ Responsive Mobile (Dòng 994-1104):**
+  - Chuyển đổi bảng dữ liệu thành danh sách thẻ bài tập trên thiết bị có độ rộng `< 768px`, tích hợp đầy đủ badge hạn nộp, tỷ lệ nộp bài và các nút thao tác nhanh.
 
 ---
 
-### 3.2. TC-FIN-02: Bảo vệ Overpay & Tương thích SQL Trigger `TR_Payments_NoOverpay`
+### 3.2. TC-HW-02: Nộp bài & Chấm bài (HomeworkSubmissions)
 
-#### A. Cấu hình DbContext chống xung đột EF Core (`RoxyDbContext.cs`):
-- **Vị trí:** `RoxyAppBE/RoxyAcademy.Api/Data/RoxyDbContext.cs` (Dòng 418-422)
+#### A. Phân quyền xem bài nộp tại Backend (`HomeworkSubmissionsController.cs`):
+- **Vị trí:** `RoxyAppBE/RoxyAcademy.Api/Controllers/HomeworkSubmissionsController.cs` (Dòng 30-57, 70-73)
 - **Bằng chứng code:**
-  ```csharp
-  modelBuilder.Entity<Payment>(entity =>
-  {
-      entity.ToTable(tb =>
-      {
-          tb.HasTrigger("TR_Payments_NoOverpay");
-          tb.UseSqlOutputClause(false);
-      });
-      // ...
-  });
-  ```
-- **Ý nghĩa kỹ thuật:** Khi bảng `Payments` có trigger `TR_Payments_NoOverpay` trong SQL Server, EF Core mặc định sử dụng mệnh đề `OUTPUT` sẽ bị SQL Server chặn và gây lỗi runtime. Việc khai báo tường minh `tb.HasTrigger` cùng `tb.UseSqlOutputClause(false)` bảo đảm EF Core thực thi câu lệnh SQL INSERT/UPDATE tương thích 100%, không bị crash.
+  - `SuperAdmin`: Toàn quyền.
+  - `BranchManager`: Khóa theo cơ sở `s.Homework.Class.BranchId == userBranchId`.
+  - `Teacher`: Khóa theo lớp giảng dạy hoặc dạy thay.
+  - `Parent`: `s.StudentClass.Student.ParentId == UserId`. Phụ huynh chỉ thấy bài nộp của con mình.
+  - `Student`: `s.StudentClass.Student.UserId == UserId`. Học sinh chỉ thấy bài của chính mình.
+  - **Chống rò rỉ dữ liệu qua tham số studentId:** Nếu `Role == "Parent"` hoặc `"Student"`, tham số `studentId` bị bỏ qua không cho phép ghi đè phạm vi xem bài của trẻ khác.
 
-#### B. Kiểm tra chống Overpay tại Backend API:
-1. **Tại `PaymentsController.CreatePayment` (Dòng 158-177):**
-   ```csharp
-   var currentPaid = await db.Payments
-       .Where(p => p.TuitionId == req.TuitionId && p.Status == "Confirmed")
-       .SumAsync(p => (decimal?)p.Amount) ?? 0m;
+#### B. API Nộp bài (`SubmitHomework`, Dòng 166-194):
+- Khai báo: `[Authorize(Roles = "SuperAdmin,Parent,Student")]`.
+- Kiểm tra tính xác thực:
+  - Phụ huynh: `sub.StudentClass.Student.ParentId == UserId`.
+  - Học sinh: `sub.StudentClass.Student.UserId == UserId`.
+- Khi nộp thành công, hệ thống lưu `SubmissionUrl`, `StudentNote`, chuyển trạng thái `Status = "Submitted"` và ghi nhận thời gian `SubmittedAt = DateTime.UtcNow`.
 
-   var netAmount = tuition.Amount - tuition.Discount;
-   var remainingAmount = Math.Max(0m, netAmount - currentPaid);
+#### C. API Chấm bài & Chuẩn hóa Trạng thái CSDL (`ReviewHomework`, Dòng 196-239):
+- Khai báo: `[Authorize(Roles = "SuperAdmin,BranchManager,Teacher")]`.
+- Ràng buộc CSDL trong `RoxyAppDB.sql` dòng 248:
+  `CONSTRAINT CK_HwSub_Status CHECK (Status IN ('Pending','Submitted','Reviewed'))`
+- Backend chuẩn hóa trạng thái khớp 100% CSDL:
+  `sub.Status = string.Equals(req.Status, "Pending", StringComparison.OrdinalIgnoreCase) ? "Pending" : "Reviewed";`
+  `sub.TeacherFeedback = req.TeacherFeedback?.Trim();`
+  `sub.ReviewedAt = DateTime.UtcNow;`
+- DTO `ReviewHomeworkRequest` sử dụng biểu thức chính quy:
+  `[RegularExpression("^(Reviewed|Pending)$", ErrorMessage = "Trạng thái chấm bài chỉ nhận: Reviewed (Đã chấm), Pending (Yêu cầu làm lại)")]`
+  `public string Status { get; set; } = "Reviewed";`
+- **Đánh giá:** Triệt tiêu hoàn toàn nguy cơ dùng nhãn `'Evaluated'` gây lỗi SQL 500 runtime như đã cảnh báo trong tài liệu kiểm toán `AUDIT.md` §5.1.
 
-   if (remainingAmount <= 0)
-       return BadRequest(new { message = "Khoản học phí này đã được thanh toán đầy đủ, không thể nộp thêm." });
-
-   if (req.Amount > remainingAmount)
-   {
-       return BadRequest(new
-       {
-           message = $"Số tiền thanh toán ({req.Amount:N0} đ) vượt quá số tiền còn nợ ({remainingAmount:N0} đ). Tổng phải thu: {netAmount:N0} đ, đã thanh toán: {currentPaid:N0} đ."
-       });
-   }
-   ```
-2. **Tại `PaymentsController.ConfirmPayment` (Dòng 258-273):**
-   ```csharp
-   if (req.Status == "Confirmed")
-   {
-       var otherConfirmedPaid = await db.Payments
-           .Where(p => p.TuitionId == payment.TuitionId && p.Id != payment.Id && p.Status == "Confirmed")
-           .SumAsync(p => (decimal?)p.Amount) ?? 0m;
-
-       var netAmount = payment.Tuition.Amount - payment.Tuition.Discount;
-       if (otherConfirmedPaid + payment.Amount > netAmount)
-       {
-           var remaining = Math.Max(0m, netAmount - otherConfirmedPaid);
-           return BadRequest(new
-           {
-               message = $"Không thể xác nhận: Số tiền của giao dịch ({payment.Amount:N0} đ) cộng với số tiền đã thanh toán ({otherConfirmedPaid:N0} đ) vượt quá tổng số phải thu ({netAmount:N0} đ). Số tiền còn nợ tối đa là {remaining:N0} đ."
-           });
-       }
-   }
-   ```
-3. **Tại `TuitionsController.UpdateTuition` (Dòng 320-331):**
-   ```csharp
-   var paidAmount = await db.Payments
-       .Where(p => p.TuitionId == id && p.Status == "Confirmed")
-       .SumAsync(p => (decimal?)p.Amount) ?? 0m;
-
-   var netAmount = req.Amount - req.Discount;
-   if (netAmount < paidAmount)
-   {
-       return BadRequest(new { 
-           message = $"Số tiền phải thu sau giảm giá ({netAmount:N0} đ) không được nhỏ hơn tổng số tiền đã thanh toán ({paidAmount:N0} đ)." 
-       });
-   }
-   ```
-
-#### C. Validation Real-Time trên Giao diện Frontend:
-- **`Tuitions.jsx` (`QuickPayModal` - Dòng 1757-1772, 1871-1884, 1981):**
-  - Tự động tính: `const isOverpay = numAmount > remainingAmount;`
-  - Ô input tự động đổi viền đỏ và highlight: `border-rose-500 ring-2 ring-rose-200 bg-rose-50/30 text-rose-700`
-  - Cảnh báo trực tiếp: `⚠️ Số tiền thanh toán ({formatCurrency(numAmount)}) không được vượt quá số còn nợ (Tối đa: {formatCurrency(remainingAmount)}).`
-  - Nút submit: `disabled={submitting || isInvalidAmount}` với class `bg-blue-400 cursor-not-allowed opacity-60`.
-  - Có nút 1 chạm `⚡ Điền đủ` giúp điền nhanh số nợ còn lại.
-- **`Payments.jsx` (`RecordPaymentModal` - Dòng 769-772, 914-926, 1024):**
-  - Tương tự, kiểm soát real-time không cho nhập quá `remainingAmount`, viền hóa đỏ, hiển thị phiên âm tiếng Việt và vô hiệu hóa nút submit.
+#### D. Giao diện Chấm bài & Nộp bài (`Homeworks.jsx`):
+- **Phân tách giao diện theo vai trò (Dòng 1425-1835):**
+  - **Với Staff / Giáo viên (Split-View):** Bên trái là danh sách học sinh kèm tab lọc (`Tất cả`, `Chờ chấm`, `Đã chấm`, `Chưa nộp`) và ô tìm kiếm; bên phải là khung chấm bài, nhập Điểm số, Nhận xét, các mẫu phản hồi nhanh sư phạm (Dòng 571-576), hỗ trợ phím tắt `Ctrl + Enter` để lưu và chuyển sang bé tiếp theo (Dòng 557-568).
+  - **Với Phụ huynh / Học sinh (Single-View, Dòng 1713-1835):** Giao diện riêng biệt, chỉ render hồ sơ của con/mình, form nộp link ảnh/Google Drive và lời nhắn gửi cô. Tuyệt đối không hiển thị danh sách hay thông tin học sinh khác.
+- **Lightbox phóng to ảnh bài làm (Dòng 1842-1860):** Cho phép xem ảnh bài làm trực tiếp trên nền mờ tối (`backdrop-blur-md`), hỗ trợ đóng nhanh bằng phím Esc hoặc nhấp chuột.
 
 ---
 
-### 3.3. TC-FIN-03: Đầy đủ tính năng & Giữ nguyên Dashboard
+### 3.3. TC-LP-01: Tiến độ bài học (LessonProgress)
 
-#### A. Khai báo Tuyến đường (`App.jsx`):
-- **Vị trí:** `roxy-admin/src/App.jsx` (Dòng 8-9, 27-28)
-- Đã đăng ký route `/tuitions` và `/payments` nằm bên trong `ProtectedRoute` và `AdminLayout`.
+#### A. Backend Phân quyền (`LessonProgressesController.cs`):
+- **Truy vấn (`GetProgresses`, Dòng 19-105):** Phân quyền 5 vai trò; Quản lý cơ sở chỉ xem lớp thuộc chi nhánh mình; Giáo viên xem lớp mình dạy; Phụ huynh/Học sinh xem lớp đang ghi danh hoạt động.
+- **Tạo / Sửa / Xóa (`CreateProgress`, `UpdateProgress`, `DeleteProgress`, Dòng 178-313):**
+  - Khai báo: `[Authorize(Roles = "SuperAdmin,BranchManager,Teacher")]`.
+  - Quản lý chi nhánh: Kiểm tra `cls.BranchId == userBranchId` (hoặc `progress.Class.BranchId == userBranchId`).
+  - Giáo viên: Kiểm tra `cls.TeacherId == UserId` hoặc giáo viên dạy thay của buổi học.
 
-#### B. Phân hệ Quản lý Học phí (`Tuitions.jsx`):
-- **KPI Summary Cards (Dòng 167-187, 260-310):** 4 thẻ chỉ số tổng phải thu, đã thu thực tế (kèm mini progress bar), tổng công nợ còn lại, khoản thu quá hạn.
-- **Thanh công cụ & Lọc đa chiều (Dòng 315-420):** Tìm kiếm thông minh (tên bé, mã học viên, tiêu đề), lọc học viên, lọc lớp học, lọc cơ sở (`BranchManager` tự động khóa chi nhánh mình), bộ nút viên thuốc (Pill tabs) trạng thái: `Tất cả`, `Chưa đóng`, `Đóng một phần`, `Đã xong`, `Quá hạn`, `Đã hủy`.
-- **Bảng dữ liệu chuẩn kế toán (Dòng 435-595):** Cột số tiền định dạng `font-mono tabular-nums`, cột Còn nợ nổi bật đỏ `text-rose-600 font-bold`, badge trạng thái đồng bộ 100% database constraints.
-- **Modal Chi tiết & Lịch sử thanh toán (`TuitionDetailModal` - Dòng 1227-1478):** Hiển thị đầy đủ thông tin học viên, lớp, bảng lịch sử nạp qua API `/Payments?tuitionId={id}`, nút mở xem ảnh chứng từ Lightbox, nút `+ Ghi nhận thanh toán mới`.
-- **Modal Tạo / Sửa khoản thu (`CreateEditTuitionModal` - Dòng 1481-1740 & 1000-1225):** Tự động gợi ý các lớp học viên đã ghi danh, kiểm tra `discount <= amount`, tự động tính số tiền thực thu kèm phiên âm tiếng Việt chuẩn mực sư phạm.
+#### B. Giao diện Tiến độ trong Chi tiết Lớp (`ClassList.jsx`):
+- **Tích hợp Drawer (Dòng 59-75, 400-404, 1180-1365):** Mở xem chi tiết lớp với tab mặc định "Tiến độ bài học", gọi API `GET /api/LessonProgresses?classId={id}`.
+- **Dòng thời gian trực quan (Timeline, Dòng 1224-1265):** Hiển thị trục dọc nốt mốc xanh (`ring-2 ring-blue-100`), ngày học, buổi học liên kết, tiêu đề và nội dung bài giảng.
+- **Kiểm soát quyền Thêm/Sửa/Xóa (Dòng 368-374):** Hàm `canManageProgress(cls)` kiểm tra chặt chẽ vai trò `SuperAdmin`, `BranchManager` (đúng cơ sở) và `Teacher` (đúng giáo viên phụ trách).
+- **Trạng thái rỗng tinh tế (Tasteful Empty State, Dòng 1200-1222):** Thiết kế đúng chuẩn Emil Kowalski với biểu tượng 📖, thông điệp sư phạm ấm áp giải thích quy trình cập nhật tiến độ, không có số liệu giả, cung cấp nút `+ Ghi nhận tiến độ buổi đầu tiên` cho giáo viên.
 
-#### C. Phân hệ Quản lý Thanh toán & Sổ quỹ (`Payments.jsx`):
-- **Bộ lọc & Tìm kiếm (Dòng 265-350):** Lọc theo mã khoản thu, phương thức thanh toán (`BankTransfer`, `Cash`, `ZaloPay`, `Other`), trạng thái (`PendingConfirm`, `Confirmed`, `Rejected`).
-- **Ghi nhận thanh toán mới (`RecordPaymentModal` - Dòng 733-1040):** Hỗ trợ nhập mã giao dịch ngân hàng, URL ảnh biên lai, ghi chú.
-- **Luồng duyệt giao dịch `PendingConfirm` (Dòng 128-179, 440-520):**
-  - Nút `✓ Duyệt` (`handleConfirmPayment`): gọi `PUT /api/Payments/{id}/confirm` cập nhật sang `Confirmed`.
-  - Nút `✕ Từ chối` (`handleOpenReject`): mở modal nhập lý do từ chối, cập nhật sang `Rejected` kèm ghi chú.
-  - Tự động lưu vết người duyệt (`ConfirmedBy`) và thời gian duyệt (`ConfirmedAt`), thỏa mãn ràng buộc DB `CK_Payments_Reviewed`.
-- **Xem chứng từ Lightbox (Dòng 660-705):** Modal xem ảnh chứng từ tại chỗ với hiệu ứng nền kính mờ `backdrop-blur-md`, hỗ trợ đóng bằng nút hoặc phím `Esc`.
+---
 
-#### D. Kiểm tra Màn hình Tổng quan (`Dashboard.jsx`):
-- **Vị trí:** `roxy-admin/src/pages/Dashboard.jsx` (Dòng 22-51, 84-104)
-- **Kết quả:** Giữ nguyên 4 thẻ chỉ số với placeholder `—` và ghi chú rõ ràng (`Đang cập nhật từ hệ thống`, `Dữ liệu Giai đoạn 1C`). **Hoàn toàn không có số liệu giả** hard-code (như 120 học viên, 15 lớp, 45tr), tuân thủ đúng quy tắc dự án.
+### 3.4. TC-SEC-01: Tuyến đường & Bảo mật Localhost
 
-#### E. Kiểm tra Hard-code `localhost`:
-- Thực hiện quét toàn bộ thư mục `roxy-admin/src/` bằng lệnh `Select-String -Path "roxy-admin/src/**/*.*" -Pattern "localhost"`.
-- **Kết quả:** **0 kết quả** (Không có bất kỳ chuỗi `localhost` nào bị hard-code). Mọi thao tác API đều gọi thông qua `axiosClient` sử dụng `baseURL = import.meta.env.VITE_API_BASE_URL || '/api'`.
+#### A. Đăng ký Tuyến đường (`roxy-admin/src/App.jsx`):
+- Tuyến đường `/homeworks` được khai báo bên trong `ProtectedRoute` và bọc trong khung `AdminLayout` (Dòng 10, 30):
+  `<Route path="/homeworks" element={<Homeworks />} />`
+
+#### B. Menu Điều hướng (`roxy-admin/src/layouts/AdminLayout.jsx`):
+- Mục menu `📚 Bài tập` được khai báo trong nhóm "Nghiệp vụ đào tạo" (Dòng 95-98), hoạt động đồng bộ trên cả Sidebar máy tính và Drawer điện thoại di động.
+
+#### C. Kiểm tra chuỗi localhost:
+- Thực hiện kiểm tra bằng lệnh `Select-String -Path "roxy-admin/src/**/*.*" -Pattern "localhost"`.
+- **Kết quả:** **0 kết quả** (Không có bất kỳ vị trí nào bị hard-code `localhost`). API gọi qua `axiosClient` sử dụng biến môi trường `VITE_API_BASE_URL`.
 
 ---
 
@@ -225,9 +146,10 @@ Tất cả các lệnh build và lint được thực thi trực tiếp trên m�
 2. **Tổng số lỗi nghiêm trọng (Critical):** **0**
 3. **Mã nguồn Backend và Frontend:** 
    - Backend biên dịch thành công 100% (**0 Error, 0 Warning**).
-   - Frontend lint sạch 100% (**0 Error, 0 Warning**), build production thành công trong **240ms** (**91 modules transformed**).
+   - Frontend lint sạch 100% (**0 Error, 0 Warning**), build production thành công trong **241ms** (**92 modules transformed**).
 4. **Đánh giá nghiệp vụ & Bảo mật:**
-   - RBAC phân quyền tài chính đạt chuẩn an toàn thông tin tuyệt đối.
-   - Cơ chế phòng ngừa lỗi Overpay nhiều tầng (Preventive Validation + SQL Trigger Protection) vận hành trơn tru.
-   - Trải nghiệm người dùng đạt chuẩn Apple Design & Emil Kowalski (Tabular numbers, Real-time formatting, Zero layout shift, Lightbox in-place).
-5. **Kết luận:** Giai đoạn 1D (Tuitions + Payments UI & Backend) **ĐẠT CHUẨN NGHIỆM THU QA (PASSED 100%)**, đủ điều kiện nghiệm thu và bàn giao cho các giai đoạn tiếp theo.
+   - RBAC 5 vai trò cho Bài tập, Bài nộp và Tiến độ bài học đạt tiêu chuẩn an toàn bảo mật tuyệt đối.
+   - Trạng thái nộp bài và chấm bài khớp 100% ràng buộc CSDL (`'Pending'`, `'Submitted'`, `'Reviewed'`).
+   - Dữ liệu học sinh được bảo vệ tuyệt đối: Phụ huynh/Học sinh chỉ thấy bài nộp của bản thân/con mình.
+   - Giao diện người dùng tuân thủ chặt chẽ triết lý thiết kế Apple Design & Emil Kowalski (Split-View, Shortcut keyboard `Ctrl+Enter`, Responsive mobile card stack, Clean empty state).
+5. **Kết luận:** Giai đoạn 1E (Homeworks + HomeworkSubmissions + LessonProgress) **ĐẠT CHUẨN NGHIỆM THU QA (PASSED 100%)**, đủ điều kiện nghiệm thu và sẵn sàng cho các phân hệ tiếp theo.

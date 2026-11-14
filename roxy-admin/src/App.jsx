@@ -7,6 +7,7 @@ import Schedules from './pages/Schedules';
 import Attendance from './pages/Attendance';
 import Tuitions from './pages/Tuitions';
 import Payments from './pages/Payments';
+import Homeworks from './pages/Homeworks';
 import AdminLayout from './layouts/AdminLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -26,6 +27,7 @@ export default function App() {
             <Route path="/attendance" element={<Attendance />} />
             <Route path="/tuitions" element={<Tuitions />} />
             <Route path="/payments" element={<Payments />} />
+            <Route path="/homeworks" element={<Homeworks />} />
           </Route>
         </Route>
 
