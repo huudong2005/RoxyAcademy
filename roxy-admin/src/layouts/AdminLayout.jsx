@@ -106,6 +106,19 @@ export default function AdminLayout() {
         <span>Xin nghỉ phép</span>
       </NavLink>
 
+      {/* PHÂN HỆ NHÂN SỰ: CHỈ HIỂN THỊ CHO SUPERADMIN VÀ BRANCHMANAGER (ẨN HOÀN TOÀN VỚI TEACHER) */}
+      {isStaff && (
+        <>
+          <div className="pt-4 px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+            Nhân sự &amp; Giáo viên
+          </div>
+          <NavLink to="/teachers" className={navItemClass} onClick={onItemClick}>
+            <span className="text-base">👩‍🏫</span>
+            <span>Giáo viên</span>
+          </NavLink>
+        </>
+      )}
+
       {/* PHÂN HỆ TÀI CHÍNH: CHỈ HIỂN THỊ CHO SUPERADMIN VÀ BRANCHMANAGER (ẨN HOÀN TOÀN VỚI TEACHER) */}
       {isStaff && (
         <>
@@ -280,6 +293,8 @@ export default function AdminLayout() {
                   ? 'Quản lý Thanh toán & Sổ quỹ'
                   : location.pathname.startsWith('/branches')
                   ? 'Quản lý Chi nhánh'
+                  : location.pathname.startsWith('/teachers')
+                  ? 'Quản lý Giáo viên'
                   : 'Bảng Tổng Quan'}
               </h2>
             </div>

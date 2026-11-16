@@ -12,6 +12,7 @@ import Grades from './pages/Grades';
 import LeaveRequests from './pages/LeaveRequests';
 import Branches from './pages/Branches';
 import BranchDetail from './pages/BranchDetail';
+import Teachers from './pages/Teachers';
 import AdminLayout from './layouts/AdminLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -36,6 +37,7 @@ export default function App() {
             <Route path="/leave-requests" element={<LeaveRequests />} />
             <Route path="/branches" element={<Branches />} />
             <Route path="/branches/:id" element={<BranchDetail />} />
+            <Route path="/teachers" element={<Teachers />} />
           </Route>
         </Route>
 
