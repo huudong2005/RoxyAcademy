@@ -38,10 +38,9 @@ public class ClassesController(RoxyDbContext db) : ControllerBase
         }
     }
 
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<ClassDto>>> GetClasses()
+    private static Task<List<ClassDto>> ToClassDtosAsync(IQueryable<Class> query)
     {
-        var classes = await VisibleClasses()
+        return query
             .Include(c => c.Course)
             .Include(c => c.Branch)
             .Include(c => c.User)
@@ -53,7 +52,33 @@ public class ClassesController(RoxyDbContext db) : ControllerBase
                 c.ClassType, c.MaxStudents, c.StartDate, c.EndDate,
                 c.TuitionFee, c.IsOpenForRegistration, c.Status, c.Note, c.CreatedAt))
             .ToListAsync();
+    }
 
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<ClassDto>>> GetClasses()
+    {
+        var classes = await ToClassDtosAsync(VisibleClasses());
+        return Ok(classes);
+    }
+
+    [HttpGet("open-for-registration")]
+    [Authorize(Roles = "SuperAdmin,BranchManager,Parent")]
+    public async Task<ActionResult<IEnumerable<ClassDto>>> GetOpenForRegistrationClasses()
+    {
+        var q = db.Classes.Where(c => c.IsOpenForRegistration && c.Status != "Finished");
+
+        if (Role == "BranchManager")
+        {
+            var branchId = User.GetBranchId() ?? -1;
+            q = q.Where(c => c.BranchId == branchId);
+        }
+        else if (Role == "Parent")
+        {
+            q = q.Where(c => db.Students.Any(s =>
+                s.ParentId == UserId && s.Status != "Dropped" && s.BranchId == c.BranchId));
+        }
+
+        var classes = await ToClassDtosAsync(q);
         return Ok(classes);
     }
 

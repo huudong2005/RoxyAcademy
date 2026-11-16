@@ -931,4 +931,105 @@ Quản lý danh sách các cơ sở (chi nhánh) của Roxy Academy kèm thống
   - `403 Forbidden`: Không có quyền `SuperAdmin`.
   - `404 Not Found`: `{ "message": "Không tìm thấy cơ sở này." }`
 
+---
+
+## 9. PHÂN HỆ ĐĂNG KÝ LỚP CHO CON (CLASSES & STUDENTCLASSES API)
+
+> **Vị trí trên Admin Web (`roxy-admin`):** Luồng **"Phụ huynh tự đăng ký lớp cho con"** được đặt tại **Trang Học viên (`/students`)** và **chỉ hiển thị cho vai trò `Parent`**. Các vai trò `SuperAdmin`, `BranchManager`, `Teacher`, `Student` không thấy nút đăng ký hay khu vực đơn đăng ký lớp của phụ huynh tại trang này.
+
+### 9.1. Lấy danh sách lớp đang mở đăng ký — `GET /api/Classes/open-for-registration`
+- **Quyền truy cập:** `SuperAdmin`, `BranchManager`, `Parent`.
+- **Phân quyền dữ liệu (Scoping):**
+  - Chỉ lấy các lớp có `IsOpenForRegistration == true` và `Status != "Finished"`.
+  - `SuperAdmin`: Xem tất cả lớp đang mở đăng ký.
+  - `BranchManager`: Tự động giới hạn trong cơ sở mình quản lý (`Class.BranchId == userBranchId`).
+  - `Parent`: Chỉ trả về các lớp đang mở đăng ký thuộc cùng cơ sở với con đang hoạt động của phụ huynh (`Student.ParentId == UserId && Student.Status != "Dropped" && Student.BranchId == Class.BranchId`).
+- **Response:** `200 OK` (`IEnumerable<ClassDto>`)
+  ```json
+  [
+    {
+      "id": 5,
+      "className": "Luyện chữ đẹp K01",
+      "courseId": 2,
+      "courseName": "Luyện chữ đẹp",
+      "teacherId": 12,
+      "teacherName": "Cô Nguyễn Thị Mai",
+      "branchId": 1,
+      "branchName": "Cơ sở Bình Trưng Tây",
+      "classType": "Standard",
+      "maxStudents": 15,
+      "startDate": "2026-11-20",
+      "endDate": null,
+      "tuitionFee": 2500000,
+      "isOpenForRegistration": true,
+      "status": "Upcoming",
+      "note": null,
+      "createdAt": "2026-11-01T08:00:00Z"
+    }
+  ]
+  ```
+
+---
+
+### 9.2. Lấy danh sách đơn đăng ký lớp — `GET /api/StudentClasses`
+- **Quyền truy cập:** Đã đăng nhập (`SuperAdmin`, `BranchManager`, `Teacher`, `Parent`, `Student`).
+- **Phân quyền dữ liệu (Scoping):**
+  - `Parent`: Chỉ xem đơn đăng ký của các con mình (`Student.ParentId == UserId`).
+  - `Student`: Chỉ xem đơn đăng ký của chính mình.
+  - `Teacher`: Chỉ xem đơn đăng ký của các lớp mình phụ trách.
+  - `BranchManager`: Chỉ xem đơn đăng ký thuộc cơ sở mình.
+  - `SuperAdmin`: Xem toàn bộ.
+- **Query Parameters (Tùy chọn):**
+  - `studentId` (int, optional): Lọc đơn đăng ký theo mã học viên (trên trang `/students`, `Parent` gọi `GET /api/StudentClasses?studentId=...` khi lọc theo từng con hoặc `GET /api/StudentClasses` để xem tất cả các con).
+  - `classId` (int, optional): Lọc theo mã lớp học.
+- **Response:** `200 OK` (`IEnumerable<StudentClassDto>`)
+  ```json
+  [
+    {
+      "id": 31,
+      "studentId": 20,
+      "studentName": "Trần Bảo Nam",
+      "classId": 5,
+      "className": "Luyện chữ đẹp K01",
+      "status": "Pending",
+      "registeredAt": "2026-11-16T09:30:00Z",
+      "approvedBy": null,
+      "approvedByName": null,
+      "approvedAt": null,
+      "note": "Mong muốn học ca sáng cuối tuần"
+    }
+  ]
+  ```
+- **Các giá trị `status`:**
+  - `Pending`: Chờ duyệt (mặc định khi `Parent` tự đăng ký)
+  - `Active`: Đã duyệt / Đang học
+  - `Rejected`: Từ chối
+  - `Completed`: Hoàn thành
+  - `Dropped`: Ngừng học
+
+---
+
+### 9.3. Phụ huynh gửi đơn đăng ký lớp cho con — `POST /api/StudentClasses`
+- **Quyền truy cập:** `SuperAdmin`, `BranchManager`, `Parent`.
+- **Luồng gọi của `Parent` tại `/students`:**
+  1. Tải danh sách lớp đang mở từ `GET /api/Classes/open-for-registration`.
+  2. Chọn con (loại trừ bé có trạng thái `Dropped`; tự động chọn nếu chỉ có 1 bé), lọc lớp có `isOpenForRegistration === true` và cùng `branchId` với con.
+  3. Gửi `POST /api/StudentClasses` với `{ studentId, classId, note }`.
+  4. Khi `Parent` gọi, backend tạo bản ghi ở trạng thái `Pending` (Chờ duyệt); nếu `SuperAdmin`/`BranchManager` gọi thì duyệt thẳng sang `Active`.
+  5. Sau khi tạo thành công, Frontend reload lại danh sách đơn đăng ký qua `GET /api/StudentClasses?studentId=...`.
+- **Request Body:**
+  ```json
+  {
+    "studentId": 20,
+    "classId": 5,
+    "note": "Mong muốn học ca sáng cuối tuần"
+  }
+  ```
+- **Response:**
+  - `200 OK`: `{ "message": "Đăng ký thành công!", "id": 31 }` (với `Parent`, đơn ở trạng thái `Pending`).
+  - `400 Bad Request`: Học viên không tồn tại / `Dropped`, lớp không tồn tại / không mở đăng ký, hoặc học viên và lớp khác cơ sở.
+  - `403 Forbidden`: `Parent` cố tình gửi `studentId` không phải con mình (`"Bạn chỉ có thể đăng ký lớp cho con của mình."`).
+  - `409 Conflict`: Học viên đã đăng ký lớp này rồi (Frontend hiển thị thông báo rõ ràng có cụm `"đã đăng ký lớp này rồi"`).
+
+
 

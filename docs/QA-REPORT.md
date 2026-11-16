@@ -217,3 +217,40 @@ Toàn bộ 6 hạng mục kiểm thử code, phân quyền và build/smoke test 
 
 7. **Không có đăng ký công khai, không có Zalo Mini App — PASS**
    - Không có trang/route đăng ký công khai hay mã nguồn Zalo Mini App trong `roxy-admin/src`.
+
+---
+
+# BÁO CÁO KIỂM THỬ QA — GIAI ĐOẠN 1L (BỔ SUNG — PHỤ HUYNH TỰ ĐĂNG KÝ LỚP CHO CON)
+**Ngày kiểm thử:** 16/11/2026  
+**Người thực hiện:** QA Agent  
+**Phạm vi:** `ClassesController.cs`, `StudentClassesController.cs`, `SchedulesController.cs`, `StudentsController.cs`, `Students.jsx`, `ClassList.jsx`, `index.css`, `docs/API.md`  
+**Phương thức:** Kiểm tra tĩnh đối chiếu mã nguồn & hợp đồng API/DB + Build verification (chưa chạy runtime với DB/API live).
+
+## 1. KẾT QUẢ BIÊN DỊCH & BẢO MẬT (SMOKE TEST)
+
+| Thành phần | Lệnh / Phạm vi | Kết quả | Chi tiết |
+| :--- | :--- | :---: | :--- |
+| **Backend Build** | `dotnet build RoxyAppBE/RoxyAcademy.Api/RoxyAcademy.Api.csproj` | **PASS** | `0 Warning(s), 0 Error(s)` (target `net9.0`, 3.96s) |
+| **Frontend Build** | `npm run build` (`roxy-admin/`) | **PASS** | `0 Error(s)`, 103 modules transformed, built in 285ms |
+| **Hard-code `localhost`** | Quét `roxy-admin/src/**` & `Controllers/*.cs`, `Dtos/*.cs` | **PASS** | 0 kết quả hard-code `localhost` trong code sản phẩm |
+| **Bảo mật `Students.Note`** | `StudentsController.cs` & `Students.jsx` | **PASS** | Backend `Mask()` đặt `Note = null` khi `Role` không phải `SuperAdmin`/`BranchManager`/`Teacher` (`L20, L71`); Frontend ẩn khối ghi chú nội bộ với `Parent`/`Student` (`L19, L1432`) |
+| **UI Motion & Accessibility** | `roxy-admin/src/index.css` | **PASS** | Có `.modal-panel`, `.modal-backdrop` (`L54-81`) và `@media (prefers-reduced-motion: reduce)` (`L84-91`) |
+
+## 2. CHECKLIST 6 TIÊU CHÍ BẮT BUỘC (GIAI ĐOẠN 1L BỔ SUNG)
+
+| STT | Tiêu chí kiểm tra | Kết quả | Dẫn chứng file & dòng code cụ thể |
+| :-: | :--- | :-: | :--- |
+| **1** | **Phụ huynh đăng ký lớp cho con → `Pending`; nhân viên duyệt → `Active` và phụ huynh thấy lịch** | **PASS** | - `StudentClassesController.cs` L58, L93, L99-102: `POST /api/StudentClasses` tạo `Status = "Pending"`, `ApprovedBy = null` khi `Parent` gọi.<br>- `StudentClassesController.cs` L113-140 & `ClassList.jsx` L502-522: Nhân viên (`SuperAdmin`/`BranchManager`) duyệt qua `PUT /api/StudentClasses/{id}/status` → `Active` (gán `ApprovedBy`, `ApprovedAt`).<br>- `SchedulesController.cs` L48-53, L144-149: `Parent` chỉ thấy lịch học của lớp có `StudentClasses.Status == "Active"` và `sc.Student.ParentId == UserId`. |
+| **2** | **Phụ huynh đăng ký cho con người khác bị chặn `403 Forbidden`** | **PASS** | - `StudentClassesController.cs` L65-66: Kiểm tra `if (Role == "Parent" && student.ParentId != UserId)` trả về `403 Forbidden` (`"Bạn chỉ có thể đăng ký lớp cho con của mình."`). |
+| **3** | **Lớp không mở đăng ký (hoặc khác chi nhánh) thì không chọn được** | **PASS** | - `ClassesController.cs` L64-83: `GET /api/Classes/open-for-registration` chỉ trả `IsOpenForRegistration && Status != "Finished"`, với `Parent` lọc thêm `Student.ParentId == UserId && Student.Status != "Dropped" && Student.BranchId == Class.BranchId`.<br>- `Students.jsx` L661-665, L772-778: Lọc `cls.isOpenForRegistration === true && cls.branchId === selectedRegisterChild.branchId` và chặn trước khi submit.<br>- `StudentClassesController.cs` L70, L79-80: Chặn `!cls.IsOpenForRegistration` và khác `BranchId` bằng `400 Bad Request`. |
+| **4** | **Đăng ký trùng bị chặn (`409 Conflict`)** | **PASS** | - `Students.jsx` L668-674, L780-783, L800-801, L2038-2042: Hiển thị badge `Đã đăng ký`, chặn trước khi submit và bắt `409 Conflict` hiển thị rõ `"Học viên đã đăng ký lớp này rồi. Vui lòng chọn lớp khác."`<br>- `StudentClassesController.cs` L82-90: Trả `409 Conflict` khi đã tồn tại bản ghi `(StudentId, ClassId)` (cả `Pending`/`Active` lẫn `Dropped`/`Rejected`). |
+| **5** | **`Teacher` / `Student` (và Staff) không thấy nút đăng ký** | **PASS** | - `Students.jsx` L18, L210, L246, L851-862, L1180-1321, L1916-2121: Chỉ render nút `Đăng ký lớp cho con`, khu vực `Đơn đăng ký lớp của con`, modal đăng ký và chỉ gọi API khi `isParent` (`currentUser.role === 'Parent'`).<br>- `StudentClassesController.cs` L58 & `ClassesController.cs` L65: `[Authorize(Roles = "SuperAdmin,BranchManager,Parent")]` chặn `Teacher`, `Student` ở backend (`403 Forbidden`). |
+| **6** | **Build, bảo mật & tài liệu API** | **PASS** | - `dotnet build` và `npm run build` đều PASS 0 lỗi.<br>- `docs/API.md` L936-1033 mô tả đầy đủ Mục 9 (`open-for-registration`, `GET/POST StudentClasses`) khớp mã nguồn thực tế. |
+
+## 3. DANH SÁCH LỖI & KẾT LUẬN
+
+- **Lỗi chặn (Blocker):** **0**
+- **Lỗi nghiêm trọng (Critical):** **0**
+- **Lỗi nhỏ (Minor):** **0**
+
+**Trạng thái nghiệm thu Giai đoạn 1L (Bổ sung):** **ĐẠT (PASSED)** — Sẵn sàng bàn giao.
