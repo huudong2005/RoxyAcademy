@@ -69,10 +69,25 @@ public class StudentClassesController(RoxyDbContext db) : ControllerBase
 		if (cls == null) return BadRequest(new { message = "Lớp học không tồn tại." });
 		if (!cls.IsOpenForRegistration) return BadRequest(new { message = "Lớp học này hiện không mở đăng ký." });
 
-		var isAlreadyRegistered = await db.StudentClasses.AnyAsync(sc =>
-			sc.StudentId == req.StudentId && sc.ClassId == req.ClassId && sc.Status != "Dropped" && sc.Status != "Rejected");
-		if (isAlreadyRegistered)
-			return Conflict(new { message = "Học viên đã đăng ký lớp học này rồi." });
+		if (Role == "BranchManager")
+		{
+			var branchId = User.GetBranchId();
+			if (cls.BranchId != branchId || student.BranchId != branchId)
+				return StatusCode(StatusCodes.Status403Forbidden, new { message = "Chỉ được ghi danh học viên thuộc cơ sở của bạn vào lớp thuộc cơ sở của bạn." });
+		}
+
+		if (student.BranchId != cls.BranchId)
+			return BadRequest(new { message = "Học viên và lớp học phải thuộc cùng một cơ sở." });
+
+		var existing = await db.StudentClasses.FirstOrDefaultAsync(sc =>
+			sc.StudentId == req.StudentId && sc.ClassId == req.ClassId);
+		if (existing != null)
+		{
+			if (existing.Status is "Dropped" or "Rejected")
+				return Conflict(new { message = $"Học viên đã có bản ghi danh ở trạng thái {existing.Status}. Vui lòng duyệt lại bản ghi danh hiện có." });
+
+			return Conflict(new { message = "Học viên đã ghi danh lớp học này rồi." });
+		}
 
 		// Phụ huynh đăng ký thì chờ duyệt, Nhân viên đăng ký thì duyệt luôn
 		var isApproved = IsStaff;
@@ -99,17 +114,23 @@ public class StudentClassesController(RoxyDbContext db) : ControllerBase
 	[Authorize(Roles = "SuperAdmin,BranchManager")]
 	public async Task<IActionResult> UpdateStatus(int id, UpdateStudentClassStatusRequest req)
 	{
-		var sc = await db.StudentClasses.Include(s => s.Class).FirstOrDefaultAsync(s => s.Id == id);
+		var sc = await db.StudentClasses
+			.Include(s => s.Class)
+			.Include(s => s.Student)
+			.FirstOrDefaultAsync(s => s.Id == id);
 		if (sc == null) return NotFound(new { message = "Không tìm thấy thông tin đăng ký." });
 
 		if (Role == "BranchManager" && sc.Class.BranchId != User.GetBranchId())
 			return StatusCode(StatusCodes.Status403Forbidden, new { message = "Không có quyền thao tác trên lớp của cơ sở khác." });
 
+		if (req.Status == "Active" && sc.Student.Status == "Dropped")
+			return BadRequest(new { message = "Học viên đang ở trạng thái Ngừng học (Dropped). Vui lòng chuyển học viên về Đang học trước khi duyệt ghi danh." });
+
 		sc.Status = req.Status;
 		sc.Note = req.Note;
 
 		// Nếu chuyển sang Active (Duyệt)
-		if (req.Status == "Active" && sc.ApprovedBy == null)
+		if (req.Status == "Active")
 		{
 			sc.ApprovedBy = UserId;
 			sc.ApprovedAt = DateTime.UtcNow;

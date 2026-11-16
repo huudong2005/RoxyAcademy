@@ -169,3 +169,51 @@ Toàn bộ 4 nhóm checklist của Giai đoạn 1I (Dashboard dữ liệu thật
 
 Toàn bộ 6 hạng mục kiểm thử code, phân quyền và build/smoke test cho Giai đoạn 1K (Messages & Newsfeed) đều **ĐẠT (PASS 100%)**.  
 **Trạng thái nghiệm thu:** **ĐẠT CHUẨN NGHIỆM THU (PASSED)** — Đủ điều kiện bàn giao cho bước tiếp theo.
+
+
+---
+
+# BÁO CÁO KIỂM THỬ QA — GIAI ĐOẠN 1L (GHI DANH HỌC VIÊN VÀO LỚP & TÀI KHOẢN PHỤ HUYNH / HỌC VIÊN)
+**Ngày kiểm thử:** 16/11/2026  
+**Người thực hiện:** QA Agent  
+**Phạm vi:** `StudentClassesController.cs`, `StudentClassDtos.cs`, `StudentsController.cs`, `UsersController.cs`, `SchedulesController.cs`, `AuthController.cs`, `ClassList.jsx`, `Students.jsx`
+
+## 1. KẾT QUẢ KIỂM TRA BUILD & SCHEMA
+| Hạng mục | Kết quả | Chi tiết |
+| :--- | :---: | :--- |
+| **Database Schema** | **PASS** | Không thay đổi `RoxyAppDB.sql`, giữ nguyên 18 bảng và ràng buộc `UQ_StudentClasses (StudentId, ClassId)` |
+| **Frontend Lint (`npm run lint`)** | **PASS** | 0 error(s), 0 warning(s) |
+| **Frontend Build (`npm run build`)** | **PASS** | Vite built 103 modules trong 407ms |
+
+## 2. KẾT QUẢ 7 TEST CASES BẮT BUỘC (ĐỐI CHIẾU MÃ NGUỒN)
+
+1. **Thêm học viên vào lớp (`POST /api/StudentClasses`) → `Status = Active` (khi staff thêm) → Phụ huynh thấy lịch (`GET /api/Schedules`) — PASS**
+   - `StudentClassesController.cs` (`IsStaff`, `RegisterClass`, `isApproved = IsStaff`, `Status = isApproved ? "Active" : "Pending"`, `ApprovedBy`/`ApprovedAt`).
+   - `SchedulesController.cs` (`Parent` lọc `sc.Status == "Active" && sc.Student.ParentId == UserId`; `Student` lọc `sc.Status == "Active" && sc.Student.UserId == UserId`).
+   - `ClassList.jsx` (`POST /StudentClasses` trong tab `Học viên trong lớp`).
+
+2. **Chặn ghi danh trùng (`409 Conflict` cho cả `Active`/`Pending` lẫn `Dropped`/`Rejected` — khớp `UQ_StudentClasses`); UI lọc dropdown & nhắc duyệt lại — PASS**
+   - `RoxyAppDB.sql` (`CONSTRAINT UQ_StudentClasses UNIQUE (StudentId, ClassId)`).
+   - `StudentClassesController.cs` kiểm tra `(req.StudentId, req.ClassId)`: trả `409 Conflict` cả khi đã `Dropped`/`Rejected` (kèm hướng dẫn duyệt lại) và khi đang `Active`/`Pending`/`Completed`.
+   - `ClassList.jsx` lọc bỏ học viên đã có bản ghi danh khỏi dropdown thêm mới và hiển thị nhắc bấm **Duyệt lại** nếu học viên đang `Dropped`/`Rejected`.
+
+3. **Học viên sang `Dropped` → ghi danh `Active`/`Pending` thành `Dropped`; đưa về `Active` → ghi danh giữ `Dropped` tới khi duyệt lại (`PUT /api/StudentClasses/{id}/status`); chặn duyệt nếu học viên đang `Dropped` (`400 BadRequest`); UI hiển thị thông báo nghiệp vụ — PASS**
+   - `StudentsController.cs` (`ApplyStatusAsync`: `newStatus == "Dropped"` chuyển `StudentClasses` `Active`/`Pending` → `Dropped` và đặt `User.IsActive = false`; đưa về `Active` không tự khôi phục `StudentClasses`).
+   - `StudentClassesController.cs` (`UpdateStatus`: `Include(s => s.Student)`, trả `400 BadRequest` nếu duyệt `Active` khi `sc.Student.Status == "Dropped"`, cập nhật `ApprovedBy`/`ApprovedAt` khi duyệt `Active`).
+   - `ClassList.jsx` hiển thị khung lưu ý nghiệp vụ và nút **Duyệt**/**Duyệt lại**/**Ngừng ghi danh** kèm modal ghi chú.
+
+4. **Tạo tài khoản Phụ huynh ngay trong form Học viên (`POST /api/Users`, role `Parent`, mật khẩu nhập hoặc `null`) → tự thêm vào danh sách & chọn `formData.parentId`; chỉ `SuperAdmin`/`BranchManager` thấy — PASS**
+   - `UsersController.cs` (`[Authorize(Roles = "SuperAdmin,BranchManager")]`, `CreatableRoles` gồm `Parent`, `Password` tùy chọn).
+   - `Students.jsx` hiển thị nút `+ Tạo tài khoản phụ huynh mới` chỉ với `!editingStudent && isStaff`, tạo xong tự thêm vào `parents` và chọn `parentId`.
+
+5. **Tạo tài khoản Học viên (`POST /api/Students/{id}/account`, SĐT + mật khẩu hoặc `null`) → đăng nhập `POST /api/Auth/login` (khi có MK & `IsActive = true`); hiện `Đã có TK` + nút `Đặt lại MK` (`POST /api/Students/{id}/account/reset-password`); chỉ `SuperAdmin`/`BranchManager` thấy — PASS**
+   - `StudentsController.cs` (`CreateAccount`, `ResetAccountPassword` với `[Authorize(Roles = "SuperAdmin,BranchManager")]`).
+   - `AuthController.cs` (`Login` kiểm tra `IsActive` & `PasswordHash`).
+   - `Students.jsx` hiển thị cột `Tài khoản` + trong modal chi tiết với badge `Đã có TK`/`Chưa có` và nút `Tạo tài khoản`/`Đặt lại MK` chỉ cho `isStaff`.
+
+6. **Phân quyền `Teacher`: xem tab `Học viên trong lớp` của lớp mình dạy; KHÔNG thấy `+ Thêm học viên vào lớp`, `Duyệt`, `Duyệt lại`, `Ngừng ghi danh`; backend trả `403` cho `POST /StudentClasses` và `PUT /StudentClasses/{id}/status` — PASS**
+   - `StudentClassesController.cs` (`Teacher` chỉ xem `sc.Class.TeacherId == UserId`; `POST` và `PUT .../status` chặn `Teacher`).
+   - `ClassList.jsx` (`canManageEnrollments` trả `false` cho `Teacher`).
+
+7. **Không có đăng ký công khai, không có Zalo Mini App — PASS**
+   - Không có trang/route đăng ký công khai hay mã nguồn Zalo Mini App trong `roxy-admin/src`.

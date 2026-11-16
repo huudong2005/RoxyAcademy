@@ -67,11 +67,24 @@ export default function ClassList() {
 
   // State Drawer Chi tiết Lớp học & Tiến độ bài học (Lesson Progress)
   const [selectedDetailClass, setSelectedDetailClass] = useState(null);
-  const [detailTab, setDetailTab] = useState('progress'); // 'progress' hoặc 'info'
+  const [detailTab, setDetailTab] = useState('students'); // 'students' | 'progress' | 'info'
   const [lessonProgresses, setLessonProgresses] = useState([]);
   const [loadingProgress, setLoadingProgress] = useState(false);
   const [progressError, setProgressError] = useState('');
   const [classSchedules, setClassSchedules] = useState([]);
+
+  // State Ghi danh học viên trong lớp (StudentClasses)
+  const [classEnrollments, setClassEnrollments] = useState([]);
+  const [loadingEnrollments, setLoadingEnrollments] = useState(false);
+  const [enrollmentError, setEnrollmentError] = useState('');
+  const [branchStudents, setBranchStudents] = useState([]);
+  const [loadingBranchStudents, setLoadingBranchStudents] = useState(false);
+  const [showEnrollForm, setShowEnrollForm] = useState(false);
+  const [enrollStudentId, setEnrollStudentId] = useState('');
+  const [enrollNote, setEnrollNote] = useState('');
+  const [enrollSubmitting, setEnrollSubmitting] = useState(false);
+  const [enrollSubmitError, setEnrollSubmitError] = useState('');
+  const [statusActionModal, setStatusActionModal] = useState(null); // { sc, targetStatus, note, submitting, error }
 
   // State Modal Thêm / Sửa Tiến độ bài học
   const [isProgressModalOpen, setIsProgressModalOpen] = useState(false);
@@ -382,6 +395,41 @@ export default function ClassList() {
     return false;
   }, [isSuperAdmin, currentUser.role, currentUser.branchId, currentUser.id]);
 
+  // Chỉ SuperAdmin hoặc BranchManager (đúng chi nhánh) được thêm/duyệt ghi danh; Teacher chỉ xem
+  const canManageEnrollments = useCallback((cls) => {
+    if (!cls) return false;
+    if (isSuperAdmin) return true;
+    if (currentUser.role === 'BranchManager') return cls.branchId === currentUser.branchId;
+    return false;
+  }, [isSuperAdmin, currentUser.role, currentUser.branchId]);
+
+  const loadClassEnrollments = useCallback(async (classId) => {
+    setLoadingEnrollments(true);
+    setEnrollmentError('');
+    try {
+      const res = await axiosClient.get(`/StudentClasses?classId=${classId}`);
+      setClassEnrollments(res.data || []);
+    } catch (err) {
+      setEnrollmentError(err.response?.data?.message || 'Không thể tải danh sách ghi danh của lớp.');
+    } finally {
+      setLoadingEnrollments(false);
+    }
+  }, []);
+
+  const loadBranchStudents = useCallback(async (branchId) => {
+    if (!branchId) return;
+    setLoadingBranchStudents(true);
+    try {
+      const res = await axiosClient.get(`/Students?branchId=${branchId}&status=Active&pageSize=100`);
+      setBranchStudents(res.data?.items || res.data || []);
+    } catch (err) {
+      console.warn('Không tải được danh sách học viên cùng chi nhánh:', err);
+      setBranchStudents([]);
+    } finally {
+      setLoadingBranchStudents(false);
+    }
+  }, []);
+
   const loadLessonProgresses = useCallback(async (classId) => {
     setLoadingProgress(true);
     setProgressError('');
@@ -407,9 +455,70 @@ export default function ClassList() {
 
   const handleOpenDetail = (cls) => {
     setSelectedDetailClass(cls);
-    setDetailTab('progress');
+    setDetailTab('students');
+    setShowEnrollForm(false);
+    setEnrollStudentId('');
+    setEnrollNote('');
+    setEnrollSubmitError('');
+    loadClassEnrollments(cls.id);
+    if (canManageEnrollments(cls)) {
+      loadBranchStudents(cls.branchId);
+    } else {
+      setBranchStudents([]);
+    }
     loadLessonProgresses(cls.id);
     loadClassSchedules(cls.id);
+  };
+
+  const handleEnrollSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedDetailClass) return;
+    setEnrollSubmitError('');
+    if (!enrollStudentId) {
+      setEnrollSubmitError('Vui lòng chọn học viên cần ghi danh.');
+      return;
+    }
+
+    setEnrollSubmitting(true);
+    try {
+      await axiosClient.post('/StudentClasses', {
+        studentId: Number(enrollStudentId),
+        classId: selectedDetailClass.id,
+        note: enrollNote.trim() || null,
+      });
+      setEnrollStudentId('');
+      setEnrollNote('');
+      setShowEnrollForm(false);
+      await loadClassEnrollments(selectedDetailClass.id);
+      setReloadKey((k) => k + 1);
+    } catch (err) {
+      const data = err.response?.data;
+      setEnrollSubmitError(data?.message || 'Không thể ghi danh học viên vào lớp.');
+    } finally {
+      setEnrollSubmitting(false);
+    }
+  };
+
+  const handleEnrollmentStatusSubmit = async (e) => {
+    e.preventDefault();
+    if (!statusActionModal || !selectedDetailClass) return;
+    setStatusActionModal((prev) => ({ ...prev, submitting: true, error: '' }));
+    try {
+      await axiosClient.put(`/StudentClasses/${statusActionModal.sc.id}/status`, {
+        status: statusActionModal.targetStatus,
+        note: statusActionModal.note.trim() || null,
+      });
+      setStatusActionModal(null);
+      await loadClassEnrollments(selectedDetailClass.id);
+      setReloadKey((k) => k + 1);
+    } catch (err) {
+      const data = err.response?.data;
+      setStatusActionModal((prev) => ({
+        ...prev,
+        submitting: false,
+        error: data?.message || 'Không thể cập nhật trạng thái ghi danh.',
+      }));
+    }
   };
 
   const handleOpenCreateProgress = () => {
@@ -1133,11 +1242,26 @@ export default function ClassList() {
             </div>
 
             {/* Tab Navigation */}
-            <div className="flex border-b border-slate-200 bg-white px-6">
+            <div className="flex border-b border-slate-200 bg-white px-6 overflow-x-auto">
+              <button
+                type="button"
+                onClick={() => setDetailTab('students')}
+                className={`py-3 px-4 text-xs md:text-sm font-semibold border-b-2 transition-colors duration-150 cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
+                  detailTab === 'students'
+                    ? 'border-blue-600 text-blue-700'
+                    : 'border-transparent text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <span>🎓 Học viên trong lớp</span>
+                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] text-blue-700 font-bold border border-blue-200">
+                  {classEnrollments.filter((sc) => sc.status === 'Active').length}
+                </span>
+              </button>
+
               <button
                 type="button"
                 onClick={() => setDetailTab('progress')}
-                className={`py-3 px-4 text-xs md:text-sm font-semibold border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`py-3 px-4 text-xs md:text-sm font-semibold border-b-2 transition-colors duration-150 cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
                   detailTab === 'progress'
                     ? 'border-blue-600 text-blue-700'
                     : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -1152,7 +1276,7 @@ export default function ClassList() {
               <button
                 type="button"
                 onClick={() => setDetailTab('info')}
-                className={`py-3 px-4 text-xs md:text-sm font-semibold border-b-2 transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`py-3 px-4 text-xs md:text-sm font-semibold border-b-2 transition-colors duration-150 cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
                   detailTab === 'info'
                     ? 'border-blue-600 text-blue-700'
                     : 'border-transparent text-slate-500 hover:text-slate-800'
@@ -1164,7 +1288,257 @@ export default function ClassList() {
 
             {/* Thân Drawer cuộn độc lập */}
             <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50">
-              {detailTab === 'progress' ? (
+              {detailTab === 'students' ? (
+                /* ========================================================
+                   TAB 1: HỌC VIÊN TRONG LỚP (GHI DANH / DUYỆT GHI DANH)
+                   ======================================================== */
+                <div className="space-y-4">
+                  {/* Thanh tác vụ đầu tab */}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
+                    <div>
+                      <h3 className="text-xs md:text-sm font-bold text-slate-900">
+                        Danh sách ghi danh lớp học
+                      </h3>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        Tổng {classEnrollments.length} bản ghi danh (
+                        {classEnrollments.filter((s) => s.status === 'Active').length} đang học,{' '}
+                        {classEnrollments.filter((s) => s.status === 'Pending').length} chờ duyệt,{' '}
+                        {classEnrollments.filter((s) => s.status === 'Dropped').length} ngừng học)
+                      </p>
+                    </div>
+
+                    {canManageEnrollments(selectedDetailClass) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowEnrollForm((v) => !v);
+                          setEnrollSubmitError('');
+                        }}
+                        className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-xs font-semibold rounded-lg shadow-xs hover:bg-blue-700 active:scale-[0.97] transition-transform duration-150 ease-out cursor-pointer self-start sm:self-auto"
+                      >
+                        <span>{showEnrollForm ? 'Đóng form thêm' : '+ Thêm học viên vào lớp'}</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Ghi chú nghiệp vụ Dropped -> Active */}
+                  <div className="rounded-xl border border-amber-200 bg-amber-50/90 px-4 py-3 text-xs text-amber-900 leading-relaxed">
+                    <span className="font-bold">Lưu ý trạng thái ghi danh:</span> Khi đổi trạng thái học viên sang{' '}
+                    <span className="font-semibold">Ngừng học (Dropped)</span>, mọi ghi danh lớp của học viên sẽ tự động chuyển thành{' '}
+                    <span className="font-semibold">Dropped</span>. Khi đưa học viên về{' '}
+                    <span className="font-semibold">Đang học (Active)</span>, ghi danh{' '}
+                    <span className="font-semibold underline">không tự khôi phục</span> — quản lý phải duyệt lại tại đây để phụ huynh/học viên thấy lịch học.
+                  </div>
+
+                  {/* Form thêm học viên vào lớp (SuperAdmin / BranchManager) */}
+                  {showEnrollForm && canManageEnrollments(selectedDetailClass) && (
+                    <form
+                      onSubmit={handleEnrollSubmit}
+                      className="rounded-xl border border-blue-200 bg-white p-4 space-y-3 shadow-xs"
+                    >
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-xs font-bold text-slate-900">
+                          Ghi danh học viên đang học (Cơ sở: {selectedDetailClass.branchName || `#${selectedDetailClass.branchId}`})
+                        </h4>
+                      </div>
+
+                      {enrollSubmitError && (
+                        <div className="rounded-lg bg-rose-50 border border-rose-200 px-3 py-2 text-xs text-rose-700">
+                          ⚠️ {enrollSubmitError}
+                        </div>
+                      )}
+
+                      {(() => {
+                        const existingMap = new Map(classEnrollments.map((sc) => [sc.studentId, sc]));
+                        const availableStudents = branchStudents.filter((stu) => !existingMap.has(stu.id));
+                        const droppedInClass = branchStudents.filter(
+                          (stu) => existingMap.get(stu.id)?.status === 'Dropped' || existingMap.get(stu.id)?.status === 'Rejected'
+                        );
+
+                        return (
+                          <>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                              <div>
+                                <label className="block font-semibold text-slate-700 mb-1">
+                                  Chọn học viên <span className="text-rose-500">*</span>
+                                </label>
+                                <select
+                                  required
+                                  disabled={loadingBranchStudents}
+                                  value={enrollStudentId}
+                                  onChange={(e) => setEnrollStudentId(e.target.value)}
+                                  className="w-full h-9 rounded-lg border border-slate-300 bg-white px-2.5 text-slate-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none disabled:bg-slate-50"
+                                >
+                                  <option value="">
+                                    {loadingBranchStudents
+                                      ? 'Đang tải học viên...'
+                                      : availableStudents.length === 0
+                                      ? '-- Không còn học viên phù hợp --'
+                                      : '-- Chọn học viên đang học --'}
+                                  </option>
+                                  {availableStudents.map((stu) => (
+                                    <option key={stu.id} value={stu.id}>
+                                      {stu.fullName} {stu.parentPhone ? `(${stu.parentPhone})` : ''}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+
+                              <div>
+                                <label className="block font-semibold text-slate-700 mb-1">
+                                  Ghi chú ghi danh (tùy chọn)
+                                </label>
+                                <input
+                                  type="text"
+                                  maxLength={500}
+                                  placeholder="VD: Nhập học từ tháng 11..."
+                                  value={enrollNote}
+                                  onChange={(e) => setEnrollNote(e.target.value)}
+                                  className="w-full h-9 rounded-lg border border-slate-300 bg-white px-2.5 text-slate-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none"
+                                />
+                              </div>
+                            </div>
+
+                            {droppedInClass.length > 0 && (
+                              <p className="text-[11px] text-slate-500">
+                                💡 Học viên đã có bản ghi danh ở trạng thái Dropped/Rejected ({droppedInClass.map((s) => s.fullName).join(', ')}) không thể thêm trùng — hãy bấm <span className="font-semibold text-blue-700">Duyệt lại</span> ở danh sách bên dưới.
+                              </p>
+                            )}
+
+                            <div className="flex justify-end gap-2 pt-1">
+                              <button
+                                type="button"
+                                onClick={() => setShowEnrollForm(false)}
+                                className="px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
+                              >
+                                Hủy
+                              </button>
+                              <button
+                                type="submit"
+                                disabled={enrollSubmitting || !enrollStudentId}
+                                className="px-3.5 py-1.5 rounded-lg bg-blue-600 text-xs font-semibold text-white hover:bg-blue-700 active:scale-[0.97] transition-transform duration-150 disabled:opacity-50 cursor-pointer"
+                              >
+                                {enrollSubmitting ? 'Đang ghi danh...' : 'Xác nhận ghi danh'}
+                              </button>
+                            </div>
+                          </>
+                        );
+                      })()}
+                    </form>
+                  )}
+
+                  {enrollmentError && (
+                    <div className="rounded-lg bg-rose-50 border border-rose-200 p-3 text-xs text-rose-700">
+                      ⚠️ {enrollmentError}
+                    </div>
+                  )}
+
+                  {loadingEnrollments ? (
+                    <div className="py-10 text-center text-xs text-slate-400">
+                      Đang tải danh sách học viên trong lớp...
+                    </div>
+                  ) : classEnrollments.length === 0 ? (
+                    <div className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center">
+                      <div className="text-2xl mb-1.5">🎓</div>
+                      <p className="text-xs font-semibold text-slate-700">Chưa có học viên nào ghi danh lớp này</p>
+                      <p className="text-[11px] text-slate-400 mt-1">
+                        {canManageEnrollments(selectedDetailClass)
+                          ? 'Nhấn "+ Thêm học viên vào lớp" để ghi danh học viên đang học.'
+                          : 'Danh sách học viên sẽ hiển thị khi quản lý ghi danh vào lớp.'}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2.5">
+                      {classEnrollments.map((sc) => {
+                        const statusMap = {
+                          Active: { label: 'Đang học (Active)', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+                          Pending: { label: 'Chờ duyệt (Pending)', cls: 'bg-amber-50 text-amber-700 border-amber-200' },
+                          Dropped: { label: 'Ngừng học (Dropped)', cls: 'bg-rose-50 text-rose-700 border-rose-200' },
+                          Rejected: { label: 'Từ chối (Rejected)', cls: 'bg-slate-100 text-slate-600 border-slate-200' },
+                          Completed: { label: 'Hoàn thành', cls: 'bg-blue-50 text-blue-700 border-blue-200' },
+                        };
+                        const badge = statusMap[sc.status] || {
+                          label: sc.status,
+                          cls: 'bg-slate-100 text-slate-600 border-slate-200',
+                        };
+
+                        return (
+                          <div
+                            key={sc.id}
+                            className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+                          >
+                            <div className="space-y-1 min-w-0">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="text-xs md:text-sm font-bold text-slate-900">
+                                  {sc.studentName || `Học viên #${sc.studentId}`}
+                                </span>
+                                <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${badge.cls}`}>
+                                  {badge.label}
+                                </span>
+                              </div>
+
+                              <div className="text-[11px] text-slate-500 flex flex-wrap gap-x-3 gap-y-0.5">
+                                <span>Đăng ký: {formatDateTime(sc.registeredAt)}</span>
+                                {sc.approvedByName && (
+                                  <span>
+                                    Duyệt bởi: <span className="font-medium text-slate-700">{sc.approvedByName}</span>
+                                    {sc.approvedAt ? ` (${formatDateTime(sc.approvedAt)})` : ''}
+                                  </span>
+                                )}
+                              </div>
+
+                              {sc.note && (
+                                <p className="text-[11px] text-slate-600 bg-slate-50 rounded-md px-2 py-1 border border-slate-100">
+                                  Ghi chú: {sc.note}
+                                </p>
+                              )}
+                            </div>
+
+                            {canManageEnrollments(selectedDetailClass) && (
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                {(sc.status === 'Pending' || sc.status === 'Dropped' || sc.status === 'Rejected') && (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setStatusActionModal({
+                                        sc,
+                                        targetStatus: 'Active',
+                                        note: sc.note || '',
+                                        submitting: false,
+                                        error: '',
+                                      })
+                                    }
+                                    className="px-2.5 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 active:scale-[0.97] transition-transform duration-150 cursor-pointer"
+                                  >
+                                    {sc.status === 'Pending' ? 'Duyệt' : 'Duyệt lại'}
+                                  </button>
+                                )}
+                                {(sc.status === 'Active' || sc.status === 'Pending') && (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setStatusActionModal({
+                                        sc,
+                                        targetStatus: 'Dropped',
+                                        note: sc.note || '',
+                                        submitting: false,
+                                        error: '',
+                                      })
+                                    }
+                                    className="px-2.5 py-1.5 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 text-xs font-semibold hover:bg-rose-100 active:scale-[0.97] transition-transform duration-150 cursor-pointer"
+                                  >
+                                    {sc.status === 'Pending' ? 'Từ chối' : 'Ngừng ghi danh'}
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              ) : detailTab === 'progress' ? (
                 /* ========================================================
                    TAB 1: TIẾN ĐỘ BÀI HỌC (LESSON PROGRESS TIMELINE)
                    ======================================================== */
@@ -1502,6 +1876,104 @@ export default function ClassList() {
                   ) : (
                     '✓ Lưu tiến độ'
                   )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 8. MODAL XÁC NHẬN DUYỆT / NGỪNG GHI DANH HỌC VIÊN */}
+      {statusActionModal && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
+          <div
+            className="fixed inset-0 bg-slate-900/50 backdrop-blur-[2px]"
+            onClick={() => !statusActionModal.submitting && setStatusActionModal(null)}
+            aria-hidden="true"
+          />
+          <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl z-10">
+            <div className="flex items-start justify-between border-b border-slate-100 pb-3">
+              <div>
+                <h3 className="text-base font-bold text-slate-900">
+                  {statusActionModal.targetStatus === 'Active'
+                    ? 'Duyệt ghi danh học viên'
+                    : 'Ngừng ghi danh học viên'}
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {statusActionModal.sc.studentName} — Lớp {selectedDetailClass?.className}
+                </p>
+              </div>
+              <button
+                type="button"
+                disabled={statusActionModal.submitting}
+                onClick={() => setStatusActionModal(null)}
+                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleEnrollmentStatusSubmit} className="mt-4 space-y-3 text-xs">
+              {statusActionModal.error && (
+                <div className="rounded-lg bg-rose-50 border border-rose-200 px-3 py-2 text-rose-700">
+                  ⚠️ {statusActionModal.error}
+                </div>
+              )}
+
+              <div className="rounded-lg bg-slate-50 border border-slate-200 px-3 py-2.5 text-slate-700">
+                Trạng thái mới:{' '}
+                <span
+                  className={`font-bold ${
+                    statusActionModal.targetStatus === 'Active' ? 'text-emerald-700' : 'text-rose-700'
+                  }`}
+                >
+                  {statusActionModal.targetStatus === 'Active' ? 'Đang học (Active)' : 'Ngừng học (Dropped)'}
+                </span>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Ghi chú (tùy chọn)
+                </label>
+                <textarea
+                  rows={3}
+                  maxLength={500}
+                  placeholder={
+                    statusActionModal.targetStatus === 'Active'
+                      ? 'VD: Đã xác nhận xếp lớp, duyệt lại sau khi quay lại học...'
+                      : 'VD: Phụ huynh xin nghỉ lớp, chuyển lớp khác...'
+                  }
+                  value={statusActionModal.note}
+                  onChange={(e) =>
+                    setStatusActionModal((prev) => ({ ...prev, note: e.target.value }))
+                  }
+                  className="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-slate-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  disabled={statusActionModal.submitting}
+                  onClick={() => setStatusActionModal(null)}
+                  className="px-4 py-2 rounded-lg border border-slate-300 bg-white font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  disabled={statusActionModal.submitting}
+                  className={`px-4 py-2 rounded-lg font-semibold text-white active:scale-[0.97] transition-transform duration-150 disabled:opacity-50 cursor-pointer ${
+                    statusActionModal.targetStatus === 'Active'
+                      ? 'bg-emerald-600 hover:bg-emerald-700'
+                      : 'bg-rose-600 hover:bg-rose-700'
+                  }`}
+                >
+                  {statusActionModal.submitting
+                    ? 'Đang xử lý...'
+                    : statusActionModal.targetStatus === 'Active'
+                    ? 'Xác nhận duyệt'
+                    : 'Xác nhận ngừng'}
                 </button>
               </div>
             </form>

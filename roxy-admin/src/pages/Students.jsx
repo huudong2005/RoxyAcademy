@@ -69,6 +69,21 @@ export default function Students() {
     status: 'Active',
   });
 
+  // Tạo nhanh tài khoản Phụ huynh ngay trong form Học viên (POST /Users, role Parent)
+  const [showInlineParentForm, setShowInlineParentForm] = useState(false);
+  const [inlineParentData, setInlineParentData] = useState({
+    fullName: '',
+    phoneNumber: '',
+    password: '',
+  });
+  const [inlineParentSubmitting, setInlineParentSubmitting] = useState(false);
+  const [inlineParentError, setInlineParentError] = useState('');
+  const [inlineParentSuccess, setInlineParentSuccess] = useState('');
+
+  // Modal Tạo tài khoản Học viên / Đặt lại mật khẩu Học viên
+  const [accountModal, setAccountModal] = useState(null); // { mode: 'create'|'reset', student, phoneNumber, password, newPassword, submitting, error }
+  const [actionFeedback, setActionFeedback] = useState('');
+
   // Tải danh mục branches, classes, parents (cho staff)
   useEffect(() => {
     let ignore = false;
@@ -193,6 +208,10 @@ export default function Students() {
   const handleOpenCreateModal = () => {
     setEditingStudent(null);
     setFormError('');
+    setShowInlineParentForm(false);
+    setInlineParentData({ fullName: '', phoneNumber: '', password: '' });
+    setInlineParentError('');
+    setInlineParentSuccess('');
     setFormData({
       fullName: '',
       dob: '',
@@ -211,6 +230,10 @@ export default function Students() {
   const handleOpenEditModal = (stu) => {
     setEditingStudent(stu);
     setFormError('');
+    setShowInlineParentForm(false);
+    setInlineParentData({ fullName: '', phoneNumber: '', password: '' });
+    setInlineParentError('');
+    setInlineParentSuccess('');
     setFormData({
       fullName: stu.fullName || '',
       dob: stu.dob ? stu.dob.split('T')[0] : '',
@@ -223,6 +246,157 @@ export default function Students() {
       status: stu.status || 'Active',
     });
     setFormModalOpen(true);
+  };
+
+  // Tạo nhanh tài khoản Phụ huynh ngay trong form Học viên
+  const handleCreateInlineParent = async () => {
+    setInlineParentError('');
+    setInlineParentSuccess('');
+    const fullName = inlineParentData.fullName.trim();
+    const phoneNumber = inlineParentData.phoneNumber.trim();
+    const password = inlineParentData.password;
+
+    if (!fullName) {
+      setInlineParentError('Họ tên phụ huynh là bắt buộc.');
+      return;
+    }
+    if (!/^0\d{9}$/.test(phoneNumber)) {
+      setInlineParentError('Số điện thoại phải gồm 10 chữ số và bắt đầu bằng 0.');
+      return;
+    }
+    if (password && password.length < 8) {
+      setInlineParentError('Mật khẩu phải từ 8 ký tự (hoặc để trống để đặt lại sau).');
+      return;
+    }
+
+    setInlineParentSubmitting(true);
+    try {
+      const branchIdVal = isBranchManager
+        ? currentUser.branchId
+        : formData.branchId
+        ? Number(formData.branchId)
+        : null;
+
+      const res = await axiosClient.post('/Users', {
+        fullName,
+        phoneNumber,
+        role: 'Parent',
+        branchId: branchIdVal,
+        password: password ? password : null,
+        preferredLanguage: 'vi',
+      });
+
+      const createdParent = res.data;
+      setParents((prev) => [createdParent, ...prev]);
+      setFormData((prev) => ({ ...prev, parentId: String(createdParent.id) }));
+      setInlineParentData({ fullName: '', phoneNumber: '', password: '' });
+      setShowInlineParentForm(false);
+      setInlineParentSuccess(`Đã tạo và chọn phụ huynh ${createdParent.fullName} (${createdParent.phoneNumber}).`);
+    } catch (err) {
+      const data = err.response?.data;
+      const detail =
+        data?.message ||
+        (data?.errors ? Object.values(data.errors).flat().join(' ') : '') ||
+        'Không thể tạo tài khoản phụ huynh.';
+      setInlineParentError(detail);
+    } finally {
+      setInlineParentSubmitting(false);
+    }
+  };
+
+  // Mở modal Tạo tài khoản / Đặt lại mật khẩu Học viên
+  const handleOpenCreateAccountModal = (stu) => {
+    setAccountModal({
+      mode: 'create',
+      student: stu,
+      phoneNumber: '',
+      password: '',
+      newPassword: '',
+      submitting: false,
+      error: '',
+    });
+  };
+
+  const handleOpenResetAccountModal = (stu) => {
+    setAccountModal({
+      mode: 'reset',
+      student: stu,
+      phoneNumber: '',
+      password: '',
+      newPassword: '',
+      submitting: false,
+      error: '',
+    });
+  };
+
+  const handleStudentAccountSubmit = async (e) => {
+    e.preventDefault();
+    if (!accountModal) return;
+    const { mode, student, phoneNumber, password, newPassword } = accountModal;
+
+    if (mode === 'create') {
+      const phone = phoneNumber.trim();
+      if (!/^0\d{9}$/.test(phone)) {
+        setAccountModal((prev) => ({
+          ...prev,
+          error: 'Số điện thoại phải gồm 10 chữ số và bắt đầu bằng 0.',
+        }));
+        return;
+      }
+      if (password && password.length < 8) {
+        setAccountModal((prev) => ({
+          ...prev,
+          error: 'Mật khẩu phải từ 8 ký tự (hoặc để trống để đặt lại sau).',
+        }));
+        return;
+      }
+
+      setAccountModal((prev) => ({ ...prev, submitting: true, error: '' }));
+      try {
+        const res = await axiosClient.post(`/Students/${student.id}/account`, {
+          phoneNumber: phone,
+          password: password ? password : null,
+        });
+        const updatedStu = res.data;
+        if (selectedStudent?.id === student.id) {
+          setSelectedStudent(updatedStu);
+        }
+        setAccountModal(null);
+        setActionFeedback(`Đã tạo tài khoản đăng nhập cho học viên ${student.fullName}.`);
+        setReloadKey((k) => k + 1);
+      } catch (err) {
+        const data = err.response?.data;
+        const detail =
+          data?.message ||
+          (data?.errors ? Object.values(data.errors).flat().join(' ') : '') ||
+          'Không thể tạo tài khoản học viên.';
+        setAccountModal((prev) => ({ ...prev, submitting: false, error: detail }));
+      }
+    } else {
+      if (!newPassword || newPassword.length < 8) {
+        setAccountModal((prev) => ({
+          ...prev,
+          error: 'Mật khẩu mới phải từ 8 ký tự trở lên.',
+        }));
+        return;
+      }
+
+      setAccountModal((prev) => ({ ...prev, submitting: true, error: '' }));
+      try {
+        await axiosClient.post(`/Students/${student.id}/account/reset-password`, {
+          newPassword,
+        });
+        setAccountModal(null);
+        setActionFeedback(`Đã đặt lại mật khẩu cho học viên ${student.fullName}.`);
+      } catch (err) {
+        const data = err.response?.data;
+        const detail =
+          data?.message ||
+          (data?.errors ? Object.values(data.errors).flat().join(' ') : '') ||
+          'Không thể đặt lại mật khẩu học viên.';
+        setAccountModal((prev) => ({ ...prev, submitting: false, error: detail }));
+      }
+    }
   };
 
   // Mở Drawer/Modal Xem chi tiết
@@ -509,6 +683,20 @@ export default function Students() {
         </div>
       )}
 
+      {/* Thông báo thao tác tài khoản thành công */}
+      {actionFeedback && (
+        <div className="rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-3 text-xs md:text-sm text-emerald-800 flex items-center justify-between gap-2">
+          <span>✓ {actionFeedback}</span>
+          <button
+            type="button"
+            onClick={() => setActionFeedback('')}
+            className="text-emerald-700 hover:text-emerald-900 font-semibold cursor-pointer"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* 3. Bảng Danh Sách Học Viên (Responsive overflow-x-auto) */}
       <div className="w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xs">
         <div className="overflow-x-auto min-w-full">
@@ -521,13 +709,14 @@ export default function Students() {
                 <th scope="col" className="px-4 py-3.5">Cơ sở</th>
                 <th scope="col" className="px-4 py-3.5">Trường / Khối lớp</th>
                 <th scope="col" className="px-4 py-3.5">Trạng thái</th>
+                <th scope="col" className="px-4 py-3.5">Tài khoản</th>
                 <th scope="col" className="px-4 py-3.5 text-right">Thao tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
               {loading ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-12 text-center text-slate-400">
+                  <td colSpan="8" className="px-6 py-12 text-center text-slate-400">
                     <div className="flex items-center justify-center gap-2">
                       <svg className="h-5 w-5 animate-spin text-blue-600" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -539,7 +728,7 @@ export default function Students() {
                 </tr>
               ) : students.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-12 text-center text-slate-400">
+                  <td colSpan="8" className="px-6 py-12 text-center text-slate-400">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <span className="text-3xl">🎓</span>
                       <p className="text-sm font-medium text-slate-600">Không tìm thấy học viên nào</p>
@@ -605,7 +794,44 @@ export default function Students() {
                       {renderStatusBadge(stu.status)}
                     </td>
 
-                    {/* Cột 7: Thao tác */}
+                    {/* Cột 7: Tài khoản Học viên */}
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      {stu.userId ? (
+                        <div className="flex items-center gap-1.5">
+                          <span className="inline-flex items-center rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                            Đã có TK
+                          </span>
+                          {isStaff && (
+                            <button
+                              type="button"
+                              onClick={() => handleOpenResetAccountModal(stu)}
+                              className="px-2 py-1 text-[11px] font-semibold rounded-md text-slate-700 bg-slate-100 hover:bg-slate-200 active:scale-[0.97] transition-transform duration-150 cursor-pointer"
+                              title="Đặt lại mật khẩu tài khoản học viên"
+                            >
+                              Đặt lại MK
+                            </button>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5">
+                          <span className="inline-flex items-center rounded-full bg-slate-100 border border-slate-200 px-2 py-0.5 text-[11px] font-medium text-slate-500">
+                            Chưa có
+                          </span>
+                          {isStaff && stu.status !== 'Dropped' && (
+                            <button
+                              type="button"
+                              onClick={() => handleOpenCreateAccountModal(stu)}
+                              className="px-2 py-1 text-[11px] font-semibold rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100 active:scale-[0.97] transition-transform duration-150 cursor-pointer"
+                              title="Tạo tài khoản đăng nhập cho học viên"
+                            >
+                              Tạo tài khoản
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </td>
+
+                    {/* Cột 8: Thao tác */}
                     <td className="px-4 py-3 whitespace-nowrap text-right">
                       <div className="inline-flex items-center gap-1.5">
                         {/* Nút Xem chi tiết (Tất cả vai trò đều bấm được) */}
@@ -755,6 +981,33 @@ export default function Students() {
                   {selectedStudent.grade ? `— Khối ${selectedStudent.grade}` : ''}
                 </span>
               </div>
+              <div className="col-span-2 rounded-lg bg-slate-50 p-3 flex items-center justify-between gap-3">
+                <div>
+                  <span className="text-slate-500 block">Tài khoản đăng nhập học viên</span>
+                  <span className={`font-semibold ${selectedStudent.userId ? 'text-emerald-700' : 'text-slate-600'}`}>
+                    {selectedStudent.userId ? 'Đã có tài khoản đăng nhập' : 'Chưa có tài khoản'}
+                  </span>
+                </div>
+                {isStaff && (
+                  selectedStudent.userId ? (
+                    <button
+                      type="button"
+                      onClick={() => handleOpenResetAccountModal(selectedStudent)}
+                      className="px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-100 active:scale-[0.97] transition-transform duration-150 cursor-pointer"
+                    >
+                      Đặt lại mật khẩu
+                    </button>
+                  ) : selectedStudent.status !== 'Dropped' ? (
+                    <button
+                      type="button"
+                      onClick={() => handleOpenCreateAccountModal(selectedStudent)}
+                      className="px-3 py-1.5 rounded-lg bg-blue-600 text-xs font-semibold text-white hover:bg-blue-700 active:scale-[0.97] transition-transform duration-150 cursor-pointer"
+                    >
+                      Tạo tài khoản
+                    </button>
+                  ) : null
+                )}
+              </div>
             </div>
 
             {/* MỤC ĐẶC BIỆT: GHI CHÚ NỘI BỘ (Note) — DỮ LIỆU NHẠY CẢM */}
@@ -869,16 +1122,31 @@ export default function Students() {
                   </select>
                 </div>
 
-                {/* Phụ huynh (Chỉ chọn khi tạo mới; khi sửa backend không đổi parentId trực tiếp) */}
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Phụ huynh bảo hộ {!editingStudent && <span className="text-rose-500">*</span>}
-                  </label>
+                {/* Phụ huynh (Chỉ chọn khi tạo mới; hỗ trợ tạo nhanh tài khoản Phụ huynh tại chỗ) */}
+                <div className="md:col-span-2">
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-semibold text-slate-700">
+                      Phụ huynh bảo hộ {!editingStudent && <span className="text-rose-500">*</span>}
+                    </label>
+                    {!editingStudent && isStaff && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowInlineParentForm((v) => !v);
+                          setInlineParentError('');
+                        }}
+                        className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 cursor-pointer"
+                      >
+                        {showInlineParentForm ? 'Đóng form tạo phụ huynh' : '+ Tạo tài khoản phụ huynh mới'}
+                      </button>
+                    )}
+                  </div>
+
                   {editingStudent ? (
                     <input
                       type="text"
                       disabled
-                      value={editingStudent.parentName || 'Phụ huynh'}
+                      value={`${editingStudent.parentName || 'Phụ huynh'}${editingStudent.parentPhone ? ` (${editingStudent.parentPhone})` : ''}`}
                       className="w-full h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-slate-500 cursor-not-allowed"
                     />
                   ) : (
@@ -895,6 +1163,90 @@ export default function Students() {
                         </option>
                       ))}
                     </select>
+                  )}
+
+                  {inlineParentSuccess && (
+                    <p className="mt-1.5 text-[11px] font-medium text-emerald-700">
+                      ✓ {inlineParentSuccess}
+                    </p>
+                  )}
+
+                  {!editingStudent && isStaff && showInlineParentForm && (
+                    <div className="mt-2.5 rounded-xl border border-blue-200 bg-blue-50/50 p-3.5 space-y-2.5">
+                      <div className="text-xs font-bold text-slate-800">
+                        Tạo nhanh tài khoản Phụ huynh (vai trò Parent)
+                      </div>
+
+                      {inlineParentError && (
+                        <div className="rounded-lg bg-rose-50 border border-rose-200 px-2.5 py-1.5 text-[11px] text-rose-700">
+                          ⚠️ {inlineParentError}
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <div>
+                          <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                            Họ tên phụ huynh <span className="text-rose-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="VD: Trần Thị Lan"
+                            value={inlineParentData.fullName}
+                            onChange={(e) =>
+                              setInlineParentData((prev) => ({ ...prev, fullName: e.target.value }))
+                            }
+                            className="w-full h-9 rounded-lg border border-slate-300 bg-white px-2.5 text-xs text-slate-800 focus:border-blue-600 focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                            Số điện thoại <span className="text-rose-500">*</span>
+                          </label>
+                          <input
+                            type="tel"
+                            placeholder="09xxxxxxxx"
+                            value={inlineParentData.phoneNumber}
+                            onChange={(e) =>
+                              setInlineParentData((prev) => ({ ...prev, phoneNumber: e.target.value }))
+                            }
+                            className="w-full h-9 rounded-lg border border-slate-300 bg-white px-2.5 text-xs text-slate-800 focus:border-blue-600 focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                            Mật khẩu (tùy chọn)
+                          </label>
+                          <input
+                            type="password"
+                            placeholder="Để trống đặt sau (≥8 ký tự)"
+                            value={inlineParentData.password}
+                            onChange={(e) =>
+                              setInlineParentData((prev) => ({ ...prev, password: e.target.value }))
+                            }
+                            className="w-full h-9 rounded-lg border border-slate-300 bg-white px-2.5 text-xs text-slate-800 focus:border-blue-600 focus:outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end gap-2 pt-1">
+                        <button
+                          type="button"
+                          disabled={inlineParentSubmitting}
+                          onClick={() => setShowInlineParentForm(false)}
+                          className="px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-[11px] font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
+                        >
+                          Đóng
+                        </button>
+                        <button
+                          type="button"
+                          disabled={inlineParentSubmitting}
+                          onClick={handleCreateInlineParent}
+                          className="px-3 py-1.5 rounded-lg bg-blue-600 text-[11px] font-semibold text-white hover:bg-blue-700 active:scale-[0.97] transition-transform duration-150 disabled:opacity-50 cursor-pointer"
+                        >
+                          {inlineParentSubmitting ? 'Đang tạo...' : 'Tạo & chọn phụ huynh'}
+                        </button>
+                      </div>
+                    </div>
                   )}
                 </div>
 
@@ -1014,6 +1366,125 @@ export default function Students() {
                   ) : (
                     'Lưu hồ sơ học viên'
                   )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 7. Modal Tạo tài khoản Học viên / Đặt lại mật khẩu Học viên */}
+      {accountModal && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
+          <div
+            className="fixed inset-0 bg-slate-900/50 backdrop-blur-[2px]"
+            onClick={() => !accountModal.submitting && setAccountModal(null)}
+            aria-hidden="true"
+          />
+
+          <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl z-10">
+            <div className="flex items-start justify-between border-b border-slate-100 pb-3.5">
+              <div>
+                <h3 className="text-base font-bold text-slate-900">
+                  {accountModal.mode === 'create'
+                    ? 'Tạo tài khoản cho học viên'
+                    : 'Đặt lại mật khẩu học viên'}
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Học viên: <span className="font-semibold text-slate-700">{accountModal.student.fullName}</span>
+                </p>
+              </div>
+              <button
+                type="button"
+                disabled={accountModal.submitting}
+                onClick={() => setAccountModal(null)}
+                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleStudentAccountSubmit} className="mt-4 space-y-3.5 text-xs">
+              {accountModal.error && (
+                <div className="rounded-lg bg-rose-50 border border-rose-200 px-3 py-2 text-rose-700">
+                  ⚠️ {accountModal.error}
+                </div>
+              )}
+
+              {accountModal.mode === 'create' ? (
+                <>
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
+                      Số điện thoại đăng nhập <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="VD: 0912345678"
+                      value={accountModal.phoneNumber}
+                      onChange={(e) =>
+                        setAccountModal((prev) => ({ ...prev, phoneNumber: e.target.value }))
+                      }
+                      className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-slate-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none"
+                    />
+                    <p className="mt-1 text-[11px] text-slate-400">
+                      Mỗi tài khoản sử dụng một số điện thoại riêng (10 chữ số, bắt đầu bằng 0).
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-slate-700 mb-1">
+                      Mật khẩu (tùy chọn)
+                    </label>
+                    <input
+                      type="password"
+                      placeholder="Để trống nếu chưa đặt, tối thiểu 8 ký tự"
+                      value={accountModal.password}
+                      onChange={(e) =>
+                        setAccountModal((prev) => ({ ...prev, password: e.target.value }))
+                      }
+                      className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-slate-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none"
+                    />
+                  </div>
+                </>
+              ) : (
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Mật khẩu mới <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    minLength={8}
+                    placeholder="Nhập mật khẩu mới (tối thiểu 8 ký tự)"
+                    value={accountModal.newPassword}
+                    onChange={(e) =>
+                      setAccountModal((prev) => ({ ...prev, newPassword: e.target.value }))
+                    }
+                    className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-slate-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none"
+                  />
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  disabled={accountModal.submitting}
+                  onClick={() => setAccountModal(null)}
+                  className="px-4 py-2 rounded-lg border border-slate-300 bg-white font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  disabled={accountModal.submitting}
+                  className="px-4 py-2 rounded-lg bg-blue-600 font-semibold text-white hover:bg-blue-700 active:scale-[0.97] transition-transform duration-150 disabled:opacity-50 cursor-pointer"
+                >
+                  {accountModal.submitting
+                    ? 'Đang xử lý...'
+                    : accountModal.mode === 'create'
+                    ? 'Tạo tài khoản'
+                    : 'Đặt lại mật khẩu'}
                 </button>
               </div>
             </form>

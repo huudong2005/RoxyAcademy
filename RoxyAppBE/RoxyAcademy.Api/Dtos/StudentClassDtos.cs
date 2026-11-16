@@ -31,7 +31,7 @@ public class CreateStudentClassRequest
 public class UpdateStudentClassStatusRequest
 {
     [Required(ErrorMessage = "Trạng thái là bắt buộc")]
-    [RegularExpression("^(Pending|Active|Dropped|Finished|Rejected)$", ErrorMessage = "Trạng thái không hợp lệ")]
+    [RegularExpression("^(Pending|Active|Dropped|Completed|Rejected)$", ErrorMessage = "Trạng thái không hợp lệ")]
     public string Status { get; set; } = "";
 
     [StringLength(500)]
