@@ -816,3 +816,119 @@ Quản lý đơn xin nghỉ học của học viên và nghỉ phép của giáo
   }
   ```
 
+---
+
+## 8. PHÂN HỆ CƠ SỞ / CHI NHÁNH (BRANCHES API)
+
+Quản lý danh sách các cơ sở (chi nhánh) của Roxy Academy kèm thống kê nhanh số lớp đang mở, học viên đang học và giáo viên đang hoạt động tại từng cơ sở.
+
+### Cấu trúc dữ liệu `BranchDto`
+| Trường | Kiểu dữ liệu | Mô tả |
+| :--- | :--- | :--- |
+| `id` | `int` | Mã định danh cơ sở |
+| `branchName` | `string` | Tên cơ sở (tối đa 150 ký tự) |
+| `address` | `string` | Địa chỉ cơ sở (tối đa 300 ký tự) |
+| `phone` | `string?` | Số điện thoại liên hệ (tối đa 20 ký tự, có thể `null`) |
+| `isActive` | `bool` | Trạng thái hoạt động (`true`: Đang hoạt động, `false`: Ngừng hoạt động) |
+| `createdAt` | `DateTime` | Thời điểm tạo bản ghi (UTC) |
+| `classCount` | `int` | Số lớp đang mở tại cơ sở (`Classes.BranchId == Id && Classes.Status != "Finished"`) |
+| `studentCount` | `int` | Số học viên đang theo học tại cơ sở (`Students.BranchId == Id && Students.Status == "Active"`) |
+| `teacherCount` | `int` | Số giáo viên đang hoạt động tại cơ sở (`Users.BranchId == Id && Users.Role == "Teacher" && Users.IsActive == true`) |
+
+---
+
+### 8.1. Lấy danh sách cơ sở — `GET /api/Branches`
+- **Quyền truy cập:** Đã đăng nhập (`SuperAdmin`, `BranchManager`, `Teacher`, `Parent`, `Student`).
+- **Response:** `200 OK`
+  ```json
+  [
+    {
+      "id": 1,
+      "branchName": "Cơ sở Bình Trưng Tây",
+      "address": "123 Nguyễn Duy Trinh, P. Bình Trưng, TP.HCM",
+      "phone": "0326 538 824",
+      "isActive": true,
+      "createdAt": "2026-01-01T00:00:00Z",
+      "classCount": 8,
+      "studentCount": 95,
+      "teacherCount": 6
+    }
+  ]
+  ```
+
+---
+
+### 8.2. Lấy chi tiết 1 cơ sở — `GET /api/Branches/{id}`
+- **Quyền truy cập:** Đã đăng nhập (`SuperAdmin`, `BranchManager`, `Teacher`, `Parent`, `Student`).
+- **Response:**
+  - `200 OK`: Trả về object `BranchDto` (bao gồm `classCount`, `studentCount`, `teacherCount`).
+  - `404 Not Found`: `{ "message": "Không tìm thấy cơ sở này." }`
+
+---
+
+### 8.3. Tạo cơ sở mới — `POST /api/Branches`
+- **Quyền truy cập:** Chỉ `SuperAdmin`.
+- **Request Body:**
+  ```json
+  {
+    "branchName": "Cơ sở Bình Trưng Đông",
+    "address": "456 Lê Văn Thịnh, P. Bình Trưng, TP.HCM",
+    "phone": "0326 538 824"
+  }
+  ```
+- **Validation:**
+  - `branchName`: Bắt buộc, tối đa 150 ký tự.
+  - `address`: Bắt buộc, tối đa 300 ký tự.
+  - `phone`: Tùy chọn, tối đa 20 ký tự.
+- **Response:**
+  - `201 Created`: Trả về `BranchDto` vừa tạo (với `isActive: true`, `classCount: 0`, `studentCount: 0`, `teacherCount: 0`) cùng header `Location`.
+  - `400 Bad Request`: Dữ liệu đầu vào không hợp lệ.
+  - `403 Forbidden`: Không có quyền `SuperAdmin`.
+
+---
+
+### 8.4. Cập nhật thông tin cơ sở — `PUT /api/Branches/{id}`
+- **Quyền truy cập:** Chỉ `SuperAdmin`.
+- **Request Body:**
+  ```json
+  {
+    "branchName": "Cơ sở Bình Trưng Tây (Mới)",
+    "address": "123 Nguyễn Duy Trinh, P. Bình Trưng, TP.HCM",
+    "phone": "0326 538 824",
+    "isActive": true
+  }
+  ```
+- **Ràng buộc nghiệp vụ khi ngừng hoạt động (`branch.IsActive == true && req.IsActive == false`):**
+  - Hệ thống kiểm tra số lớp đang mở (`Classes.Status != "Finished"`) và số học viên đang học (`Students.Status == "Active"`) thuộc chi nhánh.
+  - Nếu còn lớp đang mở hoặc học viên đang học (`openClassesCount > 0 || activeStudentsCount > 0`), từ chối ngừng hoạt động và trả về `400 Bad Request`:
+    ```json
+    {
+      "message": "Không thể ngừng hoạt động chi nhánh vì còn {openClassesCount} lớp đang mở và {activeStudentsCount} học viên đang học. Vui lòng chuyển hoặc kết thúc toàn bộ lớp và học viên trước khi ngừng chi nhánh."
+    }
+    ```
+- **Response:**
+  - `204 No Content`: Cập nhật thành công.
+  - `400 Bad Request`: Vi phạm ràng buộc ngừng hoạt động hoặc dữ liệu không hợp lệ.
+  - `403 Forbidden`: Không có quyền `SuperAdmin`.
+  - `404 Not Found`: `{ "message": "Không tìm thấy cơ sở này." }`
+
+---
+
+### 8.5. Ngừng hoạt động cơ sở (Soft Delete) — `DELETE /api/Branches/{id}`
+- **Quyền truy cập:** Chỉ `SuperAdmin`.
+- **Cơ chế:** Xóa mềm bằng cách đặt `IsActive = false` để bảo toàn dữ liệu lịch sử và khóa ngoại.
+- **Ràng buộc nghiệp vụ:**
+  - Kiểm tra số lớp đang mở (`Classes.Status != "Finished"`) và số học viên đang học (`Students.Status == "Active"`) thuộc chi nhánh.
+  - Nếu `openClassesCount > 0 || activeStudentsCount > 0`, từ chối ngừng hoạt động và trả về `400 Bad Request`:
+    ```json
+    {
+      "message": "Không thể ngừng hoạt động chi nhánh vì còn {openClassesCount} lớp đang mở và {activeStudentsCount} học viên đang học. Vui lòng chuyển hoặc kết thúc toàn bộ lớp và học viên trước khi ngừng chi nhánh."
+    }
+    ```
+- **Response:**
+  - `204 No Content`: Ngừng hoạt động thành công.
+  - `400 Bad Request`: Chi nhánh còn lớp đang mở hoặc học viên đang học.
+  - `403 Forbidden`: Không có quyền `SuperAdmin`.
+  - `404 Not Found`: `{ "message": "Không tìm thấy cơ sở này." }`
+
+

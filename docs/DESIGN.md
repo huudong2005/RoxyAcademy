@@ -2224,4 +2224,424 @@ Frontend Developer và QA đối chiếu nghiệm thu tính năng theo danh sác
   - [ ] Chiều cao các nút thao tác đạt chuẩn Apple HIG tối thiểu `44px`.
   - [ ] Chi tiết đơn trên di động mở dạng Bottom Sheet vuốt kéo mượt mà có thanh drag handle.
 
+---
+
+## 12. THIẾT KẾ CHI TIẾT GIAI ĐOẠN 1G: QUẢN LÝ CHI NHÁNH CƠ SỞ (`/branches`)
+
+> [!NOTE]
+> Giai đoạn 1G bổ sung phân hệ **Quản lý Chi nhánh Cơ sở (`/branches`)** dành riêng cho Ban Giám Đốc (`SuperAdmin`).  
+> Chi nhánh là đơn vị pháp lý và vận hành nền tảng của hệ thống Roxy Academy — nơi neo giữ toàn bộ Học viên, Lớp học, Giáo viên và Doanh thu học phí.  
+> Thiết kế tuân thủ nghiêm ngặt hai bộ kỹ năng chuẩn mực:
+> - **Apple Design Guidelines** (*Designing Fluid Interfaces* — WWDC): Phản hồi xúc giác tức thì trên pointer-down (`:active:scale-[0.98]`), spring critically damped (damping 1.0, không rung lắc cợt nhả), kích thước vùng chạm mobile tối thiểu `44px x 44px`, bố cục card phân tầng thị giác rõ ràng.
+> - **Emil Kowalski Philosophy** (*UI Polish & Design Engineering*): Polish UI qua chi tiết nhỏ cộng dồn, chuyển động modal từ `scale(0.96) + opacity: 0` sang `scale(1) + opacity: 1` (`180ms ease-out`), xử lý lỗi 400 tận gốc bằng Guardrail UX và giải thích rõ ràng cho người dùng, tôn trọng `prefers-reduced-motion`.
+
+---
+
+### 12.1. ĐÁNH GIÁ THIẾT KẾ KỸ THUẬT (EMIL KOWALSKI POLISH REVIEW)
+
+| Trước (Mẫu chung chung / AI Slop) | Sau (Roxy Academy Polish UI) | Lý do kỹ thuật & Trải nghiệm |
+| :--- | :--- | :--- |
+| Mọi nhân sự đều thấy mục menu "Chi nhánh" và khi click vào mới bị lỗi console | **Ẩn hoàn toàn mục menu** trên Sidebar & Mobile Drawer đối với `BranchManager`, `Teacher`, `Parent`, `Student`; chặn 403 bằng giao diện trang trọng nếu nhập URL trực tiếp | Tiết kiệm ngân sách nhận thức (Cognitive Budget); không hiển thị tùy chọn mà người dùng không có quyền thao tác. |
+| Bảng dữ liệu 7 cột bị co quắp chữ trên màn hình mobile 375px | **Chế độ Thẻ Cơ Sở Độc Lập (Grid Cards)** trên Desktop và **Thẻ Xếp Dọc (Mobile Stack)** trên điện thoại | Cơ sở của trung tâm có số lượng hữu hạn (hiện tại 2 cơ sở tại P. Bình Trưng), hiển thị dạng Thẻ (Cards) giúp làm nổi bật địa chỉ, SĐT và các chỉ số vận hành rõ ràng hơn bảng thô. |
+| Modal phóng to giật cục từ giữa màn hình `scale(0)` | Modal mở mượt mà từ `scale(0.96) + opacity: 0` lên `scale(1) + opacity: 1` trong `180ms ease-out` (`cubic-bezier(0.23, 1, 0.32, 1)`) | Tuân thủ triết lý Emil Kowalski: Trong thế giới vật lý không có vật thể nào sinh ra từ kích thước 0. |
+| Người dùng bấm "Ngừng hoạt động", server ném lỗi 400 rồi chỉ hiện Toast đỏ cụt ngủn | **Khối Cảnh Báo Lỗi 400 Chuyên Biệt** nằm ngay trong Hộp thoại Xác nhận, liệt kê số lớp đang mở & số học viên, kèm 2 nút lối tắt sang `/classes` và `/students` | Guardrail UX: Hướng dẫn người dùng cách khắc phục cụ thể thay vì bế tắc với mã lỗi kỹ thuật. |
+| Nút bấm không có phản hồi xúc giác khi nhấp chuột | Toàn bộ nút Primary CTA, nút Sửa, nút Toggle có phản hồi **`:active:scale-[0.98]` trong 100ms** | Kill Latency: Phản hồi ngay khoảnh khắc ngón tay/chuột chạm xuống (pointer-down), không chờ đến khi nhả chuột (click). |
+| Các chỉ số lớp/học viên hiển thị dạng chữ nhỏ khó đọc | **3 Thẻ KPI Mini-Badges** với màu sắc và icon trực quan (`🏫 Lớp đang mở`, `🎓 Học viên active`, `👩‍🏫 Giáo viên`) | Nâng cao khả năng quét nhanh thông tin (Scannability) cho Ban giám đốc. |
+
+---
+
+### 12.2. PHÂN QUYỀN VAI TRÒ & MÀN HÌNH CHẶN 403 (RBAC & 403 VIEW)
+
+#### 1. Ma Trận Phân Quyền (RBAC Matrix):
+
+| Thao tác / Quyền hạn | `SuperAdmin` (👑) | `BranchManager` (🏢) | `Teacher` (👩‍🏫) | `Parent` (👨‍👩‍👧) | `Student` (🎒) |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Hiển thị Menu "Quản lý Chi nhánh"** | **CÓ** (Hiển thị) | **ẨN HOÀN TOÀN** | **ẨN HOÀN TOÀN** | **ẨN HOÀN TOÀN** | **ẨN HOÀN TOÀN** |
+| **Truy cập route `/branches`** | Cho phép | Bị chặn (403) | Bị chặn (403) | Bị chặn (403) | Bị chặn (403) |
+| **Xem danh sách & KPI chi nhánh** | Toàn quyền | Không có quyền | Không có quyền | Không có quyền | Không có quyền |
+| **Thêm chi nhánh mới (`POST /api/Branches`)** | Toàn quyền | Không có quyền | Không có quyền | Không có quyền | Không có quyền |
+| **Sửa thông tin chi nhánh (`PUT /api/Branches/{id}`)** | Toàn quyền | Không có quyền | Không có quyền | Không có quyền | Không có quyền |
+| **Ngừng / Kích hoạt chi nhánh (`IsActive`)** | Toàn quyền | Không có quyền | Không có quyền | Không có quyền | Không có quyền |
+
+#### 2. Vị Trí Menu Trên Sidebar & Mobile Drawer:
+Trong `roxy-admin/src/layouts/AdminLayout.jsx`:
+- Menu chỉ hiển thị khi `user.role === 'SuperAdmin'`.
+- Nằm trong nhóm danh mục `Cấu hình & Hệ thống`:
+  ```jsx
+  {isSuperAdmin && (
+    <>
+      <div className="pt-4 px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+        Hệ thống &amp; Thiết lập
+      </div>
+      <NavLink to="/branches" className={navItemClass} onClick={onItemClick}>
+        <span className="text-base">🏢</span>
+        <span>Quản lý chi nhánh</span>
+      </NavLink>
+    </>
+  )}
+  ```
+
+#### 3. Màn Hình Chặn 403 Đồng Bộ (Forbidden Access Screen):
+Khi người dùng có vai trò khác `SuperAdmin` cố tình truy cập trực tiếp URL `http://.../branches`, hệ thống chặn lại và render màn hình lỗi 403 đồng bộ tuyệt đối với phong cách của `Tuitions.jsx`:
+
+```
++---------------------------------------------------------------------------------------------------+
+|                                                                                                   |
+|                                            [ 🚫 ]                                                 |
+|                                                                                                   |
+|                       Bạn không có quyền truy cập Quản lý Chi nhánh                               |
+|                                                                                                   |
+|        Phân hệ Cấu hình Chi nhánh & Cơ sở trung tâm chỉ dành riêng cho Ban Giám Đốc               |
+|        (SuperAdmin). Quản lý cơ sở và Giáo viên không được phép can thiệp danh mục cơ sở.         |
+|                                                                                                   |
+|                       [ 📊 Quay lại Tổng quan ]      [ 🏫 Xem Lớp học ]                           |
+|                                                                                                   |
++---------------------------------------------------------------------------------------------------+
+```
+
+- **Quy chuẩn mã Tailwind CSS 4:**
+  ```jsx
+  // Kiểm tra quyền SuperAdmin
+  const isSuperAdmin = currentUser.role === 'SuperAdmin';
+
+  if (!isSuperAdmin) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4 animate-in fade-in duration-200">
+        <div className="w-16 h-16 rounded-full bg-rose-100 flex items-center justify-center text-3xl mb-4 text-rose-600 shadow-xs">
+          🚫
+        </div>
+        <h2 className="text-xl font-bold text-slate-800 mb-2">
+          Bạn không có quyền truy cập Quản lý Chi nhánh
+        </h2>
+        <p className="text-sm text-slate-600 max-w-md mb-6 leading-relaxed">
+          Phân hệ Cấu hình Chi nhánh &amp; Cơ sở trung tâm chỉ dành riêng cho Ban Giám Đốc (SuperAdmin). Quản lý cơ sở và Giáo viên không được phép can thiệp danh mục cơ sở.
+        </p>
+        <div className="flex gap-3">
+          <button
+            onClick={() => navigate('/')}
+            className="px-4 py-2 text-sm font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 active:scale-95 transition-all cursor-pointer"
+          >
+            Quay lại Tổng quan
+          </button>
+          <button
+            onClick={() => navigate('/classes')}
+            className="px-4 py-2 text-sm font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 active:scale-95 transition-all cursor-pointer"
+          >
+            Xem Lớp học
+          </button>
+        </div>
+      </div>
+    );
+  }
+  ```
+
+---
+
+### 12.3. BỐ CỤC MÀN HÌNH QUẢN LÝ CHI NHÁNH (`/branches`)
+
+#### 1. Thanh Tiêu Đề & Tổng Quan Vận Hành (Header & Summary Strip):
+
+```
++-------------------------------------------------------------------------------------------------------------------+
+|  🏢 QUẢN LÝ CHI NHÁNH CƠ SỞ                                                        [ + Thêm chi nhánh mới ]       |
+|  Danh sách cơ sở đào tạo, thông tin liên hệ và giám sát hoạt động giảng dạy toàn hệ thống Roxy Academy.           |
++-------------------------------------------------------------------------------------------------------------------+
+|  [ 🏛️ 2 Chi nhánh hoạt động ]   [ 🏫 12 Lớp đang mở ]   [ 🎓 148 Học viên đang học ]   [ 👩‍🏫 16 Giáo viên giảng dạy ]|
++-------------------------------------------------------------------------------------------------------------------+
+|  [ 🔍 Tìm tên cơ sở, địa chỉ, SĐT...            ]   [ Trạng thái: Tất cả (2) | Đang hoạt động (2) | Tạm ngừng (0) ]|
++-------------------------------------------------------------------------------------------------------------------+
+```
+
+- **Tiêu đề trang (H1):** `text-xl md:text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2`.
+- **Nút CTA Primary Blue `+ Thêm chi nhánh mới`:**
+  - Styling: `inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-lg shadow-xs active:scale-[0.98] transition-all duration-150 cursor-pointer min-h-[42px]`.
+  - Nhấp mở `CreateEditBranchModal` ở chế độ Thêm mới.
+- **Thanh tóm tắt nhanh (Summary Strip):**
+  - Gồm 4 thẻ chip gọn gàng hiển thị tổng số:
+    * `🏛️ Tổng cơ sở`: Tính từ số lượng chi nhánh có `isActive === true`.
+    * `🏫 Lớp đang mở`: Tổng trường `classCount` của các chi nhánh.
+    * `🎓 Học viên`: Tổng trường `studentCount` của các chi nhánh.
+    * `👩‍🏫 Giáo viên`: Tổng trường `teacherCount` của các chi nhánh.
+
+---
+
+### 12.4. ĐẶC TẢ CHI TIẾT THẺ CHI NHÁNH (BRANCH CARD COMPONENT)
+
+Do đặc thù trung tâm có các cơ sở cố định (quy mô 2 - 5 chi nhánh), giao diện ưu tiên sử dụng **Bố cục Thẻ Lưới Hiện Đại (Responsive Modern Card Grid)** kết hợp chuyển đổi sang **Bảng Dữ Liệu Sạch (Clean Table)** khi danh sách dài:
+
+#### 1. Wireframe Thẻ Cơ Sở (Desktop View - Grid 2 Cột `lg:grid-cols-2 gap-6`):
+
+```
++---------------------------------------------------------------------------------------------------+
+|  +-------------------------------------------------------------+  [ ● Đang hoạt động ]            |
+|  | 🏢 CƠ SỞ 1 - BÌNH TRƯNG ĐÔNG                                |  Mã CS: #BR-1                    |
+|  +-------------------------------------------------------------+                                  |
+|  📍 Địa chỉ:   21/11 Đường 49, Phường Bình Trưng Đông, TP. Thủ Đức, TP.HCM                        |
+|  📞 Hotline:   0326 538 824  [ Gọi ngay ]                                                         |
+|  📅 Ngày tạo:  10/01/2026 (Khởi tạo hệ thống)                                                     |
+|                                                                                                   |
+|  CHỈ SỐ HOẠT ĐỘNG THỜI GIAN THỰC:                                                                 |
+|  +-----------------------------+ +-----------------------------+ +-----------------------------+  |
+|  | 🏫 Lớp đang mở              | | 🎓 Học viên đang học        | | 👩‍🏫 Giáo viên cơ sở         |  |
+|  |           8 lớp             | |          92 học viên        | |          10 giáo viên       |  |
+|  | (Status != 'Finished')      | | (Status == 'Active')        | | (Role=Teacher, Active)      |  |
+|  +-----------------------------+ +-----------------------------+ +-----------------------------+  |
+|                                                                                                   |
+|  +---------------------------------------------------------------------------------------------+  |
+|  | [ ✏️ Chỉnh sửa thông tin ]                                       [ 🚫 Ngừng hoạt động cơ sở ] |  |
+|  +---------------------------------------------------------------------------------------------+  |
++---------------------------------------------------------------------------------------------------+
+```
+
+#### 2. Quy Cách Styling Từng Khối Thông Tin Trên Thẻ:
+1. **Khung chứa Thẻ (Card Container):**
+   - Lớp CSS: `bg-white rounded-xl border border-slate-200 p-5 md:p-6 shadow-xs hover:border-blue-300 hover:shadow-sm transition-all duration-200 flex flex-col justify-between relative`.
+   - Nếu chi nhánh bị ngừng hoạt động (`isActive === false`): Thêm viền xám mờ và lớp phủ nhẹ `bg-slate-50/60 opacity-85 border-dashed border-slate-300`.
+2. **Tiêu đề & Badge Trạng thái:**
+   - Tên cơ sở: `font-bold text-lg md:text-xl text-slate-900 tracking-tight flex items-center gap-2`.
+   - Mã cơ sở: `text-xs font-mono font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded`.
+   - **Badge Trạng thái hoạt động (`isActive`):**
+     * **`Đang hoạt động` (`isActive === true`):** `bg-emerald-50 text-emerald-800 border border-emerald-300 font-semibold px-2.5 py-1 rounded-full text-xs inline-flex items-center gap-1.5` kèm chấm tròn `w-2 h-2 rounded-full bg-emerald-500 animate-pulse`.
+     * **`Ngừng hoạt động` (`isActive === false`):** `bg-slate-100 text-slate-600 border border-slate-300 font-medium px-2.5 py-1 rounded-full text-xs inline-flex items-center gap-1.5` kèm chấm tròn `w-2 h-2 rounded-full bg-slate-400`.
+3. **Thông tin liên lạc & Vị trí:**
+   - **Địa chỉ (`Address`):** Hiển thị kèm icon `📍`, `text-sm text-slate-700 leading-relaxed font-normal`.
+   - **Số điện thoại (`Phone`):** 
+     * Hiển thị kèm icon `📞`.
+     * Nếu có số: Định dạng link bấm gọi điện `tel:{phone}`, chữ màu `text-blue-600 font-mono font-medium hover:underline`.
+     * Nếu trống / null: Hiển thị chữ màu mờ `— (Chưa cập nhật số hotline)`.
+   - **Ngày tạo (`CreatedAt`):** `text-xs text-slate-400 mt-1` định dạng `DD/MM/YYYY`.
+4. **Cụm 3 Thẻ Chỉ Số Vận Hành (KPI Mini-Cards):**
+   - Được dàn đều 3 cột: `grid grid-cols-3 gap-2.5 my-4`.
+   - **Ô 1 — Lớp đang mở (`classCount`):**
+     * Nền `bg-blue-50/70 border border-blue-200/80 rounded-lg p-2.5 text-center`.
+     * Số lượng: `font-bold font-mono text-lg text-blue-700 tabular-nums`.
+     * Nhãn phụ: `text-[11px] font-medium text-blue-800 uppercase tracking-tight`.
+   - **Ô 2 — Học viên đang học (`studentCount`):**
+     * Nền `bg-emerald-50/70 border border-emerald-200/80 rounded-lg p-2.5 text-center`.
+     * Số lượng: `font-bold font-mono text-lg text-emerald-700 tabular-nums`.
+     * Nhãn phụ: `text-[11px] font-medium text-emerald-800 uppercase tracking-tight`.
+   - **Ô 3 — Giáo viên cơ sở (`teacherCount`):**
+     * Nền `bg-indigo-50/70 border border-indigo-200/80 rounded-lg p-2.5 text-center`.
+     * Số lượng: `font-bold font-mono text-lg text-indigo-700 tabular-nums`.
+     * Nhãn phụ: `text-[11px] font-medium text-indigo-800 uppercase tracking-tight`.
+5. **Thanh Thao Tác Chân Thẻ (Card Footer Actions):**
+   - **Nút `✏️ Sửa chi nhánh`:**
+     * Lớp CSS: `inline-flex items-center gap-1.5 px-3.5 py-2 bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 hover:text-slate-900 text-xs font-semibold rounded-lg shadow-2xs active:scale-95 transition-all duration-100 cursor-pointer`.
+   - **Nút Đổi Trạng Thái Hoạt Động:**
+     * Nếu đang hoạt động (`isActive === true`): Hiển thị nút **`🚫 Ngừng hoạt động`** dạng cảnh báo `inline-flex items-center gap-1.5 px-3.5 py-2 bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 hover:border-rose-300 text-xs font-semibold rounded-lg active:scale-95 transition-all duration-100 cursor-pointer`.
+     * Nếu đang ngừng hoạt động (`isActive === false`): Hiển thị nút **`✓ Kích hoạt lại`** dạng xanh lá `inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300 text-xs font-semibold rounded-lg active:scale-95 transition-all duration-100 cursor-pointer`.
+
+---
+
+### 12.5. MODAL THÊM / SỬA CHI NHÁNH (`CreateEditBranchModal`)
+
+Modal được thiết kế tối giản, tập trung và **chỉ sử dụng đúng 4 trường dữ liệu của entity `Branches`** trong CSDL: `BranchName`, `Address`, `Phone`, `IsActive`:
+
+```
++---------------------------------------------------------------------------------------------------+
+|  [ 🏢 ] THÊM CHI NHÁNH CƠ SỞ MỚI                                                             [ ✕ ]|
+|  Điền đầy đủ thông tin địa điểm đào tạo để mở rộng mạng lưới trung tâm Roxy Academy.              |
++---------------------------------------------------------------------------------------------------+
+|                                                                                                   |
+|  Tên chi nhánh cơ sở: (*) (Tối đa 150 ký tự)                                                      |
+|  +---------------------------------------------------------------------------------------------+  |
+|  | Cơ sở 3 - Thảo Điền                                                                         |  |
+|  +---------------------------------------------------------------------------------------------+  |
+|  Gợi ý: Cơ sở 1 - Bình Trưng Đông, Cơ sở 2 - Nguyễn Duy Trinh, Chi nhánh Sala...                 |
+|                                                                                                   |
+|  Địa chỉ chi nhánh: (*) (Tối đa 300 ký tự)                                                        |
+|  +---------------------------------------------------------------------------------------------+  |
+|  | 21/11 Đường 49, Phường Bình Trưng Đông, TP. Thủ Đức, TP. Hồ Chí Minh                        |  |
+|  +---------------------------------------------------------------------------------------------+  |
+|                                                                                                   |
+|  Số điện thoại hotline: (Tùy chọn, tối đa 20 ký tự)                                               |
+|  +---------------------------------------------------------------------------------------------+  |
+|  | 0326 538 824                                                                                |  |
+|  +---------------------------------------------------------------------------------------------+  |
+|  Dùng làm số hotline liên hệ ghi danh và hỗ trợ phụ huynh tại cơ sở.                              |
+|                                                                                                   |
+|  <!-- TRƯỜNG "TRẠNG THÁI HOẠT ĐỘNG" CHỈ HIỂN THỊ KHI CHỈNH SỬA (EDIT MODE) -->                    |
+|  Trạng thái hoạt động:                                                                            |
+|  +---------------------------------------------------------------------------------------------+  |
+|  |  [ (●) Bật ]  Cơ sở đang mở cửa hoạt động và tiếp nhận học viên ghi danh                       |  |
+|  +---------------------------------------------------------------------------------------------+  |
+|                                                                                                   |
++---------------------------------------------------------------------------------------------------+
+|  [ Hủy bỏ ]                                                                  [ 💾 Lưu chi nhánh ] |
++---------------------------------------------------------------------------------------------------+
+```
+
+#### Ràng Buộc Kỹ Thuật & Validation Form:
+1. **Ánh xạ DTO Backend:**
+   - **Khi Tạo mới (`isEdit === false`):**
+     * Gửi payload `CreateBranchRequest` lên `POST /api/Branches`:
+       ```json
+       {
+         "branchName": "Cơ sở 1 - Bình Trưng Đông",
+         "address": "21/11 Đường 49, Phường Bình Trưng Đông, TP. Thủ Đức",
+         "phone": "0326538824"
+       }
+       ```
+     * Backend tự gán `IsActive = true` và `CreatedAt = DateTime.UtcNow`.
+   - **Khi Sửa (`isEdit === true`):**
+     * Gửi payload `UpdateBranchRequest` lên `PUT /api/Branches/{id}`:
+       ```json
+       {
+         "branchName": "Cơ sở 1 - Bình Trưng Đông",
+         "address": "21/11 Đường 49, Phường Bình Trưng Đông, TP. Thủ Đức",
+         "phone": "0326538824",
+         "isActive": true
+       }
+       ```
+2. **Quy tắc Kiểm tra Tính Hợp lệ (Client-side Validation):**
+   - `BranchName`: Không được để trống. Cắt tỉa khoảng trắng thừa (`trim()`). Độ dài từ 3 đến 150 ký tự. Nếu trống, báo lỗi: `"Vui lòng nhập tên chi nhánh cơ sở."`.
+   - `Address`: Không được để trống. Độ dài từ 5 đến 300 ký tự. Nếu trống, báo lỗi: `"Vui lòng nhập địa chỉ cụ thể của cơ sở."`.
+   - `Phone`: Cho phép để trống. Nếu có nhập, kiểm tra định dạng số điện thoại Việt Nam (10–11 số, bắt đầu bằng `0` hoặc `+84`). Nếu sai định dạng, báo lỗi: `"Số điện thoại không hợp lệ (VD: 0326 538 824)."`.
+3. **Hiệu ứng & Trạng thái Nút Submit:**
+   - Khi đang lưu (`isSubmitting === true`): Nút Lưu chuyển sang trạng thái disabled, icon spinner xoay nhẹ, nhãn đổi thành `"Đang lưu dữ liệu..."`.
+   - Chặn nhấp đúp (Double-click guard) để tránh gửi trùng request tạo 2 chi nhánh cùng tên.
+
+---
+
+### 12.6. LUỒNG NGỪNG HOẠT ĐỘNG / KÍCH HOẠT LẠI & XỬ LÝ LỖI 400
+
+Thao tác ngừng hoạt động một chi nhánh là hành động có mức độ ảnh hưởng hệ thống cao (High-Impact Destructive Action) vì liên quan trực tiếp đến các lớp học đang diễn ra, học sinh đang học và giáo viên đang giảng dạy.
+
+#### 1. Hộp Thoại Xác Nhận Ngừng Hoạt Động (Deactivation Confirmation Dialog):
+
+```
++---------------------------------------------------------------------------------------------------+
+|  ⚠️ XÁC NHẬN NGỪNG HOẠT ĐỘNG CHI NHÁNH                                                       [ ✕ ]|
++---------------------------------------------------------------------------------------------------+
+|                                                                                                   |
+|  Bạn có chắc chắn muốn ngừng hoạt động chi nhánh:                                                 |
+|  🏛️ [ Cơ sở 1 - Bình Trưng Đông ] (#BR-1)                                                        |
+|                                                                                                   |
+|  Khi ngừng hoạt động:                                                                             |
+|  • Chi nhánh sẽ bị ẩn khỏi danh mục chọn cơ sở khi tạo Lớp học mới và Đăng ký học viên.           |
+|  • Dữ liệu lịch sử, học phí và điểm danh trước đây vẫn được lưu trữ bảo toàn trong CSDL.          |
+|                                                                                                   |
+|  <!-- KHI SERVER TRẢ VỀ LỖI 400 (VÌ CÒN LỚP HOẶC HỌC VIÊN ĐANG HỌC) -> HIỂN THỊ KHỐI DƯỚI ĐÂY: -->|
+|  +---------------------------------------------------------------------------------------------+  |
+|  | ❌ KHÔNG THỂ NGỪNG HOẠT ĐỘNG CHI NHÁNH NÀY!                                                 |  |
+|  | ------------------------------------------------------------------------------------------- |  |
+|  | Chi nhánh hiện vẫn còn:                                                                     |  |
+|  | • 8 Lớp học đang mở (Chưa kết thúc)                                                         |  |
+|  | • 92 Học viên đang học (Trạng thái Active)                                                  |  |
+|  |                                                                                             |  |
+|  | ℹ️ Quy định an toàn: Vui lòng chuyển toàn bộ học viên sang cơ sở khác hoặc cập nhật trạng    |  |
+|  | thái Lớp học sang "Đã kết thúc" trước khi ngừng chi nhánh.                                  |  |
+|  |                                                                                             |  |
+|  | Hành động khắc phục nhanh:                                                                  |  |
+|  | [ 🏫 Mở danh sách 8 lớp đang mở ]            [ 🎓 Mở danh sách 92 học viên ]                |  |
+|  +---------------------------------------------------------------------------------------------+  |
+|                                                                                                   |
++---------------------------------------------------------------------------------------------------+
+|  [ Đóng ]                                                    [ 🚫 Xác nhận ngừng hoạt động ]      |
+|                                                              (Vô hiệu hóa khi có lỗi 400)         |
++---------------------------------------------------------------------------------------------------+
+```
+
+#### 2. Cơ Chế Xử Lý Lỗi 400 Từ Backend Server (`BranchesController.cs` dòng 122–136):
+Trong mã nguồn backend:
+```csharp
+private async Task<IActionResult?> ValidateBranchDeactivationAsync(int branchId)
+{
+    var openClassesCount = await db.Classes.CountAsync(c => c.BranchId == branchId && c.Status != "Finished");
+    var activeStudentsCount = await db.Students.CountAsync(s => s.BranchId == branchId && s.Status == "Active");
+
+    if (openClassesCount > 0 || activeStudentsCount > 0)
+    {
+        return BadRequest(new
+        {
+            message = $"Không thể ngừng hoạt động chi nhánh vì còn {openClassesCount} lớp đang mở và {activeStudentsCount} học viên đang học. Vui lòng chuyển hoặc kết thúc toàn bộ lớp và học viên trước khi ngừng chi nhánh."
+        });
+    }
+    return null;
+}
+```
+
+- **Quy tắc hiển thị lỗi trên giao diện:**
+  1. Khi SuperAdmin bấm `Xác nhận ngừng hoạt động`, frontend gọi API `DELETE /api/Branches/{id}` (hoặc `PUT /api/Branches/{id}` với `isActive: false`).
+  2. Nếu backend phản hồi `400 Bad Request`:
+     - **KHÔNG đóng hộp thoại.**
+     - Hiển thị ngay **Khối Cảnh Báo Lỗi 400 (Error Callout Box)** màu đỏ nổi bật `bg-rose-50 border-2 border-rose-300 rounded-xl p-4 text-rose-900` với thông báo chính xác từ server: `err.response?.data?.message`.
+     - Trích xuất thông minh số lượng lớp học và học viên từ message để render 2 nút điều hướng nhanh:
+       * `[ 🏫 Quản lý Lớp cơ sở ]`: Click mở tab mới đến `/classes?branchId={id}&status=Ongoing`.
+       * `[ 🎓 Quản lý Học viên ]`: Click mở tab mới đến `/students?branchId={id}&status=Active`.
+     - Nút `Xác nhận ngừng hoạt động` bị vô hiệu hóa (`disabled`) để người dùng không bấm lại vô ích.
+  3. Nếu backend phản hồi `204 NoContent` (Thành công):
+     - Hiện Toast xanh: `"Đã ngừng hoạt động chi nhánh thành công."`.
+     - Đóng dialog và tự động cập nhật danh sách tại chỗ (optimistic update hoặc reload data).
+
+#### 3. Luồng Kích Hoạt Lại Chi Nhánh (Reactivation Flow):
+- Khi chi nhánh đang ở trạng thái `Ngừng hoạt động` (`isActive === false`):
+  * Nhấn nút `✓ Kích hoạt lại` sẽ mở hộp thoại xác nhận nhẹ nhàng màu xanh:
+    `"Bạn có muốn kích hoạt lại cơ sở [Tên cơ sở]? Cơ sở này sẽ xuất hiện trở lại trong danh sách tuyển sinh và mở lớp mới."`
+  * Bấm `Xác nhận`: Gửi `PUT /api/Branches/{id}` với payload giữ nguyên thông tin và `isActive: true`.
+  * Thành công: Cập nhật badge sang `Đang hoạt động` với chấm xanh animate pulse.
+
+---
+
+### 12.7. THIẾT KẾ RESPONSIVE TRÊN MOBILE (`375px – 414px`)
+
+Trên màn hình điện thoại di động (khi Ban Giám Đốc kiểm tra tình hình cơ sở qua smartphone):
+
+#### 1. Thẻ Cơ Sở Tối Ưu Cho Mobile (Mobile Branch Card):
+```
++-------------------------------------------------------+
+|  🏢 CƠ SỞ 1 - BÌNH TRƯNG ĐÔNG            [ ● Đang HĐ] |
+|  Mã: #BR-1                                            |
+|  📍 21/11 Đường 49, P. Bình Trưng Đông, Thủ Đức      |
+|  📞 0326 538 824 [ 📱 Gọi ngay ]                      |
+|  +-------------------------------------------------+  |
+|  | 🏫 8 Lớp mở  | 🎓 92 Học viên  | 👩‍🏫 10 Giáo viên |  |
+|  +-------------------------------------------------+  |
+|  [ ✏️ Sửa chi nhánh (44px) ]  [ 🚫 Ngừng HĐ (44px) ]  |
++-------------------------------------------------------+
+```
+
+- **Tiêu chuẩn Apple Human Interface Guidelines trên Mobile:**
+  - Khoảng cách giữa các thẻ: `gap-3.5`.
+  - Các nút hành động `Sửa chi nhánh`, `Ngừng hoạt động`, `Gọi ngay` đều có chiều cao đạt chuẩn tối thiểu `min-h-[44px]` để ngón tay cái chạm bấm chính xác 100%, không bị chạm trượt.
+  - Số điện thoại hỗ trợ click-to-call lập tức mở ứng dụng điện thoại trên smartphone.
+
+#### 2. Trải Nghiệm Bottom Sheet Cho Modal Trên Mobile:
+- Khi bấm `+ Thêm chi nhánh` hoặc `✏️ Sửa`:
+  * Modal tự động biến đổi thành **Bottom Sheet trượt từ cạnh đáy màn hình lên** (`fixed inset-x-0 bottom-0 rounded-t-2xl bg-white shadow-2xl max-h-[90vh] overflow-y-auto pb-[env(safe-area-inset-bottom,16px)]`).
+  * Có thanh vuốt kéo (Drag Handle) ở đỉnh: `w-12 h-1.5 bg-slate-300 rounded-full mx-auto my-2.5`.
+  * Hỗ trợ thao tác vuốt trượt xuống để đóng.
+
+---
+
+### 12.8. TIÊU CHUẨN NGHIỆM THU CHO GIAI ĐOẠN 1G (ACCEPTANCE CHECKLIST)
+
+Frontend Developer và QA đối chiếu nghiệm thu màn hình Quản lý Chi nhánh theo danh sách kiểm tra chi tiết sau:
+
+- [ ] **Phân Quyền Vai Trò Nghiêm Ngặt (Strict RBAC):**
+  - [ ] Mục menu `Quản lý chi nhánh` CHỈ xuất hiện trên Sidebar desktop và Drawer mobile của tài khoản `SuperAdmin`.
+  - [ ] Các tài khoản khác (`BranchManager`, `Teacher`, `Parent`, `Student`) hoàn toàn không thấy menu này.
+  - [ ] Khi đăng nhập bằng `BranchManager` hoặc `Teacher` và gõ trực tiếp URL `/branches` trên trình duyệt: Hệ thống hiển thị Màn hình chặn 403 trang trọng đồng bộ với trang Học phí, có nút quay về `Tổng quan` và `Lớp học`.
+- [ ] **Bố Cục Danh Sách & Dữ Liệu Chi Nhánh (`/branches`):**
+  - [ ] Hiển thị đầy đủ danh sách cơ sở từ API `GET /api/Branches`.
+  - [ ] Mỗi chi nhánh hiển thị chuẩn xác: Tên cơ sở (`branchName`), Địa chỉ (`address`), Số điện thoại (`phone`), Trạng thái (`isActive`), Ngày tạo (`createdAt`).
+  - [ ] Hiển thị đầy đủ 3 chỉ số vận hành thời gian thực: `Lớp đang mở` (`classCount`), `Học viên` (`studentCount`), `Giáo viên` (`teacherCount`).
+  - [ ] Số điện thoại có định dạng link click-to-call `tel:...`; nếu null hiển thị text placeholder rõ ràng.
+- [ ] **Modal Thêm / Sửa Chi Nhánh (`CreateEditBranchModal`):**
+  - [ ] Form chỉ bao gồm đúng 4 trường: `branchName`, `address`, `phone`, và `isActive` (khi sửa).
+  - [ ] Kiểm tra bắt buộc (Validation): `branchName` và `address` không được để trống; cảnh báo rõ ràng nếu vi phạm.
+  - [ ] Thêm chi nhánh mới gọi đúng `POST /api/Branches`, tải lại danh sách mượt mà không reload trang.
+  - [ ] Sửa chi nhánh gọi đúng `PUT /api/Branches/{id}`, cập nhật dữ liệu tức thì.
+- [ ] **Luồng Ngừng Hoạt Động & Xử Lý Lỗi 400:**
+  - [ ] Bấm `Ngừng hoạt động` mở Hộp thoại xác nhận cảnh báo an toàn.
+  - [ ] **Bắt lỗi 400 chính xác:** Khi chi nhánh còn lớp học đang mở hoặc học viên đang học, backend trả về mã 400 kèm message: Thông báo lỗi hiển thị rõ ràng ngay trong Hộp thoại xác nhận.
+  - [ ] Cung cấp nút điều hướng nhanh sang danh sách Lớp học và danh sách Học viên để Ban Giám Đốc xử lý.
+  - [ ] Khi chi nhánh đã dọn sạch lớp và học viên: Thao tác ngừng hoạt động thành công, trạng thái đổi sang `Ngừng hoạt động`.
+  - [ ] Luồng `Kích hoạt lại`: Cho phép mở lại chi nhánh đang ngừng hoạt động về trạng thái `Đang hoạt động`.
+- [ ] **Chuẩn Responsive Mobile (`375px – 414px`):**
+  - [ ] Hiển thị thẻ gọn gàng, không bị vỡ bố cục hay tràn viền ngang màn hình.
+  - [ ] Nút bấm đạt chuẩn công thái học ngón tay cái tối thiểu `44px x 44px`.
+  - [ ] Form thêm/sửa mở dạng Bottom Sheet trượt từ đáy màn hình êm ái.
+
+
 

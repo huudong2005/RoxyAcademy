@@ -9,6 +9,7 @@ import Tuitions from './pages/Tuitions';
 import Payments from './pages/Payments';
 import Homeworks from './pages/Homeworks';
 import LeaveRequests from './pages/LeaveRequests';
+import Branches from './pages/Branches';
 import AdminLayout from './layouts/AdminLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -30,6 +31,7 @@ export default function App() {
             <Route path="/payments" element={<Payments />} />
             <Route path="/homeworks" element={<Homeworks />} />
             <Route path="/leave-requests" element={<LeaveRequests />} />
+            <Route path="/branches" element={<Branches />} />
           </Route>
         </Route>
 

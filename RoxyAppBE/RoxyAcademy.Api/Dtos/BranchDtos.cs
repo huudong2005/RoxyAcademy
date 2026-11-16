@@ -3,7 +3,17 @@
 namespace RoxyAcademy.Api.Dtos;
 
 // Record dùng để trả dữ liệu về (Read)
-public record BranchDto(int Id, string BranchName, string Address, string? Phone, bool IsActive, DateTime CreatedAt);
+public record BranchDto(
+	int Id,
+	string BranchName,
+	string Address,
+	string? Phone,
+	bool IsActive,
+	DateTime CreatedAt,
+	int ClassCount = 0,
+	int StudentCount = 0,
+	int TeacherCount = 0
+);
 
 // Class dùng để nhận dữ liệu khi Thêm mới (Create)
 public class CreateBranchRequest

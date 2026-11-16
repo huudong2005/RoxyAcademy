@@ -66,6 +66,7 @@ export default function AdminLayout() {
     }`;
 
   const isStaff = user.role === 'SuperAdmin' || user.role === 'BranchManager';
+  const isSuperAdmin = user.role === 'SuperAdmin';
 
   const renderNavLinks = (onItemClick) => (
     <>
@@ -114,6 +115,19 @@ export default function AdminLayout() {
           <NavLink to="/payments" className={navItemClass} onClick={onItemClick}>
             <span className="text-base">💳</span>
             <span>Thanh toán</span>
+          </NavLink>
+        </>
+      )}
+
+      {/* PHÂN HỆ HỆ THỐNG: CHỈ HIỂN THỊ CHO SUPERADMIN */}
+      {isSuperAdmin && (
+        <>
+          <div className="pt-4 px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+            Hệ thống &amp; Thiết lập
+          </div>
+          <NavLink to="/branches" className={navItemClass} onClick={onItemClick}>
+            <span className="text-base">🏢</span>
+            <span>Quản lý chi nhánh</span>
           </NavLink>
         </>
       )}
@@ -256,6 +270,8 @@ export default function AdminLayout() {
                   ? 'Quản lý Học phí & Công nợ'
                   : location.pathname.startsWith('/payments')
                   ? 'Quản lý Thanh toán & Sổ quỹ'
+                  : location.pathname.startsWith('/branches')
+                  ? 'Quản lý Chi nhánh'
                   : 'Bảng Tổng Quan'}
               </h2>
             </div>

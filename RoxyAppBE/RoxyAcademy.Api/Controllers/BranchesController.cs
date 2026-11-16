@@ -17,7 +17,17 @@ public class BranchesController(RoxyDbContext db) : ControllerBase
 	public async Task<ActionResult<IEnumerable<BranchDto>>> GetBranches()
 	{
 		var branches = await db.Branches
-			.Select(b => new BranchDto(b.Id, b.BranchName, b.Address, b.Phone, b.IsActive, b.CreatedAt))
+			.Select(b => new BranchDto(
+				b.Id,
+				b.BranchName,
+				b.Address,
+				b.Phone,
+				b.IsActive,
+				b.CreatedAt,
+				db.Classes.Count(c => c.BranchId == b.Id && c.Status != "Finished"),
+				db.Students.Count(s => s.BranchId == b.Id && s.Status == "Active"),
+				db.Users.Count(u => u.BranchId == b.Id && u.Role == "Teacher" && u.IsActive)
+			))
 			.ToListAsync();
 
 		return Ok(branches);
@@ -27,10 +37,24 @@ public class BranchesController(RoxyDbContext db) : ControllerBase
 	[HttpGet("{id}")]
 	public async Task<ActionResult<BranchDto>> GetBranch(int id)
 	{
-		var b = await db.Branches.FindAsync(id);
-		if (b == null) return NotFound(new { message = "Không tìm thấy cơ sở này." });
+		var branch = await db.Branches
+			.Where(b => b.Id == id)
+			.Select(b => new BranchDto(
+				b.Id,
+				b.BranchName,
+				b.Address,
+				b.Phone,
+				b.IsActive,
+				b.CreatedAt,
+				db.Classes.Count(c => c.BranchId == b.Id && c.Status != "Finished"),
+				db.Students.Count(s => s.BranchId == b.Id && s.Status == "Active"),
+				db.Users.Count(u => u.BranchId == b.Id && u.Role == "Teacher" && u.IsActive)
+			))
+			.FirstOrDefaultAsync();
 
-		return Ok(new BranchDto(b.Id, b.BranchName, b.Address, b.Phone, b.IsActive, b.CreatedAt));
+		if (branch == null) return NotFound(new { message = "Không tìm thấy cơ sở này." });
+
+		return Ok(branch);
 	}
 
 	// 3. THÊM MỚI (CREATE) - Chỉ SuperAdmin được làm
@@ -50,7 +74,7 @@ public class BranchesController(RoxyDbContext db) : ControllerBase
 		db.Branches.Add(branch);
 		await db.SaveChangesAsync();
 
-		var dto = new BranchDto(branch.Id, branch.BranchName, branch.Address, branch.Phone, branch.IsActive, branch.CreatedAt);
+		var dto = new BranchDto(branch.Id, branch.BranchName, branch.Address, branch.Phone, branch.IsActive, branch.CreatedAt, 0, 0, 0);
 		return CreatedAtAction(nameof(GetBranch), new { id = branch.Id }, dto);
 	}
 
@@ -61,6 +85,12 @@ public class BranchesController(RoxyDbContext db) : ControllerBase
 	{
 		var branch = await db.Branches.FindAsync(id);
 		if (branch == null) return NotFound(new { message = "Không tìm thấy cơ sở này." });
+
+		if (branch.IsActive && !req.IsActive)
+		{
+			var validationError = await ValidateBranchDeactivationAsync(id);
+			if (validationError != null) return validationError;
+		}
 
 		branch.BranchName = req.BranchName;
 		branch.Address = req.Address;
@@ -79,10 +109,29 @@ public class BranchesController(RoxyDbContext db) : ControllerBase
 		var branch = await db.Branches.FindAsync(id);
 		if (branch == null) return NotFound(new { message = "Không tìm thấy cơ sở này." });
 
+		var validationError = await ValidateBranchDeactivationAsync(id);
+		if (validationError != null) return validationError;
+
 		// Thay vì xóa cứng (Remove) có thể gây lỗi khóa ngoại, ta dùng xóa mềm (đổi trạng thái)
 		branch.IsActive = false;
 		await db.SaveChangesAsync();
 
 		return NoContent();
+	}
+
+	private async Task<IActionResult?> ValidateBranchDeactivationAsync(int branchId)
+	{
+		var openClassesCount = await db.Classes.CountAsync(c => c.BranchId == branchId && c.Status != "Finished");
+		var activeStudentsCount = await db.Students.CountAsync(s => s.BranchId == branchId && s.Status == "Active");
+
+		if (openClassesCount > 0 || activeStudentsCount > 0)
+		{
+			return BadRequest(new
+			{
+				message = $"Không thể ngừng hoạt động chi nhánh vì còn {openClassesCount} lớp đang mở và {activeStudentsCount} học viên đang học. Vui lòng chuyển hoặc kết thúc toàn bộ lớp và học viên trước khi ngừng chi nhánh."
+			});
+		}
+
+		return null;
 	}
 }
