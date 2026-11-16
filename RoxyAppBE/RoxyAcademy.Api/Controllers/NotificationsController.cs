@@ -59,7 +59,7 @@ public class NotificationsController(RoxyDbContext db) : ControllerBase
     public async Task<IActionResult> MarkAsRead(long id)
     {
         var notif = await db.Notifications.FirstOrDefaultAsync(n => n.Id == id && n.UserId == UserId);
-        if (notif == null) return NotFound();
+        if (notif == null) return NotFound(new { message = "Không tìm thấy thông báo này hoặc bạn không có quyền truy cập." });
 
         if (!notif.IsRead)
         {

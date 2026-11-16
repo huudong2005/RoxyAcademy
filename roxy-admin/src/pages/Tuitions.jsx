@@ -18,6 +18,8 @@ export default function Tuitions() {
   const isTeacher = currentUser.role === 'Teacher';
   const isSuperAdmin = currentUser.role === 'SuperAdmin';
   const isBranchManager = currentUser.role === 'BranchManager';
+  const isParent = currentUser.role === 'Parent';
+  const isStudent = currentUser.role === 'Student';
   const canManage = isSuperAdmin || isBranchManager;
 
   // Dữ liệu danh sách khoản thu
@@ -67,6 +69,9 @@ export default function Tuitions() {
 
   const [quickPayModalOpen, setQuickPayModalOpen] = useState(false);
   const [quickPayTuition, setQuickPayTuition] = useState(null);
+
+  const [parentPaymentModalOpen, setParentPaymentModalOpen] = useState(false);
+  const [parentPaymentTuition, setParentPaymentTuition] = useState(null);
 
   const [lightboxImageUrl, setLightboxImageUrl] = useState(null);
 
@@ -168,6 +173,11 @@ export default function Tuitions() {
     setQuickPayModalOpen(true);
   };
 
+  const handleOpenParentPayment = (item) => {
+    setParentPaymentTuition(item);
+    setParentPaymentModalOpen(true);
+  };
+
   // 4. Thống kê nhanh KPI
   const stats = useMemo(() => {
     const valid = tuitions.filter((t) => !t.isCancelled);
@@ -254,10 +264,21 @@ export default function Tuitions() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
-            <span>💰</span> Quản lý Học phí &amp; Công nợ
+            <span>💰</span>
+            <span>
+              {isParent
+                ? 'Học phí & Đóng phí trực tuyến'
+                : isStudent
+                ? 'Thông tin Học phí'
+                : 'Quản lý Học phí & Công nợ'}
+            </span>
           </h1>
           <p className="text-xs md:text-sm text-slate-500 mt-0.5">
-            Theo dõi khoản phải thu, tình trạng thanh toán và nhắc nợ học viên theo cơ sở.
+            {isParent
+              ? 'Theo dõi biểu phí, lịch sử đóng và nộp học phí trực tuyến thuận tiện cho các con.'
+              : isStudent
+              ? 'Chi tiết học phí các môn học và tình trạng thanh toán của bản thân.'
+              : 'Theo dõi khoản phải thu, tình trạng thanh toán và nhắc nợ học viên theo cơ sở.'}
           </p>
         </div>
 
@@ -272,77 +293,147 @@ export default function Tuitions() {
         )}
       </div>
 
-      {/* 4 THẺ THỐNG KÊ NHANH (KPI SUMMARY CARDS) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
-        {/* Thẻ 1: Tổng học phí phải thu */}
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between text-slate-500 mb-1">
-            <span className="text-xs font-semibold uppercase tracking-wider">Tổng phải thu</span>
-            <span className="text-base">📑</span>
-          </div>
-          <div className="font-mono font-bold text-xl md:text-2xl text-slate-900 tracking-tight tabular-nums">
-            {formatCurrency(stats.totalNet)}
-          </div>
-          <div className="mt-2 text-[11px] text-slate-500">
-            Tổng cộng: <span className="font-semibold text-slate-700">{stats.totalCount}</span> khoản thu
-          </div>
-        </div>
-
-        {/* Thẻ 2: Đã thu thực tế */}
-        <div className="bg-emerald-50/50 p-4 rounded-xl border border-emerald-200 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between text-emerald-700 mb-1">
-            <span className="text-xs font-semibold uppercase tracking-wider">Đã thu thực tế</span>
-            <span className="text-base">💵</span>
-          </div>
-          <div className="font-mono font-bold text-xl md:text-2xl text-emerald-700 tracking-tight tabular-nums">
-            {formatCurrency(stats.totalPaid)}
-          </div>
-          <div className="mt-2">
-            <div className="flex justify-between text-[11px] text-emerald-800 font-medium mb-1">
-              <span>Tiến độ thu:</span>
-              <span>{stats.progressPercent}%</span>
+      {/* BANNER CÔNG NỢ PHỤ HUYNH HOẶC THẺ KPI ADMIN */}
+      {isParent ? (
+        <div className="bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 rounded-2xl p-5 md:p-6 text-white shadow-md space-y-4 border border-blue-900/50">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-200 text-xs font-semibold mb-1 border border-blue-400/20">
+                <span>👨‍👩‍👧</span> Cổng thông tin Phụ huynh Roxy
+              </span>
+              <h2 className="text-base md:text-lg font-bold">Tổng quan học phí gia đình</h2>
+              <p className="text-xs text-blue-200/90 mt-0.5">
+                Quý phụ huynh vui lòng kiểm tra và hoàn tất các khoản học phí còn nợ đúng hạn để đảm bảo quyền lợi học tập cho các bé.
+              </p>
             </div>
-            <div className="w-full h-1.5 bg-emerald-200/60 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-emerald-600 rounded-full transition-all duration-300"
-                style={{ width: `${stats.progressPercent}%` }}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Thẻ 3: Tổng công nợ còn lại */}
-        <div className="bg-amber-50/60 p-4 rounded-xl border border-amber-200 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between text-amber-800 mb-1">
-            <span className="text-xs font-semibold uppercase tracking-wider">Còn nợ lại</span>
-            <span className="text-base">⏳</span>
-          </div>
-          <div className="font-mono font-bold text-xl md:text-2xl text-amber-800 tracking-tight tabular-nums">
-            {formatCurrency(stats.totalRemaining)}
-          </div>
-          <div className="mt-2 text-[11px] text-amber-900/80 font-medium">
-            <span className="font-bold text-amber-900">{stats.debtCount}</span> khoản thu chưa hoàn tất
-          </div>
-        </div>
-
-        {/* Thẻ 4: Khoản thu quá hạn */}
-        <div className="bg-rose-50/60 p-4 rounded-xl border border-rose-200 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between text-rose-700 mb-1">
-            <span className="text-xs font-semibold uppercase tracking-wider">Quá hạn nộp</span>
-            <span className="text-base animate-pulse">⚠️</span>
-          </div>
-          <div className="font-mono font-bold text-xl md:text-2xl text-rose-700 tracking-tight tabular-nums">
-            {formatCurrency(stats.totalOverdueAmount)}
-          </div>
-          <div className="mt-2 text-[11px] text-rose-800 font-semibold">
-            {stats.overdueCount > 0 ? (
-              <span>⚠️ Cần nhắc {stats.overdueCount} khoản quá hạn!</span>
-            ) : (
-              <span className="text-slate-500 font-normal">Không có khoản nợ quá hạn</span>
+            {stats.totalRemaining > 0 && (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-500/20 border border-rose-400/30 rounded-xl text-rose-200 text-xs font-semibold shrink-0">
+                <span>⚠️</span>
+                <span>Cần thanh toán: {stats.debtCount} khoản</span>
+              </div>
             )}
           </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+            <div className="bg-white/10 backdrop-blur-xs rounded-xl p-3.5 border border-white/10">
+              <span className="text-xs text-blue-200 uppercase tracking-wider block font-medium">Tổng học phí</span>
+              <span className="text-xl md:text-2xl font-bold font-mono mt-1 block tracking-tight">
+                {formatCurrency(stats.totalNet)}
+              </span>
+              <span className="text-[11px] text-blue-200/70 mt-1 block">
+                Tổng cộng {stats.totalCount} khoản thu
+              </span>
+            </div>
+
+            <div className="bg-emerald-950/40 backdrop-blur-xs rounded-xl p-3.5 border border-emerald-500/30">
+              <span className="text-xs text-emerald-200 uppercase tracking-wider block font-medium">Đã thanh toán</span>
+              <span className="text-xl md:text-2xl font-bold font-mono mt-1 block text-emerald-300 tracking-tight">
+                {formatCurrency(stats.totalPaid)}
+              </span>
+              <span className="text-[11px] text-emerald-200/70 mt-1 block">
+                Đạt {stats.progressPercent}% tiến độ
+              </span>
+            </div>
+
+            <div className="bg-amber-950/40 backdrop-blur-xs rounded-xl p-3.5 border border-amber-500/30">
+              <span className="text-xs text-amber-200 uppercase tracking-wider block font-medium">Còn nợ cần thanh toán</span>
+              <span className="text-xl md:text-2xl font-bold font-mono mt-1 block text-amber-300 tracking-tight">
+                {formatCurrency(stats.totalRemaining)}
+              </span>
+              <span className="text-[11px] text-amber-200/70 mt-1 block">
+                {stats.totalRemaining > 0 ? 'Có thể đóng theo từng đợt' : '✓ Đã hoàn tất mọi khoản'}
+              </span>
+            </div>
+          </div>
         </div>
-      </div>
+      ) : isStudent ? (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
+          <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Tổng học phí</span>
+            <div className="font-mono font-bold text-xl text-slate-900 mt-1">{formatCurrency(stats.totalNet)}</div>
+          </div>
+          <div className="bg-emerald-50/60 p-4 rounded-xl border border-emerald-200 shadow-xs">
+            <span className="text-xs font-semibold uppercase tracking-wider text-emerald-700">Đã thanh toán</span>
+            <div className="font-mono font-bold text-xl text-emerald-700 mt-1">{formatCurrency(stats.totalPaid)}</div>
+          </div>
+          <div className="bg-amber-50/60 p-4 rounded-xl border border-amber-200 shadow-xs">
+            <span className="text-xs font-semibold uppercase tracking-wider text-amber-800">Còn nợ</span>
+            <div className="font-mono font-bold text-xl text-amber-800 mt-1">{formatCurrency(stats.totalRemaining)}</div>
+          </div>
+        </div>
+      ) : (
+        /* 4 THẺ THỐNG KÊ NHANH CHO ADMIN / STAFF */
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+          {/* Thẻ 1: Tổng học phí phải thu */}
+          <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
+            <div className="flex items-center justify-between text-slate-500 mb-1">
+              <span className="text-xs font-semibold uppercase tracking-wider">Tổng phải thu</span>
+              <span className="text-base">📑</span>
+            </div>
+            <div className="font-mono font-bold text-xl md:text-2xl text-slate-900 tracking-tight tabular-nums">
+              {formatCurrency(stats.totalNet)}
+            </div>
+            <div className="mt-2 text-[11px] text-slate-500">
+              Tổng cộng: <span className="font-semibold text-slate-700">{stats.totalCount}</span> khoản thu
+            </div>
+          </div>
+
+          {/* Thẻ 2: Đã thu thực tế */}
+          <div className="bg-emerald-50/50 p-4 rounded-xl border border-emerald-200 shadow-xs flex flex-col justify-between">
+            <div className="flex items-center justify-between text-emerald-700 mb-1">
+              <span className="text-xs font-semibold uppercase tracking-wider">Đã thu thực tế</span>
+              <span className="text-base">💵</span>
+            </div>
+            <div className="font-mono font-bold text-xl md:text-2xl text-emerald-700 tracking-tight tabular-nums">
+              {formatCurrency(stats.totalPaid)}
+            </div>
+            <div className="mt-2">
+              <div className="flex justify-between text-[11px] text-emerald-800 font-medium mb-1">
+                <span>Tiến độ thu:</span>
+                <span>{stats.progressPercent}%</span>
+              </div>
+              <div className="w-full h-1.5 bg-emerald-200/60 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-emerald-600 rounded-full transition-all duration-300"
+                  style={{ width: `${stats.progressPercent}%` }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Thẻ 3: Tổng công nợ còn lại */}
+          <div className="bg-amber-50/60 p-4 rounded-xl border border-amber-200 shadow-xs flex flex-col justify-between">
+            <div className="flex items-center justify-between text-amber-800 mb-1">
+              <span className="text-xs font-semibold uppercase tracking-wider">Còn nợ lại</span>
+              <span className="text-base">⏳</span>
+            </div>
+            <div className="font-mono font-bold text-xl md:text-2xl text-amber-800 tracking-tight tabular-nums">
+              {formatCurrency(stats.totalRemaining)}
+            </div>
+            <div className="mt-2 text-[11px] text-amber-900/80 font-medium">
+              <span className="font-bold text-amber-900">{stats.debtCount}</span> khoản thu chưa hoàn tất
+            </div>
+          </div>
+
+          {/* Thẻ 4: Khoản thu quá hạn */}
+          <div className="bg-rose-50/60 p-4 rounded-xl border border-rose-200 shadow-xs flex flex-col justify-between">
+            <div className="flex items-center justify-between text-rose-700 mb-1">
+              <span className="text-xs font-semibold uppercase tracking-wider">Quá hạn nộp</span>
+              <span className="text-base animate-pulse">⚠️</span>
+            </div>
+            <div className="font-mono font-bold text-xl md:text-2xl text-rose-700 tracking-tight tabular-nums">
+              {formatCurrency(stats.totalOverdueAmount)}
+            </div>
+            <div className="mt-2 text-[11px] text-rose-800 font-semibold">
+              {stats.overdueCount > 0 ? (
+                <span>⚠️ Cần nhắc {stats.overdueCount} khoản quá hạn!</span>
+              ) : (
+                <span className="text-slate-500 font-normal">Không có khoản nợ quá hạn</span>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* THANH CÔNG CỤ & BỘ LỌC ĐA CHIỀU */}
       <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-3">
@@ -612,6 +703,19 @@ export default function Tuitions() {
                               </button>
                             )}
 
+                            {/* Nút Gửi thanh toán cho Phụ huynh (chỉ hiện khi còn nợ > 0 và chưa bị hủy) */}
+                            {isParent && !t.isCancelled && (t.remainingAmount || 0) > 0 && (
+                              <button
+                                type="button"
+                                onClick={() => handleOpenParentPayment(t)}
+                                title="Thanh toán trực tuyến khoản học phí này"
+                                className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-semibold text-xs rounded-md shadow-2xs transition-all cursor-pointer"
+                              >
+                                <span>💳</span>
+                                <span>Thanh toán</span>
+                              </button>
+                            )}
+
                             {/* Nút Thu tiền nhanh (chỉ hiện khi còn nợ > 0 và chưa bị hủy) */}
                             {canManage && !t.isCancelled && (t.remainingAmount || 0) > 0 && (
                               <button
@@ -709,6 +813,16 @@ export default function Tuitions() {
                         </button>
                       )}
 
+                      {isParent && !t.isCancelled && (t.remainingAmount || 0) > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => handleOpenParentPayment(t)}
+                          className="flex-1 min-h-[44px] flex items-center justify-center gap-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-xs active:scale-95 transition-all cursor-pointer"
+                        >
+                          💳 Thanh toán ngay
+                        </button>
+                      )}
+
                       {canManage && !t.isCancelled && (t.remainingAmount || 0) > 0 && (
                         <button
                           type="button"
@@ -741,12 +855,17 @@ export default function Tuitions() {
             setDetailModalOpen(false);
             handleOpenQuickPay(selectedTuition);
           }}
+          onOpenParentPayment={() => {
+            setDetailModalOpen(false);
+            handleOpenParentPayment(selectedTuition);
+          }}
           onOpenEdit={() => {
             setDetailModalOpen(false);
             handleOpenEdit(selectedTuition);
           }}
           onViewImage={(url) => setLightboxImageUrl(url)}
           canManage={canManage}
+          isParent={isParent}
         />
       )}
 
@@ -796,6 +915,23 @@ export default function Tuitions() {
             setQuickPayModalOpen(false);
             setQuickPayTuition(null);
             showToast(msg || 'Ghi nhận thanh toán thành công!');
+            setReloadKey((k) => k + 1);
+          }}
+        />
+      )}
+
+      {/* ==================== 4.1. MODAL GỬI THANH TOÁN (PHỤ HUYNH) ==================== */}
+      {parentPaymentModalOpen && parentPaymentTuition && (
+        <ParentPaymentModal
+          tuition={parentPaymentTuition}
+          onClose={() => {
+            setParentPaymentModalOpen(false);
+            setParentPaymentTuition(null);
+          }}
+          onSuccess={(msg) => {
+            setParentPaymentModalOpen(false);
+            setParentPaymentTuition(null);
+            showToast(msg || 'Gửi yêu cầu thanh toán thành công! Trung tâm sẽ kiểm tra và xác nhận.');
             setReloadKey((k) => k + 1);
           }}
         />
@@ -893,9 +1029,11 @@ function TuitionDetailModal({
   loadingPayments,
   onClose,
   onOpenQuickPay,
+  onOpenParentPayment,
   onOpenEdit,
   onViewImage,
   canManage,
+  isParent,
 }) {
   const finalAmount = tuition.finalAmount ?? (tuition.amount - tuition.discount);
   const remainingAmount = tuition.remainingAmount ?? Math.max(0, finalAmount - tuition.paidAmount);
@@ -1014,6 +1152,16 @@ function TuitionDetailModal({
                   <span>Ghi nhận thanh toán mới</span>
                 </button>
               )}
+              {isParent && hasDebt && (
+                <button
+                  type="button"
+                  onClick={onOpenParentPayment}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-semibold rounded-lg shadow-2xs transition-all cursor-pointer"
+                >
+                  <span>💳</span>
+                  <span>Gửi thanh toán ngay</span>
+                </button>
+              )}
             </div>
 
             {loadingPayments ? (
@@ -1110,6 +1258,15 @@ function TuitionDetailModal({
                 className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs active:scale-95 transition-all cursor-pointer"
               >
                 ⚡ Thu tiền ngay ({formatCurrency(remainingAmount)})
+              </button>
+            )}
+            {isParent && hasDebt && (
+              <button
+                type="button"
+                onClick={onOpenParentPayment}
+                className="px-4 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-xs active:scale-95 transition-all cursor-pointer"
+              >
+                💳 Thanh toán ngay ({formatCurrency(remainingAmount)})
               </button>
             )}
           </div>
@@ -1994,6 +2151,291 @@ function QuickPayModal({ tuition, onClose, onSuccess }) {
                 <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
               )}
               <span>✓ Lưu &amp; Xác nhận thanh toán</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ==================== 4.1. MODAL THANH TOÁN DÀNH CHO PHỤ HUYNH ====================
+function ParentPaymentModal({ tuition, onClose, onSuccess }) {
+  const finalAmount = tuition.finalAmount ?? (tuition.amount - tuition.discount);
+  const remainingAmount = tuition.remainingAmount ?? Math.max(0, finalAmount - (tuition.paidAmount || 0));
+
+  const [amount, setAmount] = useState(String(remainingAmount));
+  const [paymentMethod, setPaymentMethod] = useState('BankTransfer');
+  const [transactionCode, setTransactionCode] = useState('');
+  const [proofImageUrl, setProofImageUrl] = useState('');
+  const [note, setNote] = useState('');
+
+  const [copiedStk, setCopiedStk] = useState(false);
+  const [copiedSyntax, setCopiedSyntax] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState('');
+
+  const numAmount = Number(amount) || 0;
+  const isOverpay = numAmount > remainingAmount;
+
+  const bankAccount = {
+    bankName: 'Ngân hàng TMCP Ngoại thương Việt Nam (Vietcombank)',
+    accountNumber: '0326538824',
+    accountName: 'TRUNG TAM ROXY ACADEMY',
+    transferSyntax: `HP ${tuition.id} ${tuition.studentName || ''}`.trim(),
+  };
+
+  const handleCopy = (text, type) => {
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(text);
+      if (type === 'stk') {
+        setCopiedStk(true);
+        setTimeout(() => setCopiedStk(false), 2000);
+      } else {
+        setCopiedSyntax(true);
+        setTimeout(() => setCopiedSyntax(false), 2000);
+      }
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setFormError('');
+
+    if (numAmount <= 0) {
+      setFormError('Số tiền thanh toán phải lớn hơn 0.');
+      return;
+    }
+    if (isOverpay) {
+      setFormError(`Số tiền thanh toán không được vượt quá số còn nợ (Tối đa: ${formatCurrency(remainingAmount)}).`);
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const payload = {
+        tuitionId: tuition.id,
+        amount: numAmount,
+        paymentMethod,
+        transactionCode: transactionCode.trim() || null,
+        proofImageUrl: proofImageUrl.trim() || null,
+        paidAt: new Date().toISOString(),
+        note: note.trim() || null,
+      };
+
+      const res = await axiosClient.post('/Payments', payload);
+      onSuccess(res.data?.message || 'Gửi yêu cầu thanh toán thành công! Trung tâm sẽ kiểm tra và xác nhận.');
+    } catch (err) {
+      console.error('Lỗi khi gửi thanh toán:', err);
+      setFormError(err.response?.data?.message || 'Không thể gửi yêu cầu thanh toán.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-[2px] overflow-y-auto">
+      <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden my-8 animate-in fade-in zoom-in-95 duration-150">
+        <form onSubmit={handleSubmit}>
+          {/* Header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+            <div>
+              <h2 className="text-base font-bold text-slate-900 flex items-center gap-1.5">
+                <span>💳</span>
+                <span>Nộp học phí trực tuyến</span>
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Khoản thu: <strong className="text-slate-800">{tuition.title}</strong> — Học viên: {tuition.studentName}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-200/70 hover:text-slate-700 cursor-pointer"
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* Body */}
+          <div className="p-6 space-y-4 max-h-[calc(85vh-130px)] overflow-y-auto">
+            {formError && (
+              <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 flex items-start gap-2">
+                <span className="shrink-0 text-sm">⚠️</span>
+                <span>{formError}</span>
+              </div>
+            )}
+
+            {/* HỘP THÔNG TIN TÀI KHOẢN NGÂN HÀNG ROXY */}
+            <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-blue-900 uppercase tracking-wider flex items-center gap-1">
+                  <span>🏦</span> Tài khoản nhận học phí
+                </span>
+                <span className="text-[11px] font-semibold text-blue-700 bg-white px-2 py-0.5 rounded border border-blue-200">
+                  Vietcombank
+                </span>
+              </div>
+
+              <div className="space-y-1.5 text-xs text-slate-700">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500">Chủ tài khoản:</span>
+                  <strong className="text-slate-900 uppercase font-mono">{bankAccount.accountName}</strong>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500">Số tài khoản:</span>
+                  <div className="flex items-center gap-2">
+                    <strong className="font-mono text-base text-blue-700">{bankAccount.accountNumber}</strong>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(bankAccount.accountNumber, 'stk')}
+                      className="px-2 py-0.5 text-[11px] font-semibold bg-white text-blue-700 hover:bg-blue-100 border border-blue-300 rounded active:scale-95 transition-all cursor-pointer"
+                    >
+                      {copiedStk ? '✓ Đã chép' : 'Sao chép'}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-1 border-t border-blue-200/60">
+                  <span className="text-slate-500">Cú pháp chuyển khoản:</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs font-bold text-slate-800 bg-white/80 px-2 py-0.5 rounded border border-blue-200">
+                      {bankAccount.transferSyntax}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(bankAccount.transferSyntax, 'syntax')}
+                      className="px-2 py-0.5 text-[11px] font-semibold bg-white text-blue-700 hover:bg-blue-100 border border-blue-300 rounded active:scale-95 transition-all cursor-pointer"
+                    >
+                      {copiedSyntax ? '✓ Đã chép' : 'Sao chép'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Số tiền cần thanh toán */}
+            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs flex justify-between items-center">
+              <div>
+                <span className="text-slate-500 block">Số tiền còn nợ của khoản thu:</span>
+                <span className="font-bold text-rose-600 text-sm font-mono">{formatCurrency(remainingAmount)}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setAmount(String(remainingAmount))}
+                className="text-xs text-blue-600 font-semibold hover:underline cursor-pointer"
+              >
+                Điền toàn bộ
+              </button>
+            </div>
+
+            {/* Input Số tiền muốn đóng */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Số tiền thanh toán lần này (VNĐ) <span className="text-rose-600">*</span>
+              </label>
+              <input
+                type="number"
+                required
+                min={1000}
+                max={remainingAmount}
+                step={10000}
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="w-full h-10 px-3 text-xs md:text-sm font-mono font-bold text-slate-900 bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              />
+              {/* Phiên âm số tiền thành chữ tiếng Việt */}
+              {numAmount > 0 && (
+                <p className="mt-1.5 text-xs text-blue-700 bg-blue-50/70 border border-blue-100 rounded-md p-2 italic leading-relaxed">
+                  Bằng chữ: <strong>{numberToVietnameseWords(numAmount)}</strong>
+                </p>
+              )}
+            </div>
+
+            {/* Phương thức thanh toán */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Phương thức thanh toán <span className="text-rose-600">*</span>
+              </label>
+              <select
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                className="w-full h-10 px-3 text-xs md:text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-700"
+              >
+                <option value="BankTransfer">🏦 Chuyển khoản ngân hàng (Khuyên dùng)</option>
+                <option value="ZaloPay">📱 Ví ZaloPay</option>
+                <option value="Cash">💵 Đóng tiền mặt tại quầy trung tâm</option>
+              </select>
+            </div>
+
+            {/* Mã giao dịch ngân hàng */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Mã giao dịch / Mã tham chiếu ngân hàng <span className="text-slate-400 font-normal">(tùy chọn)</span>
+              </label>
+              <input
+                type="text"
+                maxLength={50}
+                placeholder="VD: FT241116..., MB0326..."
+                value={transactionCode}
+                onChange={(e) => setTransactionCode(e.target.value)}
+                className="w-full h-10 px-3 text-xs md:text-sm font-mono uppercase bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 placeholder:text-slate-400"
+              />
+              <span className="text-[11px] text-slate-400 mt-0.5 block">
+                Điền mã giao dịch trên ứng dụng ngân hàng giúp trung tâm đối soát và xác nhận nhanh hơn.
+              </span>
+            </div>
+
+            {/* Link ảnh chứng từ chuyển khoản */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Link ảnh chứng từ / Biên lai chuyển khoản <span className="text-slate-400 font-normal">(tùy chọn)</span>
+              </label>
+              <input
+                type="url"
+                placeholder="https://..."
+                value={proofImageUrl}
+                onChange={(e) => setProofImageUrl(e.target.value)}
+                className="w-full h-10 px-3 text-xs md:text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 placeholder:text-slate-400"
+              />
+            </div>
+
+            {/* Ghi chú */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Ghi chú cho trung tâm <span className="text-slate-400 font-normal">(tùy chọn)</span>
+              </label>
+              <textarea
+                rows={2}
+                maxLength={250}
+                placeholder="Ví dụ: Phụ huynh bé Nam đã chuyển khoản từ ngân hàng Techcombank..."
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                className="w-full p-2.5 text-xs md:text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 placeholder:text-slate-400"
+              />
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50/50">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={submitting}
+              className="px-4 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 active:scale-95 transition-all cursor-pointer"
+            >
+              Hủy
+            </button>
+            <button
+              type="submit"
+              disabled={submitting || numAmount <= 0 || isOverpay}
+              className="inline-flex items-center gap-1.5 px-5 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 active:scale-95 rounded-lg shadow-xs transition-all cursor-pointer disabled:opacity-50"
+            >
+              {submitting && (
+                <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              )}
+              <span>✓ Gửi yêu cầu xác nhận</span>
             </button>
           </div>
         </form>

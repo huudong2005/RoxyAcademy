@@ -133,6 +133,10 @@ public class PaymentsController(RoxyDbContext db) : ControllerBase
     [Authorize(Roles = "SuperAdmin,BranchManager,Parent,Student")]
     public async Task<ActionResult> CreatePayment(CreatePaymentRequest req)
     {
+        // Học viên CHỈ được xem học phí, KHÔNG được gửi thanh toán
+        if (Role == "Student")
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = "Học viên chỉ có quyền xem học phí, không được phép thực hiện giao dịch thanh toán. Vui lòng liên hệ phụ huynh hoặc trung tâm." });
+
         var tuition = await db.Tuitions
             .Include(t => t.Student)
             .FirstOrDefaultAsync(t => t.Id == req.TuitionId);
@@ -144,9 +148,6 @@ public class PaymentsController(RoxyDbContext db) : ControllerBase
             return BadRequest(new { message = "Khoản học phí này đã bị hủy, không thể thực hiện thanh toán." });
 
         if (Role == "Parent" && tuition.Student.ParentId != UserId)
-            return StatusCode(StatusCodes.Status403Forbidden, new { message = "Không thể thanh toán khoản thu của học viên khác." });
-
-        if (Role == "Student" && tuition.Student.UserId != UserId)
             return StatusCode(StatusCodes.Status403Forbidden, new { message = "Không thể thanh toán khoản thu của học viên khác." });
 
         if (Role == "BranchManager" && tuition.BranchId != (User.GetBranchId() ?? -1))

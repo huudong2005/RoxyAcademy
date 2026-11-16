@@ -3422,3 +3422,581 @@ Frontend Developer và QA đối chiếu nghiệm thu màn hình `/grades` theo 
   - [ ] Phản hồi xúc giác `:active:scale-[0.98]` trên các nút bấm.
   - [ ] Tôn trọng `@media (prefers-reduced-motion: reduce)`.
 
+
+
+---
+
+## 15. THIẾT KẾ CHI TIẾT GIAI ĐOẠN 1M-1: NOTIFICATION BELL, QUẢN LÝ KHÓA HỌC & TRẢI NGHIỆM PHỤ HUYNH VỀ HỌC PHÍ / THANH TOÁN
+
+> [!NOTE]
+> Giai đoạn 1M-1 hoàn thiện 3 mảnh ghép trải nghiệm người dùng trọng yếu của Roxy Academy:
+> 1. **Chuông thông báo (Notification Bell & Popover dropdown)** tại Header `AdminLayout.jsx`.
+> 2. **Trang Quản lý Khóa học (`Courses.jsx`)** tại route `/courses` phục vụ cấu hình chương trình đào tạo.
+> 3. **Trải nghiệm Phụ huynh & Học viên xem học phí và gửi thông tin thanh toán** trên `Tuitions.jsx` & `Payments.jsx`.
+> 
+> Bản thiết kế áp dụng toàn diện 2 bộ kỹ năng: **Apple Design Guidelines** (*Designing Fluid Interfaces* — WWDC) và **Emil Kowalski Philosophy** (*Design Engineering / Polish UI*), kết hợp chặt chẽ với bản sắc sư phạm 20 năm của Roxy Academy và các luật phân quyền nghiêm ngặt trong `GEMINI.md`.
+
+---
+
+### 15.1. 7 NGUYÊN LÝ THIẾT KẾ & CHUYỂN ĐỘNG (APPLE DESIGN & EMIL KOWALSKI) ÁP DỤNG RIÊNG CHO GIAI ĐOẠN 1M-1
+
+| STT | Nguyên lý | Quy tắc ứng dụng thực tế trên Giai đoạn 1M-1 |
+| :-: | :--- | :--- |
+| **1** | **Phản hồi tức thì trên Pointer-Down** *(Kill Latency)* | Nút bấm Chuông thông báo, nút "Sao chép 1 chạm", nút "Thanh toán ngay" và các toggle trạng thái phản hồi `:active:scale-[0.97]` ngay khoảnh khắc ngón tay/chuột chạm xuống trong `100ms ease-out`, loại bỏ cảm giác trễ nải (lag). |
+| **2** | **Điểm neo quang học cho Popover** *(Origin-Aware Anchoring)* | Hộp thoại thông báo (Popover) mở ra từ chính vị trí nút Chuông (`transform-origin: top right`). Tuyệt đối không phóng to từ giữa màn hình. Hiệu ứng xuất hiện từ `scale(0.95) + opacity: 0` chuyển sang `scale(1) + opacity: 1` trong `180ms cubic-bezier(0.23, 1, 0.32, 1)`. |
+| **3** | **Tiết chế & Lấy hành vi làm trọng tâm** *(Restraint & Behavior over Animation)* | Chuông thông báo và danh sách nộp tiền là các bề mặt có tần suất truy cập cao. Chuyển động phải đầm chắc, dùng **Critically Damped Springs (Damping 1.0, Response 0.35s)**, không nảy (no bounce). Thời gian chuyển động không vượt quá `200ms`. |
+| **4** | **Không bao giờ xuất hiện từ hư vô** *(Never animate from scale 0)* | Mọi Modal (Tạo/Sửa Khóa học, Gửi Thanh toán, Xác nhận Xóa) đều mở từ `scale(0.96) + opacity: 0` lên `scale(1) + opacity: 1` với tâm neo giữa màn hình (`transform-origin: center`). |
+| **5** | **Khả năng ngắt nhịp tương tác tức thì** *(Interruptibility)* | Popover thông báo và Modal có thể đóng ngay lập tức bằng phím `Escape` hoặc click ra ngoài vùng backdrop (`click outside`) mà không phải chờ animation chạy hết vòng đời. |
+| **6** | **Thấu hiểu tâm lý phụ huynh & Giảm thiểu sai sót** *(Empathetic Finance UX)* | Các con số công nợ học phí được hiển thị kèm phiên âm tiếng Việt (VD: *"Một triệu năm trăm nghìn đồng"*). Số tài khoản và cú pháp chuyển khoản có nút **Sao chép 1 chạm** kèm phản hồi xúc giác/tooltip, ngăn ngừa 100% việc phụ huynh gõ nhầm nội dung chuyển khoản. |
+| **7** | **Tôn trọng tùy chọn giảm chuyển động** *(Reduced Motion & Compositor-Only)* | Dưới `@media (prefers-reduced-motion: reduce)`, triệt tiêu toàn bộ thuộc tính `transform` (scale, translate), chỉ giữ lại chuyển tiếp độ mờ `opacity: 150ms ease`. Mọi chuyển động đều chạy trên GPU (`transform` và `opacity`). |
+
+---
+
+### 15.2. DESIGN TOKENS, BẢNG MÀU, TYPOGRAPHY & MOTIF HỆ THỐNG
+
+#### 1. Bảng màu giao diện (Color Palette):
+- **Brand Primary Blue (Sư phạm & Tin cậy):**
+  - Main CTA / Nút chính: `#2563EB` (`bg-blue-600`, `hover:bg-blue-700`)
+  - Active Nav / Highlight: `#1D4ED8` (`bg-blue-700`, `text-blue-700`)
+  - Light Accent / Nền mềm: `#EFF6FF` (`bg-blue-50`, `border-blue-200`)
+- **Warm Sunbeam Accent (Ấm áp, Học phí & Điểm nhấn):**
+  - Thẻ công nợ / Badge cảnh báo: `#F59E0B` (`text-amber-600`, `bg-amber-500`)
+  - Nền badge chờ xác nhận: `#FEF3C7` (`bg-amber-100`, `border-amber-300`, `text-amber-900`)
+- **Status Alert Colors (Trạng thái nghiệp vụ):**
+  - Còn nợ quá hạn / Từ chối / Xóa: `#E11D48` (`rose-600`), nền `#FFE4E6` (`rose-100`)
+  - Đã thanh toán / Kích hoạt: `#059669` (`emerald-600`), nền `#ECFDF5` (`emerald-50`)
+  - Đang chờ xác nhận / Pending: `#D97706` (`amber-600`), nền `#FEF3C7` (`amber-100`)
+- **Neutral Canvas (Nền tảng Slate sạch sẽ):**
+  - Chữ tiêu đề: `#0F172A` (`slate-900`)
+  - Chữ nội dung: `#334155` (`slate-700`)
+  - Chữ phụ đề / Muted: `#64748B` (`slate-500`)
+  - Viền phân tách: `#E2E8F0` (`border-slate-200`)
+  - Nền bảng / Header: `#F1F5F9` (`bg-slate-100`)
+  - Nền App Canvas: `#F8FAFC` (`bg-slate-50`)
+
+#### 2. Phông chữ (Typography):
+- **Native High-Quality System UI Font Stack:**
+  ```css
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  ```
+- *Tính tương thích:* Hỗ trợ 100% tiếng Việt UTF-8 có dấu hoàn hảo, tải trang tức thì 0ms, không phụ thuộc máy chủ font bên thứ ba.
+- *Bản quyền:* Đã cấp phép sẵn trên macOS, Windows, iOS, Android. Trạng thái bản quyền: **HỢP LỆ (Native OS)**.
+
+#### 3. Motif nhận diện lặp lại (Systemic Visual Motif):
+- Thẻ bo góc tiêu chuẩn `rounded-xl` (`12px`) với đường viền mỏng tinh xảo `border border-slate-200/80` và bóng mờ nhẹ `shadow-xs`.
+- Hệ thống Badge tròn mềm mại `rounded-full` kết hợp Dot chỉ thị màu trạng thái đường kính `6px` (`w-1.5 h-1.5 rounded-full`).
+- Nút bấm đồng bộ phản hồi co dãn xúc giác `:active:scale-[0.97]` với chiều cao chạm tối thiểu `40px` trên desktop và `44px` trên mobile (chuẩn Apple Human Interface Guidelines).
+
+---
+
+### 15.3. HẠNG MỤC 1: CHUÔNG THÔNG BÁO (NOTIFICATION BELL & POPOVER DROPDOWN)
+
+**Vị trí:** Trên thanh Header Topbar của `roxy-admin/src/layouts/AdminLayout.jsx`, đặt ngay bên trái cụm thông tin người dùng và Avatar.
+
+#### 1. Bản vẽ Bố cục Thành phần Header & Popover:
+```
++------------------------------------------------------------------------------------------------------+
+|  ROXY ACADEMY  |  [☰] Quản lý Lớp học                [ 🔔 (3) ]  [ 👑 SuperAdmin ]  (Avatar) Đông ▾  |
++-------------------------------------------------------------+----------------------------------------+
+                                                              |  POPOVER PANEL (~380px, neo top-right) |
+                                                              |  +-----------------------------------+ |
+                                                              |  |  🔔 Thông báo (3 mới)  [Đã đọc hết]| |
+                                                              |  +-----------------------------------+ |
+                                                              |  | [💰] Học phí mới: Bé An Nhiên  ●  | |
+                                                              |  |      Kỳ 11/2026 - 1.500.000 đ     | |
+                                                              |  |      5 phút trước                 | |
+                                                              |  | --------------------------------- | |
+                                                              |  | [📋] Điểm danh: Bé Tuấn Kiệt   ●  | |
+                                                              |  |      Hôm nay có mặt đúng giờ      | |
+                                                              |  |      15 phút trước                | |
+                                                              |  | --------------------------------- | |
+                                                              |  | [📅] Đổi phòng học: Lớp Vẽ B2     | |
+                                                              |  |      Chuyển sang Phòng 201 cơ sở 1| |
+                                                              |  |      Hôm qua 16:30                | |
+                                                              |  +-----------------------------------+ |
+                                                              |  | [ Đóng / Xem tất cả thông báo ]   | |
+                                                              |  +-----------------------------------+ |
+```
+
+#### 2. Nút Chuông Thông Báo (Bell Trigger Button):
+- **Cấu trúc Styling:**
+  - Vùng chạm tối thiểu: `w-10 h-10` (`40px x 40px` trên desktop, `44px x 44px` trên mobile).
+  - Khung nút: `relative flex items-center justify-center rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 active:scale-95 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1`.
+  - Icon Chuông: Icon SVG chuông viền nét (stroke 2px) hoặc Lucide `Bell` kích thước `20px x 20px`. Khi có thông báo chưa đọc, icon hơi nghiêng góc nhẹ hoặc có chấm sáng.
+- **Badge số lượng chưa đọc (Unread Count Badge):**
+  - Hiển thị khi `unreadCount > 0`.
+  - Định dạng: Nếu `unreadCount <= 99` hiển thị số chính xác (VD: `3`, `12`); nếu `unreadCount > 99` hiển thị `99+`.
+  - Vị trí: Neo ở góc trên bên phải của nút chuông (`absolute -top-0.5 -right-0.5`).
+  - Lớp Tailwind: `flex h-4 min-w-[16px] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-extrabold text-white shadow-xs ring-2 ring-white animate-in zoom-in-50 duration-150`.
+  - Nếu `unreadCount === 0`: Ẩn badge hoàn toàn để giảm thiểu phiền nhiễu thị giác cho người dùng.
+
+#### 3. Khung Hộp Thoại (Popover Panel Specs):
+- **Định vị & Kích thước:**
+  - Chiều rộng cố định: `w-[380px] max-w-[calc(100vw-32px)]`.
+  - Vị trí neo: `absolute right-0 top-full mt-2 z-50`.
+  - Neo chuyển động quang học: `transform-origin: top right`.
+- **Chất liệu bề mặt (Materials & Depth):**
+  - Bo góc: `rounded-2xl` (`16px`).
+  - Viền & Nền: `border border-slate-200/90 bg-white/95 backdrop-blur-md shadow-2xl`.
+  - Đổ bóng: `0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.08)`.
+- **Tương thích thiết bị di động (< 640px):**
+  - Tự động căng rộng toàn màn hình với khoảng đệm an toàn `w-[calc(100vw-24px)] -right-2` hoặc neo dạng dropdown thông minh không tràn mép màn hình.
+
+#### 4. Header Popover:
+- Chiều cao `48px`, ngăn cách bởi đường viền `border-b border-slate-100 px-4 flex items-center justify-between bg-slate-50/50`.
+- **Bên trái:** Tiêu đề `Thông báo` (`text-sm font-bold text-slate-900 flex items-center gap-2`), kèm pill số lượng mới: `<span class="bg-blue-100 text-blue-700 text-xs px-2 py-0.2 rounded-full font-semibold">{unreadCount} mới</span>`.
+- **Bên phải:** Nút bấm `Đánh dấu tất cả đã đọc` (`text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors p-1 rounded hover:bg-blue-50 active:scale-95 disabled:opacity-40 disabled:pointer-events-none`).
+
+#### 5. Danh Sách Thông Báo (Scrollable Notifications List):
+- Khung cuộn: `max-h-[384px] overflow-y-auto divide-y divide-slate-100 overscroll-contain`.
+- **Cấu trúc từng Item Thông báo (`NotificationItem`):**
+  - Padding: `p-3.5 flex items-start gap-3 transition-colors cursor-pointer`.
+  - Trạng thái chưa đọc (`IsRead === false`):
+    - Nền: `bg-blue-50/30 hover:bg-blue-50/60`.
+    - Dấu chấm chưa đọc (Unread Dot): Chấm tròn xanh dương `w-2 h-2 rounded-full bg-blue-600 ring-4 ring-blue-100 shrink-0 mt-1.5`.
+  - Trạng thái đã đọc (`IsRead === true`):
+    - Nền: `bg-white hover:bg-slate-50`.
+    - Tiêu đề chữ thường: `text-slate-700 font-medium`.
+- **Icon Phân loại Nghiệp vụ (Type Icons):**
+  Khớp chính xác các giá trị Enum `Notification.Type` trong CSDL:
+  - `Tuition` (Học phí & Thu chi): Vòng tròn vàng `bg-amber-100 text-amber-700`, icon `💰`.
+  - `Attendance` (Điểm danh học sinh): Vòng tròn xanh ngọc `bg-emerald-100 text-emerald-700`, icon `📋`.
+  - `Schedule` (Thời khóa biểu, đổi giờ): Vòng tròn xanh dương `bg-blue-100 text-blue-700`, icon `📅`.
+  - `Grade` (Điểm kiểm tra & Nhận xét): Vòng tròn tím `bg-purple-100 text-purple-700`, icon `💯`.
+  - `Homework` (Bài tập về nhà): Vòng tròn chàm `bg-indigo-100 text-indigo-700`, icon `📚`.
+  - `Leave` (Đơn xin nghỉ phép): Vòng tròn cam `bg-amber-100 text-amber-800`, icon `📝`.
+  - `Newsfeed` / `System` / Khác: Vòng tròn xám `bg-slate-100 text-slate-700`, icon `🔔`.
+- **Nội dung hiển thị:**
+  - Dòng 1: Tiêu đề (`text-xs font-semibold text-slate-900 line-clamp-1`).
+  - Dòng 2: Nội dung tóm tắt (`text-[11px] text-slate-600 line-clamp-2 mt-0.5 leading-snug`).
+  - Dòng 3: Thời gian tương đối (`text-[10px] text-slate-400 mt-1 flex items-center gap-1` — VD: "5 phút trước", "Hôm qua lúc 14:30", "12/11/2026").
+- **Hành vi khi click vào thông báo:**
+  1. Gửi request `PUT /api/Notifications/{id}/read` ngầm để cập nhật trạng thái `IsRead = true`.
+  2. Giảm ngay lập tức số đếm `unreadCount` trên UI (Optimistic Update).
+  3. Điều hướng người dùng đến đúng trang liên quan dựa trên `Type` và `RefId`:
+     - `Tuition` → `/tuitions`
+     - `Attendance` → `/attendance`
+     - `Schedule` → `/schedules`
+     - `Grade` → `/grades`
+     - `Homework` → `/homeworks`
+     - `Leave` → `/leave-requests`
+     - `Newsfeed` → `/newsfeed`
+  4. Tự động đóng popover panel.
+
+#### 6. Trạng thái Danh sách Rỗng (Empty State):
+- Hiển thị khi người dùng không có thông báo nào:
+  ```
+  +-----------------------------------------------------------+
+  |                                                           |
+  |                        [ 🔔 ]                             |
+  |             Bạn không có thông báo mới nào                |
+  |     Mọi cập nhật học phí, thời khóa biểu và kết quả       |
+  |            học tập sẽ được hiển thị tại đây.              |
+  |                                                           |
+  +-----------------------------------------------------------+
+  ```
+  - Biểu tượng: Icon chuông xám trong khối nền tròn `w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-300 text-2xl mx-auto mb-2`.
+  - Tiêu đề: `text-xs font-semibold text-slate-700`.
+  - Phụ đề: `text-[11px] text-slate-400 max-w-[220px] mx-auto text-center mt-1 leading-normal`.
+
+---
+
+### 15.4. HẠNG MỤC 2: TRANG QUẢN LÝ KHÓA HỌC (`roxy-admin/src/pages/Courses.jsx`, ROUTE `/courses`)
+
+**Route:** `/courses`  
+**Quyền truy cập:**
+- `SuperAdmin`: Toàn quyền xem, tìm kiếm, thêm mới (`POST`), chỉnh sửa (`PUT`), xóa mềm / đổi trạng thái (`DELETE`).
+- `BranchManager`: Được xem danh sách khóa học, tìm kiếm, lọc (chế độ chỉ xem - View Only; ẩn các nút Thêm, Sửa, Xóa).
+- `Teacher`, `Parent`, `Student`: Chặn 403, không hiển thị trên menu sidebar.
+
+#### 1. Cấu hình Menu Sidebar trong `AdminLayout.jsx`:
+- Đặt tại nhóm **"Nghiệp vụ đào tạo"**, ngay phía trên mục "Lớp học":
+  ```jsx
+  {/* Menu Khóa học: Hiển thị cho SuperAdmin và BranchManager */}
+  {(user.role === 'SuperAdmin' || user.role === 'BranchManager') && (
+    <NavLink to="/courses" className={navItemClass} onClick={onItemClick}>
+      <span className="text-base">📖</span>
+      <span>Khóa học</span>
+    </NavLink>
+  )}
+  ```
+
+#### 2. Bố cục Tổng Thể Màn Hình `/courses`:
+```
++----------------------------------------------------------------------------------------------------+
+|  Quản lý Khóa học  [ 8 chương trình ]                                    [ + Thêm khóa học mới ]   |
+|  Danh mục các chương trình đào tạo tiêu chuẩn của Roxy Academy (Tiền tiểu học, Luyện chữ, Toán...)  |
++----------------------------------------------------------------------------------------------------+
+|  [ 📊 Tổng số: 8 khóa ]         |  [ 🟢 Đang kích hoạt: 7 ]        |  [ ⚪ Tạm ngưng: 1 ]          |
++----------------------------------------------------------------------------------------------------+
+|  [ 🔍 Tìm theo tên hoặc mã khóa...                        ]    [ Trạng thái: Tất cả ▾ ]    [ 🔄 ]  |
++----------------------------------------------------------------------------------------------------+
+|  Mã khóa    Tên chương trình đào tạo          Số buổi    Học phí tiêu chuẩn  Trạng thái  Thao tác     |
++----------------------------------------------------------------------------------------------------+
+|  #PRE-01    Tiền tiểu học - Hành trang lớp 1  24 buổi    2.400.000 đ         [ ● Đang mở] [ ✏️ ] [ 🗑️ ]|
+|  #WRT-02    Luyện chữ đẹp & Giữ vở sạch       12 buổi    1.200.000 đ         [ ● Đang mở] [ ✏️ ] [ 🗑️ ]|
+|  #MAT-01    Toán tư duy & Logic cơ bản        16 buổi    1.800.000 đ         [ ● Đang mở] [ ✏️ ] [ 🗑️ ]|
+|  #ART-03    Lớp vẽ sáng tạo thiếu nhi         8 buổi     900.000 đ           [ ● Tạm dừng][ ✏️ ] [ 🗑️ ]|
++----------------------------------------------------------------------------------------------------+
+|  Hiển thị 1 - 8 trên tổng số 8 khóa học                                    [ Trang 1 / 1 ]         |
++----------------------------------------------------------------------------------------------------+
+```
+
+#### 3. Ba Thẻ KPI Thống Kê Nhanh (Metric Cards):
+- **Thẻ 1: Tổng số khóa học** → Giá trị: `{courses.length}` khóa học. Icon `📚` xanh dương.
+- **Thẻ 2: Đang kích hoạt** → Giá trị: `{activeCount}` khóa. Icon `🟢` xanh ngọc (`IsActive === true`).
+- **Thẻ 3: Tạm ngưng tuyển sinh** → Giá trị: `{inactiveCount}` khóa. Icon `⚪` xám (`IsActive === false`).
+- *Styling thẻ:* `rounded-xl border border-slate-200 bg-white p-4 shadow-xs flex items-center justify-between hover:border-slate-300 transition-colors`.
+
+#### 4. Thanh Công Cụ (Filter Toolbar):
+- **Ô Tìm kiếm (`searchTerm`):**
+  - Placeholder: `Tìm theo tên khóa học hoặc mã khóa...`.
+  - Icon kính lúp bên trái, có nút `✕` xóa nhanh khi có chữ.
+  - Tìm kiếm client-side kết hợp debounce mượt mà trên trường `courseName` và `courseCode`.
+- **Lọc Trạng thái (`statusFilter`):**
+  - Dropdown 3 tùy chọn: `Tất cả trạng thái`, `Đang kích hoạt (Active)`, `Tạm ngưng (Inactive)`.
+- **Nút Đặt lại (`Reset`):** Icon `🔄` làm mới danh sách và xóa bộ lọc.
+
+#### 5. Bảng Danh Sách Khóa Học (Data Table Specifications):
+Bảng có thuộc tính `overflow-x-auto min-w-full rounded-xl border border-slate-200 bg-white shadow-xs`:
+
+| Cột | Tiêu đề | Trường CSDL / DTO | Định dạng & Quy chuẩn hiển thị |
+| :-: | :--- | :--- | :--- |
+| **1** | **Mã khóa** | `CourseCode` | Monospace badge: `#CRS-{code}`, font-mono `font-semibold text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200`. Nếu null hiển thị `#CRS-{id}`. |
+| **2** | **Tên chương trình** | `CourseName`, `Description` | - Dòng 1: Tên khóa in đậm `text-slate-900 font-bold text-sm hover:text-blue-600 transition`.<br>- Dòng 2: Mô tả tóm tắt rút gọn `text-xs text-slate-500 line-clamp-1 max-w-md mt-0.5`. |
+| **3** | **Số buổi học** | `TotalSessions` | Hiển thị dạng chip: `{TotalSessions} buổi` (`bg-blue-50 text-blue-700 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-blue-200`). Nếu null hiển thị `—`. |
+| **4** | **Học phí tiêu chuẩn** | `DefaultFee` | Định dạng tiền tệ VNĐ: `formatCurrency(DefaultFee)` (VD: `1.800.000 đ`), font-mono `font-bold text-slate-900 text-sm`. Nếu null hiển thị `Thỏa thuận`. |
+| **5** | **Trạng thái** | `IsActive` | Badge chuẩn: <br>- `Active` (true): `bg-emerald-50 text-emerald-800 border-emerald-200` kèm dot xanh lá `● Đang mở`.<br>- `Inactive` (false): `bg-slate-100 text-slate-600 border-slate-200` kèm dot xám `○ Tạm ngưng`. |
+| **6** | **Thao tác** | Actions | - **Nút `[ ✏️ Sửa ]`**: Icon bút chì, mở Modal chỉnh sửa.<br>- **Nút `[ 🗑️ Xóa / Ngưng ]`**: Icon thùng rác đỏ, mở Modal xác nhận xóa mềm.<br>*(Ẩn toàn bộ nút thao tác này đối với `BranchManager`)*. |
+
+#### 6. Thẻ Hiển Thị Trên Mobile (`375px – 414px` Card Stack):
+Trên màn hình điện thoại di động, bảng tự động chuyển sang danh sách thẻ xếp dọc, đảm bảo diện tích chạm `min-h-[44px]`:
+- Khung thẻ: `rounded-xl border border-slate-200 bg-white p-4 shadow-xs space-y-2.5`.
+- Header thẻ: Mã khóa bên trái + Badge trạng thái bên phải.
+- Tên khóa học to rõ `text-base font-bold text-slate-900`.
+- 2 dòng thông số: Số buổi học ⏱️ và Học phí tiêu chuẩn 💰.
+- Dưới cùng: Nút `[ ✏️ Chỉnh sửa ]` (44px) và `[ 🗑️ Xóa ]` (44px).
+
+#### 7. Modal Thêm / Chỉnh Sửa Khóa Học (`CreateEditCourseModal`):
+- **Cấu trúc Form nhập liệu:**
+  1. **Tên khóa học (*BẮT BUỘC*):** Ô nhập text, placeholder `VD: Tiền tiểu học - Hành trang vững bước vào lớp 1`. Validate không được để trống.
+  2. **Mã khóa học (`CourseCode`):** Ô nhập mã ngắn, tự động chuyển chữ hoa `uppercase`, placeholder `VD: PRE-01, WRT-02, MAT-01`.
+  3. **Số buổi học (`TotalSessions`):** Ô nhập số, `type="number"`, min 1, placeholder `VD: 24 (buổi)`.
+  4. **Học phí gợi ý tiêu chuẩn (`DefaultFee`):** Ô nhập số tiền (VNĐ). Ngay bên dưới tự động phiên âm số tiền thành chữ tiếng Việt qua hàm `numberToVietnameseWords` (VD: *"Một triệu tám trăm nghìn đồng"*).
+  5. **Mô tả chi tiết (`Description`):** Textarea 3 dòng, giới thiệu mục tiêu học tập, đầu ra khóa học.
+  6. **Công tắc Trạng thái (`IsActive` - Chỉ hiện ở chế độ Sửa):** Toggle switch xanh lá `Cho phép tuyển sinh và mở lớp mới`.
+- **Nút Chân Modal:**
+  - Nút `[ Hủy bỏ ]`: Secondary button `bg-white border border-slate-300 text-slate-700 hover:bg-slate-50`.
+  - Nút `[ Lưu khóa học ]`: Primary CTA button `bg-blue-600 text-white font-semibold hover:bg-blue-700 active:scale-[0.98]`. Khi đang lưu có spinner xoay tròn và text `Đang lưu...`.
+
+#### 8. Modal Xác Nhận Xóa / Ngưng Khóa Học (`DeleteCourseConfirmModal`):
+- Dialog cảnh báo màu hổ phách/đỏ với icon ⚠️ `w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-3 text-2xl`.
+- Nội dung: `Bạn có chắc chắn muốn ngừng kích hoạt khóa học "[CourseName]"?`
+- Giải thích: `Khóa học sẽ được chuyển trạng thái sang ngưng hoạt động (IsActive = false). Các lớp học trong quá khứ vẫn được bảo toàn nguyên vẹn lịch sử đào tạo.`
+- Nút xác nhận: `[ Hủy ]` và `[ Xác nhận ngưng hoạt động ]` (`bg-rose-600 hover:bg-rose-700 text-white`).
+
+---
+
+### 15.5. HẠNG MỤC 3: TRẢI NGHIỆM PHỤ HUYNH XEM HỌC PHÍ & GỬI THANH TOÁN (`Tuitions.jsx` & `Payments.jsx`)
+
+#### 1. Mở Lại Phân Quyền Menu Trên `AdminLayout.jsx`:
+- Cập nhật logic hiển thị menu tài chính trên Sidebar:
+  ```jsx
+  {/* PHÂN HỆ TÀI CHÍNH & HỌC PHÍ:
+      - SuperAdmin & BranchManager: Thấy đầy đủ Học phí + Thanh toán
+      - Parent: Thấy Học phí của con + Lịch sử thanh toán
+      - Student: Chỉ thấy Học phí của chính mình (ẩn Thanh toán)
+      - Teacher: Ẩn hoàn toàn */}
+  {(isStaff || user.role === 'Parent' || user.role === 'Student') && (
+    <>
+      <div className="pt-4 px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+        {user.role === 'Parent' || user.role === 'Student' ? 'Học phí & Thanh toán' : 'Tài chính & Sổ quỹ'}
+      </div>
+      <NavLink to="/tuitions" className={navItemClass} onClick={onItemClick}>
+        <span className="text-base">💰</span>
+        <span>{user.role === 'Parent' ? 'Học phí của con' : user.role === 'Student' ? 'Học phí của tôi' : 'Học phí'}</span>
+      </NavLink>
+      {user.role !== 'Student' && (
+        <NavLink to="/payments" className={navItemClass} onClick={onItemClick}>
+          <span className="text-base">💳</span>
+          <span>{user.role === 'Parent' ? 'Lịch sử thanh toán' : 'Thanh toán'}</span>
+        </NavLink>
+      )}
+    </>
+  )}
+  ```
+
+---
+
+#### 2. Màn Hình Học Phí Cho Phụ Huynh (`Tuitions.jsx` Dưới Góc Nhìn `Parent`):
+
+Phụ huynh đăng nhập vào `/tuitions` để theo dõi các khoản học phí của các con trong gia đình.
+
+##### a. Bản vẽ Bố cục Màn hình Phụ huynh:
+```
++----------------------------------------------------------------------------------------------------+
+|  Học phí của con  [ 2 bé theo học ]                                        (Đăng nhập: Mẹ Lan Anh) |
+|  Theo dõi các khoản học phí, hạn nộp và nộp học phí trực tuyến thuận tiện cho các con              |
++----------------------------------------------------------------------------------------------------+
+|  +-----------------------------------------------------------------------------------------------+ |
+|  |  🔔 THÔNG BÁO CÔNG NỢ HỌC PHÍ CỦA GIA ĐÌNH                                                    | |
+|  |  Tổng học phí: 4.500.000 đ  •  Đã thanh toán: 3.000.000 đ                                     | |
+|  |  SỐ TIỀN CẦN THANH TOÁN NGAY:  1.500.000 đ  (Một triệu năm trăm nghìn đồng)                  | |
+|  +-----------------------------------------------------------------------------------------------+ |
++----------------------------------------------------------------------------------------------------+
+|  +-----------------------------------------------------------------------------------------------+ |
+|  |  🎓 BÉ NGUYỄN AN NHIÊN (#STU-102)  •  Lớp: Tiền tiểu học Họa Mi 1 • Cơ sở 1 Bình Trưng        | |
+|  |  Khoản thu: Học phí Tháng 11/2026                                                             | |
+|  |  Tổng: 2.400.000 đ  |  Miễn giảm: 400.000 đ  |  Cần đóng: 2.000.000 đ  |  Đã nộp: 2.000.000 đ | |
+|  |  Còn lại: 0 đ  [ ● ĐÃ HOÀN TẤT HỌC PHÍ ]                                  [ 📄 Xem biên nhận ] | |
+|  +-----------------------------------------------------------------------------------------------+ |
+|  +-----------------------------------------------------------------------------------------------+ |
+|  |  🎓 BÉ NGUYỄN TUẤN KIỆT (#STU-110)  •  Lớp: Toán tư duy Logic B1 • Cơ sở 1 Bình Trưng         | |
+|  |  Khoản thu: Học phí Khóa Toán Tư Duy K12                                                      | |
+|  |  Tổng: 1.800.000 đ  |  Miễn giảm: 300.000 đ  |  Cần đóng: 1.500.000 đ  |  Đã nộp: 0 đ         | |
+|  |  Hạn nộp: 20/11/2026 (Còn 4 ngày)                                                             | |
+|  |  CÒN LẠI: 1.500.000 đ  [ ⚠️ CHƯA THANH TOÁN ]                          [ 💳 THANH TOÁN NGAY ] | |
+|  +-----------------------------------------------------------------------------------------------+ |
+```
+
+##### b. Banner Tóm Tắt Công Nợ Gia Đình (Family Debt Summary Banner):
+- Thiết kế dạng thẻ Gradient ấm áp và trang trọng: `rounded-2xl border border-amber-200/90 bg-gradient-to-r from-amber-50 via-orange-50 to-amber-50 p-5 shadow-xs`.
+- Nội dung:
+  - Dòng 1: Tiêu đề `Tổng hợp học phí gia đình` kèm biểu tượng 👨‍👩‍👧.
+  - Dòng 2: Hiển thị 3 chỉ số ngang:
+    - Tổng tiền các khóa: `formatCurrency(totalNet)`
+    - Đã thanh toán: `formatCurrency(totalPaid)` (màu xanh lá)
+    - **Cần thanh toán ngay:** Chữ số lớn `text-2xl md:text-3xl font-extrabold text-rose-600 font-mono` kèm phiên âm tiếng Việt rõ ràng bên cạnh.
+
+##### c. Danh Sách Thẻ Khoản Thu Của Các Con (Tuition Cards for Parent):
+Mỗi khoản thu được hiển thị dạng Thẻ Container độc lập, phân nhóm rõ ràng theo từng bé:
+- **Header Thẻ:**
+  - Tên bé in đậm to rõ `text-base font-bold text-slate-900` + Mã học viên `#STU-{id}`.
+  - Tên lớp học + Tên cơ sở đào tạo.
+- **Body Thẻ (Các chỉ số tài chính):**
+  - Tiêu đề khoản thu (`Title`): VD *"Học phí Khóa Tiền tiểu học tháng 11/2026"*.
+  - Tổng số tiền ban đầu (`Amount`) và Miễn giảm học bổng/anh em (`Discount`).
+  - Số tiền cần đóng (`FinalAmount = Amount - Discount`).
+  - Số tiền đã nộp vào quỹ (`PaidAmount`).
+  - Số tiền đang chờ kế toán xác nhận (`PendingAmount` nếu có).
+  - **Số tiền còn nợ (`RemainingAmount`):**
+    - Nếu `RemainingAmount > 0`: Chữ số đỏ cam nổi bật `text-lg font-bold text-rose-600 font-mono`, kèm hạn nộp `DueDate` (nếu quá hạn có badge đỏ rực `🚨 Quá hạn`).
+    - Nếu `RemainingAmount === 0`: Huy hiệu xanh ngọc `✓ Đã hoàn tất thanh toán`.
+- **Hành động tại chân thẻ (Footer Actions):**
+  - **Trường hợp còn nợ (`RemainingAmount > 0`):** Nút Primary **`[ 💳 Thanh toán ngay (44px) ]`** màu xanh dương đậm hoặc cam rực rỡ (`bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-xl shadow-xs active:scale-95 transition-transform flex items-center justify-center gap-2`).
+  - **Trường hợp đã nộp đủ:** Nút Secondary `[ 📄 Xem lịch sử / Chi tiết biên nhận ]`.
+
+---
+
+#### 3. Modal Gửi Thông Tin Thanh Toán Cho Phụ Huynh (`ParentPaymentModal`):
+
+Khi phụ huynh nhấn nút **`[ 💳 Thanh toán ngay ]`**, Modal mở ra hướng dẫn chuyển khoản và tiếp nhận thông tin đối soát:
+
+##### a. Bản vẽ Modal Gửi Thanh Toán:
+```
++-----------------------------------------------------------------------------------+
+|  💳 Gửi thông tin chuyển khoản học phí                                       [ ✕ ]|
+|  Khoản thu: Học phí Khóa Toán Tư Duy K12 • Bé Nguyễn Tuấn Kiệt                   |
++-----------------------------------------------------------------------------------+
+|  1. THÔNG TIN CHUYỂN KHOẢN NGÂN HÀNG TRUNG TÂM ROXY ACADEMY                       |
+|  +------------------------------------------------------------------------------+ |
+|  |  Ngân hàng:    Vietcombank (Ngân hàng TMCP Ngoại thương Việt Nam)             | |
+|  |  Số tài khoản: 0326 538 824                              [ 📋 Sao chép STK ] | |
+|  |  Chủ tài khoản: TRUNG TAM ROXY ACADEMY                                       | |
+|  |  Số tiền nợ:   1.500.000 đ                                                   | |
+|  |  Nội dung CK:  ROXY TUI12 STU110 Tuan Kiet 0903888999    [ 📋 Sao chép cú pháp]| |
+|  +------------------------------------------------------------------------------+ |
+|  💡 Phụ huynh vui lòng giữ đúng cú pháp chuyển khoản để hệ thống đối soát nhanh   |
++-----------------------------------------------------------------------------------+
+|  2. THÔNG TIN PHỤ HUYNH XÁC NHẬN ĐÃ CHUYỂN TIỀN                                   |
+|                                                                                   |
+|  Số tiền nộp (VNĐ) (*)                          Phương thức thanh toán (*)        |
+|  [ 1.500.000                             ]      [ Chuyển khoản ngân hàng       ▾ ]|
+|  Phiên âm: Một triệu năm trăm nghìn đồng                                          |
+|                                                                                   |
+|  Mã giao dịch ngân hàng                         Link / Ảnh chụp biên lai CK       |
+|  [ VD: FT241116889900                    ]      [ https://imgur.com/... hoặc ảnh ]|
+|                                                                                   |
+|  Ghi chú gửi cho kế toán                                                          |
+|  [ Mẹ đã chuyển khoản qua Vietcombank lúc 10h sáng nay...                       ]|
+|                                                                                   |
+|  ℹ️ Sau khi gửi, giao dịch sẽ ở trạng thái "Chờ xác nhận". Cán bộ trung tâm sẽ    |
+|  kiểm tra sao kê và phê duyệt trong vòng 2 - 4 giờ làm việc.                      |
++-----------------------------------------------------------------------------------+
+|                                                 [ Hủy bỏ ]   [ ✓ Gửi thanh toán ] |
++-----------------------------------------------------------------------------------+
+```
+
+##### b. Chi tiết Khối Thông Tin Tài Khoản Trung Tâm:
+- **Số tài khoản:** `0326538824` (Số hotline kiêm tài khoản chính thức của Roxy Academy). Kèm nút **`[ 📋 Sao chép STK ]`** phản hồi tooltip xanh `"Đã sao chép!"` trong 2 giây.
+- **Ngân hàng:** Vietcombank (Ngân hàng Ngoại Thương Việt Nam) - Chi nhánh TP.HCM.
+- **Chủ tài khoản:** `TRUNG TAM ROXY ACADEMY` (viết hoa chuẩn ngân hàng).
+- **Cú pháp chuyển khoản gợi ý:**
+  - Cấu trúc: `ROXY [MãKhoảnThu] [MãHọcViên] [TênBéKhôngDấu] [SĐTPhụHuynh]`
+  - Ví dụ: `ROXY TUI12 STU110 Tuan Kiet 0903888999`
+  - Có nút **`[ 📋 Sao chép cú pháp ]`** để phụ huynh dán trực tiếp vào App ngân hàng (Vietcombank, MB, Techcombank, VPBank...).
+
+##### c. Chi tiết Form Tiếp Nhận Thông Tin Đối Soát:
+1. **Số tiền nộp (`Amount` - *Bắt buộc*):**
+   - Mặc định tự động điền đúng số tiền còn nợ (`RemainingAmount`).
+   - Cho phép phụ huynh chỉnh sửa số tiền nhỏ hơn nếu có nguyện vọng đóng học phí thành nhiều đợt.
+   - Kiểm tra hợp lệ: `Amount > 0` và `Amount <= RemainingAmount`.
+   - Ngay dưới ô input hiển thị phiên âm chữ tiếng Việt qua `numberToVietnameseWords` để phụ huynh kiểm tra lại số 0 tránh gõ thừa/thiếu.
+2. **Phương thức thanh toán (`PaymentMethod` - *Bắt buộc*):**
+   - Dropdown hoặc 3 nút Segmented:
+     - `Chuyển khoản ngân hàng (BankTransfer)` (Mặc định)
+     - `Ví ZaloPay (ZaloPay)`
+     - `Tiền mặt tại cơ sở (Cash)`
+3. **Mã giao dịch ngân hàng (`TransactionCode`):**
+   - Ô nhập text, placeholder `VD: FT241116889900 hoặc 8 chữ số mã giao dịch trên app ngân hàng`.
+4. **Link / Ảnh chụp biên lai chuyển tiền (`ProofImageUrl`):**
+   - Ô nhập đường dẫn ảnh chụp màn hình chuyển tiền thành công hoặc ủy nhiệm chi.
+5. **Ghi chú bổ sung (`Note`):**
+   - Textarea 2 dòng phụ huynh nhắn gửi lời dặn dò cho bộ phận kế toán.
+6. **Khối Lưu ý Quy trình Phê duyệt:**
+   - Hộp thông báo màu xanh lam nhạt `bg-blue-50 border border-blue-200 text-blue-800 rounded-xl p-3 text-xs leading-relaxed flex items-start gap-2`:
+   - *"Sau khi gửi thông tin, giao dịch của gia đình sẽ ở trạng thái 'Chờ xác nhận' (PendingConfirm). Bộ phận kế toán trung tâm sẽ đối soát với sao kê ngân hàng và phê duyệt trong vòng 2 – 4 giờ làm việc."*
+7. **Nút Thao Tác Chân Modal:**
+   - Nút `[ Hủy bỏ ]` (Secondary).
+   - Nút `[ ✓ Gửi thanh toán ]` (Primary Blue, có spinner loading và disable khi đang gửi).
+
+---
+
+#### 4. Màn Hình Lịch Sử Thanh Toán (`Payments.jsx` Dưới Góc Nhìn `Parent`):
+
+Phụ huynh truy cập `/payments` để tra cứu lịch sử các lần nộp học phí của con và tình trạng phê duyệt của trung tâm.
+
+##### a. Danh Sách Các Lần Thanh Toán:
+Bảng hiển thị thân thiện trên Desktop và tự động chuyển thành Card Stack trên Mobile:
+- Cột 1: **Mã giao dịch** (`#PAY-{id}` / `TransactionCode` ngân hàng).
+- Cột 2: **Khoản học phí & Tên con** (VD: *Bé Nguyễn Tuấn Kiệt - Học phí Toán Tư Duy*).
+- Cột 3: **Số tiền đã nộp** (`formatCurrency(Amount)` — font-mono đậm `text-slate-900`).
+- Cột 4: **Phương thức** (Badge: `Chuyển khoản`, `ZaloPay`, `Tiền mặt`).
+- Cột 5: **Thời gian nộp** (`formatDateTime(PaidAt)`).
+- Cột 6: **Ảnh chứng từ** (Thumbnail ảnh nhỏ `w-10 h-10 rounded border object-cover cursor-pointer hover:opacity-80 transition`, click mở Lightbox xem ảnh lớn toàn màn hình).
+- Cột 7: **Trạng thái phê duyệt (`Status Badge`):**
+  - **`Chờ xác nhận (PendingConfirm)`:** Badge vàng cam `bg-amber-50 text-amber-800 border-amber-300 font-medium px-2.5 py-1 rounded-full text-xs flex items-center gap-1.5` kèm icon `⏳ Đang đối soát`.
+  - **`Đã xác nhận (Confirmed)`:** Badge xanh lá `bg-emerald-50 text-emerald-800 border-emerald-300 font-semibold px-2.5 py-1 rounded-full text-xs flex items-center gap-1.5` kèm icon `✓ Đã vào sổ`. Có thông tin người xác nhận và ngày giờ xác nhận.
+  - **`Bị từ chối (Rejected)`:** Badge đỏ `bg-rose-50 text-rose-800 border-rose-300 font-semibold px-2.5 py-1 rounded-full text-xs flex items-center gap-1.5` kèm icon `❌ Bị từ chối`. Bên dưới hiển thị lý do từ chối (ghi chú của kế toán, ví dụ: *"Chưa thấy tiền vào tài khoản trung tâm, phụ huynh vui lòng kiểm tra lại ngân hàng"*).
+
+##### b. Quy Tắc Bảo Mật & Phân Quyền Nghiêm Ngặt Trên `Payments.jsx`:
+- **TUYỆT ĐỐI ẨN CÁC NÚT THAO TÁC CỦA NHÂN SỰ ĐỐI VỚI PHỤ HUYNH & HỌC VIÊN:**
+  - Ẩn nút `[ + Ghi nhận thanh toán mới ]` (Nút tạo hóa đơn trực tiếp của kế toán).
+  - Ẩn nút `[ ✓ Xác nhận thanh toán ]` (Nút duyệt của kế toán).
+  - Ẩn nút `[ 🚫 Từ chối thanh toán ]` (Nút reject của kế toán).
+- Phụ huynh chỉ có duy nhất các quyền tương tác an toàn:
+  - Xem danh sách thanh toán của con mình.
+  - Click vào ảnh để phóng to Lightbox xem ủy nhiệm chi.
+  - Xem chi tiết biên lai thu tiền.
+
+---
+
+#### 5. Trải Nghiệm Học Viên (`Student` Role):
+- Học viên (lớp 6+ tự đăng nhập) chỉ được phép truy cập màn hình `/tuitions` để xem thông tin học phí của chính bản thân mình (`Student.UserId == CurrentUserId`).
+- **TUYỆT ĐỐI KHÔNG CÓ NÚT "THANH TOÁN" HOẶC "GỬI THANH TOÁN":**
+  - Tránh trường hợp học sinh nhỏ tuổi thao tác nhầm lẫn hoặc gửi thông tin thanh toán giả mạo. Việc thanh toán học phí do phụ huynh bảo hộ chịu trách nhiệm thực hiện.
+- Học viên không thấy menu `Thanh toán` (`/payments`) trên thanh điều hướng sidebar.
+
+---
+
+### 15.6. QUY CHUẨN CHUYỂN ĐỘNG & MOTION SPECS THEO SKILL
+
+Áp dụng chuẩn xác các tham số chuyển động từ `apple-design` và `emil-design-eng`:
+
+```css
+/* 1. Origin-Aware Popover Dropdown (Chuông thông báo) */
+@keyframes popoverScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.notification-popover {
+  transform-origin: top right;
+  animation: popoverScaleIn 180ms cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+/* 2. Critically Damped Modal Dialog (Thêm khóa học, Gửi thanh toán) */
+@keyframes modalScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.modal-content {
+  transform-origin: center;
+  animation: modalScaleIn 200ms cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+/* 3. Phản hồi bấm nút xúc giác (Touch Feedback) */
+.btn-tactile:active {
+  transform: scale(0.97);
+  transition: transform 100ms ease-out;
+}
+
+/* 4. Tôn trọng tùy chọn giảm chuyển động (Reduced Motion) */
+@media (prefers-reduced-motion: reduce) {
+  .notification-popover,
+  .modal-content {
+    animation: none !important;
+    transition: opacity 150ms ease !important;
+    transform: none !important;
+  }
+  .btn-tactile:active {
+    transform: none !important;
+  }
+}
+```
+
+---
+
+### 15.7. HƯỚNG DẪN NGHIỆM THU CHO FRONTEND & QA (ACCEPTANCE CHECKLIST)
+
+Khi triển khai code thực tế, Frontend Developer và QA đối chiếu nghiệm thu theo danh sách kiểm tra chi tiết sau:
+
+#### 1. Chuông thông báo (`Notification Bell & Popover`):
+- [ ] Nút chuông xuất hiện trên Header Topbar của `AdminLayout.jsx` bên trái avatar người dùng, vùng chạm tối thiểu `40x40px` (desktop) và `44x44px` (mobile).
+- [ ] Badge số lượng hiển thị đúng số thông báo chưa đọc; nếu `count > 99` hiển thị `99+`; nếu `count === 0` thì ẩn badge.
+- [ ] Popover mở ra với hiệu ứng `scale(0.95) -> scale(1)` từ góc trên bên phải (`transform-origin: top right`).
+- [ ] Nhấn phím `Escape` hoặc click ra ngoài popover lập tức đóng lại mượt mà.
+- [ ] Nút "Đánh dấu tất cả đã đọc" gọi API `PUT /api/Notifications/read-all` và làm mờ các chấm xanh unread tức thì.
+- [ ] Click vào từng thông báo: đánh dấu đã đọc (`PUT /api/Notifications/{id}/read`), giảm đếm unread và chuyển trang ngữ cảnh chính xác theo `Type`.
+- [ ] Khi không có thông báo nào, hiển thị đúng giao diện Empty State dịu mắt.
+
+#### 2. Trang Quản lý Khóa học (`/courses`):
+- [ ] Mục menu "Khóa học" xuất hiện trong Sidebar `AdminLayout` đối với `SuperAdmin` và `BranchManager`.
+- [ ] Vai trò `SuperAdmin`: Thấy nút `+ Thêm khóa học mới`, các nút `Sửa` và `Xóa` trên từng dòng dữ liệu.
+- [ ] Vai trò `BranchManager`: Được xem danh sách, tìm kiếm, lọc; ẩn các nút Thêm/Sửa/Xóa (View-only).
+- [ ] Vai trò `Teacher`, `Parent`, `Student`: Bị chặn 403 khi truy cập trực tiếp URL `/courses`.
+- [ ] Bảng dữ liệu hiển thị đủ: Mã khóa học monospace `#CRS-`, Tên khóa, Mô tả, Số buổi học, Học phí tiêu chuẩn VND, Trạng thái hoạt động.
+- [ ] Modal Thêm/Sửa: Validate bắt buộc Tên khóa học; số buổi học > 0; học phí hiển thị phiên âm chữ tiếng Việt chuẩn xác.
+- [ ] Modal Xóa: Cảnh báo xác nhận trước khi thực hiện xóa mềm (`IsActive = false`).
+
+#### 3. Trải nghiệm Phụ huynh & Học viên (`Tuitions.jsx` & `Payments.jsx`):
+- [ ] Menu Sidebar mở lại nhóm "Học phí & Thanh toán" cho `Parent` (thấy `/tuitions` và `/payments`). Với `Student`: chỉ thấy `/tuitions`.
+- [ ] Vai trò `Parent` trên `/tuitions`:
+  - [ ] Thấy Banner tóm tắt công nợ tổng thể của các con với số tiền cần thanh toán to rõ kèm phiên âm tiếng Việt.
+  - [ ] Danh sách hiển thị đúng các khoản thu của con mình (`Student.ParentId == CurrentUserId`).
+  - [ ] Khoản thu còn nợ (`RemainingAmount > 0`) có nút nổi bật `[ 💳 Thanh toán ngay ]`.
+  - [ ] Khoản thu đã hoàn tất (`RemainingAmount === 0`) có badge xanh `✓ Đã hoàn tất` và nút xem chi tiết.
+- [ ] Modal Gửi Thanh Toán cho Phụ huynh:
+  - [ ] Hiển thị đầy đủ thông tin STK `0326538824`, Ngân hàng Vietcombank, Chủ TK `TRUNG TAM ROXY ACADEMY`.
+  - [ ] Nút "Sao chép STK" và "Sao chép cú pháp" hoạt động chuẩn xác, có phản hồi tooltip đã sao chép.
+  - [ ] Ô số tiền mặc định gợi ý số tiền còn nợ, cho phép sửa số nhỏ hơn nếu nộp theo đợt, hiển thị phiên âm tiếng Việt.
+  - [ ] Sau khi gửi thành công, giao dịch ở trạng thái "Chờ xác nhận" (`PendingConfirm`), đóng modal và hiển thị toast thông báo.
+- [ ] Màn hình `/payments` cho Phụ huynh:
+  - [ ] Danh sách các lần nộp tiền hiển thị đúng badge: "Chờ xác nhận" (vàng), "Đã xác nhận" (xanh), "Bị từ chối" (đỏ kèm lý do).
+  - [ ] Ẩn hoàn toàn các nút duyệt/từ chối/thu tiền của nhân sự đối với Phụ huynh.
+- [ ] Vai trò `Student`:
+  - [ ] Chỉ xem danh sách học phí của bản thân tại `/tuitions`.
+  - [ ] Tuyệt đối không có nút "Thanh toán" hay gửi tiền.

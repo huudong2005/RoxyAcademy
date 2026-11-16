@@ -19,6 +19,8 @@ export default function Payments() {
   const isTeacher = currentUser.role === 'Teacher';
   const isSuperAdmin = currentUser.role === 'SuperAdmin';
   const isBranchManager = currentUser.role === 'BranchManager';
+  const isParent = currentUser.role === 'Parent';
+  const isStudent = currentUser.role === 'Student';
   const canManage = isSuperAdmin || isBranchManager;
 
   // Dữ liệu danh sách thanh toán
@@ -240,10 +242,21 @@ export default function Payments() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
-            <span>💳</span> Quản lý Thanh toán &amp; Sổ quỹ
+            <span>💳</span>
+            <span>
+              {isParent
+                ? 'Lịch sử thanh toán học phí'
+                : isStudent
+                ? 'Lịch sử thanh toán'
+                : 'Quản lý Thanh toán & Sổ quỹ'}
+            </span>
           </h1>
           <p className="text-xs md:text-sm text-slate-500 mt-0.5">
-            Lịch sử giao dịch đóng học phí, đối soát biên nhận ngân hàng và duyệt thanh toán trực tuyến.
+            {isParent
+              ? 'Theo dõi trạng thái các giao dịch đóng học phí của con (Chờ xác nhận, Đã xác nhận, Bị từ chối).'
+              : isStudent
+              ? 'Chi tiết lịch sử các lần đóng học phí của bản thân.'
+              : 'Lịch sử giao dịch đóng học phí, đối soát biên nhận ngân hàng và duyệt thanh toán trực tuyến.'}
           </p>
         </div>
 
@@ -452,6 +465,14 @@ export default function Payments() {
                         {/* Trạng thái */}
                         <td className="px-3 py-3.5 text-center whitespace-nowrap">
                           {renderPaymentStatusBadge(p.status)}
+                          {p.status === 'Rejected' && p.note && (
+                            <span
+                              className="block text-[11px] text-rose-600 italic mt-1 max-w-[150px] truncate mx-auto"
+                              title={`Lý do từ chối: ${p.note}`}
+                            >
+                              Lý do: {p.note}
+                            </span>
+                          )}
                         </td>
 
                         {/* Người duyệt / tạo */}
@@ -531,7 +552,17 @@ export default function Payments() {
                         <div className="font-bold text-slate-900 text-sm mt-0.5">{p.studentName}</div>
                         <div className="text-xs text-slate-500 mt-0.5">{p.tuitionTitle}</div>
                       </div>
-                      <div className="shrink-0">{renderPaymentStatusBadge(p.status)}</div>
+                      <div className="shrink-0 text-right">
+                        {renderPaymentStatusBadge(p.status)}
+                        {p.status === 'Rejected' && p.note && (
+                          <span
+                            className="block text-[10px] text-rose-600 italic mt-0.5 max-w-[130px] truncate"
+                            title={`Lý do từ chối: ${p.note}`}
+                          >
+                            Lý do: {p.note}
+                          </span>
+                        )}
+                      </div>
                     </div>
 
                     <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200/80 flex items-center justify-between">

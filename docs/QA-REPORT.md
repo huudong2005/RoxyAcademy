@@ -254,3 +254,172 @@ Toàn bộ 6 hạng mục kiểm thử code, phân quyền và build/smoke test 
 - **Lỗi nhỏ (Minor):** **0**
 
 **Trạng thái nghiệm thu Giai đoạn 1L (Bổ sung):** **ĐẠT (PASSED)** — Sẵn sàng bàn giao.
+
+
+---
+
+---
+
+# BÁO CÁO KIỂM THỬ QA — GIAI ĐOẠN 1M-1 (3 HẠNG MỤC MÀN HÌNH: CHUÔNG THÔNG BÁO, TÀI CHÍNH & HỌC PHÍ, QUẢN LÝ KHÓA HỌC)
+**Dự án:** Roxy Academy — Hệ thống Quản trị Học tập  
+**Ngày kiểm thử:** 16/11/2026 (Re-test sau khi fix lint: 16/11/2026)  
+**Người thực hiện:** QA Agent  
+**Tài liệu đối chiếu:** `GEMINI.md`, `docs/DESIGN.md`, `docs/API.md`, `RoxyAppDB.sql`  
+**Phạm vi kiểm thử:**
+1. Chuông thông báo cá nhân (`NotificationsController.cs`, `NotificationBell.jsx`, `AdminLayout.jsx`)
+2. Phụ huynh xem học phí + gửi thanh toán & Phân quyền Tài chính (`TuitionsController.cs`, `PaymentsController.cs`, `Tuitions.jsx`, `Payments.jsx`, `AdminLayout.jsx`)
+3. Quản lý Khóa học (`CoursesController.cs`, `Courses.jsx`, `App.jsx`, `AdminLayout.jsx`)
+4. Kiểm tra Biên dịch, Linting & Ràng buộc bảo mật
+
+---
+
+## 1. KẾT QUẢ BIÊN DỊCH, LINT VÀ SMOKE TEST API
+
+| Thành phần | Lệnh thực thi / Phương thức | Kết quả | Chi tiết đối chiếu |
+| :--- | :--- | :---: | :--- |
+| **Database Schema** | Đối chiếu `RoxyAppDB.sql` | **PASS** | 0 thay đổi schema DB; giữ nguyên 18 bảng, không phát sinh migration thừa |
+| **Backend Build** | `dotnet build RoxyAppBE/RoxyAcademy.Api/RoxyAcademy.Api.csproj` | **PASS** | **0 Warning(s), 0 Error(s)**, target `net9.0` (đã tắt process trước khi build) |
+| **Frontend Lint** | `npm run lint` tại `roxy-admin/` | **PASS** | **0 problems (0 errors, 0 warnings)** — Đã khắc phục triệt để `react-hooks/rules-of-hooks` và `react-hooks/set-state-in-effect` |
+| **Frontend Build** | `npm run build` tại `roxy-admin/` | **PASS** | **0 Error(s)**, Vite production build transformed 105 modules trong 366ms |
+| **API Smoke Test** | `curl.exe http://localhost:5123/api/...` | **PASS** | Không token: `GET /api/Notifications` → `401`, `GET /api/Courses` → `401`, `GET /api/Payments` → `401` |
+| **Bảo mật & Localhost** | Quét toàn bộ mã nguồn | **PASS** | 0 hard-code `localhost`, 0 `[CẦN XÁC MINH]` hiển thị trong code UI, toàn bộ gọi qua `axiosClient` |
+
+---
+
+## 2. MA TRẬN PHÂN QUYỀN RBAC (5 VAI TRÒ)
+
+| Nghiệp vụ / Hành động | SuperAdmin | BranchManager | Teacher | Parent | Student |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **1. Notifications (Thông báo)** | | | | | |
+| - Xem thông báo (`GET /api/Notifications`) | Của mình | Của mình | Của mình | Của mình | Của mình |
+| - Đánh dấu đã đọc (`PUT /api/Notifications/{id}/read`) | Của mình | Của mình | Của mình | Của mình | Của mình |
+| - Đánh dấu đọc tất cả (`PUT /api/Notifications/read-all`) | Của mình | Của mình | Của mình | Của mình | Của mình |
+| - Nhận thông báo tự động khi nộp/duyệt học phí | — | — | — | **Tự động nhận** | — |
+| **2. Phân hệ Học phí (`/tuitions`)** | | | | | |
+| - Menu "Học phí" trên thanh điều hướng | Hiển thị | Hiển thị | **Ẩn hoàn toàn** | Hiển thị | Hiển thị |
+| - Danh sách học phí (`GET /api/Tuitions`) | Toàn hệ thống | Theo chi nhánh | **403 Chặn** | Chỉ con mình | Chỉ bản thân |
+| - Xem Banner công nợ gia đình | KPI Quản trị | KPI Quản trị | Không | **Banner gia đình** | Thẻ cá nhân |
+| - Nút "Thanh toán" gửi giao dịch nộp phí | Không | Không | Không | **Hiển thị (Nợ > 0)** | **Không hiển thị** |
+| - Tạo / Chỉnh sửa / Hủy khoản thu | Có | Chi nhánh mình | **403 Chặn** | **403 Chặn** | **403 Chặn** |
+| **3. Phân hệ Thanh toán (`/payments`)** | | | | | |
+| - Menu "Thanh toán" trên thanh điều hướng | Hiển thị ("Thanh toán") | Hiển thị ("Thanh toán") | **Ẩn hoàn toàn** | Hiển thị ("Lịch sử TT") | **Ẩn hoàn toàn** |
+| - Danh sách giao dịch (`GET /api/Payments`) | Toàn hệ thống | Theo chi nhánh | **403 Chặn** | Chỉ con mình | Chỉ bản thân |
+| - Ghi nhận thanh toán trực tiếp (Thu tiền) | **Có (Confirmed)** | **Có (Confirmed)** | **403 Chặn** | Không | **403 Chặn** |
+| - Duyệt / Từ chối giao dịch (`PUT .../confirm`) | **Có** | **Chi nhánh mình** | **403 Chặn** | Không | Không |
+| - Gửi thanh toán mới (`POST /api/Payments`) | **Confirmed** | **Confirmed** | **403 Chặn** | **PendingConfirm** | **403 Chặn** |
+| **4. Phân hệ Khóa học (`/courses`)** | | | | | |
+| - Menu "Khóa học" trên thanh điều hướng | Hiển thị | Hiển thị | **Ẩn hoàn toàn** | **Ẩn hoàn toàn** | **Ẩn hoàn toàn** |
+| - Truy cập màn hình `/courses` | Cho phép | Cho phép | **Redirect Dashboard** | **Redirect Dashboard** | **Redirect Dashboard** |
+| - Tạo / Cập nhật khóa học | Có | Có | **403 Chặn** | **403 Chặn** | **403 Chặn** |
+| - Xóa khóa học (`DELETE /api/Courses/{id}`) | **Có (khi an toàn)** | **Có (khi an toàn)** | **403 Chặn** | **403 Chặn** | **403 Chặn** |
+
+---
+
+## 3. KẾT QUẢ KIỂM THỬ CHI TIẾT THEO TỪNG HẠNG MỤC
+
+### 3.1. Hạng mục 1: Chuông thông báo (Notifications) — PASS
+1. **API Endpoints & Phân quyền nghiêm ngặt theo UserId: PASS**
+   - `NotificationsController.cs` (L16, L20-33, L58-72, L74-90): Mọi câu truy vấn đều gán `n.UserId == UserId`. Người dùng chỉ đọc và thao tác trên thông báo của chính mình.
+   - Khi đánh dấu đọc `PUT /api/Notifications/{id}/read`: Kiểm tra `n.Id == id && n.UserId == UserId`, trả về `404 Not Found` nếu không tìm thấy hoặc thông báo thuộc người khác, triệt tiêu nguy cơ lộ ID hay can thiệp chéo.
+2. **Giao diện chuông thông báo & Popover (`NotificationBell.jsx`): PASS**
+   - Icon chuông hiển thị chuẩn SVG trên Top Header Bar (`AdminLayout.jsx` L348).
+   - Badge số lượng chưa đọc: Ẩn hoàn toàn khi `unreadCount === 0`; định dạng `99+` khi `unreadCount > 99` (L219-223).
+   - Popover dropdown: Hiển thị danh sách thông báo nổi phía trên giao diện (z-50) kèm hiệu ứng mở mượt mà; hỗ trợ đóng khi click outside và bấm phím Escape (L89-110).
+   - Empty state: Hiển thị icon 🔕 "Không có thông báo mới" khi rỗng (L264-273).
+   - Đánh dấu đã đọc khi click: Gọi `PUT /api/Notifications/{id}/read`, cập nhật tức thì trạng thái local, đóng popover và điều hướng chính xác đến trang nghiệp vụ tương ứng (`Tuition` → `/tuitions`, `Schedule` → `/schedules`, `Attendance` → `/attendance`, `Grade` → `/grades`, `Newsfeed` → `/newsfeed`...) (L139-192).
+   - Đánh dấu đọc tất cả: Nút "Đánh dấu tất cả đã đọc" gọi `PUT /api/Notifications/read-all` và chuyển toàn bộ thông báo về trạng thái đã đọc (L123-136).
+3. **Tự động sinh thông báo cho Phụ huynh: PASS**
+   - Khi nhân viên ghi nhận thanh toán trực tiếp (`POST /api/Payments`): `PaymentsController.cs` (L206-226) tự động thêm bản ghi `Notification` cho phụ huynh (`tuition.Student.ParentId`) với tiêu đề *"Biên nhận học phí mới"* và nội dung chi tiết số tiền, tên học viên.
+   - Khi nhân viên duyệt hoặc từ chối giao dịch chuyển khoản (`PUT /api/Payments/{id}/confirm`): `PaymentsController.cs` (L289-310) tự động tạo thông báo gửi phụ huynh với tiêu đề *"Thanh toán học phí thành công"* hoặc *"Thanh toán học phí bị từ chối"* kèm lý do ghi chú.
+
+---
+
+### 3.2. Hạng mục 2: Phụ huynh xem học phí + gửi thanh toán & Phân quyền Tài chính — PASS
+1. **Phụ huynh (`Parent`): PASS**
+   - Menu Tài chính: `AdminLayout.jsx` (L158-174) hiển thị mục *"Học phí & Thanh toán"* với 2 liên kết: `/tuitions` (Học phí) và `/payments` (Lịch sử thanh toán).
+   - Vào `/tuitions`: Backend `TuitionsController.cs` (L48) lọc strictly `t.Student.ParentId == UserId`. Phụ huynh chỉ thấy danh sách học phí của các con mình, không thấy học viên khác.
+   - Banner công nợ gia đình: `Tuitions.jsx` (L297-348) hiển thị banner cao cấp nền xanh gradient đậm *"Tổng quan học phí gia đình"*, cảnh báo số khoản nợ, 3 thẻ tổng học phí - đã nộp - còn nợ.
+   - Nút "Thanh toán": Hiển thị ở cả bảng Desktop (L707-717) và Mobile Card (L816-824) đối với khoản thu còn nợ (`remainingAmount > 0` và chưa hủy).
+   - Modal nộp học phí trực tuyến (`ParentPaymentModal` L2163-2415):
+     - Hiển thị đầy đủ thông tin tài khoản ngân hàng Roxy: Vietcombank, STK `0326538824`, Chủ TK `TRUNG TAM ROXY ACADEMY`, Cú pháp `HP {id} {studentName}` kèm nút Sao chép 1 chạm.
+     - Kiểm soát số tiền thanh toán: Không cho nhập <= 0; chặn nộp vượt quá số nợ còn lại; có phiên âm số tiền thành chữ tiếng Việt (`numberToVietnameseWords`).
+     - Gửi yêu cầu qua `POST /api/Payments`: Tạo bản ghi với trạng thái `PendingConfirm` (L183: `IsStaff ? "Confirmed" : "PendingConfirm"`), chờ nhân viên kiểm tra sao kê.
+2. **Nhân sự (`SuperAdmin` / `BranchManager`): PASS**
+   - Nút "Tạo khoản thu" và "Ghi nhận thanh toán" / "Thu tiền nhanh": Chỉ hiển thị cho staff (`canManage = isSuperAdmin || isBranchManager`).
+   - Duyệt giao dịch (`Payments.jsx` L509-530): Cụm nút "✓ Duyệt" và "✕ Từ chối" chỉ hiển thị cho staff khi giao dịch ở trạng thái `PendingConfirm`.
+   - Kiểm tra overpay nghiêm ngặt: `PaymentsController.cs` (L160-178 và L258-274) kiểm tra tổng số tiền đã đóng không được vượt quá số phải thu (`netAmount`), ngăn ngừa lỗi trigger `TR_Payments_NoOverpay`.
+   - Tự động lưu vết người duyệt (`ConfirmedBy = UserId`, `ConfirmedAt = DateTime.UtcNow`) thỏa mãn ràng buộc `CK_Payments_Reviewed`.
+3. **Học viên (`Student`): PASS**
+   - Menu Sidebar: `AdminLayout.jsx` (L167) chỉ hiện liên kết `/tuitions` ("Học phí"), ẩn hoàn toàn mục "Thanh toán" (`/payments`).
+   - Vào `/tuitions`: Backend lọc `t.Student.UserId == UserId` (L52). Học viên chỉ thấy học phí của chính mình; giao diện hiển thị 3 thẻ thống kê đơn giản (L350-363).
+   - Không có nút thanh toán: Học viên KHÔNG thấy nút "Thanh toán" hay "Thu tiền", chỉ có nút xem chi tiết `👁️` (L706-731).
+   - Backend chặn cứng 403: `PaymentsController.cs` (L137-139) kiểm tra nếu `Role == "Student"` lập tức trả về `403 Forbidden` kèm thông báo *"Học viên chỉ có quyền xem học phí, không được phép thực hiện giao dịch thanh toán. Vui lòng liên hệ phụ huynh hoặc trung tâm."*.
+4. **Giáo viên (`Teacher`): PASS**
+   - Menu Sidebar: `AdminLayout.jsx` (L158) ẩn toàn bộ nhóm Tài chính / Sổ quỹ đối với giáo viên (`!isTeacher`).
+   - Backend chặn cứng 403: `TuitionsController.cs` (L28, L167) và `PaymentsController.cs` (L27, L89, L133, L238) chặn `Forbid()` (403) trên toàn bộ endpoints đọc/ghi tài chính.
+   - Giao diện chặn an toàn: Cả `Tuitions.jsx` (L216-244) và `Payments.jsx` (L194-222) đều trang bị màn hình chặn 403 chuyên biệt với icon 🚫 và nút quay về Lớp học / Thời khóa biểu.
+
+---
+
+### 3.3. Hạng mục 3: Quản lý Khóa học (`/courses`) — PASS
+1. **Phân quyền truy cập: PASS**
+   - Thanh điều hướng: `AdminLayout.jsx` (L96-101) chỉ hiển thị menu "Khóa học" cho SuperAdmin và BranchManager (`isStaff`).
+   - Bảo vệ màn hình: `Courses.jsx` (L105-107) tự động redirect các vai trò khác (`Teacher`, `Parent`, `Student`) về `/dashboard`.
+   - Backend: Các API tạo (`POST`), sửa (`PUT`), xóa (`DELETE`) đều có thuộc tính `[Authorize(Roles = "SuperAdmin,BranchManager")]` (L35, L62, L85).
+2. **CRUD Khóa học hoàn chỉnh: PASS**
+   - Tạo mới khóa học (`CourseFormModal` L503-741): Nhập tên, mã khóa học, mô tả, số buổi học, học phí tiêu chuẩn (có phiên âm tiếng Việt), trạng thái hoạt động. Bắt lỗi trùng mã khóa học với mã lỗi `409 Conflict` (L41, L572).
+   - Đọc & Hiển thị danh sách: Thống kê 3 thẻ KPI (Tổng số, Đang kích hoạt, Tạm ngưng); ô tìm kiếm theo tên hoặc mã khóa; 3 tab lọc trạng thái (Tất cả, Đang kích hoạt, Tạm ngưng); hỗ trợ hiển thị kép Desktop Table và Mobile Card stack (L281-432).
+   - Cập nhật khóa học: Form cập nhật đầy đủ thông tin, kiểm tra không bị trùng mã với khóa khác (`409 Conflict`).
+3. **Ràng buộc xóa an toàn nghiệp vụ: PASS**
+   - `CoursesController.cs` (L91-96):
+     ```csharp
+     bool hasActiveClasses = await db.Classes.AnyAsync(c => c.CourseId == id && (c.Status != "Finished" || c.IsOpenForRegistration));
+     if (hasActiveClasses)
+     {
+         return BadRequest(new { message = "Không thể xóa khóa học đang có lớp học đang mở hoặc đang diễn ra." });
+     }
+     course.IsActive = false;
+     await db.SaveChangesAsync();
+     return NoContent();
+     ```
+   - Nếu khóa học đang có lớp chưa kết thúc (`Status != "Finished"`) hoặc đang mở đăng ký (`IsOpenForRegistration == true`), backend chặn xóa bằng mã `400 Bad Request`.
+   - Nếu an toàn, hệ thống thực hiện xóa mềm (`IsActive = false`), giữ nguyên lịch sử dữ liệu liên kết.
+   - Frontend `Courses.jsx` (L119-139, L451-497) hiển thị Modal xác nhận cảnh báo nguy hiểm và bắt chính xác thông báo lỗi nghiệp vụ từ API để hiển thị cho người dùng.
+
+---
+
+## 4. DANH SÁCH LỖI VÀ VẤN ĐỀ CẦN XỬ LÝ (DEFECT LOG)
+
+### ✅ LỖI 1 (BLOCKER — ĐÃ KHẮC PHỤC TRIỆT ĐỂ / RESOLVED): Vi phạm quy tắc React Hook (`react-hooks/rules-of-hooks`) trong `Courses.jsx`
+- **Mã lỗi Lint:** `react-hooks/rules-of-hooks`
+- **Mô tả ban đầu:** `useMemo` được gọi sau câu lệnh early return `if (!isStaff) return ...`.
+- **Khắc phục:** Frontend sub-agent đã di chuyển hai hook `useMemo` (`stats` và `filteredCourses`) lên trước câu lệnh early return (L77, L85 trước L105).
+- **Kết quả Re-test:** **PASS** (chạy `npm run lint` đạt 0 error).
+
+---
+
+### ✅ LỖI 2 (MINOR — ĐÃ KHẮC PHỤC / RESOLVED): Cảnh báo `setState` đồng bộ trong `useEffect` (`react-hooks/set-state-in-effect`)
+- **Mã lỗi Lint:** `react-hooks/set-state-in-effect`
+- **Mô tả ban đầu:** Gọi `setState` đồng bộ ngay đầu `useEffect` khi gọi `fetchNotifications()` / `fetchCourses()`.
+- **Khắc phục:** Frontend sub-agent đã chuẩn hóa pattern khai báo fetcher bên trong `useEffect` với cờ hủy `let ignore = false;` ở cả `Courses.jsx` và `NotificationBell.jsx`.
+- **Kết quả Re-test:** **PASS** (chạy `npm run lint` đạt 0 warning).
+
+---
+
+### Thống kê lỗi hiện tại:
+- **Lỗi chặn (Blocker):** **0**
+- **Lỗi nghiêm trọng (Critical):** **0**
+- **Lỗi nhỏ (Minor):** **0**
+
+---
+
+## 5. KẾT LUẬN & ĐỀ NGHỊ BÀN GIAO
+
+- **Nghiệp vụ, Thiết kế & Bảo mật API/RBAC:** **ĐẠT (PASS 100%)** — Toàn bộ logic chuông thông báo, gửi và duyệt thanh toán học phí, bảo mật công nợ và ràng buộc xóa khóa học an toàn đều được xây dựng chặt chẽ, khớp 100% tài liệu `docs/API.md` và `docs/DESIGN.md`.
+- **Biên dịch & Lint hệ thống:** **ĐẠT (PASS 100%)** — Backend (`net9.0`) 0 lỗi, Frontend `npm run lint` 0 lỗi 0 cảnh báo, `npm run build` Vite built 105 modules trong 366ms.
+- **Chất lượng mã nguồn (Code Quality):** **ĐẠT (PASS 100%)** — Không còn vi phạm Rules of Hooks, không hard-code localhost, không lộ thông tin nhạy cảm.
+
+> [!TIP]
+> **KẾT QUẢ NGHIỆM THU: ĐẠT CHUẨN NGHIỆM THU (PASSED 100%)**  
+> Toàn bộ 4 nhóm tiêu chí (Chuông thông báo, Tài chính & Học phí, Quản lý Khóa học, Biên dịch/Linting/RBAC) đều đạt chuẩn nghiệm thu theo `GEMINI.md`. Không còn lỗi chặn.  
+> **HỆ THỐNG ĐÃ SẴN SÀNG ĐỂ BÀN GIAO CHO DEPLOY SUB-AGENT.**

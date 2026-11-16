@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
+import NotificationBell from '../components/NotificationBell';
 
 export default function AdminLayout() {
   const navigate = useNavigate();
@@ -79,6 +80,9 @@ export default function AdminLayout() {
 
   const isStaff = user.role === 'SuperAdmin' || user.role === 'BranchManager';
   const isSuperAdmin = user.role === 'SuperAdmin';
+  const isParent = user.role === 'Parent';
+  const isStudent = user.role === 'Student';
+  const isTeacher = user.role === 'Teacher';
 
   const renderNavLinks = (onItemClick) => (
     <>
@@ -89,6 +93,12 @@ export default function AdminLayout() {
         <span className="text-base">📊</span>
         <span>Tổng quan</span>
       </NavLink>
+      {isStaff && (
+        <NavLink to="/courses" className={navItemClass} onClick={onItemClick}>
+          <span className="text-base">📖</span>
+          <span>Khóa học</span>
+        </NavLink>
+      )}
       <NavLink to="/students" className={navItemClass} onClick={onItemClick}>
         <span className="text-base">🎓</span>
         <span>Hồ sơ học viên</span>
@@ -144,20 +154,22 @@ export default function AdminLayout() {
         </>
       )}
 
-      {/* PHÂN HỆ TÀI CHÍNH: CHỈ HIỂN THỊ CHO SUPERADMIN VÀ BRANCHMANAGER (ẨN HOÀN TOÀN VỚI TEACHER) */}
-      {isStaff && (
+      {/* PHÂN HỆ TÀI CHÍNH: HIỂN THỊ CHO STAFF VÀ PHỤ HUYNH / HỌC VIÊN (ẨN HOÀN TOÀN VỚI TEACHER) */}
+      {!isTeacher && (
         <>
           <div className="pt-4 px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-            Tài chính &amp; Sổ quỹ
+            {isParent || isStudent ? 'Học phí & Thanh toán' : 'Tài chính & Sổ quỹ'}
           </div>
           <NavLink to="/tuitions" className={navItemClass} onClick={onItemClick}>
             <span className="text-base">💰</span>
             <span>Học phí</span>
           </NavLink>
-          <NavLink to="/payments" className={navItemClass} onClick={onItemClick}>
-            <span className="text-base">💳</span>
-            <span>Thanh toán</span>
-          </NavLink>
+          {(isStaff || isParent) && (
+            <NavLink to="/payments" className={navItemClass} onClick={onItemClick}>
+              <span className="text-base">💳</span>
+              <span>{isParent ? 'Lịch sử thanh toán' : 'Thanh toán'}</span>
+            </NavLink>
+          )}
         </>
       )}
 
@@ -298,7 +310,9 @@ export default function AdminLayout() {
 
             <div>
               <h2 className="text-sm md:text-base font-semibold text-slate-800">
-                {location.pathname.startsWith('/students')
+                {location.pathname.startsWith('/courses')
+                  ? 'Quản lý Khóa học'
+                  : location.pathname.startsWith('/students')
                   ? 'Quản lý Học viên'
                   : location.pathname.startsWith('/classes')
                   ? 'Quản lý Lớp học'
@@ -315,7 +329,7 @@ export default function AdminLayout() {
                   : location.pathname.startsWith('/tuitions')
                   ? 'Quản lý Học phí & Công nợ'
                   : location.pathname.startsWith('/payments')
-                  ? 'Quản lý Thanh toán & Sổ quỹ'
+                  ? (isParent ? 'Lịch sử thanh toán học phí' : 'Quản lý Thanh toán & Sổ quỹ')
                   : location.pathname.startsWith('/branches')
                   ? 'Quản lý Chi nhánh'
                   : location.pathname.startsWith('/teachers')
@@ -329,7 +343,10 @@ export default function AdminLayout() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3 md:gap-4">
+          <div className="flex items-center gap-2.5 sm:gap-3 md:gap-4">
+            {/* Chuông thông báo */}
+            <NotificationBell />
+
             {/* Badge quyền người dùng */}
             <div className="hidden sm:inline-flex">{getRoleBadge(user.role)}</div>
 

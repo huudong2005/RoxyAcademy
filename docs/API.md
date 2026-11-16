@@ -412,10 +412,10 @@ Quản lý việc thu tiền học phí, ghi nhận thanh toán (tiền mặt / 
 ---
 
 ### 5.3. Ghi nhận giao dịch thanh toán mới — `POST /api/Payments`
-- **Quyền truy cập:** `SuperAdmin`, `BranchManager`, `Parent`, `Student`.
+- **Quyền truy cập:** `SuperAdmin`, `BranchManager`, `Parent` (Học viên `Student` chỉ được xem học phí, nếu cố tạo giao dịch thanh toán sẽ bị từ chối với `403 Forbidden`: `{"message": "Học viên chỉ có quyền xem học phí, không được phép thực hiện giao dịch thanh toán. Vui lòng liên hệ phụ huynh hoặc trung tâm."}`).
 - **Phân luồng trạng thái tự động theo vai trò:**
-  - **Nhân viên thu tiền trực tiếp (`SuperAdmin`, `BranchManager`):** Giao dịch tự động có trạng thái `"Confirmed"`, gán `confirmedBy` là tài khoản hiện tại, `confirmedAt` là thời điểm hiện tại. Hệ thống tự động tạo Thông báo (`Notification`) gửi vào chuông của Phụ huynh học viên.
-  - **Phụ huynh / Học viên nộp qua App (`Parent`, `Student`):** Giao dịch có trạng thái `"PendingConfirm"`, `confirmedBy: null` để Quản lý cơ sở kiểm tra sao kê ngân hàng và duyệt.
+  - **Nhân viên thu tiền trực tiếp (`SuperAdmin`, `BranchManager`):** Giao dịch tự động có trạng thái `"Confirmed"`, gán `confirmedBy` là tài khoản hiện tại, `confirmedAt` là thời điểm hiện tại. Hệ thống tự động tạo Thông báo (`Notification`) gửi vào chuông của Phụ huynh học viên (`tuition.Student.ParentId`).
+  - **Phụ huynh nộp qua App (`Parent`):** Giao dịch có trạng thái `"PendingConfirm"`, `confirmedBy: null` để Quản lý cơ sở kiểm tra sao kê ngân hàng và duyệt. Khi duyệt/từ chối qua `PUT /api/Payments/{id}/confirm`, hệ thống cũng tự động tạo Thông báo gửi tới Phụ huynh.
 - **Kiểm soát chặn Overpay nghiêm ngặt trước khi lưu DB:**
   - Số tiền thanh toán `amount > 0`.
   - Khoản thu phải tồn tại và chưa bị hủy (`IsCancelled == false`).
@@ -1030,6 +1030,123 @@ Quản lý danh sách các cơ sở (chi nhánh) của Roxy Academy kèm thống
   - `400 Bad Request`: Học viên không tồn tại / `Dropped`, lớp không tồn tại / không mở đăng ký, hoặc học viên và lớp khác cơ sở.
   - `403 Forbidden`: `Parent` cố tình gửi `studentId` không phải con mình (`"Bạn chỉ có thể đăng ký lớp cho con của mình."`).
   - `409 Conflict`: Học viên đã đăng ký lớp này rồi (Frontend hiển thị thông báo rõ ràng có cụm `"đã đăng ký lớp này rồi"`).
+
+---
+
+## 10. PHÂN HỆ KHÓA HỌC (COURSES API)
+
+Quản lý danh mục khóa học của Roxy Academy (Tiền tiểu học, Luyện chữ đẹp, Tư duy logic, Gia sư...).
+
+### 10.1. Lấy danh sách khóa học — `GET /api/Courses`
+- **Quyền truy cập:** Đã đăng nhập (`SuperAdmin`, `BranchManager`, `Teacher`, `Parent`, `Student`).
+- **Response:** `200 OK`
+  ```json
+  [
+    {
+      "id": 1,
+      "courseCode": "TTH",
+      "courseName": "Tiền tiểu học",
+      "description": "Hành trang vững chắc vào lớp 1 cho bé",
+      "totalSessions": 24,
+      "defaultFee": 3000000,
+      "isActive": true,
+      "createdAt": "2026-11-01T00:00:00Z"
+    }
+  ]
+  ```
+
+---
+
+### 10.2. Lấy chi tiết khóa học — `GET /api/Courses/{id}`
+- **Quyền truy cập:** Đã đăng nhập (`SuperAdmin`, `BranchManager`, `Teacher`, `Parent`, `Student`).
+- **Response:** `200 OK` hoặc `404 Not Found` (`{"message": "Không tìm thấy khóa học này."}`).
+
+---
+
+### 10.3. Thêm khóa học mới — `POST /api/Courses`
+- **Quyền truy cập:** `SuperAdmin`, `BranchManager`.
+- **Ràng buộc:** Nếu có `courseCode`, kiểm tra không trùng mã khóa học đã có trong hệ thống (`409 Conflict`).
+- **Request Body:**
+  ```json
+  {
+    "courseCode": "LCD-01",
+    "courseName": "Luyện chữ đẹp",
+    "description": "Rèn chữ viết chuẩn và tư thế ngồi học đúng",
+    "totalSessions": 12,
+    "defaultFee": 2500000
+  }
+  ```
+- **Response:** `201 Created`
+
+---
+
+### 10.4. Cập nhật khóa học — `PUT /api/Courses/{id}`
+- **Quyền truy cập:** `SuperAdmin`, `BranchManager`.
+- **Ràng buộc:** Kiểm tra mã `courseCode` không trùng với khóa học khác (`409 Conflict`).
+- **Request Body:**
+  ```json
+  {
+    "courseCode": "LCD-01",
+    "courseName": "Luyện chữ đẹp & Rèn nếp",
+    "description": "Rèn chữ viết chuẩn và tư thế ngồi học đúng",
+    "totalSessions": 12,
+    "defaultFee": 2500000,
+    "isActive": true
+  }
+  ```
+- **Response:** `204 NoContent` hoặc `404 Not Found`, `409 Conflict`.
+
+---
+
+### 10.5. Xóa (vô hiệu hóa) khóa học — `DELETE /api/Courses/{id}`
+- **Quyền truy cập:** `SuperAdmin`, `BranchManager`.
+- **Ràng buộc nghiệp vụ:**
+  - Nếu khóa học đang có lớp học đang mở (`Status != "Finished"` hoặc `IsOpenForRegistration == true`) -> Chặn xóa và trả về `400 Bad Request`: `{"message": "Không thể xóa khóa học đang có lớp học đang mở hoặc đang diễn ra."}`.
+  - Khi xóa hợp lệ, hệ thống thực hiện soft delete (`IsActive = false`).
+- **Response:** `204 NoContent` hoặc `400 Bad Request`, `404 Not Found`.
+
+---
+
+## 11. PHÂN HỆ THÔNG BÁO (NOTIFICATIONS API)
+
+Quản lý thông báo cá nhân cho người dùng (học phí, lịch học, duyệt đăng ký...). Dữ liệu được bảo mật strictly theo `UserId` của người đăng nhập.
+
+### 11.1. Lấy danh sách thông báo của tôi — `GET /api/Notifications`
+- **Quyền truy cập:** Đã đăng nhập (`SuperAdmin`, `BranchManager`, `Teacher`, `Parent`, `Student`).
+- **Phân quyền dữ liệu (Scoping):** Tự động lọc strictly theo `UserId == User.GetUserId()`, không lộ chéo giữa các tài khoản/vai trò.
+- **Query Parameters:**
+  - `unreadOnly` (bool, optional): Lọc chỉ lấy thông báo chưa đọc (`true`).
+- **Response:** `200 OK`
+  ```json
+  [
+    {
+      "id": 1,
+      "userId": 10,
+      "title": "Biên nhận học phí mới",
+      "body": "Khoản thanh toán 1,000,000 đ cho 'Học phí Khóa Luyện chữ đẹp tháng 11/2026' của học viên Trần Bảo Nam đã được ghi nhận.",
+      "type": "Tuition",
+      "refId": 15,
+      "isRead": false,
+      "readAt": null,
+      "createdAt": "2026-11-16T10:00:00Z"
+    }
+  ]
+  ```
+
+---
+
+### 11.2. Đánh dấu 1 thông báo đã đọc — `PUT /api/Notifications/{id}/read`
+- **Quyền truy cập:** Đã đăng nhập.
+- **Phân quyền dữ liệu:** Chỉ đánh dấu thông báo thuộc về chính `UserId` của user đăng nhập. Nếu không khớp hoặc không tồn tại -> trả `404 Not Found`.
+- **Response:** `204 NoContent`
+
+---
+
+### 11.3. Đánh dấu tất cả thông báo đã đọc — `PUT /api/Notifications/read-all`
+- **Quyền truy cập:** Đã đăng nhập.
+- **Phân quyền dữ liệu:** Tự động cập nhật `isRead = true` cho tất cả thông báo chưa đọc của user hiện tại (`UserId == User.GetUserId()`).
+- **Response:** `200 OK` (`{"message": "Đã đánh dấu đọc tất cả!"}`)
+
 
 
 

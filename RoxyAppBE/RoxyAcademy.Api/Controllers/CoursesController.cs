@@ -32,7 +32,7 @@ public class CoursesController(RoxyDbContext db) : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "SuperAdmin")]
+    [Authorize(Roles = "SuperAdmin,BranchManager")]
     public async Task<ActionResult<CourseDto>> CreateCourse(CreateCourseRequest req)
     {
         if (!string.IsNullOrEmpty(req.CourseCode))
@@ -59,7 +59,7 @@ public class CoursesController(RoxyDbContext db) : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [Authorize(Roles = "SuperAdmin")]
+    [Authorize(Roles = "SuperAdmin,BranchManager")]
     public async Task<IActionResult> UpdateCourse(int id, UpdateCourseRequest req)
     {
         var course = await db.Courses.FindAsync(id);
@@ -82,11 +82,18 @@ public class CoursesController(RoxyDbContext db) : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Roles = "SuperAdmin")]
+    [Authorize(Roles = "SuperAdmin,BranchManager")]
     public async Task<IActionResult> DeleteCourse(int id)
     {
         var course = await db.Courses.FindAsync(id);
         if (course == null) return NotFound(new { message = "Không tìm thấy khóa học này." });
+
+        // Khóa học đang có lớp đang mở (Status != "Finished" hoặc IsOpenForRegistration) thì KHÔNG được xóa
+        bool hasActiveClasses = await db.Classes.AnyAsync(c => c.CourseId == id && (c.Status != "Finished" || c.IsOpenForRegistration));
+        if (hasActiveClasses)
+        {
+            return BadRequest(new { message = "Không thể xóa khóa học đang có lớp học đang mở hoặc đang diễn ra." });
+        }
 
         course.IsActive = false;
         await db.SaveChangesAsync();
