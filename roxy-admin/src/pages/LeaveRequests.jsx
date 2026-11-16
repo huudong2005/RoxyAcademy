@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
 import { formatDate, formatDateTime } from '../utils/formatters';
 
@@ -63,6 +64,9 @@ export default function LeaveRequests() {
   const [teachers, setTeachers] = useState([]);
 
   // Bộ lọc
+  const [searchParams] = useSearchParams();
+  const initialStatus = searchParams.get('status');
+  const validStatuses = ['Pending', 'Approved', 'Rejected', 'Cancelled'];
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [requesterTypeFilter, setRequesterTypeFilter] = useState('all'); // 'all', 'Student', 'Teacher'
@@ -71,7 +75,9 @@ export default function LeaveRequests() {
   const [branchFilter, setBranchFilter] = useState(
     isBranchManager && currentUser.branchId ? String(currentUser.branchId) : ''
   );
-  const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'Pending', 'Approved', 'Rejected', 'Cancelled'
+  const [statusFilter, setStatusFilter] = useState(
+    initialStatus && validStatuses.includes(initialStatus) ? initialStatus : 'all'
+  ); // 'all', 'Pending', 'Approved', 'Rejected', 'Cancelled'
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
 

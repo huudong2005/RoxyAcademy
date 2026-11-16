@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
 import { formatCurrency, formatDate, formatDateTime, numberToVietnameseWords } from '../utils/formatters';
 
@@ -27,6 +27,9 @@ export default function Tuitions() {
   const [reloadKey, setReloadKey] = useState(0);
 
   // Bộ lọc
+  const [searchParams] = useSearchParams();
+  const initialStatus = searchParams.get('status');
+  const validStatuses = ['Unpaid', 'PartiallyPaid', 'Paid', 'Overdue', 'Cancelled'];
   const [searchTerm, setSearchTerm] = useState('');
   const [studentFilter, setStudentFilter] = useState('');
   const [classFilter, setClassFilter] = useState('');
@@ -36,7 +39,9 @@ export default function Tuitions() {
     }
     return '';
   });
-  const [statusFilter, setStatusFilter] = useState(''); // '', 'Unpaid', 'PartiallyPaid', 'Paid', 'Overdue', 'Cancelled'
+  const [statusFilter, setStatusFilter] = useState(
+    initialStatus && validStatuses.includes(initialStatus) ? initialStatus : ''
+  ); // '', 'Unpaid', 'PartiallyPaid', 'Paid', 'Overdue', 'Cancelled'
 
   // Danh mục bổ trợ
   const [branches, setBranches] = useState([]);

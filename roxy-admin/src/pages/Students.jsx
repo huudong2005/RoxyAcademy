@@ -28,6 +28,8 @@ export default function Students() {
   // Bộ lọc
   const [searchParams] = useSearchParams();
   const initialBranchId = searchParams.get('branchId');
+  const initialStatus = searchParams.get('status');
+  const validStatuses = ['Active', 'Paused', 'Graduated', 'Dropped'];
   const [search, setSearch] = useState('');
   const [branchFilter, setBranchFilter] = useState(
     isBranchManager && currentUser.branchId
@@ -37,7 +39,9 @@ export default function Students() {
       : ''
   );
   const [classFilter, setClassFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState(
+    initialStatus && validStatuses.includes(initialStatus) ? initialStatus : ''
+  );
 
   // Danh mục phục vụ lọc và form
   const [branches, setBranches] = useState([]);
