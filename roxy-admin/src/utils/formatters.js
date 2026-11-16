@@ -112,3 +112,18 @@ export function numberToVietnameseWords(num) {
   const formatted = words.charAt(0).toUpperCase() + words.slice(1) + ' đồng';
   return formatted;
 }
+
+export const NEWSFEED_AUDIENCE_META = {
+  All: {
+    label: 'Tất cả',
+    badgeClass: 'border-slate-200 bg-slate-100 text-slate-700',
+  },
+  Parents: {
+    label: 'Phụ huynh',
+    badgeClass: 'border-emerald-200 bg-emerald-50 text-emerald-800',
+  },
+  Teachers: {
+    label: 'Giáo viên',
+    badgeClass: 'border-indigo-200 bg-indigo-50 text-indigo-800',
+  },
+};

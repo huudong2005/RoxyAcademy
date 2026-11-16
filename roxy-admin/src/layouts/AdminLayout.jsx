@@ -42,6 +42,18 @@ export default function AdminLayout() {
             👩‍🏫 Giáo viên
           </span>
         );
+      case 'Parent':
+        return (
+          <span className="inline-flex items-center gap-1 rounded-full border border-emerald-300 bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-900">
+            👨‍👩‍👧 Phụ huynh
+          </span>
+        );
+      case 'Student':
+        return (
+          <span className="inline-flex items-center gap-1 rounded-full border border-purple-300 bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-900">
+            🎒 Học viên
+          </span>
+        );
       default:
         return (
           <span className="inline-flex items-center gap-1 rounded-full border border-slate-300 bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-800">
@@ -104,6 +116,19 @@ export default function AdminLayout() {
       <NavLink to="/leave-requests" className={navItemClass} onClick={onItemClick}>
         <span className="text-base">📝</span>
         <span>Xin nghỉ phép</span>
+      </NavLink>
+
+      {/* GIAO TIẾP & BẢNG TIN: HIỂN THỊ CHO TẤT CẢ VAI TRÒ ĐÃ ĐĂNG NHẬP */}
+      <div className="pt-4 px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+        Giao tiếp &amp; Bảng tin
+      </div>
+      <NavLink to="/messages" className={navItemClass} onClick={onItemClick}>
+        <span className="text-base">💬</span>
+        <span>Tin nhắn</span>
+      </NavLink>
+      <NavLink to="/newsfeed" className={navItemClass} onClick={onItemClick}>
+        <span className="text-base">📰</span>
+        <span>Bảng tin</span>
       </NavLink>
 
       {/* PHÂN HỆ NHÂN SỰ: CHỈ HIỂN THỊ CHO SUPERADMIN VÀ BRANCHMANAGER (ẨN HOÀN TOÀN VỚI TEACHER) */}
@@ -295,6 +320,10 @@ export default function AdminLayout() {
                   ? 'Quản lý Chi nhánh'
                   : location.pathname.startsWith('/teachers')
                   ? 'Quản lý Giáo viên'
+                  : location.pathname.startsWith('/messages')
+                  ? 'Tin nhắn'
+                  : location.pathname.startsWith('/newsfeed')
+                  ? 'Bảng tin trung tâm'
                   : 'Bảng Tổng Quan'}
               </h2>
             </div>

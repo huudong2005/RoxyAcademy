@@ -119,3 +119,53 @@ Toàn bộ 4 nhóm checklist của Giai đoạn 1I (Dashboard dữ liệu thật
 4. Không thay đổi DB schema, không hard-code localhost, code biên dịch sạch cả backend và frontend.
 
 **Trạng thái nghiệm thu:** **ĐẠT CHUẨN NGHIỆM THU (PASSED)** — Đủ điều kiện bàn giao cho Giai đoạn tiếp theo / Deploy agent.
+
+---
+
+# BÁO CÁO KIỂM THỬ QA — GIAI ĐOẠN 1K (TIN NHẮN & BẢNG TIN — MESSAGES & NEWSFEED)
+**Dự án:** Roxy Academy — Hệ thống Quản trị Học tập  
+**Phân hệ:** Tin nhắn trao đổi (`/messages`) & Bảng tin trung tâm (`/newsfeed`)  
+**Ngày kiểm thử:** 16/11/2026  
+**Người thực hiện:** QA Agent  
+**Tài liệu đối chiếu:** `GEMINI.md`, `docs/DESIGN.md`, `docs/API.md`, `RoxyAppDB.sql`
+
+---
+
+## 1. KẾT QUẢ BIÊN DỊCH, LINT VÀ SMOKE TEST API
+
+| Thành phần | Lệnh thực thi | Kết quả | Chi tiết |
+| :--- | :--- | :---: | :--- |
+| **Database Schema** | Đối chiếu `RoxyAppDB.sql` | **PASS** | 0 thay đổi schema DB; `TargetAudience` khớp `CK_Newsfeed_Target CHECK (TargetAudience IN ('All','Parents','Teachers'))`; `Messages` khớp `CK_Messages_Target` |
+| **Backend Build** | `dotnet build` tại `RoxyAppBE/RoxyAcademy.Api/` | **PASS** | **0 Warning(s), 0 Error(s)**, target `net9.0` (đã tắt `RoxyAcademy.Api` trước khi build) |
+| **Frontend Lint** | `npm run lint` tại `roxy-admin/` | **PASS** | **0 Error(s)** (`eslint .` sạch) |
+| **Frontend Build** | `npm run build` tại `roxy-admin/` | **PASS** | **0 Error(s)**, Vite transformed 103 modules (276ms) |
+| **API Smoke Test (no token)** | `curl.exe` trên local SQL Server | **PASS** | `GET /api/Messages` → `401`, `GET /api/Messages/recipients` → `401`, `POST /api/Newsfeeds` → `401`, `GET /api/Newsfeeds` (`[AllowAnonymous]`) → `200` (đã tắt API sau khi test) |
+| **Kiểm tra Localhost & Zalo** | Quét toàn bộ 11 file Giai đoạn 1K | **PASS** | 0 hard-code `localhost`; không có code Zalo Mini App (chỉ giữ mục placeholder "Zalo Mini App - Giai đoạn 2" bị disable ở `AdminLayout.jsx` L182) |
+
+---
+
+## 2. BẢNG TỔNG HỢP CHECKLIST KIỂM THỬ GIAI ĐOẠN 1K
+
+| STT | Hạng mục kiểm tra | Tiêu chí yêu cầu | Kết quả | Dòng code đối chiếu cụ thể |
+| :-: | :--- | :--- | :-: | :--- |
+| **1** | **Messages — 3 tab & phân quyền 5 vai trò** | - 3 tab `inbox`, `outbox`, `class` lọc đúng theo `SuperAdmin`, `BranchManager`, `Teacher`, `Parent`, `Student` ở Backend và hiển thị đúng ở Frontend.<br>- Các `type` lạ / mặc định không bao giờ trả toàn bộ tin nhắn. | **PASS** | - `MessagesController.cs` L20-67<br>- `Messages.jsx` L6-10, L89-91, L284-309 |
+| **2** | **Messages — `recipients` & `POST /api/Messages` (403)** | - `GET /api/Messages/recipients` chỉ trả user/lớp trong phạm vi vai trò & chi nhánh.<br>- `POST /api/Messages` kiểm tra `GetAllowedReceiverUsersQuery()` và `GetAllowedClassesQuery()`, chặn `403 Forbidden` nếu ngoài phạm vi; kiểm tra `CK_Messages_Target` (`400 BadRequest`).<br>- `ComposeMessageModal` chỉ cho chọn từ `recipients`. | **PASS** | - `MessagesController.cs` L82-197<br>- `MessageModals.jsx` L48-70, L248-286 |
+| **3** | **Messages — Đánh dấu đã đọc & Không xóa** | - `PUT /api/Messages/{id}/read` kiểm tra `msg.ReceiverId != UserId` → `403 Forbidden`, chỉ người nhận đích danh mới đánh dấu được.<br>- Không có API `DELETE` và không có nút xóa tin nhắn trên UI. | **PASS** | - `MessagesController.cs` L223-241<br>- `Messages.jsx` L126-168, L543-555<br>- `MessageModals.jsx` L344-499 |
+| **4** | **Newsfeed — `TargetAudience` khớp DB** | - `CreateNewsfeedRequest` & `UpdateNewsfeedRequest` chỉ nhận `All`, `Parents`, `Teachers` khớp `CK_Newsfeed_Target` trong `RoxyAppDB.sql`.<br>- Frontend dropdown & `NEWSFEED_AUDIENCE_META` khớp 3 giá trị trên. | **PASS** | - `RoxyAppDB.sql` L418<br>- `NewsfeedDtos.cs` L33-35, L52-54<br>- `formatters.js` L116-129<br>- `NewsfeedModals.jsx` L362-370 |
+| **5** | **Newsfeed — Phân quyền tạo / sửa / xóa** | - Chỉ `SuperAdmin` và `BranchManager` thấy nút Đăng bài / Sửa / Xóa ở Frontend.<br>- `Teacher` / `Parent` / `Student` không thấy nút và bị Backend `[Authorize(Roles = "SuperAdmin,BranchManager")]` chặn `403`.<br>- `BranchManager` chỉ đăng/sửa/xóa bài chi nhánh mình; `UpdateNewsfeed` chặn đổi `BranchId` sang chi nhánh khác hoặc `null` bằng `403`. | **PASS** | - `NewsfeedsController.cs` L64-69, L92-100, L117-125<br>- `Newsfeed.jsx` L25-27, L58-68, L192, L419-439<br>- `NewsfeedModals.jsx` L178-187, L255-259, L377-394 |
+| **6** | **Newsfeed — Quyền đọc theo vai trò & chi nhánh** | - Mọi vai trò đọc được bài chung (`BranchId == null`) và bài chi nhánh mình.<br>- Lọc đúng `TargetAudience` và chỉ trả bài `IsPublished == true` với `Teacher`/`Parent`/`Student`. | **PASS** | - `NewsfeedsController.cs` L30-47 |
+
+---
+
+## 3. DANH SÁCH LỖI VÀ VẤN ĐỀ CẦN XỬ LÝ (DEFECT LOG)
+
+- **Lỗi chặn (Blocker):** **0**
+- **Lỗi nghiêm trọng (Critical):** **0**
+- **Lỗi nhỏ (Minor):** **0**
+
+---
+
+## 4. KẾT LUẬN & ĐỀ NGHỊ BÀN GIAO
+
+Toàn bộ 6 hạng mục kiểm thử code, phân quyền và build/smoke test cho Giai đoạn 1K (Messages & Newsfeed) đều **ĐẠT (PASS 100%)**.  
+**Trạng thái nghiệm thu:** **ĐẠT CHUẨN NGHIỆM THU (PASSED)** — Đủ điều kiện bàn giao cho bước tiếp theo.

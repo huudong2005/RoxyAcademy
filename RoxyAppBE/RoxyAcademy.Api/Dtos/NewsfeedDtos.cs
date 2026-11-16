@@ -31,7 +31,7 @@ public class CreateNewsfeedRequest
     [StringLength(500)] public string? ImageUrl { get; set; }
 
     [Required]
-    [RegularExpression("^(All|Student|Parent|Teacher|Staff)$", ErrorMessage = "Đối tượng chỉ nhận: All, Student, Parent, Teacher, Staff")]
+    [RegularExpression("^(All|Parents|Teachers)$", ErrorMessage = "Đối tượng chỉ nhận: All, Parents, Teachers")]
     public string TargetAudience { get; set; } = "All";
 
     public int? BranchId { get; set; }
@@ -50,7 +50,7 @@ public class UpdateNewsfeedRequest
     [StringLength(500)] public string? ImageUrl { get; set; }
 
     [Required]
-    [RegularExpression("^(All|Student|Parent|Teacher|Staff)$")]
+    [RegularExpression("^(All|Parents|Teachers)$", ErrorMessage = "Đối tượng chỉ nhận: All, Parents, Teachers")]
     public string TargetAudience { get; set; } = "All";
 
     public int? BranchId { get; set; }

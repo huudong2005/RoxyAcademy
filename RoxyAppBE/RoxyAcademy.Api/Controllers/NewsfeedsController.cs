@@ -15,7 +15,6 @@ public class NewsfeedsController(RoxyDbContext db) : ControllerBase
 {
     private string Role => User.GetRole();
     private int UserId => User.GetUserId();
-    private bool IsStaff => Role is "SuperAdmin" or "BranchManager";
 
     [HttpGet]
     [AllowAnonymous] // Có thể cho phép khách vãng lai xem bảng tin public nếu muốn (tùy chọn)
@@ -26,22 +25,27 @@ public class NewsfeedsController(RoxyDbContext db) : ControllerBase
             .Include(n => n.CreatedByNavigation)
             .AsQueryable();
 
-        // 1. Lọc theo trạng thái xuất bản
-        if (!IsStaff)
-        {
-            q = q.Where(n => n.IsPublished == true); // Chỉ nội bộ quản lý mới thấy bài Nháp
+        var userBranchId = User.GetBranchId();
 
-            // 2. Lọc theo đối tượng (TargetAudience)
-            q = q.Where(n => n.TargetAudience == "All" || n.TargetAudience == Role);
-        }
-
-        // 3. Lọc theo chi nhánh
-        if (Role == "BranchManager")
+        q = Role switch
         {
-            var userBranchId = User.GetBranchId();
-            // Quản lý cơ sở thấy bài viết chung (null) và bài của cơ sở mình
-            q = q.Where(n => n.BranchId == null || n.BranchId == userBranchId);
-        }
+            "SuperAdmin" => q,
+            "BranchManager" => q.Where(n => n.BranchId == null || (userBranchId.HasValue && n.BranchId == userBranchId.Value)),
+            "Teacher" => q.Where(n =>
+                n.IsPublished &&
+                (n.TargetAudience == "All" || n.TargetAudience == "Teachers") &&
+                (n.BranchId == null || (userBranchId.HasValue && n.BranchId == userBranchId.Value))),
+            "Parent" => q.Where(n =>
+                n.IsPublished &&
+                (n.TargetAudience == "All" || n.TargetAudience == "Parents") &&
+                (n.BranchId == null || db.Students.Where(s => s.ParentId == UserId).Select(s => s.BranchId).Contains(n.BranchId.Value))),
+            "Student" => q.Where(n =>
+                n.IsPublished &&
+                n.TargetAudience == "All" &&
+                (n.BranchId == null || db.Students.Where(s => s.UserId == UserId).Select(s => s.BranchId).Contains(n.BranchId.Value))),
+            _ => q.Where(n => n.IsPublished && n.TargetAudience == "All" && n.BranchId == null)
+        };
+
         if (branchId.HasValue) q = q.Where(n => n.BranchId == branchId);
 
         // Sắp xếp: Ưu tiên bài được Ghim (IsPinned = true) lên trên cùng, sau đó mới tính ngày tạo
@@ -92,8 +96,8 @@ public class NewsfeedsController(RoxyDbContext db) : ControllerBase
         var newsfeed = await db.Newsfeeds.FindAsync(id);
         if (newsfeed == null) return NotFound(new { message = "Không tìm thấy bản tin này." });
 
-        if (Role == "BranchManager" && newsfeed.BranchId != User.GetBranchId())
-            return StatusCode(StatusCodes.Status403Forbidden);
+        if (Role == "BranchManager" && (newsfeed.BranchId != User.GetBranchId() || req.BranchId != User.GetBranchId()))
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = "Không thể chỉnh sửa hoặc chuyển bản tin sang chi nhánh khác." });
 
         newsfeed.Title = req.Title.Trim();
         newsfeed.Content = req.Content.Trim();

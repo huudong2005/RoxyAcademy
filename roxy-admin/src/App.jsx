@@ -13,6 +13,8 @@ import LeaveRequests from './pages/LeaveRequests';
 import Branches from './pages/Branches';
 import BranchDetail from './pages/BranchDetail';
 import Teachers from './pages/Teachers';
+import Messages from './pages/Messages';
+import Newsfeed from './pages/Newsfeed';
 import AdminLayout from './layouts/AdminLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -38,6 +40,8 @@ export default function App() {
             <Route path="/branches" element={<Branches />} />
             <Route path="/branches/:id" element={<BranchDetail />} />
             <Route path="/teachers" element={<Teachers />} />
+            <Route path="/messages" element={<Messages />} />
+            <Route path="/newsfeed" element={<Newsfeed />} />
           </Route>
         </Route>
 

@@ -18,6 +18,26 @@ public record MessageDto(
     DateTime CreatedAt
 );
 
+public record MessageRecipientsDto(
+    List<RecipientUserDto> Users,
+    List<RecipientClassDto> Classes
+);
+
+public record RecipientUserDto(
+    int Id,
+    string FullName,
+    string Role,
+    int? BranchId,
+    string? BranchName
+);
+
+public record RecipientClassDto(
+    int Id,
+    string ClassName,
+    int BranchId,
+    string BranchName
+);
+
 public class SendMessageRequest
 {
     public int? ReceiverId { get; set; }
