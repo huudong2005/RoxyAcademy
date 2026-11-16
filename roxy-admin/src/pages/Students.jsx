@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
 
 export default function Students() {
@@ -25,9 +26,15 @@ export default function Students() {
   const [reloadKey, setReloadKey] = useState(0);
 
   // Bộ lọc
+  const [searchParams] = useSearchParams();
+  const initialBranchId = searchParams.get('branchId');
   const [search, setSearch] = useState('');
   const [branchFilter, setBranchFilter] = useState(
-    isBranchManager && currentUser.branchId ? currentUser.branchId : ''
+    isBranchManager && currentUser.branchId
+      ? currentUser.branchId
+      : initialBranchId && /^\d+$/.test(initialBranchId)
+      ? initialBranchId
+      : ''
   );
   const [classFilter, setClassFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');

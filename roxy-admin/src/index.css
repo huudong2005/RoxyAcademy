@@ -34,6 +34,22 @@
   }
 }
 
+/* Hiệu ứng chuyển tab mượt mà theo docs/DESIGN.md Mục 13.7 */
+@keyframes tabEnter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.tab-content {
+  animation: tabEnter 150ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
 /* Tôn trọng cài đặt giảm chuyển động theo docs/DESIGN.md */
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after {

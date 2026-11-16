@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
 import { formatDateTime } from '../utils/formatters';
 
@@ -26,8 +27,12 @@ export default function ClassList() {
   const [teachers, setTeachers] = useState([]);
 
   // Bộ lọc
+  const [searchParams] = useSearchParams();
+  const initialBranchId = searchParams.get('branchId');
   const [search, setSearch] = useState('');
-  const [branchFilter, setBranchFilter] = useState('');
+  const [branchFilter, setBranchFilter] = useState(
+    initialBranchId && /^\d+$/.test(initialBranchId) ? initialBranchId : ''
+  );
   const [courseFilter, setCourseFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 

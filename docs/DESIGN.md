@@ -2388,17 +2388,18 @@ Do đặc thù trung tâm có các cơ sở cố định (quy mô 2 - 5 chi nhá
 |  +-----------------------------+ +-----------------------------+ +-----------------------------+  |
 |                                                                                                   |
 |  +---------------------------------------------------------------------------------------------+  |
-|  | [ ✏️ Chỉnh sửa thông tin ]                                       [ 🚫 Ngừng hoạt động cơ sở ] |  |
+|  | [ 👁️ Xem chi tiết ]       [ ✏️ Sửa chi nhánh ]                     [ 🚫 Ngừng hoạt động cơ sở ] |  |
 |  +---------------------------------------------------------------------------------------------+  |
 +---------------------------------------------------------------------------------------------------+
 ```
 
 #### 2. Quy Cách Styling Từng Khối Thông Tin Trên Thẻ:
 1. **Khung chứa Thẻ (Card Container):**
-   - Lớp CSS: `bg-white rounded-xl border border-slate-200 p-5 md:p-6 shadow-xs hover:border-blue-300 hover:shadow-sm transition-all duration-200 flex flex-col justify-between relative`.
+   - Lớp CSS: `bg-white rounded-xl border border-slate-200 p-5 md:p-6 shadow-xs hover:border-blue-300 hover:shadow-sm transition-all duration-200 flex flex-col justify-between relative cursor-pointer`.
+   - **Tương tác điều hướng:** Nhấp vào vùng thẻ hoặc tiêu đề cơ sở sẽ tự động mở màn hình **Chi tiết Chi nhánh (`/branches/:id`)**. Ngoại trừ các nút bấm hành động riêng lẻ (Sửa, Ngừng hoạt động) có cơ chế `e.stopPropagation()`.
    - Nếu chi nhánh bị ngừng hoạt động (`isActive === false`): Thêm viền xám mờ và lớp phủ nhẹ `bg-slate-50/60 opacity-85 border-dashed border-slate-300`.
 2. **Tiêu đề & Badge Trạng thái:**
-   - Tên cơ sở: `font-bold text-lg md:text-xl text-slate-900 tracking-tight flex items-center gap-2`.
+   - Tên cơ sở: `font-bold text-lg md:text-xl text-slate-900 tracking-tight flex items-center gap-2 hover:text-blue-700 transition-colors`.
    - Mã cơ sở: `text-xs font-mono font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded`.
    - **Badge Trạng thái hoạt động (`isActive`):**
      * **`Đang hoạt động` (`isActive === true`):** `bg-emerald-50 text-emerald-800 border border-emerald-300 font-semibold px-2.5 py-1 rounded-full text-xs inline-flex items-center gap-1.5` kèm chấm tròn `w-2 h-2 rounded-full bg-emerald-500 animate-pulse`.
@@ -2425,11 +2426,15 @@ Do đặc thù trung tâm có các cơ sở cố định (quy mô 2 - 5 chi nhá
      * Số lượng: `font-bold font-mono text-lg text-indigo-700 tabular-nums`.
      * Nhãn phụ: `text-[11px] font-medium text-indigo-800 uppercase tracking-tight`.
 5. **Thanh Thao Tác Chân Thẻ (Card Footer Actions):**
+   - **Nút `👁️ Xem chi tiết`:**
+     * Lớp CSS: `inline-flex items-center gap-1.5 px-3 py-2 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 hover:border-blue-300 text-xs font-semibold rounded-lg shadow-2xs active:scale-95 transition-all duration-100 cursor-pointer`.
+     * Click chuyển hướng sang trang Chi tiết Chi nhánh: `/branches/${branch.id}`.
    - **Nút `✏️ Sửa chi nhánh`:**
-     * Lớp CSS: `inline-flex items-center gap-1.5 px-3.5 py-2 bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 hover:text-slate-900 text-xs font-semibold rounded-lg shadow-2xs active:scale-95 transition-all duration-100 cursor-pointer`.
+     * Lớp CSS: `inline-flex items-center gap-1.5 px-3 py-2 bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 hover:text-slate-900 text-xs font-semibold rounded-lg shadow-2xs active:scale-95 transition-all duration-100 cursor-pointer`.
+     * Click mở `CreateEditBranchModal` chỉnh sửa chi nhánh.
    - **Nút Đổi Trạng Thái Hoạt Động:**
-     * Nếu đang hoạt động (`isActive === true`): Hiển thị nút **`🚫 Ngừng hoạt động`** dạng cảnh báo `inline-flex items-center gap-1.5 px-3.5 py-2 bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 hover:border-rose-300 text-xs font-semibold rounded-lg active:scale-95 transition-all duration-100 cursor-pointer`.
-     * Nếu đang ngừng hoạt động (`isActive === false`): Hiển thị nút **`✓ Kích hoạt lại`** dạng xanh lá `inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300 text-xs font-semibold rounded-lg active:scale-95 transition-all duration-100 cursor-pointer`.
+     * Nếu đang hoạt động (`isActive === true`): Hiển thị nút **`🚫 Ngừng hoạt động`** dạng cảnh báo `inline-flex items-center gap-1.5 px-3 py-2 bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 hover:border-rose-300 text-xs font-semibold rounded-lg active:scale-95 transition-all duration-100 cursor-pointer`.
+     * Nếu đang ngừng hoạt động (`isActive === false`): Hiển thị nút **`✓ Kích hoạt lại`** dạng xanh lá `inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300 text-xs font-semibold rounded-lg active:scale-95 transition-all duration-100 cursor-pointer`.
 
 ---
 
@@ -2642,6 +2647,483 @@ Frontend Developer và QA đối chiếu nghiệm thu màn hình Quản lý Chi 
   - [ ] Hiển thị thẻ gọn gàng, không bị vỡ bố cục hay tràn viền ngang màn hình.
   - [ ] Nút bấm đạt chuẩn công thái học ngón tay cái tối thiểu `44px x 44px`.
   - [ ] Form thêm/sửa mở dạng Bottom Sheet trượt từ đáy màn hình êm ái.
+
+---
+
+## 13. THIẾT KẾ CHI TIẾT GIAI ĐOẠN 1G (BỔ SUNG): MÀN HÌNH CHI TIẾT CHI NHÁNH (`/branches/:id`)
+
+> [!NOTE]
+> Phân hệ **Chi tiết Chi nhánh Cơ sở (`/branches/:id`)** là trung tâm chỉ huy vận hành chuyên sâu cho từng cơ sở đào tạo, dành riêng cho Ban Giám Đốc (`SuperAdmin`).  
+> Màn hình này giải quyết triệt để bài toán: Không chỉ dừng lại ở con số tổng quan tại danh mục chi nhánh (`/branches`), Ban Giám Đốc cần nắm rõ **cơ sở này đang có những lớp nào đang mở, giáo viên nào đang đứng lớp giảng dạy, học viên nào đang theo học, phụ huynh liên hệ ra sao**, từ đó trực tiếp đưa ra các quyết định điều phối nhân sự, mở lớp mới, hỗ trợ học viên hoặc xử lý ngừng hoạt động một cách chuẩn xác và tức thì.
+
+---
+
+### 13.1. ĐÁNH GIÁ THIẾT KẾ KỸ THUẬT & TRIẾT LÝ POLISH (EMIL KOWALSKI & APPLE DESIGN)
+
+Tuân thủ nguyên tắc đánh giá bảng Markdown bắt buộc theo bộ kỹ năng Emil Kowalski:
+
+| Trước (Mẫu chung chung / AI Slop) | Sau (Roxy Academy Polish UI) | Lý do kỹ thuật & Trải nghiệm |
+| :--- | :--- | :--- |
+| Nhồi nhét cả 3 danh sách (Lớp, Giáo viên, Học viên) dồn dập vào 1 trang dài vô tận | **Hệ thống Tab Phẳng (Segmented Tabs)** phân loại chuyên sâu với số lượng hiển thị ngay trên Tab badge | Phân chia nhận thức (Cognitive Chunking); không tải dồn dập dữ liệu nặng cùng lúc, giúp trang tải nhanh và dễ thao tác. |
+| Người dùng chuyển tab thấy giật cục hoặc nháy trang | Chuyển tab mượt mà với **`opacity: 0 -> 1` kết hợp `translateY(4px) -> translateY(0)` trong `150ms ease-out`** (`cubic-bezier(0.23, 1, 0.32, 1)`) | Triết lý Emil Kowalski: Tránh giật trang đột ngột; micro-transition dưới 200ms tạo cảm giác giao diện mượt mà và trực quan. |
+| Không biết đang ở đâu, bấm nút Back trình duyệt bị văng khỏi admin | **Thanh Breadcrumb Chuẩn Wayfinding**: `← Quay lại Quản lý chi nhánh / {Tên cơ sở}` kèm mã `#BR-{id}` | Nguyên lý Apple Wayfinding: Người dùng luôn biết mình đang ở đâu, đi từ đâu tới, và làm sao để quay về. |
+| Bảng học viên hiển thị tràn lan toàn bộ ghi chú nội bộ nhạy cảm | **Bảo vệ dữ liệu nhạy cảm**: Ghi chú `Note` (can thiệp tự kỷ, sức khỏe đặc biệt) tuân thủ nghiêm ngặt theo vai trò và luật `GEMINI.md` | Đạo đức sư phạm & Trách nhiệm dữ liệu (Apple Principle: Responsibility) đối với trẻ em mầm non & tiểu học. |
+| Người dùng muốn can thiệp sâu lớp hoặc học sinh phải mở tab mới tìm lại cơ sở từ đầu | **Lối tắt ngữ cảnh thông minh (Contextual Deep Links)**: Nút `↗ Quản lý tại trang Lớp học` kèm query `?branchId={id}` | Tối ưu hóa chuỗi tác vụ (High Velocity Workflow) cho Ban Giám Đốc. |
+| Số điện thoại cơ sở / giáo viên / phụ huynh chỉ là chữ thường | Toàn bộ số điện thoại định dạng **Link `tel:{phone}` click-to-call** có hover highlight xanh | Instant Action: Giúp ban giám đốc hoặc quản lý cơ sở gọi trực tiếp chỉ bằng 1 chạm trên di động hoặc máy tính bảng. |
+
+---
+
+### 13.2. PHÂN QUYỀN VAI TRÒ & MÀN HÌNH CHẶN 403 (RBAC & 403 VIEW)
+
+#### 1. Ma Trận Phân Quyền Màn Hình `/branches/:id`:
+- **Chỉ duy nhất `SuperAdmin`** được phép truy cập và xem dữ liệu màn hình này.
+- **Các vai trò khác (`BranchManager`, `Teacher`, `Parent`, `Student`)**:
+  * Khi truy cập route `/branches/:id` qua gõ URL hoặc bookmark: Hệ thống **ngắt chặn ngay tại tầng Component Client**, **TUYỆT ĐỐI KHÔNG GỌI BẤT KỲ API NÀO** (`GET /api/Branches/{id}`, `GET /api/Classes`, `GET /api/Users`, `GET /api/Students`) để triệt tiêu nguy cơ rò rỉ dữ liệu hoặc tải vô ích lên backend server.
+  * Hiển thị màn hình chặn 403 trang trọng đồng bộ tuyệt đối với `/branches` và `/tuitions`:
+
+```
++---------------------------------------------------------------------------------------------------+
+|                                                                                                   |
+|                                            [ 🚫 ]                                                 |
+|                                                                                                   |
+|                       Bạn không có quyền truy cập Chi tiết Chi nhánh                              |
+|                                                                                                   |
+|        Thông tin quản trị chuyên sâu và điều phối vận hành chi nhánh chỉ dành riêng cho           |
+|        Ban Giám Đốc (SuperAdmin). Quản lý cơ sở và Giáo viên không có quyền truy cập.             |
+|                                                                                                   |
+|                       [ 📊 Quay lại Tổng quan ]      [ 🏫 Xem Lớp học ]                           |
+|                                                                                                   |
++---------------------------------------------------------------------------------------------------+
+```
+
+- **Mã triển khai chuẩn tại Client:**
+  ```jsx
+  // Kiểm tra quyền SuperAdmin ngay đầu component
+  const isSuperAdmin = currentUser?.role === 'SuperAdmin';
+
+  if (!isSuperAdmin) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4 animate-in fade-in duration-200">
+        <div className="w-16 h-16 rounded-full bg-rose-100 flex items-center justify-center text-3xl mb-4 text-rose-600 shadow-xs">
+          🚫
+        </div>
+        <h2 className="text-xl font-bold text-slate-800 mb-2">
+          Bạn không có quyền truy cập Chi tiết Chi nhánh
+        </h2>
+        <p className="text-sm text-slate-600 max-w-md mb-6 leading-relaxed">
+          Thông tin quản trị chuyên sâu và điều phối vận hành chi nhánh chỉ dành riêng cho Ban Giám Đốc (SuperAdmin). Quản lý cơ sở và Giáo viên không có quyền truy cập.
+        </p>
+        <div className="flex gap-3">
+          <button
+            onClick={() => navigate('/')}
+            className="px-4 py-2 text-sm font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 active:scale-95 transition-all cursor-pointer"
+          >
+            Quay lại Tổng quan
+          </button>
+          <button
+            onClick={() => navigate('/classes')}
+            className="px-4 py-2 text-sm font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 active:scale-95 transition-all cursor-pointer"
+          >
+            Xem Lớp học
+          </button>
+        </div>
+      </div>
+    );
+  }
+  ```
+
+---
+
+### 13.3. ĐIỀU HƯỚNG & THANH BREADCRUMB (NAVIGATION & BREADCRUMB)
+
+#### 1. Điều Hướng Từ Màn Hình Quản Lý Chi Nhánh (`/branches`):
+Người dùng có thể mở `/branches/:id` qua 2 cách mượt mà:
+1. **Click vào Thẻ Chi Nhánh:** Toàn bộ khung thẻ cơ sở tại `/branches` có con trỏ `cursor-pointer` và hiệu ứng `hover:border-blue-300 hover:shadow-sm`. Nhấp chuột vào thẻ sẽ tự động kích hoạt `navigate('/branches/' + branch.id)`. Các nút bấm con bên trong (`Sửa`, `Ngừng hoạt động`) sử dụng `e.stopPropagation()` để không gây xung đột sự kiện.
+2. **Nút `[ 👁️ Xem chi tiết ]`:** Nút hành động chuyên biệt đặt tại chân thẻ chi nhánh.
+
+#### 2. Cấu Trúc Thanh Breadcrumb (Breadcrumb Bar):
+Nằm ở đầu trang `/branches/:id`, đảm bảo nguyên lý **Wayfinding (Apple HIG)**:
+
+```
++---------------------------------------------------------------------------------------------------+
+|  [ ← Quay lại Quản lý chi nhánh ]   /   Cơ sở 1 - Bình Trưng Đông   [ #BR-1 ]                     |
++---------------------------------------------------------------------------------------------------+
+```
+
+- **Mã Tailwind CSS 4 chuẩn:**
+  ```jsx
+  <div className="flex items-center gap-2 mb-4 text-sm">
+    <Link
+      to="/branches"
+      className="inline-flex items-center gap-1.5 font-semibold text-slate-600 hover:text-blue-700 active:scale-95 transition-all duration-150 cursor-pointer"
+    >
+      <span>←</span>
+      <span>Quay lại Quản lý chi nhánh</span>
+    </Link>
+    <span className="text-slate-300">/</span>
+    <span className="font-semibold text-slate-900 truncate max-w-[200px] sm:max-w-md">
+      {branch.branchName}
+    </span>
+    <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
+      #BR-{branch.id}
+    </span>
+  </div>
+  ```
+
+---
+
+### 13.4. BỐ CỤC HEADER THÔNG TIN CHI NHÁNH (BRANCH HERO HEADER)
+
+Thẻ Hero Header là trung tâm nhận diện và điều hành của cơ sở:
+
+```
++---------------------------------------------------------------------------------------------------+
+|  🏢 CƠ SỞ 1 - BÌNH TRƯNG ĐÔNG                  [ ● Đang hoạt động ]                               |
+|  Mã chi nhánh: #BR-1  •  Ngày tạo: 10/01/2026                                                     |
+|                                                                                                   |
+|  📍 Địa chỉ: 21/11 Đường 49, Phường Bình Trưng Đông, TP. Thủ Đức, TP. Hồ Chí Minh                 |
+|  📞 Hotline liên hệ: 0326 538 824 [ 📱 Gọi hotline ]                                              |
+|                                                                                                   |
+|  +---------------------------------------------------------------------------------------------+  |
+|  | [ ✏️ Chỉnh sửa thông tin ]                                       [ 🚫 Ngừng hoạt động cơ sở ] |  |
+|  +---------------------------------------------------------------------------------------------+  |
++---------------------------------------------------------------------------------------------------+
+```
+
+#### 1. Chi Tiết Các Thành Phần Thông Tin:
+- **Tên cơ sở (H1):** `text-xl md:text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2.5`.
+- **Mã chi nhánh & Ngày tạo:**
+  * Mã chi nhánh: `font-mono text-xs font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded`.
+  * Ngày tạo: `text-xs text-slate-500` hiển thị định dạng `DD/MM/YYYY`.
+- **Badge Trạng Thái Hoạt Động (`isActive`):**
+  * **`Đang hoạt động` (`isActive === true`):** `bg-emerald-50 text-emerald-800 border border-emerald-300 font-semibold px-3 py-1 rounded-full text-xs inline-flex items-center gap-1.5 shadow-2xs` kèm chấm tròn pulse `w-2 h-2 rounded-full bg-emerald-500 animate-pulse`.
+  * **`Ngừng hoạt động` (`isActive === false`):** `bg-slate-100 text-slate-600 border border-slate-300 font-medium px-3 py-1 rounded-full text-xs inline-flex items-center gap-1.5 shadow-2xs` kèm chấm tròn xám `w-2 h-2 rounded-full bg-slate-400`.
+- **Địa chỉ (`Address`):** Hiển thị kèm icon `📍`, font chữ `text-sm text-slate-700 leading-relaxed font-normal mt-1`.
+- **Số điện thoại (`Phone`):**
+  * Hiển thị kèm icon `📞`.
+  * Nếu có số: Link định dạng click-to-call `tel:{phone}`, chữ màu `text-blue-600 font-mono font-medium hover:underline`. Kèm nút phụ mini `[ 📱 Gọi hotline ]`.
+  * Nếu trống: Chữ nghiêng màu mờ `text-slate-400 italic` *(Chưa cập nhật số hotline)*.
+
+#### 2. Cặp Nút Hành Động Ở Header:
+- **Nút `[ ✏️ Chỉnh sửa thông tin ]`:**
+  * Styling: `inline-flex items-center gap-2 px-4 py-2 bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 hover:text-slate-900 text-sm font-semibold rounded-lg shadow-2xs active:scale-[0.98] transition-all cursor-pointer min-h-[40px]`.
+  * Khi bấm: Mở `CreateEditBranchModal` (chế độ sửa cho chi nhánh hiện tại). Sau khi lưu thành công (`PUT /api/Branches/{id}`), tự động refresh thông tin Header mà không cần tải lại toàn trang.
+- **Nút Đổi Trạng Thái Hoạt Động (`Ngừng hoạt động` / `Kích hoạt lại`):**
+  * Nếu đang hoạt động (`isActive === true`): Hiển thị nút **`[ 🚫 Ngừng hoạt động cơ sở ]`** màu đỏ `inline-flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-700 border border-rose-300 hover:bg-rose-100 hover:border-rose-400 text-sm font-semibold rounded-lg active:scale-[0.98] transition-all cursor-pointer min-h-[40px]`.
+  * Nếu đang ngừng hoạt động (`isActive === false`): Hiển thị nút **`[ ✓ Kích hoạt lại cơ sở ]`** màu xanh lá `inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 border border-emerald-300 hover:bg-emerald-100 hover:border-emerald-400 text-sm font-semibold rounded-lg active:scale-[0.98] transition-all cursor-pointer min-h-[40px]`.
+  * **Cơ chế Bắt lỗi 400 & Guardrail UX:** Hoàn toàn kế thừa logic chuẩn tại Mục 12.6. Nếu cơ sở còn lớp học đang mở hoặc học viên active, server trả về lỗi `400 Bad Request` kèm message chi tiết. Modal xác nhận hiển thị ngay Khối Cảnh Báo Lỗi 400 màu đỏ, vô hiệu hóa nút xác nhận và hiển thị 2 nút lối tắt sang tab Lớp và tab Học viên để Ban Giám Đốc xử lý.
+
+---
+
+### 13.5. 3 THẺ KPI THỐNG KÊ THỜI GIAN THỰC (SUMMARY KPI CARDS)
+
+Ngay dưới Header là hàng 3 Thẻ thống kê (KPI Summary Cards) lấy trực tiếp từ 3 trường đếm của DTO `GET /api/Branches/{id}`:
+
+```
++---------------------------------------------------------------------------------------------------+
+|  +-----------------------------+ +-----------------------------+ +-----------------------------+  |
+|  | 🏫 LỚP ĐANG MỞ              | | 🎓 HỌC VIÊN ĐANG HỌC        | | 👩‍🏫 GIÁO VIÊN CƠ SỞ         |  |
+|  |            8                | |           92                | |           10                |  |
+|  | (Status != 'Finished')      | | (Status == 'Active')        | | (Role=Teacher, Active)      |  |
+|  | [ Xem tab Lớp học → ]       | | [ Xem tab Học viên → ]      | | [ Xem tab Giáo viên → ]     |  |
+|  +-----------------------------+ +-----------------------------+ +-----------------------------+  |
++---------------------------------------------------------------------------------------------------+
+```
+
+#### Bảng Đặc Tả Chi Tiết 3 Thẻ KPI:
+
+| Thuộc tính DTO | Trường dữ liệu Backend | Ý nghĩa nghiệp vụ | Styling & Màu sắc | Hành vi khi click (Trigger) |
+| :--- | :--- | :--- | :--- | :--- |
+| **Lớp đang mở** | `classCount` | `c.BranchId == id && c.Status != 'Finished'` | `bg-blue-50/70 border-blue-200 text-blue-700 hover:border-blue-400` | Tự động chuyển active sang **Tab 1: Lớp học** |
+| **Học viên đang học** | `studentCount` | `s.BranchId == id && s.Status == 'Active'` | `bg-emerald-50/70 border-emerald-200 text-emerald-700 hover:border-emerald-400` | Tự động chuyển active sang **Tab 3: Học viên** |
+| **Giáo viên cơ sở** | `teacherCount` | `u.BranchId == id && u.Role == 'Teacher' && u.IsActive` | `bg-indigo-50/70 border-indigo-200 text-indigo-700 hover:border-indigo-400` | Tự động chuyển active sang **Tab 2: Giáo viên** |
+
+- **Quy chuẩn mã Tailwind CSS 4 cho Thẻ KPI:**
+  ```jsx
+  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 my-5">
+    {/* Thẻ 1: Lớp đang mở */}
+    <div
+      onClick={() => setActiveTab('classes')}
+      className={`p-4 md:p-5 rounded-xl border transition-all duration-150 cursor-pointer active:scale-[0.98] ${
+        activeTab === 'classes'
+          ? 'bg-blue-50 border-blue-400 ring-2 ring-blue-200 shadow-xs'
+          : 'bg-white border-slate-200 hover:border-blue-300 hover:bg-blue-50/40 shadow-2xs'
+      }`}
+    >
+      <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-blue-800">
+        <span className="flex items-center gap-1.5"><span>🏫</span> Lớp đang mở</span>
+        <span className="text-[11px] font-medium text-blue-600">Xem tab →</span>
+      </div>
+      <div className="text-3xl md:text-4xl font-extrabold text-blue-700 font-mono my-1 tabular-nums">
+        {branch.classCount ?? 0}
+      </div>
+      <div className="text-xs text-slate-500">
+        Các lớp đang học hoặc sắp mở
+      </div>
+    </div>
+
+    {/* Thẻ 2: Học viên đang học */}
+    <div
+      onClick={() => setActiveTab('students')}
+      className={`p-4 md:p-5 rounded-xl border transition-all duration-150 cursor-pointer active:scale-[0.98] ${
+        activeTab === 'students'
+          ? 'bg-emerald-50 border-emerald-400 ring-2 ring-emerald-200 shadow-xs'
+          : 'bg-white border-slate-200 hover:border-emerald-300 hover:bg-emerald-50/40 shadow-2xs'
+      }`}
+    >
+      <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-emerald-800">
+        <span className="flex items-center gap-1.5"><span>🎓</span> Học viên đang học</span>
+        <span className="text-[11px] font-medium text-emerald-600">Xem tab →</span>
+      </div>
+      <div className="text-3xl md:text-4xl font-extrabold text-emerald-700 font-mono my-1 tabular-nums">
+        {branch.studentCount ?? 0}
+      </div>
+      <div className="text-xs text-slate-500">
+        Học viên có trạng thái Active
+      </div>
+    </div>
+
+    {/* Thẻ 3: Giáo viên cơ sở */}
+    <div
+      onClick={() => setActiveTab('teachers')}
+      className={`p-4 md:p-5 rounded-xl border transition-all duration-150 cursor-pointer active:scale-[0.98] ${
+        activeTab === 'teachers'
+          ? 'bg-indigo-50 border-indigo-400 ring-2 ring-indigo-200 shadow-xs'
+          : 'bg-white border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/40 shadow-2xs'
+      }`}
+    >
+      <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-indigo-800">
+        <span className="flex items-center gap-1.5"><span>👩‍🏫</span> Giáo viên cơ sở</span>
+        <span className="text-[11px] font-medium text-indigo-600">Xem tab →</span>
+      </div>
+      <div className="text-3xl md:text-4xl font-extrabold text-indigo-700 font-mono my-1 tabular-nums">
+        {branch.teacherCount ?? 0}
+      </div>
+      <div className="text-xs text-slate-500">
+        Giáo viên đang hoạt động
+      </div>
+    </div>
+  </div>
+  ```
+
+---
+
+### 13.6. HỆ THỐNG 3 DANH SÁCH TRỰC QUAN (SEGMENTED TABS)
+
+Toàn bộ các thực thể thuộc quyền quản lý của chi nhánh được phân tách vào **3 Tabs nội dung trực quan**:
+
+```
++---------------------------------------------------------------------------------------------------+
+|  [ 🏫 Lớp học cơ sở (8) ]       [ 👩‍🏫 Giáo viên cơ sở (10) ]       [ 🎓 Học viên cơ sở (92) ]     |
++---------------------------------------------------------------------------------------------------+
+```
+
+- **Thanh Header của Tab:**
+  * Được bố trí nằm ngang: `flex border-b border-slate-200 gap-2 md:gap-4 overflow-x-auto no-scrollbar`.
+  * **Tab Active:** `border-b-2 border-blue-600 text-blue-700 font-bold py-3 px-4 text-sm inline-flex items-center gap-2 whitespace-nowrap`.
+  * **Tab Inactive:** `text-slate-600 hover:text-slate-900 font-medium py-3 px-4 text-sm inline-flex items-center gap-2 whitespace-nowrap cursor-pointer`.
+  * **Badge Số lượng trên Tab:** `px-2 py-0.5 rounded-full text-xs font-semibold font-mono bg-slate-100 text-slate-700` (khi active chuyển sang `bg-blue-100 text-blue-800`).
+
+---
+
+#### TAB 1: DANH SÁCH LỚP HỌC CƠ SỞ (`Classes Tab`)
+
+Hiển thị toàn bộ các lớp đào tạo thuộc chi nhánh này (được lọc từ danh sách lớp có `c.BranchId == id`):
+
+```
++---------------------------------------------------------------------------------------------------+
+|  🏫 DANH SÁCH LỚP HỌC (8 lớp)                                [ ↗ Quản lý tại trang Lớp học ]      |
+|  [ 🔍 Tìm tên lớp, môn học, giáo viên... ]  [ Trạng thái: Tất cả | Đang học | Sắp mở | Đã kết thúc ]|
++---------------------------------------------------------------------------------------------------+
+|  Tên lớp            Khóa học / Phân loại   Giáo viên phụ trách    Sĩ số      Thời gian     Trạng thái|
++---------------------------------------------------------------------------------------------------+
+|  Tiền TH Họa Mi 1   Tiền tiểu học (Lớp 1)  Cô Nguyễn Mai Anh      12/15 em   T2-T4-T6     [● Đang học]|
+|  Mã: #CLS-101       Nhóm nhỏ (3-5 bé)      📞 0908 123 456        (Còn 3 chỗ) 08:00-09:30             |
+|  -----------------------------------------------------------------------------------------------  |
+|  Tư Duy Nhí A2      Tư duy logic & Toán    Thầy Lê Hoàng Nam      18/20 em   T3-T5-T7     [● Đang học]|
+|  Mã: #CLS-102       Tiêu chuẩn             📞 0912 345 678        (Còn 2 chỗ) 17:30-19:00             |
+|  -----------------------------------------------------------------------------------------------  |
+|  Luyện Chữ Đẹp 03   Rèn chữ & Chính tả     Cô Đặng Thu Hà          0/12 em   Khai giảng:   [● Sắp mở] |
+|  Mã: #CLS-105       Kèm riêng 1:1          📞 0933 456 789        (Mới mở)   01/12/2026               |
++---------------------------------------------------------------------------------------------------+
+|  Hiển thị 1 - 8 trên tổng số 8 lớp thuộc Cơ sở 1                                                  |
++---------------------------------------------------------------------------------------------------+
+```
+
+- **Thành phần dữ liệu:**
+  1. **Tên lớp & Mã:** Tên lớp in đậm `text-slate-900 font-semibold`, mã `#CLS-{id}` font mono mờ.
+  2. **Khóa học / Hình thức:** Tên khóa học (`CourseName`) kèm nhãn loại lớp (`Tiêu chuẩn`, `Nhóm nhỏ`, `Kèm riêng 1:1`).
+  3. **Giáo viên phụ trách:** Tên giáo viên (`TeacherName`) kèm số hotline bấm gọi điện `tel:{phone}`. Nếu chưa có: Nhãn vàng mờ `(Chưa phân công giáo viên)`.
+  4. **Sĩ số & Chỗ trống:** Hiển thị `sĩ số / maxStudents` (font mono). Kèm cảnh báo chỗ trống (`Đầy chỗ`, `Còn 3 chỗ`).
+  5. **Thời gian:** Ngày bắt đầu `StartDate` – kết thúc `EndDate`.
+  6. **Trạng thái:** Badge trạng thái chuẩn: `Ongoing` (Đang học - xanh lá), `Upcoming` (Sắp mở - xanh dương), `Finished` (Đã kết thúc - xám).
+- **Lối tắt ngữ cảnh (Contextual Shortcut):**
+  * Nút **`[ ↗ Quản lý tại trang Lớp học ]`**: Click chuyển hướng sang `/classes?branchId={id}` để Ban Giám Đốc tạo lớp mới, xếp thời khóa biểu hoặc phân công giáo viên.
+
+---
+
+#### TAB 2: DANH SÁCH GIÁO VIÊN CƠ SỞ (`Teachers Tab`)
+
+Hiển thị đội ngũ giáo viên đang công tác tại cơ sở (lấy từ API `GET /api/Users?role=Teacher&branchId={id}`):
+
+```
++---------------------------------------------------------------------------------------------------+
+|  👩‍🏫 ĐỘI NGŨ GIÁO VIÊN CƠ SỞ (10 giáo viên)                     [ 🔍 Tìm giáo viên, SĐT... ]      |
++---------------------------------------------------------------------------------------------------+
+|  Giáo viên             Liên hệ điện thoại    Email tài khoản       Trạng thái         Ngày tham gia|
++---------------------------------------------------------------------------------------------------+
+|  [ MA ] Mai Anh        📞 0908 123 456       maianh@roxy.edu.vn    [ ● Hoạt động ]    15/02/2026   |
+|  Nguyễn Mai Anh        [ Gọi điện ]                                                               |
+|  -----------------------------------------------------------------------------------------------  |
+|  [ HN ] Hoàng Nam      📞 0912 345 678       hoangnam@roxy.edu.vn  [ ● Hoạt động ]    01/03/2026   |
+|  Lê Hoàng Nam          [ Gọi điện ]                                                               |
+|  -----------------------------------------------------------------------------------------------  |
+|  [ TH ] Thu Hà         📞 0933 456 789       thuha@roxy.edu.vn     [ ● Đã khóa ]      10/01/2026   |
+|  Đặng Thu Hà           [ Gọi điện ]                                                               |
++---------------------------------------------------------------------------------------------------+
+|  Hiển thị 1 - 10 trên tổng số 10 giáo viên thuộc Cơ sở 1                                          |
++---------------------------------------------------------------------------------------------------+
+```
+
+- **Thành phần dữ liệu:**
+  1. **Họ tên & Avatar:** Avatar tròn màu phấn với 2 chữ cái đầu (`MA`, `HN`), họ tên giáo viên in đậm `font-semibold text-slate-900`.
+  2. **Liên hệ điện thoại:** Số điện thoại hotline có link `tel:{phone}`, có nút `[ Gọi điện ]` bấm nhanh.
+  3. **Email tài khoản:** Link `mailto:{email}` màu xanh slate nhẹ.
+  4. **Trạng thái tài khoản:** Badge xanh lá `[ ● Hoạt động ]` (`isActive === true`) hoặc badge xám `[ ● Đã khóa ]` (`isActive === false`).
+  5. **Ngày tham gia:** Định dạng `DD/MM/YYYY`.
+
+---
+
+#### TAB 3: DANH SÁCH HỌC VIÊN CƠ SỞ (`Students Tab`)
+
+Hiển thị toàn bộ học viên ghi danh tại chi nhánh (lấy từ API `GET /api/Students?branchId={id}`):
+
+```
++---------------------------------------------------------------------------------------------------+
+|  🎓 DANH SÁCH HỌC VIÊN (92 học viên)                       [ ↗ Quản lý tại trang Học viên ]       |
+|  [ 🔍 Tìm tên bé, mã STU, trường học... ]  [ Trạng thái: Tất cả | Đang học | Tạm dừng | Thôi học ]|
++---------------------------------------------------------------------------------------------------+
+|  Học viên            Mã số      Ngày sinh / Tuổi    Phụ huynh bảo hộ & SĐT    Trạng thái          |
++---------------------------------------------------------------------------------------------------+
+|  Trần Bảo Ngọc       #STU-102   14/05/2020 (6t)     Mẹ Lê Thị Lan             [ ● Đang học ]      |
+|  Trường MN Tuổi Thơ                                 📞 0912 345 678 [Gọi ngay]                    |
+|  -----------------------------------------------------------------------------------------------  |
+|  Nguyễn Tuấn Kiệt    #STU-110   22/09/2018 (8t)     Bố Nguyễn Văn An          [ ● Đang học ]      |
+|  Tiểu học Bình Trưng                                📞 0903 888 999 [Gọi ngay]                    |
+|  -----------------------------------------------------------------------------------------------  |
+|  Phạm Minh Khôi      #STU-125   05/11/2019 (7t)     Mẹ Hoàng Mai Trâm         [ ● Tạm dừng ]      |
+|  Trường TH Lương Thế Vinh                           📞 0988 777 666 [Gọi ngay]                    |
++---------------------------------------------------------------------------------------------------+
+|  Hiển thị 1 - 20 trên tổng số 92 học viên thuộc Cơ sở 1                    [ < Trước ] [ 1 2 3 ] [ Sau > ]|
++---------------------------------------------------------------------------------------------------+
+```
+
+- **Thành phần dữ liệu:**
+  1. **Họ tên & Trường học:** Tên học viên in đậm `font-semibold text-slate-900`, trường mầm non / tiểu học hiển thị dưới dạng phụ đề nhỏ `text-slate-500 text-xs`.
+  2. **Mã học viên:** Badge `#STU-{id}` font mono `text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded`.
+  3. **Ngày sinh & Tuổi:** Định dạng `DD/MM/YYYY` kèm tính tuổi tự động (ví dụ: `6 tuổi`).
+  4. **Phụ huynh & Hotline:** Họ tên phụ huynh bảo hộ kèm số điện thoại định dạng link `tel:{phone}` bấm gọi ngay.
+  5. **Trạng thái:** Badge chuẩn CSDL: `Active` (Đang học - xanh ngọc), `Paused` (Tạm dừng - vàng hổ phách), `Completed` (Đã hoàn thành - tím), `Dropped` (Thôi học - xám).
+  6. **Quy tắc bảo vệ dữ liệu nhạy cảm (`Note`):**
+     * Trường ghi chú sức khỏe, can thiệp đặc biệt, tự kỷ chỉ hiển thị cho nhân sự Staff (`SuperAdmin`, `BranchManager`, `Teacher`) theo đúng quy định bảo mật tại `GEMINI.md`.
+- **Lối tắt ngữ cảnh (Contextual Shortcut):**
+  * Nút **`[ ↗ Quản lý tại trang Học viên ]`**: Click chuyển hướng sang `/students?branchId={id}` để Ban Giám Đốc thực hiện ghi danh, thêm học viên mới hoặc xếp lớp.
+
+---
+
+### 13.7. QUY CHUẨN CHUYỂN ĐỘNG & NGUYÊN LÝ POLISH (MOTION & POLISH SPECS)
+
+Tuân thủ nghiêm ngặt 2 kỹ năng **Apple Design Guidelines** và **Emil Kowalski Philosophy**:
+
+1. **Chuyển Tab Không Giật (Tab Content Transition):**
+   - Vùng nội dung tab chuyển đổi với animation mượt mà:
+     ```css
+     @keyframes tabEnter {
+       from {
+         opacity: 0;
+         transform: translateY(4px);
+       }
+       to {
+         opacity: 1;
+         transform: translateY(0);
+       }
+     }
+     .tab-content {
+       animation: tabEnter 150ms cubic-bezier(0.23, 1, 0.32, 1);
+     }
+     ```
+   - Thời gian `150ms` nằm trong khung chuẩn micro-transition (100–150ms) của Emil Kowalski, tạo cảm giác phản hồi tức thì, không gây trễ nải khi Ban Giám Đốc chuyển đổi qua lại giữa các tab.
+2. **Phản Hồi Pointer-Down Tức Thì (Kill Latency):**
+   - Mọi nút bấm (Sửa, Ngừng HĐ, Tab item, Gọi điện, Thẻ KPI, Phân trang) đều có `:active:scale-[0.98]` trong `100ms ease-out`.
+3. **Thanh Chỉ Thị Active Tab (Active Tab Underline):**
+   - Vạch gạch chân `h-0.5 bg-blue-600` chuyển động đồng pha theo tab đang chọn với `transition: all 180ms ease-out`.
+4. **Tôn Trọng Tùy Chọn Giảm Chuyển Động (Reduced Motion):**
+   - Dưới `@media (prefers-reduced-motion: reduce)`, toàn bộ `translateY` bị triệt tiêu, chỉ chuyển đổi `opacity: 120ms ease`.
+
+---
+
+### 13.8. BỐ CỤC RESPONSIVE TRÊN MOBILE (`375px – 414px`)
+
+Trên điện thoại thông minh (khi Ban Giám Đốc di chuyển ngoài cơ sở và kiểm tra tình hình):
+
+#### 1. Header & Nút Thao Tác Co Giãn Linh Hoạt:
+```
++-------------------------------------------------------+
+|  [ ← DS Chi nhánh ]  #BR-1                            |
+|  🏢 CƠ SỞ 1 - BÌNH TRƯNG ĐÔNG            [ ● Đang HĐ] |
+|  📍 21/11 Đường 49, P. Bình Trưng Đông, Thủ Đức      |
+|  📞 0326 538 824 [ 📱 Gọi ngay ]                      |
+|                                                       |
+|  [ ✏️ Sửa chi nhánh (44px) ]  [ 🚫 Ngừng HĐ (44px) ]  |
++-------------------------------------------------------+
+```
+- Các nút hành động đạt chuẩn ngón tay cái tối thiểu `min-h-[44px]`.
+
+#### 2. Thẻ KPI Dàn 3 Cột Gọn Gàng:
+- 3 thẻ KPI tự động xếp dạng 3 cột nhỏ hoặc thẻ ngang:
+  `[ 🏫 8 Lớp mở ]`  `[ 🎓 92 Học viên ]`  `[ 👩‍🏫 10 Giáo viên ]`
+  với kích thước chữ `text-xl font-mono`, nhãn súc tích, chạm vào thẻ nào tự động chuyển sang tab đó.
+
+#### 3. Thanh Tab Cuộn Ngang (Horizontal Scrollable Tabs):
+- Thanh tab hỗ trợ gạt ngón tay mượt mà: `flex overflow-x-auto no-scrollbar gap-2 pb-1 border-b`.
+
+#### 4. Chuyển Đổi Bảng Thành Thẻ Xếp Dọc (Mobile Card Stacks):
+- Trên màn hình dưới `768px`, các bảng dữ liệu tự động chuyển thành danh sách thẻ xếp dọc dễ nhìn:
+  * **Thẻ Lớp học Mobile:** Tên lớp to rõ, badge sĩ số, tên giáo viên có nút bấm gọi ngay.
+  * **Thẻ Giáo viên Mobile:** Họ tên, avatar tròn, nút gọi điện thoại to 44px.
+  * **Thẻ Học viên Mobile:** Họ tên bé, tuổi, trường học, tên phụ huynh và nút bấm gọi phụ huynh.
+
+---
+
+### 13.9. TIÊU CHUẨN NGHIỆM THU CHO MÀN HÌNH CHI TIẾT CHI NHÁNH (ACCEPTANCE CHECKLIST)
+
+Frontend Developer và QA đối chiếu nghiệm thu màn hình `/branches/:id` theo danh sách kiểm tra chi tiết sau:
+
+- [ ] **Phân Quyền RBAC Nghiêm Ngặt:**
+  - [ ] Chỉ duy nhất vai trò `SuperAdmin` được phép truy cập trang `/branches/:id`.
+  - [ ] Các vai trò `BranchManager`, `Teacher`, `Parent`, `Student` khi truy cập bị chặn ngay bởi màn hình 403 trang trọng, hoàn toàn KHÔNG kích hoạt bất kỳ API nào.
+- [ ] **Điều Hướng & Breadcrumb:**
+  - [ ] Từ `/branches`: Click vào thẻ chi nhánh hoặc nút `[ 👁️ Xem chi tiết ]` chuyển đúng đến `/branches/:id`.
+  - [ ] Thanh Breadcrumb hiển thị rõ ràng: `← Quay lại Quản lý chi nhánh` click quay về `/branches`, hiển thị tên cơ sở và mã `#BR-{id}`.
+- [ ] **Header Căn Cước Chi Nhánh:**
+  - [ ] Hiển thị chính xác: Tên cơ sở, Mã `#BR-{id}`, Địa chỉ, Số điện thoại hotline (link `tel:`), Ngày tạo (`DD/MM/YYYY`), Trạng thái hoạt động (badge xanh lá animate pulse nếu active, xám nếu inactive).
+  - [ ] Nút `[ ✏️ Sửa thông tin ]`: Mở `CreateEditBranchModal` ở chế độ chỉnh sửa; lưu thành công cập nhật dữ liệu ngay tại chỗ.
+  - [ ] Nút `[ 🚫 Ngừng hoạt động ]` / `[ ✓ Kích hoạt lại ]`: Mở dialog xác nhận, đồng bộ cơ chế bắt lỗi 400 và cung cấp lối tắt sang lớp/học viên nếu còn ràng buộc chưa hoàn thành.
+- [ ] **3 Thẻ KPI Thống Kê:**
+  - [ ] Lấy số liệu chính xác từ `BranchDto`: `classCount`, `studentCount`, `teacherCount`.
+  - [ ] Click vào từng thẻ KPI tự động chuyển sang tab tương ứng.
+- [ ] **Hệ Thống 3 Tab Danh Sách:**
+  - [ ] **Tab 1 - Lớp học:** Hiển thị danh sách lớp thuộc cơ sở; có nút `↗ Quản lý tại trang Lớp học` dẫn sang `/classes?branchId={id}`; có tìm kiếm và bộ lọc trạng thái.
+  - [ ] **Tab 2 - Giáo viên:** Hiển thị danh sách giáo viên cơ sở (họ tên, SĐT `tel:`, email `mailto:`, trạng thái tài khoản); có ô tìm kiếm.
+  - [ ] **Tab 3 - Học viên:** Hiển thị danh sách học viên cơ sở (họ tên, mã `#STU`, ngày sinh, phụ huynh & hotline `tel:`, trạng thái); tuân thủ bảo mật ghi chú nội bộ `Note`; có nút `↗ Quản lý tại trang Học viên` dẫn sang `/students?branchId={id}`.
+- [ ] **Motion & Polish:**
+  - [ ] Tab switch chuyển động mượt `opacity + translateY` trong 150ms.
+  - [ ] Phản hồi xúc giác `:active:scale-[0.98]` trên tất cả các nút bấm và thẻ.
+  - [ ] Tôn trọng tùy chọn `@media (prefers-reduced-motion: reduce)`.
+- [ ] **Chuẩn Responsive Mobile (`375px – 414px`):**
+  - [ ] Toàn bộ nút thao tác đạt diện tích chạm chuẩn `min-h-[44px]`.
+  - [ ] Bảng dữ liệu tự động thích ứng sang dạng Card xếp dọc, hiển thị đầy đủ thông tin mà không cần cuộn ngang vỡ màn hình.
+
 
 
 
