@@ -29,7 +29,7 @@ public class CreateGradeRequest
     public string ExamName { get; set; } = "";
 
     [Required(ErrorMessage = "Loại bài kiểm tra là bắt buộc"), StringLength(50)]
-    public string ExamType { get; set; } = "15Min"; // Ví dụ: 15Min, 45Min, MidTerm, Final
+    public string ExamType { get; set; } = "Other"; // Quiz, Midterm, Final, Daily, Other
 
     public DateOnly? ExamDate { get; set; }
 
@@ -39,7 +39,7 @@ public class CreateGradeRequest
     [Range(1, 1000)]
     public decimal MaxScore { get; set; } = 10; // Mặc định thang điểm 10
 
-    [StringLength(500)]
+    [StringLength(1000)]
     public string? TeacherComment { get; set; }
 }
 
@@ -49,7 +49,7 @@ public class UpdateGradeRequest
     public string ExamName { get; set; } = "";
 
     [Required(ErrorMessage = "Loại bài kiểm tra là bắt buộc"), StringLength(50)]
-    public string ExamType { get; set; } = "";
+    public string ExamType { get; set; } = "Other"; // Quiz, Midterm, Final, Daily, Other
 
     public DateOnly? ExamDate { get; set; }
 
@@ -57,8 +57,8 @@ public class UpdateGradeRequest
     public decimal? Score { get; set; }
 
     [Range(1, 1000)]
-    public decimal MaxScore { get; set; }
+    public decimal MaxScore { get; set; } = 10;
 
-    [StringLength(500)]
+    [StringLength(1000)]
     public string? TeacherComment { get; set; }
 }

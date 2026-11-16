@@ -97,6 +97,10 @@ export default function AdminLayout() {
         <span className="text-base">📚</span>
         <span>Bài tập</span>
       </NavLink>
+      <NavLink to="/grades" className={navItemClass} onClick={onItemClick}>
+        <span className="text-base">💯</span>
+        <span>Điểm kiểm tra</span>
+      </NavLink>
       <NavLink to="/leave-requests" className={navItemClass} onClick={onItemClick}>
         <span className="text-base">📝</span>
         <span>Xin nghỉ phép</span>
@@ -266,6 +270,10 @@ export default function AdminLayout() {
                   ? 'Điểm danh học viên'
                   : location.pathname.startsWith('/homeworks')
                   ? 'Quản lý Bài tập về nhà'
+                  : location.pathname.startsWith('/grades')
+                  ? 'Quản lý Điểm kiểm tra'
+                  : location.pathname.startsWith('/leave-requests')
+                  ? 'Quản lý Đơn xin nghỉ phép'
                   : location.pathname.startsWith('/tuitions')
                   ? 'Quản lý Học phí & Công nợ'
                   : location.pathname.startsWith('/payments')

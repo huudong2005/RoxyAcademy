@@ -8,6 +8,7 @@ import Attendance from './pages/Attendance';
 import Tuitions from './pages/Tuitions';
 import Payments from './pages/Payments';
 import Homeworks from './pages/Homeworks';
+import Grades from './pages/Grades';
 import LeaveRequests from './pages/LeaveRequests';
 import Branches from './pages/Branches';
 import BranchDetail from './pages/BranchDetail';
@@ -31,6 +32,7 @@ export default function App() {
             <Route path="/tuitions" element={<Tuitions />} />
             <Route path="/payments" element={<Payments />} />
             <Route path="/homeworks" element={<Homeworks />} />
+            <Route path="/grades" element={<Grades />} />
             <Route path="/leave-requests" element={<LeaveRequests />} />
             <Route path="/branches" element={<Branches />} />
             <Route path="/branches/:id" element={<BranchDetail />} />

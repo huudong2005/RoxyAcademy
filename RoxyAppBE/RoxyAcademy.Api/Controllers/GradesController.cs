@@ -13,11 +13,38 @@ namespace RoxyAcademy.Api.Controllers;
 [Authorize]
 public class GradesController(RoxyDbContext db) : ControllerBase
 {
+    private static readonly HashSet<string> AllowedExamTypes = new(StringComparer.Ordinal)
+    {
+        "Quiz", "Midterm", "Final", "Daily", "Other"
+    };
+
     private string Role => User.GetRole();
     private int UserId => User.GetUserId();
 
+    private static string? ValidateGradeInput(string? examType, decimal? score, decimal maxScore, string? teacherComment)
+    {
+        var normalizedType = examType?.Trim() ?? "";
+        if (!AllowedExamTypes.Contains(normalizedType))
+            return "Loại bài kiểm tra không hợp lệ. Chỉ chấp nhận: Quiz, Midterm, Final, Daily, Other.";
+
+        if (maxScore <= 0)
+            return "Thang điểm tối đa phải lớn hơn 0.";
+
+        if (score.HasValue && (score.Value < 0 || score.Value > maxScore))
+            return $"Điểm số phải nằm trong khoảng từ 0 đến {maxScore}.";
+
+        if (!score.HasValue && string.IsNullOrWhiteSpace(teacherComment))
+            return "Vui lòng nhập điểm số hoặc nhận xét của giáo viên.";
+
+        return null;
+    }
+
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<GradeDto>>> GetGrades([FromQuery] int? classId, [FromQuery] int? studentId)
+    public async Task<ActionResult<IEnumerable<GradeDto>>> GetGrades(
+        [FromQuery] int? classId,
+        [FromQuery] int? studentId,
+        [FromQuery] string? examType,
+        [FromQuery] DateOnly? examDate)
     {
         var q = db.Grades
             .Include(g => g.StudentClass).ThenInclude(sc => sc.Student)
@@ -49,6 +76,12 @@ public class GradesController(RoxyDbContext db) : ControllerBase
 
         if (classId.HasValue) q = q.Where(g => g.ClassId == classId);
         if (studentId.HasValue) q = q.Where(g => g.StudentId == studentId);
+        if (!string.IsNullOrWhiteSpace(examType))
+        {
+            var normalizedExamType = examType.Trim();
+            q = q.Where(g => g.ExamType == normalizedExamType);
+        }
+        if (examDate.HasValue) q = q.Where(g => g.ExamDate == examDate.Value);
 
         var list = await q.OrderByDescending(g => g.ExamDate).ThenByDescending(g => g.CreatedAt)
             .Select(g => new GradeDto(
@@ -80,16 +113,20 @@ public class GradesController(RoxyDbContext db) : ControllerBase
         if (Role == "BranchManager" && studentClass.Class!.BranchId != User.GetBranchId())
             return StatusCode(StatusCodes.Status403Forbidden, new { message = "Không thể nhập điểm cho lớp học của cơ sở khác." });
 
+        var validationError = ValidateGradeInput(req.ExamType, req.Score, req.MaxScore, req.TeacherComment);
+        if (validationError != null)
+            return BadRequest(new { message = validationError });
+
         var grade = new Grade
         {
             StudentId = req.StudentId,
             ClassId = req.ClassId,
             ExamName = req.ExamName.Trim(),
-            ExamType = req.ExamType,
+            ExamType = req.ExamType.Trim(),
             ExamDate = req.ExamDate,
             Score = req.Score,
             MaxScore = req.MaxScore,
-            TeacherComment = req.TeacherComment,
+            TeacherComment = string.IsNullOrWhiteSpace(req.TeacherComment) ? null : req.TeacherComment.Trim(),
             GradedBy = UserId,
             CreatedAt = DateTime.UtcNow
         };
@@ -116,12 +153,16 @@ public class GradesController(RoxyDbContext db) : ControllerBase
         if (Role == "BranchManager" && grade.StudentClass!.Class!.BranchId != User.GetBranchId())
             return StatusCode(StatusCodes.Status403Forbidden, new { message = "Không thể sửa điểm cho lớp học của cơ sở khác." });
 
+        var validationError = ValidateGradeInput(req.ExamType, req.Score, req.MaxScore, req.TeacherComment);
+        if (validationError != null)
+            return BadRequest(new { message = validationError });
+
         grade.ExamName = req.ExamName.Trim();
-        grade.ExamType = req.ExamType;
+        grade.ExamType = req.ExamType.Trim();
         grade.ExamDate = req.ExamDate;
         grade.Score = req.Score;
         grade.MaxScore = req.MaxScore;
-        grade.TeacherComment = req.TeacherComment;
+        grade.TeacherComment = string.IsNullOrWhiteSpace(req.TeacherComment) ? null : req.TeacherComment.Trim();
 
         // Cập nhật lại người sửa điểm và thời gian sửa
         grade.GradedBy = UserId;

@@ -3124,6 +3124,301 @@ Frontend Developer và QA đối chiếu nghiệm thu màn hình `/branches/:id`
   - [ ] Toàn bộ nút thao tác đạt diện tích chạm chuẩn `min-h-[44px]`.
   - [ ] Bảng dữ liệu tự động thích ứng sang dạng Card xếp dọc, hiển thị đầy đủ thông tin mà không cần cuộn ngang vỡ màn hình.
 
+---
 
+## 14. THIẾT KẾ MÀN HÌNH ĐIỂM KIỂM TRA (GRADES) — GIAI ĐOẠN 1H
 
+**Route:** `/grades`  
+**Component:** `roxy-admin/src/pages/Grades.jsx`  
+**Đối tượng sử dụng:**
+- **Nhóm quản lý & đào tạo (Staff):** `SuperAdmin`, `BranchManager`, `Teacher` (Toàn quyền xem, lọc, nhập điểm mới, sửa điểm).
+- **Nhóm xem kết quả (Viewer):** `Parent`, `Student` (Chỉ xem điểm/nhận xét được phân quyền; **ẩn hoàn toàn** nút nhập điểm, nút sửa điểm, không có thao tác ghi).
+- **Luật hệ thống:** **Tuyệt đối KHÔNG có nút xóa** ở bất kỳ giao diện nào (khớp nghiệp vụ backend không cung cấp endpoint DELETE).
+
+---
+
+### 14.1. 7 NGUYÊN LÝ THIẾT KẾ & CHUYỂN ĐỘNG (APPLE DESIGN & EMIL KOWALSKI) ÁP DỤNG CHO MÀN HÌNH ĐIỂM SỐ
+
+Áp dụng chặt chẽ theo bộ skill `/apple-design` và `/emil-design-eng`, định hình màn hình `/grades` thành một công cụ quản lý sư phạm chuyên nghiệp, tốc độ cao:
+
+1. **Phản hồi tức thì trên Pointer-Down (`active:scale-[0.98]`):**
+   - Mọi nút bấm (Lọc, Nhập điểm, Xem chi tiết, Sửa điểm, Chọn chip nhận xét nhanh) phản hồi `:active` ngay khoảnh khắc chạm (`transition: transform 100ms ease-out`), không đợi nhả chuột mới đổi màu.
+2. **Tiết chế chuyển động công cụ (Restraint — Admin is a Work Tool):**
+   - Giáo viên nhập điểm cho cả lớp (20–30 bài/buổi) cần tốc độ tối đa. Thao tác lọc, chọn lớp, chọn học viên và chuyển trang không dùng animation trễ nải (dưới 150ms). Không dùng spring nảy hay hiệu ứng trôi dạt gây chóng mặt.
+3. **Không bao giờ xuất hiện từ hư vô (Never animate from scale 0):**
+   - Modal nhập/sửa điểm và Drawer chi tiết mở ra từ `opacity: 0; transform: scale(0.96)` lên `opacity: 1; transform: scale(1)` với đường cong `cubic-bezier(0.23, 1, 0.32, 1)` trong 200ms. Modal luôn neo giữa màn hình (`transform-origin: center`).
+4. **Tính nhất quán không gian (Spatial Consistency):**
+   - Drawer xem chi tiết trượt vào từ mép phải (`translate-x-full` → `translate-x-0`), khi đóng rút lui về đúng mép phải. Backdrop làm mờ nhẹ (`backdrop-blur-[2px] bg-slate-900/40`) giúp người dùng tập trung vào thông tin bài thi mà không mất ngữ cảnh bảng bên dưới.
+5. **Cascading Dropdown không giật giật (Predictable Dependency):**
+   - Khi chọn Lớp học, ô Học viên chuyển sang trạng thái chờ với spinner viền mảnh inline hoặc placeholder "Đang tải danh sách học viên..." trong thời gian ngắn, sau đó nạp mượt mà, không làm nhảy layout các ô input lân cận.
+6. **Mật độ quang học & Thứ bậc kiểu chữ (Optical Sizing & Hierarchy):**
+   - Điểm số là thông tin quan trọng nhất: hiển thị số điểm lớn (`text-lg font-bold text-slate-900`), mẫu số thang điểm nhỏ hơn (`text-xs text-slate-400 font-normal`) giúp mắt nhận biết nhanh trong vòng 100ms lướt bảng.
+7. **Tôn trọng tùy chọn giảm chuyển động (Reduced Motion):**
+   - Khi bật `prefers-reduced-motion: reduce`, toàn bộ chuyển động co giãn và trượt ngang bị vô hiệu hóa; chuyển đổi giữa các trạng thái bằng `opacity 150ms ease`.
+
+---
+
+### 14.2. BẢNG MÀU, ENUM LOẠI BÀI THI & TRẠNG THÁI ĐIỂM SỐ
+
+#### 1. Badge 5 Loại bài kiểm tra (`ExamType`):
+Khớp chính xác 100% với ràng buộc Database `CK_Grades_Type` và Backend DTO (`Quiz`, `Midterm`, `Final`, `Daily`, `Other`):
+
+| Giá trị Enum DB | Nhãn Tiếng Việt | Ý nghĩa sư phạm | Màu nền & Viền | Màu chữ | Icon / Dot |
+| :--- | :--- | :--- | :--- | :--- | :---: |
+| `Quiz` | **Kiểm tra 15p** | Bài kiểm tra ngắn đầu/cuối giờ | `bg-purple-50 border-purple-200` | `text-purple-700` | ⚡ |
+| `Midterm` | **Giữa kỳ** | Đánh giá tiến độ giữa khóa | `bg-amber-50 border-amber-200` | `text-amber-800` | 📝 |
+| `Final` | **Cuối khóa** | Đánh giá tổng kết, xét hoàn thành | `bg-rose-50 border-rose-200` | `text-rose-700` | 🏆 |
+| `Daily` | **Đánh giá ngày** | Ghi nhận sự tiến bộ từng buổi | `bg-emerald-50 border-emerald-200` | `text-emerald-700` | 📅 |
+| `Other` | **Đánh giá khác** | Năng khiếu, chữ đẹp, rèn luyện (Mặc định)| `bg-slate-100 border-slate-200` | `text-slate-700` | 📌 |
+
+#### 2. Trạng thái Điểm số (`Score` vs `Score = null`):
+- **Trường hợp có điểm số (`Score !== null`):**
+  - Điểm giỏi/xuất sắc (≥ 8.5/10): `text-emerald-700 font-bold` (Kèm dot xanh lá `bg-emerald-500`).
+  - Điểm khá/đạt (5.0 – 8.4/10): `text-blue-700 font-bold` (Kèm dot xanh dương `bg-blue-500`).
+  - Điểm cần rèn luyện (< 5.0/10): `text-rose-600 font-bold` (Kèm dot đỏ `bg-rose-500`).
+  - Cấu trúc hiển thị: `<span class="text-base font-bold">{Score}</span><span class="text-xs text-slate-400 font-normal">/{MaxScore}</span>`
+- **Trường hợp không chấm điểm số (`Score === null` — Đánh giá định tính):**
+  - Hiển thị badge dịu mắt: `inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-800 border border-amber-200`
+  - Nội dung badge: `💬 Đánh giá định tính` (hoặc `📝 Chỉ nhận xét`). Giúp phụ huynh và giáo viên hiểu rõ đây là chương trình đánh giá bằng nhận xét năng lực, không áp lực điểm số.
+
+---
+
+### 14.3. BỐ CỤC TỔNG THỂ & THANH CÔNG CỤ LỌC (LAYOUT & FILTER BAR)
+
+#### Sơ đồ bố cục màn hình:
+```
++----------------------------------------------------------------------------------------------------+
+|  Quản lý Điểm kiểm tra  [ 42 bản ghi ]                                    [ + Nhập điểm mới (44px) ]|
+|  Theo dõi kết quả học tập, bài thi định kỳ và nhận xét sư phạm của giáo viên                        |
++----------------------------------------------------------------------------------------------------+
+|  [ 🏫 Chọn lớp học... ▾ ] [ 🎓 Chọn học viên... ▾ ] [ 🏷️ Loại bài: Tất cả ▾ ] [ 📅 Ngày thi: dd/mm ] [ 🔄 ]|
++----------------------------------------------------------------------------------------------------+
+|  Học viên        Lớp học        Tên bài kiểm tra         Loại bài       Ngày thi    Điểm số     Người chấm  Thao tác |
++----------------------------------------------------------------------------------------------------+
+|  Nguyễn An Nhiên Tiền tiểu học  Kiểm tra nét chữ cơ bản  [ ⚡ KT 15p ]  14/11/2026  9.5 / 10    Cô Mai Lan  [ 👁️ ] [ ✏️ ] |
+|  Trần Minh Khôi  Tư duy logic   Đánh giá kỹ năng tuần 3  [ 💬 Định tính]12/11/2026  Chỉ nhận xétThầy Hùng   [ 👁️ ] [ ✏️ ] |
++----------------------------------------------------------------------------------------------------+
+|  Hiển thị 1 - 10 trên tổng số 42 bản ghi điểm số                         [ < Trước ] [ 1 2 3 ] [ Sau > ] |
++----------------------------------------------------------------------------------------------------+
+```
+
+#### Chi tiết các trường lọc (Filter Bar):
+1. **Lọc theo Lớp học (`classFilter`):**
+   - Dropdown lấy từ `GET /api/Classes` (đã được lọc theo vai trò tự động từ backend).
+   - Tùy chọn mặc định: `Tất cả lớp học`.
+2. **Lọc theo Học viên (`studentFilter`):**
+   - **Cơ chế Cascading:**
+     - Khi đã chọn Lớp học: Dropdown hiển thị danh sách học viên đã ghi danh vào lớp đó (gọi `GET /api/StudentClasses?classId={classId}`).
+     - Khi chưa chọn Lớp học: Dropdown hiển thị toàn bộ học viên mà người dùng có quyền xem (hoặc để placeholder `Tất cả học viên`).
+3. **Lọc theo Loại bài (`examTypeFilter`):**
+   - Dropdown 6 tùy chọn: `Tất cả loại bài`, `Kiểm tra 15p (Quiz)`, `Giữa kỳ (Midterm)`, `Cuối khóa (Final)`, `Đánh giá ngày (Daily)`, `Đánh giá khác (Other)`.
+   - Giá trị gửi lên API khớp đúng 5 chuỗi enum tiếng Anh.
+4. **Lọc theo Ngày thi (`examDateFilter`):**
+   - Ô chọn ngày `type="date"`, hỗ trợ chọn ngày chính xác của bài kiểm tra.
+5. **Nút Đặt lại bộ lọc (Reset button):**
+   - Nút icon `🔄` hoặc chữ `Xóa lọc`, click đặt lại tất cả bộ lọc về rỗng/mặc định và đưa về trang 1.
+
+---
+
+### 14.4. BẢNG DỮ LIỆU DESKTOP & DANH SÁCH THẺ MOBILE
+
+#### 1. Cấu trúc Bảng Desktop (Màn hình ≥ 1024px):
+- **Cột 1: Học viên (`Student`):**
+  - Avatar tròn chữ cái viết tắt (`bg-blue-100 text-blue-700 font-bold`).
+  - Họ và tên học viên (`font-semibold text-slate-900 text-sm hover:text-blue-600 transition`).
+  - Mã học viên nhỏ phía dưới: `#STU-{studentId}` (`text-[11px] text-slate-400 font-mono`).
+- **Cột 2: Lớp học (`Class`):**
+  - Tên lớp học (`text-slate-800 font-medium text-xs md:text-sm`).
+- **Cột 3: Tên bài kiểm tra (`ExamName`):**
+  - Tiêu đề bài thi (`text-slate-900 font-medium text-sm`).
+  - Nhận xét giáo viên rút gọn phía dưới: `truncate max-w-xs text-xs text-slate-500 italic` kèm icon 💬.
+- **Cột 4: Loại bài (`ExamType`):**
+  - Badge màu tương ứng theo Bảng màu mục 14.2.
+- **Cột 5: Ngày thi (`ExamDate`):**
+  - Định dạng `DD/MM/YYYY` qua hàm `formatDate(examDate)`. Nếu null hiển thị `—`.
+- **Cột 6: Điểm số (`Score / MaxScore`):**
+  - Nếu có điểm: Hiển thị `{Score} / {MaxScore}` với màu sắc phân cấp.
+  - Nếu `Score === null`: Hiển thị badge `💬 Chỉ nhận xét`.
+- **Cột 7: Người chấm (`GradedByName`):**
+  - Tên giáo viên / cán bộ chấm điểm (`text-xs text-slate-600`).
+- **Cột 8: Thao tác (`Actions`):**
+  - Nút **[ 👁️ Xem ]**: Mở Drawer chi tiết bài thi (áp dụng cho mọi vai trò).
+  - Nút **[ ✏️ Sửa ]**: Mở Modal Chỉnh sửa điểm số (**chỉ hiển thị** cho `SuperAdmin`, `BranchManager`, `Teacher`; **ẩn hoàn toàn** đối với `Parent` và `Student`).
+  - **Tuyệt đối KHÔNG có nút Xóa**.
+
+#### 2. Danh sách Thẻ Mobile (Màn hình < 768px, Chuẩn 375px – 414px):
+Trên màn hình điện thoại, bảng dữ liệu tự động chuyển thành danh sách thẻ dọc độc lập (Card Stack), chống tràn ngang:
+- **Khung thẻ:** `rounded-xl border border-slate-200 bg-white p-4 shadow-xs space-y-3`.
+- **Dòng đầu (Header card):**
+  - Bên trái: Họ tên bé (`font-bold text-slate-900 text-base`) kèm tên lớp.
+  - Bên phải: Điểm số nổi bật (`text-lg font-bold text-emerald-700` hoặc badge `Đánh giá định tính`).
+- **Dòng thứ hai:**
+  - Tiêu đề bài thi + Badge loại bài (`Quiz`, `Midterm`,...).
+- **Dòng thứ ba:**
+  - Ngày thi 📅 `DD/MM/YYYY` + Người chấm 👩‍🏫.
+- **Dòng thứ tư (Nhận xét nếu có):**
+  - Khung viền mỏng màu vàng nhạt/xám `bg-slate-50 rounded-lg p-2.5 text-xs text-slate-600 italic line-clamp-2`.
+- **Dòng hành động (Footer card):**
+  - Nút `[ 👁️ Xem chi tiết ]` đạt diện tích chạm chuẩn ngón tay cái `min-h-[44px] flex-1 rounded-lg border border-slate-200 bg-slate-50 text-slate-700 text-xs font-semibold justify-center`.
+  - Nút `[ ✏️ Sửa điểm ]` (nếu có quyền staff) `min-h-[44px] px-4 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 text-xs font-semibold`.
+
+---
+
+### 14.5. ĐẶC TẢ DRAWER XEM CHI TIẾT BÀI KIỂM TRA (DETAIL DRAWER)
+
+Khi người dùng nhấn vào dòng dữ liệu hoặc nút `[ 👁️ Xem ]`, Drawer trượt từ mép phải màn hình với các khối nội dung:
+
+1. **Header Drawer:**
+   - Tiêu đề: `Chi tiết kết quả kiểm tra`.
+   - Nút `✕` đóng drawer (`w-9 h-9 rounded-lg hover:bg-slate-100 flex items-center justify-center`).
+2. **Khối Hero Thống kê Điểm số:**
+   - Thẻ nổi bật nền xanh nhạt hoặc vàng hổ phách dịu mắt:
+     - Nếu có điểm: Hiển thị điểm số khổng lồ `text-4xl font-extrabold text-slate-900` kèm mẫu số `/ {MaxScore}`.
+     - Nếu không có điểm: Hiển thị badge lớn `💬 Đánh giá định tính sư phạm — Không áp điểm số`.
+   - Tiêu đề bài thi (`text-lg font-bold text-slate-900 mt-2`).
+   - Badge loại bài + Ngày thi.
+3. **Khối Thông tin Học viên & Lớp học (2 Cột):**
+   - **Học viên:** Họ tên, Mã học viên, Avatar.
+   - **Lớp học:** Tên lớp học, Chi nhánh cơ sở đào tạo.
+4. **Khối Nhận xét Sư phạm của Giáo viên (Teacher's Evaluation):**
+   - Tiêu đề mục: `📝 Lời nhận xét & Đánh giá năng lực của Giáo viên`.
+   - Nội dung nhận xét đặt trong thẻ blockquote trân trọng (`bg-amber-50/60 border-l-4 border-amber-400 p-4 rounded-r-xl text-sm leading-relaxed text-slate-800 whitespace-pre-line`).
+   - Nếu chưa có nhận xét: Hiển thị chữ nghiêng `text-slate-400 italic: "Chưa có nhận xét bổ sung từ giáo viên."`.
+5. **Khối Lịch sử & Kiểm toán (Audit Metadata):**
+   - Người chấm điểm: `GradedByName` (hoặc Cán bộ quản lý).
+   - Ngày ghi nhận (`CreatedAt`): `formatDateTime(createdAt)`.
+   - Cập nhật lần cuối (`UpdatedAt`): `formatDateTime(updatedAt)` (nếu có).
+6. **Thanh Thao tác Dưới đáy Drawer (Footer Actions):**
+   - Nếu là Staff (`SuperAdmin`, `BranchManager`, `Teacher`): Có nút `[ ✏️ Chỉnh sửa điểm số ]` (`bg-blue-600 text-white min-h-[44px] rounded-lg font-semibold text-xs md:text-sm px-4 hover:bg-blue-700 active:scale-[0.98] transition`). Click vào sẽ đóng Drawer và mở Modal Chỉnh sửa.
+   - Nút `[ Đóng ]` (`border border-slate-200 text-slate-700 min-h-[44px] rounded-lg px-4 hover:bg-slate-50`).
+
+---
+
+### 14.6. ĐẶC TẢ MODAL NHẬP ĐIỂM MỚI & SỬA ĐIỂM (CREATE / EDIT MODAL)
+
+**Quyền truy cập:** Chỉ dành riêng cho `SuperAdmin`, `BranchManager`, `Teacher`. Phụ huynh (`Parent`) và Học viên (`Student`) tuyệt đối không thấy nút mở modal này.
+
+#### 1. Các trường dữ liệu trong Form:
+
+```
++---------------------------------------------------------------------------------+
+|  ✏️ Nhập điểm kiểm tra mới                                                  [ ✕ ]|
++---------------------------------------------------------------------------------+
+|  1. Lớp học (*)                                2. Học viên ghi danh (*)         |
+|  [ Tiền tiểu học - Cơ sở 1              ▾ ]    [ Nguyễn An Nhiên (#STU-102) ▾ ] |
+|                                                                                 |
+|  3. Tên bài kiểm tra (*)                       4. Loại bài thi                  |
+|  [ VD: Kiểm tra nét chữ cơ bản bài 4      ]    [ Đánh giá khác (Other)       ▾ ] |
+|                                                                                 |
+|  5. Ngày thi                                   6. Thang điểm tối đa (*)         |
+|  [ 14/11/2026                           📅 ]   [ 10                           ] |
+|                                                                                 |
+|  7. Điểm số đạt được (Có thể để trống)                                          |
+|  [ 9.5                                    ]  / 10                               |
+|  💡 Có thể để trống điểm nếu bài kiểm tra có nhận xét định tính của giáo viên   |
+|                                                                                 |
+|  8. Nhận xét của giáo viên                                                      |
+|  [ Bé viết nét khuyết trên rất tròn trịa, chữ sạch đẹp, con tiếp tục phát huy! ]|
+|  Mẫu nhận xét nhanh:                                                            |
+|  [ 🌟 Khen ngợi xuất sắc ] [ 👍 Hoàn thành tốt ] [ ✏️ Cần nắn nót ] [ 🌈 Tiến bộ ]|
++---------------------------------------------------------------------------------+
+|                                                 [ Hủy bỏ ]   [ ✓ Lưu điểm số ]  |
++---------------------------------------------------------------------------------+
+```
+
+#### 2. Quy tắc Nghiệp vụ & Khóa trường (Field Locking Rules):
+- **Khi TẠO MỚI (Create Mode):**
+  - Bước 1: Người dùng chọn **Lớp học** (`ClassId`).
+  - Bước 2: Sau khi chọn lớp, hệ thống tự động gọi API `GET /api/StudentClasses?classId={classId}` để lấy danh sách học viên đang theo học tại lớp đó.
+  - Ô chọn **Học viên** (`StudentId`) được mở khóa và chỉ hiển thị đúng các học viên đã ghi danh vào lớp.
+  - *Nếu chưa chọn Lớp học:* Dropdown Học viên ở trạng thái `disabled` kèm thông báo *"Vui lòng chọn lớp học trước"*.
+- **Khi CHỈNH SỬA (Edit Mode):**
+  - **Khóa cứng (Disabled / Readonly)** 2 trường `Lớp học` và `Học viên`.
+  - *Lý do:* Ràng buộc khóa ngoại cơ sở dữ liệu `FK_Grades_Enrolled` gắn chặt với cặp `(StudentId, ClassId)` và API `PUT /api/Grades/{id}` không cho phép chuyển bản ghi sang lớp/học viên khác.
+  - Người dùng chỉ được sửa: `ExamName`, `ExamType`, `ExamDate`, `Score`, `MaxScore`, `TeacherComment`.
+
+#### 3. Quy tắc Ràng buộc Hợp lệ (Validation UX):
+Tuân thủ đúng 100% ràng buộc CSDL `CK_Grades_HasContent`, `CK_Grades_Score`, `CK_Grades_MaxScore`:
+1. **Tên bài thi (`ExamName`):** Bắt buộc, không được để trống, tối đa 150 ký tự.
+2. **Thang điểm (`MaxScore`):** Bắt buộc, phải là số thực `> 0` (mặc định là `10`).
+3. **Điểm số (`Score`):**
+   - Cho phép để trống (null) đối với các chương trình đánh giá định tính.
+   - Nếu có nhập điểm: Phải là số trong khoảng từ `0` đến `MaxScore`. Nếu nhập số âm hoặc lớn hơn `MaxScore`, báo lỗi inline màu đỏ ngay dưới ô điểm: *"Điểm số phải nằm trong khoảng từ 0 đến {MaxScore}."*
+4. **Quy tắc Bắt buộc Có Nội dung (`CK_Grades_HasContent`):**
+   - Nếu `Score` để trống: Bắt buộc trường Nhận xét giáo viên (`TeacherComment`) phải có nội dung văn bản.
+   - Nếu cả `Score` để trống VÀ `TeacherComment` để trống: Báo lỗi inline nổi bật: *"Vui lòng nhập điểm số hoặc nhận xét sư phạm của giáo viên."*
+
+#### 4. Khối Gợi ý Nhận xét Nhanh (Quick Feedback Chips):
+Nhằm tăng tối đa năng suất làm việc cho giáo viên (theo chuẩn Emil Kowalski polish), trang bị 4 nút mẫu nhận xét 1-chạm:
+- **`[ 🌟 Khen ngợi xuất sắc ]`**: "Bé hoàn thành bài rất xuất sắc, hiểu bài sâu sắc và trình bày sạch đẹp. Cô khen ngợi con!"
+- **`[ 👍 Hoàn thành tốt ]`**: "Con làm bài tốt, đạt yêu cầu bài học. Tiếp tục rèn luyện và phát huy ở các bài sau nhé!"
+- **`[ ✏️ Cần nắn nót hơn ]`**: "Con nắm được kiến thức bài học nhưng cần chú ý viết chậm lại để nét chữ đều và đẹp hơn."
+- **`[ 🌈 Tiến bộ vượt bậc ]`**: "Bé có sự tự tin và tiến bộ rõ rệt so với giai đoạn trước. Cô rất tự hào về con!"
+*Khi click chip: Văn bản tự động nối thêm vào ô `TeacherComment`, không ghi đè mất chữ giáo viên đã gõ.*
+
+---
+
+### 14.7. ĐẶC TẢ CÁC TRẠNG THÁI GIAO DIỆN (UI STATES)
+
+#### 1. Trạng thái Đang tải (Loading Skeleton):
+- Hiển thị Skeleton Table gồm 5 dòng nhấp nháy nhẹ (`animate-pulse bg-slate-200/60 rounded-lg h-10 w-full mb-2`) thay vì spinner quay tít mù làm mất cấu trúc trang.
+- Giữ nguyên khung Filter Bar để tránh co giật Layout (Cumulative Layout Shift = 0).
+
+#### 2. Trạng thái Danh sách Rỗng (Empty States):
+- **Rỗng toàn bộ (Chưa có điểm kiểm tra nào):**
+  - Minh họa icon: `💯` hoặc `📝`.
+  - Tiêu đề: `Chưa có bài kiểm tra nào được ghi nhận`.
+  - Phụ đề: `Các bài kiểm tra 15 phút, giữa kỳ, cuối khóa và nhận xét sư phạm của lớp học sẽ xuất hiện tại đây.`
+  - Nút hành động CTA (chỉ hiện cho Staff): `[ + Nhập điểm mới ]` mở ngay modal.
+- **Rỗng do Bộ lọc (Không tìm thấy kết quả):**
+  - Minh họa icon: `🔍`.
+  - Tiêu đề: `Không tìm thấy kết quả phù hợp`.
+  - Phụ đề: `Thử thay đổi lớp học, học viên hoặc loại bài kiểm tra đang chọn.`
+  - Nút hành động: `[ 🔄 Đặt lại bộ lọc ]`.
+
+#### 3. Trạng thái Lỗi Kết Nối (Error State):
+- Banner cảnh báo đầu trang: `rounded-xl border border-rose-200 bg-rose-50 p-4 text-rose-800 text-sm flex items-center justify-between`.
+- Có nút `[ Thử lại ]` để tải lại dữ liệu mà không cần F5 trình duyệt.
+
+#### 4. Phản Hồi Thành Công (Toast / Banner Notification):
+- Thông báo nổi 4 giây ở góc phải trên:
+  - Nhập điểm thành công: `✓ Đã lưu kết quả bài kiểm tra của học viên!`
+  - Cập nhật thành công: `✓ Đã cập nhật điểm số và nhận xét thành công!`
+
+---
+
+### 14.8. CHECKLIST NGHIỆM THU GIAI ĐOẠN 1H (ACCEPTANCE CHECKLIST)
+
+Frontend Developer và QA đối chiếu nghiệm thu màn hình `/grades` theo danh sách kiểm tra chi tiết sau:
+
+- [ ] **1. Điều hướng & Route:**
+  - [ ] Route `/grades` được khai báo hợp lệ trong `roxy-admin/src/App.jsx` bên trong cụm `ProtectedRoute` và `AdminLayout`.
+  - [ ] Mục menu `Điểm kiểm tra` xuất hiện trong thanh Sidebar `AdminLayout.jsx` tại nhóm "Nghiệp vụ đào tạo" với icon `📝` hoặc `💯`.
+- [ ] **2. Phân quyền RBAC:**
+  - [ ] `SuperAdmin`, `BranchManager`, `Teacher`: Nhìn thấy nút `+ Nhập điểm mới`, nút `✏️ Sửa điểm` tại bảng và trong drawer.
+  - [ ] `Parent`, `Student`: **Ẩn hoàn toàn** nút `+ Nhập điểm mới`, ẩn toàn bộ nút sửa điểm; chỉ xem kết quả học tập của con/chính mình.
+  - [ ] **Không có nút Xóa** ở bất kỳ quyền hạn nào.
+- [ ] **3. Bộ lọc & Cascading Dropdown:**
+  - [ ] Lọc theo Lớp học (`classId`), Học viên (`studentId`), Loại bài (`examType`), Ngày thi (`examDate`).
+  - [ ] Khi chọn Lớp học, dropdown Học viên tự động cập nhật danh sách học viên thuộc lớp đó (từ `GET /api/StudentClasses?classId={classId}`).
+  - [ ] Nút Reset bộ lọc đưa tất cả về mặc định và về trang 1.
+- [ ] **4. Danh sách Điểm & Badges:**
+  - [ ] 5 loại bài (`Quiz`, `Midterm`, `Final`, `Daily`, `Other`) hiển thị đúng nhãn Tiếng Việt và màu sắc dịu mắt.
+  - [ ] Điểm số hiển thị rõ ràng `{Score} / {MaxScore}`; nếu `Score` null thì hiển thị badge `💬 Đánh giá định tính`.
+  - [ ] Nhận xét giáo viên rút gọn 1 dòng với ellipsis (`truncate`).
+- [ ] **5. Drawer Xem Chi Tiết:**
+  - [ ] Hiển thị đầy đủ: Tên bài, Loại bài, Học viên, Lớp học, Điểm số to rõ, Nhận xét chi tiết đầy đủ ngắt dòng, Người chấm, Ngày tạo/cập nhật.
+  - [ ] Đóng mở mượt mà bằng phím `Escape` hoặc nút `✕`.
+- [ ] **6. Modal Nhập mới / Chỉnh sửa:**
+  - [ ] Khi tạo mới: Chọn lớp -> tự động nạp học viên của lớp.
+  - [ ] Khi sửa: Khóa cứng `Lớp học` và `Học viên` (`disabled`).
+  - [ ] Cho phép để trống điểm số nếu có nhận xét của giáo viên.
+  - [ ] Báo lỗi rõ ràng nếu vi phạm thang điểm hoặc để trống cả điểm lẫn nhận xét.
+  - [ ] 4 chip nhận xét nhanh chèn văn bản mượt mà.
+- [ ] **7. Chuẩn Responsive Mobile (`375px – 414px`):**
+  - [ ] Trên điện thoại, bảng dữ liệu tự động chuyển thành Card Stack xếp dọc.
+  - [ ] Toàn bộ nút thao tác đạt diện tích chạm tối thiểu `min-h-[44px]`.
+- [ ] **8. Chuyển động & Hiệu năng:**
+  - [ ] Phản hồi xúc giác `:active:scale-[0.98]` trên các nút bấm.
+  - [ ] Tôn trọng `@media (prefers-reduced-motion: reduce)`.
 
