@@ -118,7 +118,8 @@ public class TuitionsController(RoxyDbContext db) : ControllerBase
                 t.IsCancelled,
                 t.Note,
                 t.CreatedAt,
-                PaidAmount = t.Payments.Where(p => p.Status == "Confirmed").Sum(p => (decimal?)p.Amount) ?? 0m
+                PaidAmount = t.Payments.Where(p => p.Status == "Confirmed").Sum(p => (decimal?)p.Amount) ?? 0m,
+                PendingAmount = t.Payments.Where(p => p.Status == "PendingConfirm").Sum(p => (decimal?)p.Amount) ?? 0m
             })
             .ToListAsync();
 
@@ -153,7 +154,8 @@ public class TuitionsController(RoxyDbContext db) : ControllerBase
                 t.DueDate,
                 t.IsCancelled,
                 t.Note,
-                t.CreatedAt
+                t.CreatedAt,
+                t.PendingAmount
             );
         }).ToList();
 
@@ -190,7 +192,8 @@ public class TuitionsController(RoxyDbContext db) : ControllerBase
                 t.IsCancelled,
                 t.Note,
                 t.CreatedAt,
-                PaidAmount = t.Payments.Where(p => p.Status == "Confirmed").Sum(p => (decimal?)p.Amount) ?? 0m
+                PaidAmount = t.Payments.Where(p => p.Status == "Confirmed").Sum(p => (decimal?)p.Amount) ?? 0m,
+                PendingAmount = t.Payments.Where(p => p.Status == "PendingConfirm").Sum(p => (decimal?)p.Amount) ?? 0m
             })
             .FirstOrDefaultAsync();
 
@@ -238,7 +241,8 @@ public class TuitionsController(RoxyDbContext db) : ControllerBase
             t.DueDate,
             t.IsCancelled,
             t.Note,
-            t.CreatedAt
+            t.CreatedAt,
+            t.PendingAmount
         ));
     }
 
@@ -317,16 +321,37 @@ public class TuitionsController(RoxyDbContext db) : ControllerBase
         if (req.Discount > req.Amount)
             return BadRequest(new { message = "Số tiền giảm giá không được lớn hơn tổng số tiền học phí." });
 
-        // Kiểm tra số tiền đã thanh toán để tránh overpay khi giảm Amount
+        // Kiểm tra số tiền đã thanh toán để tránh overpay khi giảm Amount hoặc hủy khoản thu
         var paidAmount = await db.Payments
             .Where(p => p.TuitionId == id && p.Status == "Confirmed")
             .SumAsync(p => (decimal?)p.Amount) ?? 0m;
 
+        if (req.IsCancelled && paidAmount > 0)
+        {
+            return BadRequest(new
+            {
+                message = $"Không thể hủy khoản học phí (IsCancelled = true) khi đã có giao dịch thanh toán được xác nhận ({paidAmount:N0} đ)."
+            });
+        }
+
+        if (req.IsCancelled && !tuition.IsCancelled)
+        {
+            var hasPendingPayments = await db.Payments.AnyAsync(p => p.TuitionId == id && p.Status == "PendingConfirm");
+            if (hasPendingPayments)
+            {
+                return BadRequest(new
+                {
+                    message = "Khoản học phí này đang có giao dịch chờ xác nhận (PendingConfirm). Vui lòng từ chối/hủy giao dịch chờ duyệt trước khi hủy khoản thu."
+                });
+            }
+        }
+
         var netAmount = req.Amount - req.Discount;
         if (netAmount < paidAmount)
         {
-            return BadRequest(new { 
-                message = $"Số tiền phải thu sau giảm giá ({netAmount:N0} đ) không được nhỏ hơn tổng số tiền đã thanh toán ({paidAmount:N0} đ)." 
+            return BadRequest(new
+            {
+                message = $"Số tiền phải thu sau giảm giá ({netAmount:N0} đ) không được nhỏ hơn tổng số tiền đã thanh toán ({paidAmount:N0} đ)."
             });
         }
 

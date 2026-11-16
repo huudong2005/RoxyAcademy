@@ -50,6 +50,9 @@ export default function ClassList() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
 
+  // State Modal Xác nhận & Báo lỗi Đóng Lớp Học (Soft Delete)
+  const [closeClassModal, setCloseClassModal] = useState(null); // { cls, submitting, errorMessage, reasons }
+
   const [formData, setFormData] = useState({
     className: '',
     courseId: '',
@@ -196,11 +199,13 @@ export default function ClassList() {
   const handleOpenCreateModal = () => {
     setEditingClass(null);
     setSubmitError('');
+    const activeCourses = courses.filter((c) => c.isActive !== false);
+    const activeBranches = branches.filter((b) => b.isActive !== false);
     setFormData({
       className: '',
-      courseId: courses.length > 0 ? courses[0].id : '',
+      courseId: activeCourses.length > 0 ? activeCourses[0].id : '',
       teacherId: '',
-      branchId: branches.length > 0 ? branches[0].id : '',
+      branchId: activeBranches.length > 0 ? activeBranches[0].id : '',
       classType: 'Group',
       maxStudents: 15,
       startDate: '',
@@ -272,6 +277,22 @@ export default function ClassList() {
       return;
     }
 
+    const selectedTeacherObj = teachers.find((t) => String(t.id) === String(formData.teacherId));
+    if (selectedTeacherObj && selectedTeacherObj.isActive === false) {
+      setSubmitError('Không thể phân công giáo viên đã bị khóa tài khoản. Vui lòng chọn giáo viên đang hoạt động.');
+      return;
+    }
+
+    if (editingClass) {
+      const currentActiveCount = editingClass.activeStudentsCount ?? 0;
+      if (formData.maxStudents && Number(formData.maxStudents) < currentActiveCount) {
+        setSubmitError(
+          `Không thể hạ sĩ số tối đa xuống dưới số học viên đang theo học hiện tại (${currentActiveCount} học viên).`
+        );
+        return;
+      }
+    }
+
     setSubmitting(true);
 
     try {
@@ -316,17 +337,40 @@ export default function ClassList() {
   };
 
   // Đóng lớp học / Xóa mềm (DELETE /api/Classes/{id})
-  const handleCloseClass = async (cls) => {
-    const confirmed = window.confirm(
-      `Bạn có chắc chắn muốn đóng lớp "${cls.className}"? Lớp học sẽ được chuyển trạng thái "Đã kết thúc" (Finished) và đóng cổng đăng ký.`
-    );
-    if (!confirmed) return;
+  const handleCloseClass = (cls) => {
+    setCloseClassModal({
+      cls,
+      submitting: false,
+      errorMessage: '',
+      reasons: [],
+    });
+  };
+
+  const handleConfirmCloseClass = async () => {
+    if (!closeClassModal?.cls) return;
+    setCloseClassModal((prev) => ({ ...prev, submitting: true, errorMessage: '', reasons: [] }));
 
     try {
-      await axiosClient.delete(`/Classes/${cls.id}`);
+      await axiosClient.delete(`/Classes/${closeClassModal.cls.id}`);
+      setCloseClassModal(null);
       setReloadKey((k) => k + 1);
     } catch (err) {
-      alert(err.response?.data?.message || 'Không thể đóng lớp học.');
+      const data = err.response?.data;
+      const msg = data?.message || 'Không thể đóng lớp học do còn ràng buộc nghiệp vụ.';
+      let reasonsList = Array.isArray(data?.reasons) ? data.reasons : [];
+      if (reasonsList.length === 0 && typeof data?.message === 'string' && data.message.includes('vì:')) {
+        const afterVi = data.message.split('vì:')[1]?.split('. Vui lòng')[0] || '';
+        reasonsList = afterVi
+          .split(';')
+          .map((r) => r.trim())
+          .filter(Boolean);
+      }
+      setCloseClassModal((prev) => ({
+        ...prev,
+        submitting: false,
+        errorMessage: msg,
+        reasons: reasonsList,
+      }));
       console.error(err);
     }
   };
@@ -818,9 +862,24 @@ export default function ClassList() {
                       </span>
                     </td>
 
-                    {/* Cột 5: Sĩ số tối đa */}
+                    {/* Cột 5: Sĩ số hiện tại / tối đa */}
                     <td className="px-4 py-3 whitespace-nowrap text-slate-700">
-                      Tối đa <span className="font-semibold text-slate-900">{cls.maxStudents ?? '—'}</span> học viên
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-mono font-semibold ${
+                            cls.maxStudents && (cls.activeStudentsCount ?? 0) >= cls.maxStudents
+                              ? 'bg-amber-50 text-amber-800 border-amber-200'
+                              : 'bg-slate-100 text-slate-700 border-slate-200'
+                          }`}
+                        >
+                          {cls.activeStudentsCount ?? 0} / {cls.maxStudents ?? '—'} học viên
+                        </span>
+                        {cls.maxStudents && (cls.activeStudentsCount ?? 0) >= cls.maxStudents && (
+                          <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-800">
+                            (Đầy)
+                          </span>
+                        )}
+                      </div>
                     </td>
 
                     {/* Cột 6: Hình thức & Lịch */}
@@ -985,11 +1044,13 @@ export default function ClassList() {
                     className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-slate-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none"
                   >
                     <option value="">-- Chọn khóa học --</option>
-                    {courses.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.courseName}
-                      </option>
-                    ))}
+                    {courses
+                      .filter((c) => !editingClass ? c.isActive !== false : c.isActive !== false || String(c.id) === String(editingClass.courseId))
+                      .map((c) => (
+                        <option key={c.id} value={c.id} disabled={c.isActive === false}>
+                          {c.courseName} {c.isActive === false ? '(Đã ngừng hoạt động)' : ''}
+                        </option>
+                      ))}
                   </select>
                 </div>
 
@@ -1006,12 +1067,20 @@ export default function ClassList() {
                     className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-slate-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none"
                   >
                     <option value="">-- Chọn giáo viên phụ trách --</option>
-                    {teachers.map((t) => (
-                      <option key={t.id} value={t.id}>
-                        👩‍🏫 {t.fullName} ({t.phoneNumber})
-                      </option>
-                    ))}
+                    {teachers
+                      .filter((t) => !editingClass ? t.isActive !== false : t.isActive !== false || String(t.id) === String(editingClass.teacherId))
+                      .map((t) => (
+                        <option key={t.id} value={t.id} disabled={t.isActive === false}>
+                          👩‍🏫 {t.fullName} ({t.phoneNumber}) {t.isActive === false ? '(Đã khóa tài khoản)' : ''}
+                        </option>
+                      ))}
                   </select>
+                  {editingClass &&
+                    teachers.find((t) => String(t.id) === String(formData.teacherId))?.isActive === false && (
+                      <p className="mt-1 text-[11px] text-rose-600 font-medium">
+                        ⚠️ Giáo viên hiện tại đã bị khóa tài khoản. Vui lòng chọn sang giáo viên đang hoạt động.
+                      </p>
+                    )}
                 </div>
 
                 {/* Cơ sở */}
@@ -1027,11 +1096,13 @@ export default function ClassList() {
                     className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-slate-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none"
                   >
                     <option value="">-- Chọn cơ sở --</option>
-                    {branches.map((b) => (
-                      <option key={b.id} value={b.id}>
-                        {b.branchName}
-                      </option>
-                    ))}
+                    {branches
+                      .filter((b) => !editingClass ? b.isActive !== false : b.isActive !== false || String(b.id) === String(editingClass.branchId))
+                      .map((b) => (
+                        <option key={b.id} value={b.id} disabled={b.isActive === false}>
+                          {b.branchName} {b.isActive === false ? '(Đã ngừng hoạt động)' : ''}
+                        </option>
+                      ))}
                   </select>
                 </div>
 
@@ -1060,13 +1131,31 @@ export default function ClassList() {
                   <input
                     type="number"
                     name="maxStudents"
-                    min="1"
+                    min={editingClass ? Math.max(1, editingClass.activeStudentsCount ?? 0) : 1}
                     max="100"
                     required
                     value={formData.maxStudents}
                     onChange={handleChange}
-                    className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-slate-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none"
+                    className={`w-full h-10 rounded-lg border bg-white px-3 text-slate-800 focus:outline-none ${
+                      editingClass && Number(formData.maxStudents) < (editingClass.activeStudentsCount ?? 0)
+                        ? 'border-rose-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-100'
+                        : 'border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100'
+                    }`}
                   />
+                  {editingClass && (
+                    <p className="mt-1 text-[11px] text-slate-500">
+                      Sĩ số đang theo học hiện tại:{' '}
+                      <span className="font-mono font-semibold text-slate-700">
+                        {editingClass.activeStudentsCount ?? 0}
+                      </span>{' '}
+                      học viên.
+                    </p>
+                  )}
+                  {editingClass && Number(formData.maxStudents) < (editingClass.activeStudentsCount ?? 0) && (
+                    <p className="mt-1 text-[11px] text-rose-600 font-medium">
+                      ⚠️ Không thể hạ sĩ số tối đa xuống dưới số học viên đang theo học hiện tại ({editingClass.activeStudentsCount ?? 0} học viên).
+                    </p>
+                  )}
                 </div>
 
                 {/* Học phí */}
@@ -1084,6 +1173,11 @@ export default function ClassList() {
                     onChange={handleChange}
                     className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-slate-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none"
                   />
+                  {editingClass && (
+                    <p className="mt-1.5 text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 leading-relaxed">
+                      ℹ️ Lưu ý: Không thể thay đổi học phí của lớp nếu lớp đã có khoản thu học phí phát sinh.
+                    </p>
+                  )}
                 </div>
 
                 {/* Ngày khai giảng */}
@@ -1124,14 +1218,20 @@ export default function ClassList() {
                     </label>
                     <select
                       name="status"
+                      disabled={editingClass.status === 'Finished'}
                       value={formData.status}
                       onChange={handleChange}
-                      className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-slate-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none"
+                      className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-slate-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"
                     >
                       <option value="Upcoming">Sắp mở (Upcoming)</option>
                       <option value="Ongoing">Đang học (Ongoing)</option>
                       <option value="Finished">Đã kết thúc (Finished)</option>
                     </select>
+                    {editingClass.status === 'Finished' && (
+                      <p className="mt-1 text-[11px] text-slate-500">
+                        🔒 Lớp học đã kết thúc (Finished), không thể chuyển trạng thái quay lại Đang học.
+                      </p>
+                    )}
                   </div>
 
                   <div className="flex items-center pt-5">
@@ -1178,7 +1278,11 @@ export default function ClassList() {
                 </button>
                 <button
                   type="submit"
-                  disabled={submitting}
+                  disabled={
+                    submitting ||
+                    Boolean(editingClass && Number(formData.maxStudents) < (editingClass.activeStudentsCount ?? 0)) ||
+                    Boolean(editingClass && teachers.find((t) => String(t.id) === String(formData.teacherId))?.isActive === false)
+                  }
                   className="inline-flex items-center justify-center gap-2 px-5 py-2 rounded-lg bg-blue-600 text-white text-xs font-semibold shadow-xs hover:bg-blue-700 active:scale-[0.98] transition-all disabled:opacity-60 disabled:pointer-events-none cursor-pointer"
                 >
                   {submitting ? (
@@ -1708,8 +1812,18 @@ export default function ClassList() {
                       </div>
 
                       <div>
-                        <span className="text-slate-500 block text-xs">Sĩ số tối đa:</span>
-                        <span className="font-semibold text-slate-800">{selectedDetailClass.maxStudents ?? '—'} học viên</span>
+                        <span className="text-slate-500 block text-xs">Sĩ số hiện tại / tối đa:</span>
+                        <div className="mt-0.5 flex items-center gap-1.5">
+                          <span className="font-mono font-semibold text-slate-800">
+                            {selectedDetailClass.activeStudentsCount ?? 0} / {selectedDetailClass.maxStudents ?? '—'} học viên
+                          </span>
+                          {selectedDetailClass.maxStudents &&
+                            (selectedDetailClass.activeStudentsCount ?? 0) >= selectedDetailClass.maxStudents && (
+                              <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-800">
+                                (Đầy)
+                              </span>
+                            )}
+                        </div>
                       </div>
 
                       <div>
@@ -1977,6 +2091,100 @@ export default function ClassList() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* 9. MODAL XÁC NHẬN & BÁO LỖI CHẶN ĐÓNG LỚP HỌC (BLOCKING DEPENDENCIES MODAL) */}
+      {closeClassModal && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
+          <div
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-[2px] transition-opacity"
+            onClick={() => !closeClassModal.submitting && setCloseClassModal(null)}
+            aria-hidden="true"
+          />
+          <div className="relative max-w-md w-full bg-white rounded-2xl shadow-xl border border-slate-200 p-6 z-10 modal-content">
+            <div className="flex items-start gap-3.5">
+              <div
+                className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-lg ${
+                  closeClassModal.errorMessage
+                    ? 'bg-rose-100 text-rose-600'
+                    : 'bg-amber-100 text-amber-700'
+                }`}
+              >
+                {closeClassModal.errorMessage ? '🚫' : '⚠️'}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base font-bold text-slate-900">
+                  {closeClassModal.errorMessage
+                    ? 'Không thể đóng / xóa lớp học này'
+                    : 'Xác nhận đóng lớp học'}
+                </h3>
+                <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                  {closeClassModal.errorMessage ? (
+                    <>
+                      Lớp <strong className="text-slate-900">{closeClassModal.cls.className}</strong> hiện đang có các ràng buộc nghiệp vụ chưa hoàn tất:
+                    </>
+                  ) : (
+                    <>
+                      Bạn có chắc chắn muốn đóng lớp{' '}
+                      <strong className="text-slate-900">&ldquo;{closeClassModal.cls.className}&rdquo;</strong>? Lớp học sẽ được chuyển trạng thái{' '}
+                      <strong className="text-slate-800">Đã kết thúc (Finished)</strong> và đóng cổng đăng ký.
+                    </>
+                  )}
+                </p>
+              </div>
+            </div>
+
+            {closeClassModal.errorMessage && (
+              <div className="mt-4 bg-rose-50/80 border border-rose-200 rounded-xl p-4 space-y-2">
+                {closeClassModal.reasons && closeClassModal.reasons.length > 0 ? (
+                  <ul className="list-disc pl-5 space-y-1.5 text-xs text-rose-900 font-medium">
+                    {closeClassModal.reasons.map((reason, idx) => (
+                      <li key={idx}>{reason}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-xs text-rose-900 font-medium leading-relaxed">
+                    {closeClassModal.errorMessage}
+                  </p>
+                )}
+                <p className="text-[11px] text-rose-700 pt-1 border-t border-rose-200/70">
+                  Vui lòng xử lý hoàn tất các mục trên trước khi thực hiện đóng lớp.
+                </p>
+              </div>
+            )}
+
+            <div className="mt-6 flex items-center justify-end gap-2.5 border-t border-slate-100 pt-4">
+              {closeClassModal.errorMessage ? (
+                <button
+                  type="button"
+                  onClick={() => setCloseClassModal(null)}
+                  className="bg-slate-900 text-white hover:bg-slate-800 active:scale-[0.98] px-4 py-2 rounded-lg text-xs font-semibold w-full sm:w-auto transition-all cursor-pointer"
+                >
+                  Đã hiểu
+                </button>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    disabled={closeClassModal.submitting}
+                    onClick={() => setCloseClassModal(null)}
+                    className="px-4 py-2 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
+                  >
+                    Hủy bỏ
+                  </button>
+                  <button
+                    type="button"
+                    disabled={closeClassModal.submitting}
+                    onClick={handleConfirmCloseClass}
+                    className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-rose-600 text-white text-xs font-semibold hover:bg-rose-700 active:scale-[0.98] transition-all disabled:opacity-60 cursor-pointer"
+                  >
+                    {closeClassModal.submitting ? 'Đang kiểm tra & đóng lớp...' : 'Xác nhận đóng lớp'}
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}

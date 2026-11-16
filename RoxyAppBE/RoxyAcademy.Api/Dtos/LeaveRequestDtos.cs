@@ -58,3 +58,12 @@ public class ReviewLeaveRequest
     [StringLength(500, ErrorMessage = "Ghi chú không được vượt quá 500 ký tự")]
     public string? Note { get; set; }
 }
+
+public class CancelLeaveRequestDto
+{
+    [StringLength(500, ErrorMessage = "Lý do hủy không được vượt quá 500 ký tự")]
+    public string? Reason { get; set; }
+
+    [StringLength(500, ErrorMessage = "Ghi chú không được vượt quá 500 ký tự")]
+    public string? Note { get; set; }
+}

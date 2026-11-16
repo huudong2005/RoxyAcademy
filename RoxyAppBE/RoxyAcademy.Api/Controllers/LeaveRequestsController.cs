@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 using RoxyAcademy.Api.Data;
 using RoxyAcademy.Api.Dtos;
@@ -430,7 +431,8 @@ public class LeaveRequestsController(RoxyDbContext db) : ControllerBase
     /// <summary>
     /// Duyệt (Approved) hoặc Từ chối (Rejected) đơn xin nghỉ:
     /// - Chỉ SuperAdmin và BranchManager (BranchManager kiểm tra chi nhánh cho cả GV khi ClassId == null).
-    /// - Khi duyệt đơn của học viên (Approved), tự động tạo hoặc cập nhật bản ghi Attendances với Status = 'ExcusedAbsent'.
+    /// - Khi duyệt đơn của học viên (Approved), tự động tạo hoặc cập nhật bản ghi Attendances với Status = 'ExcusedAbsent' và lưu trạng thái cũ [Prev:...].
+    /// - Khi duyệt đơn của giáo viên (Approved), tự động gỡ dạy thay hoặc chuyển buổi học sang 'Cancelled' kèm ghi chú [CẦN GIÁO VIÊN DẠY THAY ...].
     /// </summary>
     [HttpPut("{id}/review")]
     [Authorize(Roles = "SuperAdmin,BranchManager")]
@@ -467,7 +469,7 @@ public class LeaveRequestsController(RoxyDbContext db) : ControllerBase
         leave.ReviewedBy = UserId;
         leave.ReviewedAt = DateTime.UtcNow;
 
-        // LIÊN KẾT ĐIỂM DANH (ExcusedAbsent) KHI ĐƠN HỌC VIÊN ĐƯỢC DUYỆT
+        // 1. LIÊN KẾT ĐIỂM DANH (ExcusedAbsent) KHI ĐƠN HỌC VIÊN ĐƯỢC DUYỆT
         if (req.Status == "Approved" && leave.StudentId.HasValue)
         {
             var studentId = leave.StudentId.Value;
@@ -516,9 +518,16 @@ public class LeaveRequestsController(RoxyDbContext db) : ControllerBase
                 var attendance = await db.Attendances
                     .FirstOrDefaultAsync(a => a.ScheduleId == sched.Id && a.StudentId == studentId);
 
-                var reasonText = !string.IsNullOrWhiteSpace(leave.Reason) ? $": {leave.Reason}" : "";
-                var note = $"Nghỉ phép có phép (Đơn #{leave.Id}{reasonText})";
-                if (note.Length > 300) note = note.Substring(0, 297) + "...";
+                var prevStatus = attendance != null ? attendance.Status : "NONE";
+                var suffix = $" [Prev:{prevStatus}]";
+                var reasonText = !string.IsNullOrWhiteSpace(leave.Reason) ? $": {leave.Reason.Trim()}" : "";
+                var prefix = $"Nghỉ phép có phép (Đơn #{leave.Id}{reasonText})";
+                var maxPrefixLen = 300 - suffix.Length;
+                if (prefix.Length > maxPrefixLen)
+                {
+                    prefix = prefix.Substring(0, maxPrefixLen - 3) + "...";
+                }
+                var note = prefix + suffix;
 
                 if (attendance != null)
                 {
@@ -543,33 +552,238 @@ public class LeaveRequestsController(RoxyDbContext db) : ControllerBase
             }
         }
 
+        // 2. XỬ LÝ BUỔI HỌC KHI ĐƠN GIÁO VIÊN ĐƯỢC DUYỆT
+        if (req.Status == "Approved" && leave.TeacherId.HasValue)
+        {
+            var teacherId = leave.TeacherId.Value;
+            var teacherSchedules = new List<Schedule>();
+
+            if (leave.ScheduleId.HasValue)
+            {
+                var schedule = await db.Schedules
+                    .Include(s => s.Class)
+                    .FirstOrDefaultAsync(s => s.Id == leave.ScheduleId.Value);
+                if (schedule != null)
+                {
+                    teacherSchedules.Add(schedule);
+                }
+            }
+            else
+            {
+                var schedQuery = db.Schedules
+                    .Include(s => s.Class)
+                    .Where(s => s.StudyDate == leave.LeaveDate &&
+                                s.Status == "Scheduled" &&
+                                ((s.Class.TeacherId == teacherId && (s.SubstituteTeacherId == null || s.SubstituteTeacherId == teacherId)) ||
+                                 s.SubstituteTeacherId == teacherId));
+
+                if (leave.ClassId.HasValue)
+                {
+                    schedQuery = schedQuery.Where(s => s.ClassId == leave.ClassId.Value);
+                }
+
+                teacherSchedules = await schedQuery.ToListAsync();
+            }
+
+            var teacherTag = $"[CẦN GIÁO VIÊN DẠY THAY - GV nghỉ phép Đơn #{leave.Id}]";
+
+            foreach (var sched in teacherSchedules)
+            {
+                if (sched.SubstituteTeacherId == teacherId)
+                {
+                    sched.SubstituteTeacherId = null;
+                }
+
+                if (sched.Status == "Scheduled" && sched.SubstituteTeacherId == null)
+                {
+                    sched.Status = "Cancelled";
+                    if (string.IsNullOrWhiteSpace(sched.Note))
+                    {
+                        sched.Note = teacherTag;
+                    }
+                    else if (!sched.Note.Contains(teacherTag))
+                    {
+                        var existingNote = sched.Note.Trim();
+                        var maxExistingLen = 500 - teacherTag.Length - 1;
+                        if (existingNote.Length > maxExistingLen)
+                        {
+                            existingNote = existingNote.Substring(0, maxExistingLen - 3) + "...";
+                        }
+                        sched.Note = $"{existingNote} {teacherTag}";
+                    }
+                }
+            }
+        }
+
         await db.SaveChangesAsync();
+
+        var approvedMessage = leave.TeacherId.HasValue
+            ? "Đã duyệt đơn xin nghỉ của giáo viên và cập nhật trạng thái các buổi học liên quan (Cần giáo viên dạy thay)!"
+            : "Đã duyệt đơn xin nghỉ và tự động cập nhật điểm danh (Nghỉ có phép)!";
 
         return Ok(new
         {
             message = req.Status == "Approved"
-                ? "Đã duyệt đơn xin nghỉ và tự động cập nhật điểm danh (Nghỉ có phép)!"
+                ? approvedMessage
                 : "Đã từ chối đơn xin nghỉ thành công!"
         });
     }
 
     /// <summary>
-    /// Hủy đơn xin nghỉ (chỉ hủy được đơn đang ở trạng thái Chờ duyệt - Pending).
-    /// Áp dụng cho người tạo đơn hoặc Quản lý/SuperAdmin.
+    /// Hủy đơn xin nghỉ:
+    /// - Đơn Pending: Người tạo đơn, SuperAdmin hoặc BranchManager (đúng chi nhánh) đều được hủy.
+    /// - Đơn Approved: Chỉ SuperAdmin hoặc BranchManager (đúng chi nhánh) được hủy, bắt buộc nhập lý do, đồng thời tự động hoàn tác điểm danh / buổi học.
     /// </summary>
     [HttpPut("{id}/cancel")]
-    public async Task<IActionResult> CancelLeaveRequest(int id)
+    public async Task<IActionResult> CancelLeaveRequest(
+        int id,
+        [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)] CancelLeaveRequestDto? req = null)
     {
-        var leave = await db.LeaveRequests.FindAsync(id);
+        var leave = await db.LeaveRequests
+            .Include(lr => lr.Class)
+            .Include(lr => lr.Student)
+            .Include(lr => lr.User)
+            .FirstOrDefaultAsync(lr => lr.Id == id);
+
         if (leave == null)
             return NotFound(new { message = "Không tìm thấy đơn xin nghỉ này." });
 
-        if (leave.Status != "Pending")
-            return BadRequest(new { message = "Chỉ có thể hủy đơn đang ở trạng thái Chờ duyệt (Pending)." });
-
-        if (Role is not ("SuperAdmin" or "BranchManager") && leave.RequestedBy != UserId)
+        if (leave.Status != "Pending" && leave.Status != "Approved")
         {
-            return Forbid();
+            return BadRequest(new { message = "Chỉ có thể hủy đơn đang ở trạng thái Chờ duyệt (Pending) hoặc Đã duyệt (Approved)." });
+        }
+
+        // Kiểm tra phạm vi chi nhánh đối với BranchManager
+        if (Role == "BranchManager")
+        {
+            var userBranchId = User.GetBranchId() ?? -1;
+            var belongsToBranch = (leave.Class != null && leave.Class.BranchId == userBranchId) ||
+                                  (leave.Student != null && leave.Student.BranchId == userBranchId) ||
+                                  (leave.User != null && leave.User.BranchId == userBranchId);
+
+            if (!belongsToBranch && leave.RequestedBy != UserId)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new { message = "Bạn không có quyền hủy đơn xin nghỉ của chi nhánh khác." });
+            }
+        }
+
+        var cancelReason = !string.IsNullOrWhiteSpace(req?.Reason) ? req.Reason.Trim() : req?.Note?.Trim();
+
+        if (leave.Status == "Pending")
+        {
+            if (Role is not ("SuperAdmin" or "BranchManager") && leave.RequestedBy != UserId)
+            {
+                return Forbid();
+            }
+
+            if (!string.IsNullOrWhiteSpace(cancelReason))
+            {
+                var cancelTag = $"[Đã hủy đơn: {cancelReason}]";
+                leave.ReviewNote = cancelTag.Length > 500 ? cancelTag.Substring(0, 500) : cancelTag;
+            }
+        }
+        else if (leave.Status == "Approved")
+        {
+            if (Role is not ("SuperAdmin" or "BranchManager"))
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new
+                {
+                    message = "Chỉ Quản lý cơ sở hoặc SuperAdmin mới được hủy đơn xin nghỉ đã duyệt."
+                });
+            }
+
+            if (Role == "BranchManager")
+            {
+                var userBranchId = User.GetBranchId() ?? -1;
+                var belongsToBranch = (leave.Class != null && leave.Class.BranchId == userBranchId) ||
+                                      (leave.Student != null && leave.Student.BranchId == userBranchId) ||
+                                      (leave.User != null && leave.User.BranchId == userBranchId);
+
+                if (!belongsToBranch)
+                {
+                    return StatusCode(StatusCodes.Status403Forbidden, new { message = "Bạn không có quyền hủy đơn xin nghỉ của chi nhánh khác." });
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(cancelReason))
+            {
+                return BadRequest(new { message = "Vui lòng nhập lý do hủy đơn xin nghỉ đã được phê duyệt." });
+            }
+
+            var cancelTag = $"[Đã hủy đơn đã duyệt: {cancelReason}]";
+            var combinedNote = string.IsNullOrWhiteSpace(leave.ReviewNote)
+                ? cancelTag
+                : $"{leave.ReviewNote.Trim()} {cancelTag}";
+            leave.ReviewNote = combinedNote.Length > 500 ? combinedNote.Substring(0, 500) : combinedNote;
+            leave.ReviewedBy = UserId;
+            leave.ReviewedAt = DateTime.UtcNow;
+
+            // 1. Hoàn tác điểm danh của Học viên
+            if (leave.StudentId.HasValue)
+            {
+                var studentId = leave.StudentId.Value;
+                var leaveMarker = $"Đơn #{leave.Id}";
+                var affectedAttendances = await db.Attendances
+                    .Where(a => a.StudentId == studentId &&
+                                a.Status == "ExcusedAbsent" &&
+                                a.Note != null &&
+                                a.Note.Contains(leaveMarker))
+                    .ToListAsync();
+
+                var validStatuses = new[] { "Present", "Late", "ExcusedAbsent", "UnexcusedAbsent" };
+
+                foreach (var att in affectedAttendances)
+                {
+                    var noteStr = att.Note ?? "";
+                    string? restoredStatus = null;
+
+                    foreach (var st in validStatuses)
+                    {
+                        if (noteStr.Contains($"[Prev:{st}]"))
+                        {
+                            restoredStatus = st;
+                            break;
+                        }
+                    }
+
+                    if (restoredStatus != null)
+                    {
+                        att.Status = restoredStatus;
+                        att.Note = $"Đã hoàn tác đơn nghỉ #{leave.Id}";
+                        att.MarkedBy = UserId;
+                        att.MarkedAt = DateTime.UtcNow;
+                    }
+                    else
+                    {
+                        // [Prev:NONE] hoặc không có [Prev:...] -> xóa bản ghi để về trạng thái chưa điểm danh
+                        db.Attendances.Remove(att);
+                    }
+                }
+            }
+
+            // 2. Hoàn tác buổi học của Giáo viên
+            if (leave.TeacherId.HasValue)
+            {
+                var leaveMarker = $"Đơn #{leave.Id}";
+                var teacherTag = $"[CẦN GIÁO VIÊN DẠY THAY - GV nghỉ phép Đơn #{leave.Id}]";
+                var affectedSchedules = await db.Schedules
+                    .Where(s => s.Note != null && s.Note.Contains(leaveMarker))
+                    .ToListAsync();
+
+                foreach (var sched in affectedSchedules)
+                {
+                    if (sched.Status == "Cancelled")
+                    {
+                        sched.Status = "Scheduled";
+                    }
+
+                    if (sched.Note != null)
+                    {
+                        var cleanedNote = sched.Note.Replace(teacherTag, "").Trim();
+                        sched.Note = string.IsNullOrWhiteSpace(cleanedNote) ? null : cleanedNote;
+                    }
+                }
+            }
         }
 
         leave.Status = "Cancelled";

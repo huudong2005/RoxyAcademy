@@ -4000,3 +4000,143 @@ Khi triển khai code thực tế, Frontend Developer và QA đối chiếu nghi
 - [ ] Vai trò `Student`:
   - [ ] Chỉ xem danh sách học phí của bản thân tại `/tuitions`.
   - [ ] Tuyệt đối không có nút "Thanh toán" hay gửi tiền.
+
+
+---
+
+## 16. THIẾT KẾ CHI TIẾT GIAI ĐOẠN 1M-2: KHẮC PHỤC CÁC LUỒNG CHƯA HỢP LÝ TRƯỚC GO-LIVE (GUARDRAIL UX & EDGE CASES)
+
+> [!IMPORTANT]
+> **Mục tiêu Giai đoạn 1M-2:** Chuẩn hóa trải nghiệm người dùng cho các tình huống ràng buộc nghiệp vụ chéo (Lớp học ↔ Học viên ↔ Lịch học ↔ Nghỉ phép ↔ Học phí ↔ Bài tập).  
+> Áp dụng nghiêm ngặt hai bộ nguyên lý từ **Apple Design** (*Agency, Responsibility, Inline Feedback, Critically Damped Motion*) và **Emil Kowalski** (*Unseen details compound, Guardrail UX, No `scale(0)`, Custom `ease-out` `cubic-bezier(0.23, 1, 0.32, 1)`*).
+
+### 16.1. Bảng Đánh Giá Kỹ Thuật (Emil Kowalski Before/After Review)
+
+| Before | After | Why |
+| --- | --- | --- |
+| Dùng `window.alert()` hoặc báo lỗi chung chung 1 dòng khi xóa/đóng lớp bị chặn | **Blocking Dependencies Modal** (`scale(0.96) -> scale(1)`, `180ms ease-out`) với danh sách bullet list phân loại rõ từng nguyên nhân chặn | `window.alert` chặn luồng trình duyệt và khó đọc khi có nhiều lý do (học viên active, lịch tương lai, bài tập, học phí nợ). Modal có cấu trúc giúp quản lý biết chính xác cần xử lý gì trước. |
+| Hiển thị sĩ số chỉ có `Tối đa {maxStudents}` | Hiển thị **`{activeStudentsCount} / {maxStudents} học viên`** kèm thanh tiến độ nhỏ hoặc badge màu cảnh báo khi đầy lớp (`>= 100%`) | Giúp giáo vụ nhìn lướt qua biết ngay lớp còn chỗ trống hay đã đầy mà không cần bấm vào chi tiết lớp. |
+| Cho phép sửa `MaxStudents` thấp hơn sĩ số thực tế rồi mới báo lỗi 400 khi bấm Lưu | **Inline Guardrail**: Đặt `min={Math.max(1, activeStudentsCount)}` và hiển thị cảnh báo tức thì ngay dưới ô input nếu nhập nhỏ hơn `activeStudentsCount` | Apple Principle (*Feedback — validate inline, not on submit*): Ngăn lỗi ngay từ lúc gõ phím. |
+| Duyệt đơn nghỉ của Giáo viên mà không báo hiệu hệ quả lên lịch dạy | **Impact Preview Callout** màu hổ phách (`bg-amber-50 border-amber-200`) ngay trên hộp thoại duyệt đơn, nêu rõ các buổi dạy `Scheduled` trùng ngày sẽ chuyển sang **Tạm hoãn / Cần dạy thay** | Apple Principle (*Responsibility & Predictability*): Người duyệt phải biết trước tác động dây chuyền trước khi bấm xác nhận. |
+| Chỉ hiển thị `Đã thu` và `Còn nợ`, cho phép tạo tiếp giao dịch vượt số tiền thực nợ khi đang có khoản `PendingConfirm` | Hiển thị bộ 3 số liệu: **Đã thu**, **Chờ duyệt (`pendingAmount`)**, **Còn nợ**; giới hạn số tiền nộp tối đa `payableAmount = remainingAmount - pendingAmount` kèm hộp cảnh báo | Tránh phụ huynh hoặc thu ngân nộp trùng tiền khi giao dịch chuyển khoản trước đó đang chờ kế toán đối soát. |
+| Khi nộp lại bài tập đã chấm, ẩn mất điểm cũ hoặc không giải thích cơ chế giữ điểm | **Resubmission Notice Box** + **Previous Evaluation Card** (`Điểm / Nhận xét lần chấm trước`) ở cả màn hình Học viên/Phụ huynh và Giáo viên | Giữ tính liên tục thông tin (Spatial & State Continuity), giúp giáo viên đối chiếu sự tiến bộ của học sinh so với lần chấm trước. |
+
+---
+
+### 16.2. Luồng 1 — Màn Hình Lớp Học (`ClassList.jsx`)
+
+#### 1. Hiển thị sĩ số `activeStudentsCount / maxStudents` trên bảng & thẻ Mobile:
+- **Cột Sĩ số:**
+  - Hiển thị dạng số liệu kép: **`{activeStudentsCount ?? 0} / {maxStudents}`** học viên (`font-mono font-semibold text-xs`).
+  - **Màu sắc ngữ cảnh:**
+    - Còn chỗ (`activeStudentsCount < maxStudents`): `bg-slate-100 text-slate-700 border border-slate-200 px-2.5 py-1 rounded-full`.
+    - Đầy lớp (`activeStudentsCount >= maxStudents`): `bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-1 rounded-full` kèm nhãn nhỏ `(Đầy)`.
+
+#### 2. Modal Chặn Xóa / Đóng Lớp Khi Còn Ràng Buộc (`Blocking Dependencies Modal`):
+- Tuyệt đối **không dùng `window.alert()`**. Khi API trả về lỗi 400 kèm danh sách lý do chặn (hoặc kiểm tra thấy còn ràng buộc), hiển thị Modal cảnh báo chuẩn (`max-w-md w-full bg-white rounded-xl shadow-xl border border-slate-200 p-6`, animation `scale(0.96) -> scale(1)` trong `180ms cubic-bezier(0.23, 1, 0.32, 1)`):
+  - **Header:** Icon cảnh báo đỏ cam (`bg-rose-100 text-rose-600 w-10 h-10 rounded-full flex items-center justify-center`) + Tiêu đề: **`Không thể đóng / xóa lớp học này`**.
+  - **Body:** Dòng dẫn: *"Lớp **[Tên lớp]** hiện đang có các ràng buộc nghiệp vụ chưa hoàn tất:"* kèm khung danh sách lỗi (`bg-rose-50/70 border border-rose-200 rounded-lg p-3.5 text-sm text-rose-900 space-y-2`):
+    - Bullet list (`list-disc pl-5 space-y-1.5`) hiển thị từng lý do cụ thể từ Backend (tách dòng theo dấu chấm phẩy `;` hoặc `\n` từ message lỗi API):
+      - *Còn `X` học viên đang theo học (`Active`) trong lớp.*
+      - *Còn `Y` buổi học dự kiến (`Scheduled`) trong tương lai.*
+      - *Còn bài tập về nhà chưa kết thúc hạn nộp.*
+      - *Còn khoản học phí chưa thu xong hoặc đang chờ xác nhận.*
+  - **Footer:** Nút duy nhất **`[ Đã hiểu ]`** (`bg-slate-900 text-white hover:bg-slate-800 active:scale-[0.98] px-4 py-2 rounded-lg text-sm font-medium w-full sm:w-auto`).
+
+#### 3. Ràng buộc trên Modal Tạo / Sửa Lớp Học (`Create / Edit Class Modal`):
+- **Khi Tạo lớp mới (`Create`):**
+  - Dropdown **Khóa học (`CourseId`)** và **Cơ sở (`BranchId`)**: Chỉ hiển thị các bản ghi đang hoạt động (`isActive !== false`).
+  - Dropdown **Giáo viên (`TeacherId`)**: Chỉ hiển thị giáo viên đang hoạt động (`isActive !== false`).
+- **Khi Sửa lớp (`Edit`):**
+  - **Sĩ số tối đa (`MaxStudents`):**
+    - Đặt thuộc tính `min={Math.max(1, editingClass.activeStudentsCount || 1)}`.
+    - Hiển thị dòng phụ đề ngay dưới ô input: `Sĩ số đang học hiện tại: {activeStudentsCount} học viên.`
+    - Nếu người dùng nhập số `< activeStudentsCount`: Viền ô input đổi sang `border-rose-400 focus:ring-rose-100`, hiện lỗi đỏ tức thì: *"Không thể hạ sĩ số tối đa xuống thấp hơn số học viên đang học ({activeStudentsCount})."* và khóa nút Lưu.
+  - **Giáo viên phụ trách (`TeacherId`):**
+    - Không cho phép chọn giáo viên đã khóa (`isActive === false`). Nếu giáo viên hiện tại của lớp vừa bị khóa trước đó, hiển thị tùy chọn đó ở trạng thái `disabled` kèm nhãn `(Đã khóa - Cần đổi GV)` để buộc quản lý chọn giáo viên đang hoạt động khi cập nhật.
+  - **Trạng thái lớp (`Status`):**
+    - Nếu lớp đang ở trạng thái **`Finished` (`Đã kết thúc`)**: Khóa (`disabled`) không cho chuyển ngược về `Ongoing` hoặc `Upcoming`, kèm chú thích `text-xs text-slate-500 mt-1`: *"Lớp đã kết thúc không thể mở lại để đảm bảo toàn vẹn lịch sử khóa học."*
+  - **Học phí lớp (`TuitionFee`):**
+    - Hiển thị chú thích rõ ngay dưới ô nhập học phí (`text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 mt-1.5 flex items-center gap-1.5`):
+      *"ℹ️ Lưu ý: Không thể thay đổi mức học phí lớp sau khi lớp đã phát sinh khoản thu học phí của học viên."* (Nếu backend trả lỗi hoặc lớp có cờ đã phát sinh học phí thì khóa ô input `disabled`).
+
+---
+
+### 16.3. Luồng 2 — Màn Hình Nghỉ Phép (`LeaveRequests.jsx`) & Lịch Học (`Schedules.jsx`)
+
+#### 1. Hộp Lưu Ý Tác Động Khi Duyệt Đơn Nghỉ Của Giáo Viên (`Teacher Leave Impact Notice`):
+- Trong Modal / Khu vực xác nhận **Duyệt đơn (`Approve`)** tại `LeaveRequests.jsx`, khi đơn nghỉ là của **Giáo viên (`Teacher` / `requestType === 'Teacher'` hoặc đơn không có `studentId`)**:
+  - Hiển thị nổi bật hộp cảnh báo màu hổ phách (`bg-amber-50 border border-amber-300 rounded-xl p-3.5 text-xs text-amber-900 leading-relaxed mb-4`):
+    ```
+    ⚠️ Lưu ý tự động cập nhật Lịch dạy:
+    Khi duyệt đơn nghỉ của giáo viên, các buổi dạy đang ở trạng thái "Sắp tới (Scheduled)" của giáo viên trong ngày/buổi nghỉ sẽ tự động được đánh dấu "Tạm hoãn / Cần giáo viên dạy thay" (không còn ở trạng thái Scheduled với giáo viên đang nghỉ).
+    ```
+- Trên màn hình `Schedules.jsx`: Các buổi học bị tạm hoãn do giáo viên nghỉ hiển thị rõ badge trạng thái (`Cancelled` / `Tạm hoãn - GV nghỉ phép`) màu đỏ cam hoặc vàng cam để giáo vụ dễ nhận biết và xếp lịch dạy bù / phân công giáo viên dạy thay.
+
+#### 2. Thao tác "Hủy đơn đã duyệt" (`Revoke / Cancel Approved Leave Request`):
+- **Phân quyền & Hiển thị:**
+  - Khi đơn nghỉ ở trạng thái **`Approved` (`Đã duyệt`)**, hiển thị nút **`[ Hủy đơn đã duyệt ]`** cho `SuperAdmin` và `BranchManager` (`bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 active:scale-[0.98] px-3 py-1.5 rounded-lg text-xs font-medium`).
+- **Modal Xác Nhận Hủy Đơn Đã Duyệt:**
+  - Tiêu đề: **`Hủy đơn nghỉ phép đã duyệt`**.
+  - **Hộp giải thích cơ chế hoàn tác (`bg-blue-50 border border-blue-200 text-blue-900 rounded-lg p-3 text-xs leading-relaxed`):**
+    - Nếu là đơn của Học viên: *"Khi hủy đơn đã duyệt, trạng thái điểm danh **Vắng có phép (ExcusedAbsent)** đã tạo tự động từ đơn này sẽ được **hoàn tác về trạng thái trước đó**."*
+    - Nếu là đơn của Giáo viên: *"Khi hủy đơn đã duyệt, trạng thái các buổi dạy của giáo viên trong thời gian nghỉ sẽ được cập nhật lại tương ứng."*
+  - **Ô nhập Lý do hủy (*Bắt buộc*):**
+    - Textarea `rows={3}`, placeholder: *"Nhập lý do hủy đơn nghỉ phép đã duyệt (bắt buộc)..."*.
+    - Nút xác nhận **`[ Xác nhận hủy đơn ]`** (`bg-rose-600 hover:bg-rose-700 text-white`) bị `disabled` cho tới khi `reason.trim().length > 0`.
+
+---
+
+### 16.4. Luồng 3 — Màn Hình Học Phí (`Tuitions.jsx`) & Thanh Toán (`Payments.jsx`)
+
+#### 1. Hiển thị `Đang chờ duyệt (pendingAmount)` & Giới hạn số tiền nộp tối đa:
+- **Trên bảng / thẻ `Tuitions.jsx` (cả góc nhìn Nhân sự và Phụ huynh/Học viên):**
+  - Hiển thị rõ 3 chỉ số tài chính của từng khoản thu:
+    1. **Đã thu (`paidAmount`):** Chữ xanh lá `text-emerald-700 font-mono`.
+    2. **Đang chờ duyệt (`pendingAmount`):** Nếu `pendingAmount > 0`, hiển thị badge hoặc dòng chữ màu vàng cam nổi bật: `⏳ Chờ duyệt: {formatCurrency(pendingAmount)}` (`bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded text-xs font-mono font-semibold`).
+    3. **Còn nợ (`remainingAmount`):** Chữ đỏ `text-rose-600 font-mono font-bold`.
+- **Trong Modal Tạo Thanh Toán Mới (cả Phụ huynh gửi thanh toán & Nhân sự ghi nhận thu tiền):**
+  - Công thức số tiền tối đa được phép tạo mới:
+    `payableAmount = Math.max(0, remainingAmount - (pendingAmount || 0))`
+  - Mặc định điền sẵn ô `Amount` bằng `payableAmount`. Đặt `max={payableAmount}`.
+  - **Nếu `pendingAmount > 0`:**
+    - Hiển thị hộp cảnh báo màu vàng cam ngay đầu form (`bg-amber-50 border border-amber-300 text-amber-900 rounded-xl p-3 text-xs leading-relaxed`):
+      *"⏳ Khoản thu này đang có **{formatCurrency(pendingAmount)}** chờ kế toán xác nhận. Số tiền tối đa có thể tạo giao dịch mới hiện tại là **{formatCurrency(payableAmount)}**."*
+    - Nếu `payableAmount === 0` (tức toàn bộ số tiền nợ đã nằm trong các giao dịch `PendingConfirm`): Khóa nút gửi thanh toán mới và hiển thị thông báo: *"Toàn bộ số tiền còn nợ đang chờ xác nhận. Vui lòng đợi kế toán duyệt hoặc hủy giao dịch chờ duyệt trước khi tạo giao dịch mới."*
+
+#### 2. Thao tác "Hủy giao dịch (Void)" cho giao dịch `PendingConfirm`:
+- **Vị trí hiển thị:**
+  - Trên bảng danh sách tại `Payments.jsx` VÀ trong bảng lịch sử giao dịch của từng khoản thu tại `Tuitions.jsx`.
+- **Điều kiện hiển thị:**
+  - Chỉ hiển thị cho giao dịch có trạng thái **`PendingConfirm` (`Chờ xác nhận`)** (Nhân sự: `SuperAdmin`, `BranchManager` hoặc người tạo giao dịch / Phụ huynh hủy giao dịch chờ duyệt do mình gửi nhầm theo hỗ trợ của API).
+  - Style nút: **`[ Hủy giao dịch ]`** (`bg-slate-100 text-slate-700 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 border border-slate-300 px-2.5 py-1 rounded-lg text-xs font-medium active:scale-[0.98] transition-colors`).
+- **Modal Hủy Giao Dịch (`Void Payment Modal`):**
+  - Tiêu đề: **`Hủy giao dịch đang chờ xác nhận (#PAY-{id})`**
+  - Ô nhập **Lý do hủy giao dịch (*Bắt buộc*)**: Textarea `rows={2}`, placeholder: *"VD: Nhập sai số tiền chuyển khoản / Tạo trùng giao dịch..."*.
+  - Nút **`[ Xác nhận hủy giao dịch ]`** (`bg-rose-600 text-white hover:bg-rose-700 active:scale-[0.98]`). Sau khi hủy, giao dịch chuyển sang trạng thái `Voided` / `Cancelled` (badge xám gạch ngang `bg-slate-100 text-slate-500 border-slate-200`) và `pendingAmount` được giải phóng ngay lập tức.
+
+#### 3. Khóa Checkbox "Hủy khoản thu này" trong `EditTuitionModal` (`Tuitions.jsx`):
+- Khi mở Modal sửa khoản thu (`EditTuitionModal`):
+  - Kiểm tra điều kiện `tuition.paidAmount > 0`:
+    - Nếu `paidAmount > 0`: **Khóa cứng (`disabled={true}`)** checkbox / tùy chọn `"Hủy khoản thu này"` (`status = 'Cancelled'`).
+    - Hiển thị dòng giải thích rõ ràng ngay bên dưới bằng màu vàng cam/xám đậm (`text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-2.5 mt-1.5`):
+      *"🔒 Không thể hủy khoản thu này vì đã có giao dịch thu tiền được xác nhận ({formatCurrency(paidAmount)})."*
+
+---
+
+### 16.5. Luồng 4 — Màn Hình Bài Tập (`Homeworks.jsx`)
+
+#### 1. Hộp Cảnh Báo Khi Học Viên / Phụ Huynh Nộp Lại Bài Đã Chấm:
+- Khi Học viên hoặc Phụ huynh mở xem/nộp bài tập mà bài nộp đang ở trạng thái **`Reviewed` (`Đã chấm`)** HOẶC đã có điểm/nhận xét từ lần chấm trước (`submission.score !== null && submission.score !== undefined || Boolean(submission.teacherFeedback)`):
+  - Ngay bên trong Form nộp lại bài, hiển thị hộp cảnh báo rõ ràng (`bg-amber-50 border border-amber-300 text-amber-900 rounded-xl p-3.5 text-xs leading-relaxed flex items-start gap-2.5 mb-3`):
+    ```
+    ⚠️ Lưu ý: Nộp lại bài sẽ gửi bài mới cho giáo viên chấm lại, điểm số và nhận xét cũ vẫn được giữ nguyên cho tới khi giáo viên chấm lại.
+    ```
+
+#### 2. Hiển thị "Điểm / Nhận xét lần chấm trước" Khi Bài Đang Chờ Chấm Lại (`Submitted`):
+- Khi bài nộp ở trạng thái **`Submitted` (`Đã nộp / Chờ chấm lại`)** nhưng vẫn có dữ liệu `score !== null` hoặc `teacherFeedback` từ lần chấm trước đó:
+  - **Ở cả 2 phía (Học viên/Phụ huynh xem bài VÀ Giáo viên mở danh sách/modal chấm bài):**
+  - Không được ẩn khối điểm và nhận xét. Hiển thị một thẻ riêng biệt với nhãn tiêu đề rõ ràng:
+    - **Tiêu đề khối:** **`📋 Điểm / Nhận xét lần chấm trước`** (kèm badge nhỏ `Chờ chấm lại bản nộp mới` màu xanh dương `bg-blue-50 text-blue-700 border-blue-200`).
+    - **Style thẻ:** `bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-700` (nền xám dịu để phân biệt rõ đây là kết quả của lần chấm trước, đang chờ giáo viên cập nhật điểm mới cho bản nộp lại).
+    - Hiển thị đầy đủ: **Điểm lần trước: `{score}/10`** và **Nhận xét lần trước: `"{teacherFeedback}"`**.

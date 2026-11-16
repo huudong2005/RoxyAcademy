@@ -282,16 +282,18 @@ Hỗ trợ tìm kiếm, lọc theo học viên, lớp học, cơ sở và trạn
       "dueDate": "2026-11-25",
       "isCancelled": false,
       "note": "Ưu đãi đăng ký sớm 200k",
-      "createdAt": "2026-11-10T08:00:00Z"
+      "createdAt": "2026-11-10T08:00:00Z",
+      "pendingAmount": 500000
     }
   ]
   ```
+  *(Trong đó `pendingAmount` là tổng số tiền từ các giao dịch đang ở trạng thái `PendingConfirm`, giúp Frontend hiển thị số tiền đang chờ xác nhận và số tiền thực tế còn có thể nộp `remainingAmount - pendingAmount`).*
 
 ---
 
 ### 4.2. Lấy chi tiết khoản thu — `GET /api/Tuitions/{id}`
 - **Quyền truy cập:** Cùng phân quyền như `GET /api/Tuitions` (chặn Giáo viên, kiểm tra quyền sở hữu đối với Phụ huynh, Học viên và Quản lý cơ sở).
-- **Response:** `200 OK` (Cấu trúc tương tự item trong danh sách trên) hoặc `404 Not Found`, `403 Forbidden`.
+- **Response:** `200 OK` (Cấu trúc tương tự item trong danh sách trên, có kèm `pendingAmount`) hoặc `404 Not Found`, `403 Forbidden`.
 
 ---
 
@@ -331,6 +333,10 @@ Hỗ trợ tìm kiếm, lọc theo học viên, lớp học, cơ sở và trạn
 - **Quyền truy cập:** `SuperAdmin`, `BranchManager` (chỉ chi nhánh mình).
 - **Ràng buộc nghiệp vụ:**
   - `discount <= amount`.
+  - **Cấm hủy khoản thu (`isCancelled = true`) khi đã thu tiền (`paidAmount > 0`):** Nếu khoản thu đã có bất kỳ giao dịch thanh toán nào ở trạng thái `Confirmed` (`paidAmount > 0`) mà người dùng gửi `isCancelled = true`, hệ thống chặn tuyệt đối và trả về `400 Bad Request`:
+    `"Không thể hủy khoản học phí (IsCancelled = true) khi đã có giao dịch thanh toán được xác nhận ({paidAmount:N0} đ)."`
+  - **Chặn hủy khoản thu khi còn giao dịch chờ duyệt (`PendingConfirm`):** Nếu khoản thu đang có giao dịch `PendingConfirm` và người dùng chọn hủy khoản thu (`isCancelled = true`), trả về `400 Bad Request`:
+    `"Khoản học phí này đang có giao dịch chờ xác nhận (PendingConfirm). Vui lòng từ chối/hủy giao dịch chờ duyệt trước khi hủy khoản thu."`
   - **Kiểm soát chống Overpay khi giảm học phí:** Số tiền thực thu sau khi cập nhật (`amount - discount`) **không được nhỏ hơn** tổng số tiền đã thanh toán trước đó (`paidAmount`). Nếu vi phạm, trả ngay `400 Bad Request` tiếng Việt kèm thông số chi tiết.
 
 - **Request Body:**
@@ -416,12 +422,15 @@ Quản lý việc thu tiền học phí, ghi nhận thanh toán (tiền mặt / 
 - **Phân luồng trạng thái tự động theo vai trò:**
   - **Nhân viên thu tiền trực tiếp (`SuperAdmin`, `BranchManager`):** Giao dịch tự động có trạng thái `"Confirmed"`, gán `confirmedBy` là tài khoản hiện tại, `confirmedAt` là thời điểm hiện tại. Hệ thống tự động tạo Thông báo (`Notification`) gửi vào chuông của Phụ huynh học viên (`tuition.Student.ParentId`).
   - **Phụ huynh nộp qua App (`Parent`):** Giao dịch có trạng thái `"PendingConfirm"`, `confirmedBy: null` để Quản lý cơ sở kiểm tra sao kê ngân hàng và duyệt. Khi duyệt/từ chối qua `PUT /api/Payments/{id}/confirm`, hệ thống cũng tự động tạo Thông báo gửi tới Phụ huynh.
-- **Kiểm soát chặn Overpay nghiêm ngặt trước khi lưu DB:**
+- **Kiểm soát chặn Overpay & chặn nộp trùng khi có giao dịch đang chờ xác nhận (`PendingConfirm`):**
   - Số tiền thanh toán `amount > 0`.
   - Khoản thu phải tồn tại và chưa bị hủy (`IsCancelled == false`).
-  - Tính số tiền còn nợ: `remainingAmount = (Amount - Discount) - Tổng các khoản đã Confirmed`.
-  - Nếu `remainingAmount <= 0`: Trả ngay `400 Bad Request`: `"Khoản học phí này đã được thanh toán đầy đủ, không thể nộp thêm."`
-  - Nếu `amount > remainingAmount`: Trả ngay `400 Bad Request`: `"Số tiền thanh toán ({amount} đ) vượt quá số tiền còn nợ ({remainingAmount} đ)..."` — **chặn tuyệt đối việc phát sinh lỗi 500 từ SQL trigger `TR_Payments_NoOverpay`**.
+  - Tính cả `currentConfirmedPaid` (`Status == "Confirmed"`) VÀ `currentPendingPaid` (`Status == "PendingConfirm"`).
+  - `netAmount = Amount - Discount`.
+  - `availableToPay = Math.Max(0, netAmount - currentConfirmedPaid - currentPendingPaid)`.
+  - Nếu `netAmount - currentConfirmedPaid <= 0`: Trả ngay `400 Bad Request`: `"Khoản học phí này đã được thanh toán đầy đủ, không thể nộp thêm."`
+  - Nếu `availableToPay <= 0` (đang có giao dịch `PendingConfirm` chiếm hết số tiền còn nợ): Trả ngay `400 Bad Request`: `"Khoản học phí này đang có giao dịch chờ xác nhận ({currentPendingPaid:N0} đ) vừa đủ số tiền còn nợ. Vui lòng chờ nhân viên duyệt hoặc hủy giao dịch chờ trước khi tạo thanh toán mới."`
+  - Nếu `amount > availableToPay`: Trả ngay `400 Bad Request` kèm chi tiết `netAmount`, `currentConfirmedPaid`, `currentPendingPaid` — **chặn tuyệt đối việc nộp trùng chờ duyệt và lỗi 500 từ SQL trigger `TR_Payments_NoOverpay`**.
 
 - **Request Body:**
   ```json
@@ -477,6 +486,31 @@ Dành cho Quản lý chi nhánh hoặc SuperAdmin kiểm tra chứng từ/sao k�
     "id": 50,
     "status": "Confirmed",
     "message": "Xác nhận thanh toán thành công!"
+  }
+  ```
+
+---
+
+### 5.5. Hủy (Void) giao dịch thanh toán đang chờ duyệt — `PUT /api/Payments/{id}/cancel` (hoặc `PUT /api/Payments/{id}/void`)
+Dành cho Quản lý chi nhánh hoặc SuperAdmin hủy một giao dịch đang ở trạng thái chờ xác nhận (`PendingConfirm`) khi tạo nhầm hoặc phụ huynh gửi nhầm.
+
+- **Quyền truy cập:** `SuperAdmin`, `BranchManager` (chỉ chi nhánh mình).
+- **Ràng buộc nghiệp vụ:**
+  - Chỉ cho phép hủy khi `payment.Status == "PendingConfirm"`. Nếu ở trạng thái khác -> trả về `400 Bad Request`: `"Chỉ có thể hủy (void) giao dịch đang ở trạng thái Chờ xác nhận (PendingConfirm)."`
+  - **Bắt buộc nhập lý do hủy (`reason` hoặc `note`):** Nếu thiếu lý do -> trả về `400 Bad Request`: `"Vui lòng nhập lý do hủy giao dịch thanh toán."`
+  - Cập nhật trạng thái giao dịch sang `"Rejected"` (khớp `CK_Payments_Status`), ghi nhận `confirmedBy`, `confirmedAt` (khớp `CK_Payments_Reviewed`), lưu `note = "[Hủy giao dịch]: {reason}"` và gửi `Notification` cho phụ huynh.
+- **Request Body:**
+  ```json
+  {
+    "reason": "Phụ huynh nhập sai số tiền chuyển khoản, hủy để tạo lại"
+  }
+  ```
+- **Response:** `200 OK`
+  ```json
+  {
+    "message": "Đã hủy giao dịch thanh toán đang chờ duyệt.",
+    "id": 51,
+    "status": "Rejected"
   }
   ```
 
@@ -616,11 +650,8 @@ Dành cho Quản lý chi nhánh hoặc SuperAdmin kiểm tra chứng từ/sao k�
 Dành cho Phụ huynh hoặc Học viên nộp bài làm hoặc nộp lại bài khi bị yêu cầu làm lại.
 - **Quyền truy cập:** `SuperAdmin`, `Parent` (chỉ được nộp cho con mình), `Student` (chỉ nộp cho bản thân).
 - **Hành vi khi nộp / nộp lại bài:**
-  - Cập nhật trạng thái `status = "Submitted"`, ghi nhận `submittedAt = UTC`.
-  - Nếu bài nộp đã từng được giáo viên chấm trước đó, **tự động reset**:
-    - `score = null`
-    - `teacherFeedback = null`
-    - `reviewedAt = null`
+  - Cập nhật trạng thái `status = "Submitted"`, ghi nhận `submittedAt = UTC`, cập nhật `submissionUrl` và `studentNote`.
+  - **Không xóa điểm & lời phê cũ khi nộp lại:** Nếu bài nộp đã từng được giáo viên chấm trước đó (`Reviewed`), hệ thống **giữ nguyên** `score`, `teacherFeedback` và `reviewedAt` cũ để giáo viên và phụ huynh/học viên vẫn đối chiếu được điểm + lời phê trước đó cho tới khi giáo viên chấm lại.
 - **Request Body:**
   ```json
   {
@@ -631,7 +662,11 @@ Dành cho Phụ huynh hoặc Học viên nộp bài làm hoặc nộp lại bài
 - **Response:** `200 OK`
   ```json
   {
-    "message": "Nộp bài thành công!"
+    "message": "Nộp bài thành công! Bài nộp mới đã được gửi chờ giáo viên chấm lại, điểm và nhận xét cũ vẫn được giữ nguyên.",
+    "score": 8.0,
+    "teacherFeedback": "Cần sửa lại câu 2",
+    "reviewedAt": "2026-11-15T15:30:00Z",
+    "status": "Submitted"
   }
   ```
 
@@ -778,14 +813,18 @@ Quản lý đơn xin nghỉ học của học viên và nghỉ phép của giáo
 - **Phân quyền duyệt theo chi nhánh:**
   - `BranchManager` chỉ duyệt đơn thuộc chi nhánh mình (kiểm tra cả `Class.BranchId`, `Student.BranchId` và `Teacher.BranchId` để duyệt được cả đơn của Giáo viên khi `ClassId == null`). Vi phạm trả về `403 Forbidden`.
   - Chỉ duyệt đơn đang ở trạng thái `Pending` (`400 Bad Request` nếu đơn đã duyệt hoặc hủy).
-- **Quy tắc Tự động liên kết Điểm danh (`ExcusedAbsent`):**
-  - Khi đơn xin nghỉ của học viên (`StudentId != null`) được **Duyệt (`status = "Approved"`)**:
+- **Quy tắc Tự động liên kết Điểm danh (`ExcusedAbsent`) khi duyệt đơn Học viên (`StudentId != null`):**
+  - Khi đơn xin nghỉ của học viên được **Duyệt (`status = "Approved"`)**:
     - Nếu đơn có chỉ định buổi học (`ScheduleId`): Tìm buổi học đó (đảm bảo học viên đang học `Active` trong lớp).
     - Nếu đơn không chỉ định buổi học cụ thể: Tìm tất cả các buổi học trong ngày `leaveDate` mà học viên đang theo học `Active` (thuộc lớp `classId` nếu đơn có chỉ định lớp, hoặc tất cả các lớp của học viên nếu không chọn lớp).
     - Với mỗi buổi học tìm được:
-      - Nếu buổi học **đã có bản ghi điểm danh** cho học viên: Tự động cập nhật `Status = "ExcusedAbsent"`, cập nhật `Note = "Nghỉ phép có phép (Đơn #...)"`, `MarkedBy = UserId`, `MarkedAt = DateTime.UtcNow`.
-      - Nếu buổi học **chưa có bản ghi điểm danh**: Tự động tạo mới bản ghi `Attendances` với `Status = "ExcusedAbsent"`, `Note = "Nghỉ phép có phép (Đơn #...)"`, `MarkedBy = UserId`, `MarkedAt = DateTime.UtcNow`.
-    - Khi giáo viên mở màn hình điểm danh hoặc gọi `GET /api/Attendances`, học viên sẽ hiển thị ngay trạng thái `ExcusedAbsent` (Nghỉ có phép).
+      - Nếu buổi học **đã có bản ghi điểm danh** cho học viên: Lưu trạng thái cũ ở hậu tố `[Prev:{oldStatus}]`, tự động cập nhật `Status = "ExcusedAbsent"`, `Note = "Nghỉ phép có phép (Đơn #{id}: ...) [Prev:{oldStatus}]"`, `MarkedBy = UserId`, `MarkedAt = DateTime.UtcNow`.
+      - Nếu buổi học **chưa có bản ghi điểm danh**: Tự động tạo mới bản ghi `Attendances` với `Status = "ExcusedAbsent"`, `Note = "Nghỉ phép có phép (Đơn #{id}: ...) [Prev:NONE]"`, `MarkedBy = UserId`, `MarkedAt = DateTime.UtcNow`.
+- **Quy tắc Tự động xử lý Buổi học khi duyệt đơn Giáo viên (`TeacherId != null`):**
+  - Khi đơn xin nghỉ của giáo viên được **Duyệt (`status = "Approved"`)**:
+    - Tìm tất cả buổi học bị ảnh hưởng (theo `ScheduleId` nếu có, hoặc các buổi học `Status == "Scheduled"` trong ngày `leaveDate` mà giáo viên đó dạy chính hoặc dạy thay).
+    - Nếu giáo viên xin nghỉ đang là giáo viên dạy thay (`SubstituteTeacherId == teacherId`): Gỡ `SubstituteTeacherId = null`.
+    - Với các buổi học đang ở trạng thái `"Scheduled"` mà chưa có giáo viên dạy thay khác (`SubstituteTeacherId == null`): Chuyển trạng thái buổi học sang **`Status = "Cancelled"`** (Tạm hoãn chờ xếp dạy thay / học bù) và nối ghi chú `"[CẦN GIÁO VIÊN DẠY THAY - GV nghỉ phép Đơn #{id}]"` vào `Schedule.Note`. Nhờ đó buổi học không còn ở trạng thái `Scheduled` với giáo viên đang nghỉ và nhân viên nhìn vào lịch thấy ngay nhãn cần xếp dạy thay.
 - **Request Body:**
   ```json
   {
@@ -806,9 +845,24 @@ Quản lý đơn xin nghỉ học của học viên và nghỉ phép của giáo
 
 ---
 
-### 7.5. Hủy đơn xin nghỉ — `PUT /api/LeaveRequests/{id}/cancel`
-- **Quyền truy cập:** Người tạo đơn (`RequestedBy == userId`), `SuperAdmin` hoặc `BranchManager`.
-- **Ràng buộc:** Chỉ hủy được đơn đang ở trạng thái `Pending`.
+### 7.5. Hủy đơn xin nghỉ (Chờ duyệt hoặc Đã duyệt) — `PUT /api/LeaveRequests/{id}/cancel`
+- **Quyền truy cập & Ràng buộc theo trạng thái đơn:**
+  1. **Khi đơn đang ở trạng thái `Pending` (Chờ duyệt):**
+     - Người tạo đơn (`RequestedBy == userId`), `SuperAdmin` hoặc `BranchManager` (đúng chi nhánh) đều được hủy.
+     - Không bắt buộc gửi body lý do hủy.
+  2. **Khi đơn đã ở trạng thái `Approved` (Đã duyệt):**
+     - **Chỉ `SuperAdmin` hoặc `BranchManager` (đúng chi nhánh)** mới được phép hủy đơn đã duyệt (`403 Forbidden` nếu vai trò khác).
+     - **Bắt buộc nhập lý do hủy (`reason`):** Nếu thiếu lý do -> trả về `400 Bad Request`: `"Vui lòng nhập lý do hủy đơn xin nghỉ đã được phê duyệt."`
+     - Ghi nhận lý do hủy vào `ReviewNote`: `"[Đã hủy đơn đã duyệt: {reason}]"`, cập nhật `ReviewedBy` và `ReviewedAt`.
+     - **Tự động hoàn tác dữ liệu liên quan:**
+       - **Đơn của Học viên:** Tìm các bản ghi `Attendances` có `Status == "ExcusedAbsent"` gắn với `Đơn #{id}`. Nếu trước khi duyệt học viên chưa điểm danh (`[Prev:NONE]`), xóa bản ghi `Attendance` để trở về trạng thái chưa điểm danh; nếu trước đó đã có trạng thái (`[Prev:Present]`, `[Prev:Late]`, ...), khôi phục lại đúng `Status` cũ.
+       - **Đơn của Giáo viên:** Tìm các buổi học có gắn tag `"[CẦN GIÁO VIÊN DẠY THAY - GV nghỉ phép Đơn #{id}]"`, khôi phục `Status = "Scheduled"` và gỡ tag khỏi `Schedule.Note`.
+- **Request Body (Tùy chọn khi `Pending`, Bắt buộc khi `Approved`):**
+  ```json
+  {
+    "reason": "Học viên đã hết sốt và đi học lại bình thường"
+  }
+  ```
 - **Response:** `200 OK`
   ```json
   {
@@ -933,18 +987,20 @@ Quản lý danh sách các cơ sở (chi nhánh) của Roxy Academy kèm thống
 
 ---
 
-## 9. PHÂN HỆ ĐĂNG KÝ LỚP CHO CON (CLASSES & STUDENTCLASSES API)
+## 9. PHÂN HỆ LỚP HỌC & ĐĂNG KÝ LỚP (CLASSES & STUDENTCLASSES API)
 
 > **Vị trí trên Admin Web (`roxy-admin`):** Luồng **"Phụ huynh tự đăng ký lớp cho con"** được đặt tại **Trang Học viên (`/students`)** và **chỉ hiển thị cho vai trò `Parent`**. Các vai trò `SuperAdmin`, `BranchManager`, `Teacher`, `Student` không thấy nút đăng ký hay khu vực đơn đăng ký lớp của phụ huynh tại trang này.
 
-### 9.1. Lấy danh sách lớp đang mở đăng ký — `GET /api/Classes/open-for-registration`
-- **Quyền truy cập:** `SuperAdmin`, `BranchManager`, `Parent`.
-- **Phân quyền dữ liệu (Scoping):**
+### 9.1. Lấy danh sách lớp học (`GET /api/Classes`) & Lớp đang mở đăng ký (`GET /api/Classes/open-for-registration`)
+- **Quyền truy cập:**
+  - `GET /api/Classes`: Đã đăng nhập (lọc theo chi nhánh / giáo viên / con / học viên).
+  - `GET /api/Classes/open-for-registration`: `SuperAdmin`, `BranchManager`, `Parent`.
+- **Phân quyền dữ liệu (`open-for-registration`):**
   - Chỉ lấy các lớp có `IsOpenForRegistration == true` và `Status != "Finished"`.
   - `SuperAdmin`: Xem tất cả lớp đang mở đăng ký.
   - `BranchManager`: Tự động giới hạn trong cơ sở mình quản lý (`Class.BranchId == userBranchId`).
   - `Parent`: Chỉ trả về các lớp đang mở đăng ký thuộc cùng cơ sở với con đang hoạt động của phụ huynh (`Student.ParentId == UserId && Student.Status != "Dropped" && Student.BranchId == Class.BranchId`).
-- **Response:** `200 OK` (`IEnumerable<ClassDto>`)
+- **Response:** `200 OK` (`IEnumerable<ClassDto>`, bao gồm `activeStudentsCount` là sĩ số học viên `Active` hiện tại)
   ```json
   [
     {
@@ -956,7 +1012,7 @@ Quản lý danh sách các cơ sở (chi nhánh) của Roxy Academy kèm thống
       "teacherName": "Cô Nguyễn Thị Mai",
       "branchId": 1,
       "branchName": "Cơ sở Bình Trưng Tây",
-      "classType": "Standard",
+      "classType": "Group",
       "maxStudents": 15,
       "startDate": "2026-11-20",
       "endDate": null,
@@ -964,14 +1020,57 @@ Quản lý danh sách các cơ sở (chi nhánh) của Roxy Academy kèm thống
       "isOpenForRegistration": true,
       "status": "Upcoming",
       "note": null,
-      "createdAt": "2026-11-01T08:00:00Z"
+      "createdAt": "2026-11-01T08:00:00Z",
+      "activeStudentsCount": 10
     }
   ]
   ```
 
 ---
 
-### 9.2. Lấy danh sách đơn đăng ký lớp — `GET /api/StudentClasses`
+### 9.2. Tạo lớp học mới — `POST /api/Classes`
+- **Quyền truy cập:** Chỉ `SuperAdmin`.
+- **Ràng buộc nghiệp vụ:**
+  - `className`: Không trùng tên lớp đã có (`409 Conflict`).
+  - `courseId`: Khóa học phải tồn tại và đang hoạt động (`IsActive == true`). Nếu khóa học đã ngừng hoạt động -> `400 Bad Request`: `"Khóa học đã ngừng hoạt động, không thể tạo lớp mới."`
+  - `branchId`: Cơ sở phải tồn tại và đang hoạt động (`IsActive == true`). Nếu cơ sở đã ngừng hoạt động -> `400 Bad Request`: `"Cơ sở đã ngừng hoạt động, không thể tạo lớp mới."`
+  - `teacherId`: Tài khoản phải tồn tại, có `Role == "Teacher"` và đang hoạt động (`IsActive == true`). Nếu giáo viên bị khóa -> `400 Bad Request`: `"Không thể phân công giáo viên đang bị khóa tài khoản (IsActive = false)."`
+  - `classType`: Nhận `"Group"` (mặc định) hoặc `"OneToOne"` (khớp `CK_Classes_Type`).
+
+---
+
+### 9.3. Cập nhật lớp học — `PUT /api/Classes/{id}`
+- **Quyền truy cập:** Chỉ `SuperAdmin`.
+- **Các quy tắc chặn khi sửa lớp (`400 Bad Request`):**
+  1. **Không gán giáo viên đã khóa (`IsActive == false`):** Nếu tài khoản giáo viên bị khóa -> `"Không thể gán giáo viên đã bị khóa tài khoản (IsActive = false)."`
+  2. **Không hạ sĩ số tối đa (`maxStudents`) xuống dưới sĩ số đang theo học (`activeStudentsCount`):** Nếu `maxStudents < activeStudentsCount` -> `"Không thể hạ sĩ số tối đa ({maxStudents}) xuống dưới sĩ số học viên đang theo học hiện tại ({activeStudentsCount} học viên)."`
+  3. **Không đổi trạng thái từ `Finished` quay lại `Ongoing` / `Upcoming`:** Nếu lớp đã `Finished` và gửi `status != "Finished"` -> `"Lớp học đã kết thúc (Finished), không thể chuyển trạng thái quay lại Đang học (Ongoing)."`
+  4. **Không đổi học phí của lớp (`tuitionFee`) khi đã có học phí phát sinh:** Nếu `tuitionFee` thay đổi và lớp đã có bản ghi `Tuitions` (`!IsCancelled`) -> `"Không thể thay đổi học phí của lớp khi đã có khoản thu học phí phát sinh cho lớp này."`
+
+---
+
+### 9.4. Xóa / Đóng lớp học (Soft Delete) — `DELETE /api/Classes/{id}`
+- **Quyền truy cập:** Chỉ `SuperAdmin`.
+- **Kiểm tra 4 điều kiện chặn trước khi đóng lớp:**
+  1. Còn học viên đang theo học (`StudentClasses.Status == "Active"`): `"còn {n} học viên đang theo học (Active)"`
+  2. Còn lịch học tương lai chưa diễn ra (`Schedules.Status == "Scheduled" && StudyDate >= today`): `"còn {n} lịch học tương lai chưa diễn ra"`
+  3. Còn bài tập chưa kết thúc hạn nộp hoặc còn bài nộp chưa chấm xong (`HomeworkSubmissions.Status != "Reviewed"`): `"còn {n} bài tập chưa kết thúc hoặc chưa chấm xong"`
+  4. Còn khoản học phí chưa thu đủ (`!IsCancelled && PaidAmount < Amount - Discount`): `"còn {n} khoản học phí chưa thu đủ"`
+- Nếu vi phạm bất kỳ điều kiện nào, hệ thống chặn đóng lớp và trả về `400 Bad Request` liệt kê đầy đủ các lý do:
+  ```json
+  {
+    "message": "Không thể xóa/đóng lớp học \"Luyện chữ đẹp K01\" vì: còn 10 học viên đang theo học (Active); còn 4 lịch học tương lai chưa diễn ra. Vui lòng xử lý hoàn tất trước khi đóng lớp.",
+    "reasons": [
+      "còn 10 học viên đang theo học (Active)",
+      "còn 4 lịch học tương lai chưa diễn ra"
+    ]
+  }
+  ```
+- Khi thỏa mãn cả 4 điều kiện, hệ thống đóng đăng ký (`IsOpenForRegistration = false`) và chuyển `Status = "Finished"`, trả về `204 No Content`.
+
+---
+
+### 9.5. Lấy danh sách đơn đăng ký lớp — `GET /api/StudentClasses`
 - **Quyền truy cập:** Đã đăng nhập (`SuperAdmin`, `BranchManager`, `Teacher`, `Parent`, `Student`).
 - **Phân quyền dữ liệu (Scoping):**
   - `Parent`: Chỉ xem đơn đăng ký của các con mình (`Student.ParentId == UserId`).
@@ -1009,7 +1108,7 @@ Quản lý danh sách các cơ sở (chi nhánh) của Roxy Academy kèm thống
 
 ---
 
-### 9.3. Phụ huynh gửi đơn đăng ký lớp cho con — `POST /api/StudentClasses`
+### 9.6. Phụ huynh gửi đơn đăng ký lớp cho con — `POST /api/StudentClasses`
 - **Quyền truy cập:** `SuperAdmin`, `BranchManager`, `Parent`.
 - **Luồng gọi của `Parent` tại `/students`:**
   1. Tải danh sách lớp đang mở từ `GET /api/Classes/open-for-registration`.
@@ -1147,6 +1246,18 @@ Quản lý thông báo cá nhân cho người dùng (học phí, lịch học, d
 - **Phân quyền dữ liệu:** Tự động cập nhật `isRead = true` cho tất cả thông báo chưa đọc của user hiện tại (`UserId == User.GetUserId()`).
 - **Response:** `200 OK` (`{"message": "Đã đánh dấu đọc tất cả!"}`)
 
+---
 
+## 12. CHECKLIST BẢO MẬT SEED PRODUCTION (POST-DEPLOY CHECKLIST)
 
+Trong `Program.cs`, cơ chế tự động khởi tạo tài khoản `SuperAdmin` mặc định (`PhoneNumber = "0900000000"`) chỉ kích hoạt khi:
+1. Cấu hình `Seed:AdminPassword` (hoặc biến môi trường `Seed__AdminPassword`) có giá trị khác rỗng (`!string.IsNullOrWhiteSpace(seedPassword)`).
+2. Bảng `Users` chưa có bất kỳ tài khoản nào mang vai trò `SuperAdmin`.
+
+Trên môi trường không phải Development (`!app.Environment.IsDevelopment()`), nếu `Seed:AdminPassword` vẫn còn tồn tại, ứng dụng sẽ ghi log cảnh báo bảo mật mức `Warning` (`CẢNH BÁO BẢO MẬT [PRODUCTION]`).
+
+**Quy trình bắt buộc khi triển khai Production (Go-Live):**
+- [ ] **Bước 1:** Chỉ đặt `Seed__AdminPassword` trong biến môi trường / `web.config` ở lần khởi chạy đầu tiên nếu DB chưa có tài khoản `SuperAdmin`.
+- [ ] **Bước 2:** Đăng nhập ngay bằng tài khoản `SuperAdmin` vừa khởi tạo và đổi mật khẩu mạnh qua API (`POST /api/Users/{id}/reset-password` hoặc đổi mật khẩu cá nhân).
+- [ ] **Bước 3 (Quan trọng):** **XÓA NGAY** biến `Seed:AdminPassword` (`Seed__AdminPassword`) khỏi `web.config` / biến môi trường trên server Production và khởi động lại App Pool để đảm bảo tài khoản gốc không bao giờ bị tự động tạo lại nếu DB trống hoặc có sự cố dữ liệu.
 

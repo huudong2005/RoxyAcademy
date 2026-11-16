@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 using RoxyAcademy.Api.Data;
 using RoxyAcademy.Api.Dtos;
@@ -156,25 +157,38 @@ public class PaymentsController(RoxyDbContext db) : ControllerBase
         if (req.Amount <= 0)
             return BadRequest(new { message = "Số tiền thanh toán phải lớn hơn 0." });
 
-        // Kiểm tra số tiền còn nợ trước khi lưu để tránh trigger DB ném lỗi 500
-        var currentPaid = await db.Payments
+        // Kiểm tra số tiền đã xác nhận và số tiền đang chờ duyệt trước khi lưu để chặn nộp trùng / overpay
+        var currentConfirmedPaid = await db.Payments
             .Where(p => p.TuitionId == req.TuitionId && p.Status == "Confirmed")
             .SumAsync(p => (decimal?)p.Amount) ?? 0m;
 
-        var netAmount = tuition.Amount - tuition.Discount;
-        var remainingAmount = Math.Max(0m, netAmount - currentPaid);
+        var currentPendingPaid = await db.Payments
+            .Where(p => p.TuitionId == req.TuitionId && p.Status == "PendingConfirm")
+            .SumAsync(p => (decimal?)p.Amount) ?? 0m;
 
-        if (remainingAmount <= 0)
+        var netAmount = tuition.Amount - tuition.Discount;
+        var availableToPay = Math.Max(0m, netAmount - currentConfirmedPaid - currentPendingPaid);
+
+        if (netAmount - currentConfirmedPaid <= 0)
         {
             return BadRequest(new { message = "Khoản học phí này đã được thanh toán đầy đủ, không thể nộp thêm." });
         }
 
-        if (req.Amount > remainingAmount)
+        if (availableToPay <= 0)
         {
             return BadRequest(new
             {
-                message = $"Số tiền thanh toán ({req.Amount:N0} đ) vượt quá số tiền còn nợ ({remainingAmount:N0} đ). Tổng phải thu: {netAmount:N0} đ, đã thanh toán: {currentPaid:N0} đ."
+                message = $"Khoản học phí này đang có giao dịch chờ xác nhận ({currentPendingPaid:N0} đ) vừa đủ số tiền còn nợ. Vui lòng chờ nhân viên duyệt hoặc hủy giao dịch chờ trước khi tạo thanh toán mới."
             });
+        }
+
+        if (req.Amount > availableToPay)
+        {
+            var errMsg = currentPendingPaid > 0
+                ? $"Số tiền thanh toán ({req.Amount:N0} đ) vượt quá số tiền còn có thể nộp ({availableToPay:N0} đ). Tổng phải thu: {netAmount:N0} đ, đã xác nhận: {currentConfirmedPaid:N0} đ, đang chờ duyệt: {currentPendingPaid:N0} đ."
+                : $"Số tiền thanh toán ({req.Amount:N0} đ) vượt quá số tiền còn nợ ({availableToPay:N0} đ). Tổng phải thu: {netAmount:N0} đ, đã thanh toán: {currentConfirmedPaid:N0} đ.";
+
+            return BadRequest(new { message = errMsg });
         }
 
         // Logic trạng thái:
@@ -312,6 +326,69 @@ public class PaymentsController(RoxyDbContext db) : ControllerBase
         return Ok(new
         {
             message = req.Status == "Confirmed" ? "Xác nhận thanh toán thành công!" : "Đã từ chối giao dịch thanh toán.",
+            id = payment.Id,
+            status = payment.Status
+        });
+    }
+
+    [HttpPut("{id}/cancel")]
+    [HttpPut("{id}/void")]
+    [Authorize(Roles = "SuperAdmin,BranchManager")]
+    public async Task<IActionResult> CancelPayment(
+        int id,
+        [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)] CancelPaymentRequest? req = null)
+    {
+        var payment = await db.Payments
+            .Include(p => p.Tuition)
+                .ThenInclude(t => t.Student)
+            .FirstOrDefaultAsync(p => p.Id == id);
+
+        if (payment == null)
+            return NotFound(new { message = "Không tìm thấy giao dịch thanh toán này." });
+
+        if (Role == "BranchManager" && payment.Tuition.BranchId != (User.GetBranchId() ?? -1))
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = "Không thể hủy giao dịch của cơ sở khác." });
+
+        if (payment.Status != "PendingConfirm")
+            return BadRequest(new { message = "Chỉ có thể hủy (void) giao dịch đang ở trạng thái Chờ xác nhận (PendingConfirm)." });
+
+        var reason = !string.IsNullOrWhiteSpace(req?.Reason) ? req.Reason.Trim() : req?.Note?.Trim();
+        if (string.IsNullOrWhiteSpace(reason))
+            return BadRequest(new { message = "Vui lòng nhập lý do hủy giao dịch thanh toán." });
+
+        var voidNote = $"[Hủy giao dịch]: {reason}";
+        payment.Status = "Rejected";
+        payment.ConfirmedBy = UserId;
+        payment.ConfirmedAt = DateTime.UtcNow;
+        payment.Note = voidNote.Length > 500 ? voidNote.Substring(0, 500) : voidNote;
+
+        await db.SaveChangesAsync();
+
+        try
+        {
+            if (payment.Tuition.Student.ParentId > 0)
+            {
+                db.Notifications.Add(new Notification
+                {
+                    UserId = payment.Tuition.Student.ParentId,
+                    Title = "Giao dịch thanh toán đã bị hủy",
+                    Body = $"Giao dịch thanh toán {payment.Amount:N0} đ cho '{payment.Tuition.Title}' đã bị hủy. Lý do: {reason}",
+                    Type = "Tuition",
+                    RefId = payment.TuitionId,
+                    IsRead = false,
+                    CreatedAt = DateTime.UtcNow
+                });
+                await db.SaveChangesAsync();
+            }
+        }
+        catch
+        {
+            // Notification lỗi không làm ảnh hưởng việc hủy giao dịch thành công
+        }
+
+        return Ok(new
+        {
+            message = "Đã hủy giao dịch thanh toán đang chờ duyệt.",
             id = payment.Id,
             status = payment.Status
         });

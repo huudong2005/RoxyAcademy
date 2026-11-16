@@ -22,7 +22,8 @@ public record TuitionDto(
     DateOnly DueDate,
     bool IsCancelled,
     string? Note,
-    DateTime CreatedAt
+    DateTime CreatedAt,
+    decimal PendingAmount = 0m
 );
 
 public class CreateTuitionRequest

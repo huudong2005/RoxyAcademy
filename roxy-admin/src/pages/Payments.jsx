@@ -55,6 +55,13 @@ export default function Payments() {
   const [rejectReason, setRejectReason] = useState('');
   const [rejectSubmitting, setRejectSubmitting] = useState(false);
 
+  // State Modal Hủy (Void) giao dịch đang chờ xác nhận (PUT /api/Payments/{id}/cancel)
+  const [voidModalOpen, setVoidModalOpen] = useState(false);
+  const [voidPaymentItem, setVoidPaymentItem] = useState(null);
+  const [voidReason, setVoidReason] = useState('');
+  const [voidSubmitting, setVoidSubmitting] = useState(false);
+  const [voidError, setVoidError] = useState('');
+
   const [lightboxImageUrl, setLightboxImageUrl] = useState(null);
 
   // 1. Tải danh sách khoản thu (để lọc và dùng cho Modal Ghi nhận mới)
@@ -77,7 +84,7 @@ export default function Payments() {
     return () => {
       ignore = true;
     };
-  }, [isTeacher]);
+  }, [isTeacher, reloadKey]);
 
   // 2. Tải danh sách thanh toán
   useEffect(() => {
@@ -176,6 +183,40 @@ export default function Payments() {
       showToast(err.response?.data?.message || 'Không thể từ chối giao dịch.', 'error');
     } finally {
       setRejectSubmitting(false);
+    }
+  };
+
+  // 5. Mở modal Hủy (Void) giao dịch đang chờ duyệt (PUT /api/Payments/{id}/cancel)
+  const handleOpenVoid = (payment) => {
+    setVoidPaymentItem(payment);
+    setVoidReason('');
+    setVoidError('');
+    setVoidModalOpen(true);
+  };
+
+  const handleConfirmVoid = async (e) => {
+    e.preventDefault();
+    if (!voidPaymentItem) return;
+    if (!voidReason.trim()) {
+      setVoidError('Vui lòng nhập lý do hủy giao dịch thanh toán.');
+      return;
+    }
+
+    setVoidSubmitting(true);
+    setVoidError('');
+    try {
+      const res = await axiosClient.put(`/Payments/${voidPaymentItem.id}/cancel`, {
+        reason: voidReason.trim(),
+      });
+      setVoidModalOpen(false);
+      setVoidPaymentItem(null);
+      showToast(res.data?.message || 'Đã hủy giao dịch thanh toán đang chờ duyệt.');
+      setReloadKey((k) => k + 1);
+    } catch (err) {
+      console.error('Lỗi khi hủy giao dịch thanh toán:', err);
+      setVoidError(err.response?.data?.message || 'Không thể hủy giao dịch thanh toán.');
+    } finally {
+      setVoidSubmitting(false);
     }
   };
 
@@ -505,7 +546,7 @@ export default function Payments() {
                               👁️
                             </button>
 
-                            {/* Cụm 2 nút duyệt nhanh khi đang PendingConfirm */}
+                            {/* Cụm nút duyệt / từ chối / hủy (void) khi đang PendingConfirm */}
                             {canManage && isPending && (
                               <>
                                 <button
@@ -525,6 +566,15 @@ export default function Payments() {
                                 >
                                   <span>✕</span>
                                   <span>Từ chối</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenVoid(p)}
+                                  title="Hủy (Void) giao dịch đang chờ xác nhận"
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-100 text-slate-700 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 border border-slate-300 font-medium text-xs rounded-md active:scale-95 transition-all cursor-pointer"
+                                >
+                                  <span>🚫</span>
+                                  <span>Hủy (Void)</span>
                                 </button>
                               </>
                             )}
@@ -616,6 +666,13 @@ export default function Payments() {
                             className="flex-1 min-h-[44px] flex items-center justify-center gap-1 text-xs font-bold text-rose-700 bg-rose-50 border border-rose-200 hover:bg-rose-100 rounded-lg active:scale-95 transition-all"
                           >
                             ✕ Từ chối
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenVoid(p)}
+                            className="flex-1 min-h-[44px] flex items-center justify-center gap-1 text-xs font-semibold text-slate-700 bg-slate-100 border border-slate-300 hover:bg-rose-50 hover:text-rose-700 rounded-lg active:scale-95 transition-all"
+                          >
+                            🚫 Hủy
                           </button>
                         </>
                       )}
@@ -721,6 +778,80 @@ export default function Payments() {
         </div>
       )}
 
+      {/* ==================== 3.1. MODAL HỦY (VOID) GIAO DỊCH CHỜ DUYỆT ==================== */}
+      {voidModalOpen && voidPaymentItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-[2px] overflow-y-auto">
+          <div className="relative w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden modal-content">
+            <form onSubmit={handleConfirmVoid}>
+              <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 bg-slate-50">
+                <div className="flex items-center gap-2">
+                  <span className="text-rose-600 text-lg">🚫</span>
+                  <h3 className="font-bold text-slate-900 text-sm">
+                    Hủy giao dịch đang chờ xác nhận (#PAY-{voidPaymentItem.id})
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setVoidModalOpen(false)}
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-200/70"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="p-5 space-y-3 text-xs">
+                {voidError && (
+                  <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-rose-700 font-medium">
+                    ⚠️ {voidError}
+                  </div>
+                )}
+
+                <p className="text-slate-600">
+                  Bạn đang hủy (void) giao dịch chờ xác nhận{' '}
+                  <span className="font-bold font-mono">{formatCurrency(voidPaymentItem.amount)}</span> của học viên{' '}
+                  <span className="font-semibold text-slate-800">{voidPaymentItem.studentName}</span>.
+                </p>
+
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">
+                    Lý do hủy giao dịch <span className="text-rose-500">*</span>
+                  </label>
+                  <textarea
+                    rows={2}
+                    required
+                    placeholder="VD: Nhập sai số tiền chuyển khoản / Tạo trùng giao dịch..."
+                    value={voidReason}
+                    onChange={(e) => {
+                      setVoidReason(e.target.value);
+                      if (voidError) setVoidError('');
+                    }}
+                    className="w-full p-2.5 bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 text-slate-700 resize-none text-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 px-5 py-3.5 border-t border-slate-100 bg-slate-50/50">
+                <button
+                  type="button"
+                  onClick={() => setVoidModalOpen(false)}
+                  disabled={voidSubmitting}
+                  className="px-3.5 py-1.5 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 cursor-pointer"
+                >
+                  Đóng
+                </button>
+                <button
+                  type="submit"
+                  disabled={voidSubmitting || !voidReason.trim()}
+                  className="px-4 py-1.5 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 active:scale-[0.98] rounded-lg shadow-xs transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {voidSubmitting ? 'Đang xử lý...' : 'Xác nhận hủy giao dịch'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* ==================== 4. MODAL LIGHTBOX XEM ẢNH CHỨNG TỪ ==================== */}
       {lightboxImageUrl && (
         <div
@@ -776,16 +907,19 @@ function RecordPaymentModal({ tuitions, onClose, onSuccess }) {
   }, [activeUnpaidTuitions, tuitionId]);
 
   const remainingAmount = selectedTuition ? (selectedTuition.remainingAmount || 0) : 0;
+  const pendingAmount = selectedTuition ? (selectedTuition.pendingAmount || 0) : 0;
+  const payableAmount = Math.max(0, remainingAmount - pendingAmount);
   const finalAmount = selectedTuition ? (selectedTuition.finalAmount ?? (selectedTuition.amount - selectedTuition.discount)) : 0;
 
-  // Số tiền: Gợi ý đúng số nợ
-  const [amount, setAmount] = useState(() => (remainingAmount > 0 ? String(remainingAmount) : ''));
+  // Số tiền: Gợi ý đúng số tiền còn có thể nộp (sau khi trừ pendingAmount)
+  const [amount, setAmount] = useState(() => (payableAmount > 0 ? String(payableAmount) : '0'));
 
   const handleSelectTuition = (newId) => {
     setTuitionId(newId);
     const item = activeUnpaidTuitions.find((t) => String(t.id) === String(newId));
     if (item) {
-      setAmount(String(item.remainingAmount || 0));
+      const itemPayable = Math.max(0, (item.remainingAmount || 0) - (item.pendingAmount || 0));
+      setAmount(String(itemPayable > 0 ? itemPayable : 0));
     }
   };
 
@@ -798,8 +932,8 @@ function RecordPaymentModal({ tuitions, onClose, onSuccess }) {
   const [formError, setFormError] = useState('');
 
   const numAmount = Number(amount) || 0;
-  const isOverpay = numAmount > remainingAmount;
-  const isInvalidAmount = numAmount <= 0 || isOverpay;
+  const isOverpay = numAmount > payableAmount;
+  const isInvalidAmount = payableAmount <= 0 || numAmount <= 0 || isOverpay;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -809,13 +943,17 @@ function RecordPaymentModal({ tuitions, onClose, onSuccess }) {
       setFormError('Vui lòng chọn khoản thu học phí.');
       return;
     }
+    if (payableAmount <= 0) {
+      setFormError('Không thể nộp thêm vì đã có giao dịch chờ xác nhận đủ số tiền còn nợ.');
+      return;
+    }
     if (numAmount <= 0) {
       setFormError('Số tiền thanh toán phải lớn hơn 0.');
       return;
     }
     if (isOverpay) {
       setFormError(
-        `Số tiền thanh toán (${formatCurrency(numAmount)}) không được vượt quá số còn nợ (${formatCurrency(remainingAmount)})!`
+        `Số tiền thanh toán (${formatCurrency(numAmount)}) không được vượt quá số còn có thể nộp (${formatCurrency(payableAmount)})!`
       );
       return;
     }
@@ -898,35 +1036,56 @@ function RecordPaymentModal({ tuitions, onClose, onSuccess }) {
 
             {/* Card thông tin dư nợ của khoản thu đang chọn */}
             {selectedTuition && (
-              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5 font-mono">
-                <div className="flex justify-between text-xs">
-                  <span className="font-sans text-slate-500">Học viên:</span>
-                  <span className="font-sans font-semibold text-slate-800">{selectedTuition.studentName}</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="font-sans text-slate-500">Phải thu:</span>
-                  <span className="text-slate-700">{formatCurrency(finalAmount)}</span>
-                </div>
-                <div className="flex justify-between text-xs text-emerald-700">
-                  <span className="font-sans">Đã thanh toán:</span>
-                  <span className="font-medium">{formatCurrency(selectedTuition.paidAmount)}</span>
-                </div>
-                <div className="flex items-center justify-between pt-2 border-t border-slate-200">
-                  <span className="font-sans font-bold text-slate-900">CÒN NỢ CẦN THU:</span>
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-base text-rose-600">
-                      {formatCurrency(remainingAmount)}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setAmount(String(remainingAmount))}
-                      className="px-2 py-0.5 text-[11px] font-sans font-semibold bg-blue-100 text-blue-700 hover:bg-blue-200 rounded active:scale-95 transition-all cursor-pointer"
-                    >
-                      ⚡ Điền nhanh
-                    </button>
+              <>
+                {pendingAmount > 0 && (
+                  <div className="bg-amber-50 border border-amber-300 text-amber-900 rounded-xl p-3 text-xs leading-relaxed">
+                    ⏳ Lưu ý: Khoản thu này đang có <strong>{formatCurrency(pendingAmount)}</strong> chờ xác nhận. Số tiền tối đa có thể nộp thêm lúc này là <strong>{formatCurrency(payableAmount)}</strong>.
+                    {payableAmount <= 0 && (
+                      <p className="mt-1 font-semibold text-rose-700">
+                        Toàn bộ số tiền còn nợ đang chờ xác nhận. Vui lòng duyệt hoặc hủy giao dịch chờ trước khi tạo giao dịch mới.
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5 font-mono">
+                  <div className="flex justify-between text-xs">
+                    <span className="font-sans text-slate-500">Học viên:</span>
+                    <span className="font-sans font-semibold text-slate-800">{selectedTuition.studentName}</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="font-sans text-slate-500">Phải thu:</span>
+                    <span className="text-slate-700">{formatCurrency(finalAmount)}</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-emerald-700">
+                    <span className="font-sans">Đã thanh toán:</span>
+                    <span className="font-medium">{formatCurrency(selectedTuition.paidAmount)}</span>
+                  </div>
+                  {pendingAmount > 0 && (
+                    <div className="flex justify-between text-xs text-amber-700">
+                      <span className="font-sans">Đang chờ xác nhận:</span>
+                      <span className="font-semibold">{formatCurrency(pendingAmount)}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-200">
+                    <span className="font-sans font-bold text-slate-900">TỐI ĐA CÓ THỂ NỘP:</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-base text-rose-600">
+                        {formatCurrency(payableAmount)}
+                      </span>
+                      {payableAmount > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setAmount(String(payableAmount))}
+                          className="px-2 py-0.5 text-[11px] font-sans font-semibold bg-blue-100 text-blue-700 hover:bg-blue-200 rounded active:scale-95 transition-all cursor-pointer"
+                        >
+                          ⚡ Điền nhanh
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
+              </>
             )}
 
             {/* Ô nhập Số tiền thanh toán & Validate chống Overpay */}
@@ -938,11 +1097,13 @@ function RecordPaymentModal({ tuitions, onClose, onSuccess }) {
                 type="number"
                 min="1000"
                 step="1000"
+                max={payableAmount}
+                disabled={payableAmount <= 0}
                 placeholder="VD: 1500000"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 required
-                className={`w-full h-11 px-3.5 font-mono text-base font-bold rounded-lg border focus:outline-none transition-all ${
+                className={`w-full h-11 px-3.5 font-mono text-base font-bold rounded-lg border focus:outline-none transition-all disabled:bg-slate-100 disabled:text-slate-400 ${
                   isOverpay
                     ? 'border-rose-500 ring-2 ring-rose-200 bg-rose-50/30 text-rose-700'
                     : 'border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-slate-900 bg-white'
@@ -952,7 +1113,7 @@ function RecordPaymentModal({ tuitions, onClose, onSuccess }) {
               {/* Báo lỗi đỏ real-time nếu vượt nợ */}
               {isOverpay && (
                 <p className="text-xs text-rose-600 font-medium mt-1 animate-in fade-in">
-                  ⚠️ Số tiền thanh toán ({formatCurrency(numAmount)}) không được vượt quá số còn nợ (Tối đa: {formatCurrency(remainingAmount)}).
+                  ⚠️ Số tiền thanh toán ({formatCurrency(numAmount)}) không được vượt quá số còn có thể nộp (Tối đa: {formatCurrency(payableAmount)}).
                 </p>
               )}
 

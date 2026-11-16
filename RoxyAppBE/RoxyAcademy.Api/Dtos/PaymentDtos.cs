@@ -53,3 +53,12 @@ public class ConfirmPaymentRequest
     [StringLength(500, ErrorMessage = "Ghi chú duyệt tối đa 500 ký tự")]
     public string? Note { get; set; }
 }
+
+public class CancelPaymentRequest
+{
+    [StringLength(500, ErrorMessage = "Lý do hủy tối đa 500 ký tự")]
+    public string? Reason { get; set; }
+
+    [StringLength(500, ErrorMessage = "Ghi chú hủy tối đa 500 ký tự")]
+    public string? Note { get; set; }
+}

@@ -456,6 +456,9 @@ export default function LeaveRequests() {
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
   const [reviewError, setReviewError] = useState('');
 
+  // State Modal Xác nhận Hủy Đơn Đã Duyệt (Revoke Approved Leave Request)
+  const [cancelApprovedModal, setCancelApprovedModal] = useState(null); // { req, reason, submitting, error }
+
   const handleOpenDetail = (req) => {
     setSelectedRequest(req);
     setReviewNote('');
@@ -523,13 +526,29 @@ export default function LeaveRequests() {
     }
   };
 
-  // Hủy đơn xin nghỉ (cho người gửi hoặc staff)
-  const handleCancelRequest = async (reqId, e) => {
+  // Hủy đơn xin nghỉ (Pending: hủy nhanh; Approved: mở modal bắt buộc nhập lý do)
+  const handleCancelRequest = async (reqOrId, e) => {
     if (e) e.stopPropagation();
+    const reqObj =
+      typeof reqOrId === 'object'
+        ? reqOrId
+        : leaveRequests.find((r) => r.id === reqOrId) || selectedRequest;
+    const reqId = typeof reqOrId === 'object' ? reqOrId.id : reqOrId;
+
+    if (reqObj && reqObj.status === 'Approved') {
+      setCancelApprovedModal({
+        req: reqObj,
+        reason: '',
+        submitting: false,
+        error: '',
+      });
+      return;
+    }
+
     if (!window.confirm('Bạn có chắc chắn muốn hủy đơn xin nghỉ này không?')) return;
 
     try {
-      await axiosClient.put(`/LeaveRequests/${reqId}/cancel`);
+      await axiosClient.put(`/LeaveRequests/${reqId}/cancel`, { reason: 'Hủy đơn chờ duyệt' });
       showToast('success', 'Đã hủy đơn xin nghỉ phép thành công.');
       if (detailModalOpen) setDetailModalOpen(false);
       setReloadKey((k) => k + 1);
@@ -537,6 +556,39 @@ export default function LeaveRequests() {
       console.error('Lỗi hủy đơn xin nghỉ:', err);
       const msg = err.response?.data?.message || 'Không thể hủy đơn này.';
       showToast('error', msg);
+    }
+  };
+
+  // Submit hủy đơn đã duyệt (Approved -> Cancelled kèm lý do bắt buộc)
+  const handleConfirmCancelApproved = async (e) => {
+    e.preventDefault();
+    if (!cancelApprovedModal?.req) return;
+    const trimmedReason = cancelApprovedModal.reason.trim();
+    if (!trimmedReason) {
+      setCancelApprovedModal((prev) => ({
+        ...prev,
+        error: 'Vui lòng nhập lý do hủy đơn xin nghỉ đã được phê duyệt.',
+      }));
+      return;
+    }
+
+    setCancelApprovedModal((prev) => ({ ...prev, submitting: true, error: '' }));
+    try {
+      await axiosClient.put(`/LeaveRequests/${cancelApprovedModal.req.id}/cancel`, {
+        reason: trimmedReason,
+      });
+      showToast('success', 'Đã hủy đơn xin nghỉ đã duyệt và hoàn tác dữ liệu liên quan thành công!');
+      setCancelApprovedModal(null);
+      if (detailModalOpen) setDetailModalOpen(false);
+      setReloadKey((k) => k + 1);
+    } catch (err) {
+      console.error('Lỗi hủy đơn đã duyệt:', err);
+      const msg = err.response?.data?.message || 'Không thể hủy đơn đã duyệt này.';
+      setCancelApprovedModal((prev) => ({
+        ...prev,
+        submitting: false,
+        error: msg,
+      }));
     }
   };
 
@@ -1002,6 +1054,11 @@ export default function LeaveRequests() {
                               <span>✓</span> Đã đồng bộ điểm danh
                             </div>
                           )}
+                          {req.status === 'Approved' && !isStudentReq && (
+                            <div className="text-[10px] font-medium text-emerald-700 mt-1 flex items-center gap-0.5">
+                              <span>✓</span> Đã xử lý lịch dạy
+                            </div>
+                          )}
                         </td>
 
                         {/* Cột 5: Người duyệt & Ghi chú */}
@@ -1061,11 +1118,23 @@ export default function LeaveRequests() {
                             {canCancelThis && !canReview && (
                               <button
                                 type="button"
-                                onClick={(e) => handleCancelRequest(req.id, e)}
+                                onClick={(e) => handleCancelRequest(req, e)}
                                 title="Hủy đơn xin nghỉ này"
                                 className="inline-flex items-center px-2 py-1 text-xs text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors"
                               >
                                 Hủy đơn
+                              </button>
+                            )}
+
+                            {/* Hủy đơn đã duyệt (dành cho SuperAdmin & BranchManager khi Approved) */}
+                            {canReview && req.status === 'Approved' && (
+                              <button
+                                type="button"
+                                onClick={(e) => handleCancelRequest(req, e)}
+                                title="Hủy đơn đã duyệt & hoàn tác điểm danh / lịch dạy"
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 active:scale-[0.98] rounded-md text-xs font-medium transition-all"
+                              >
+                                <span>Hủy đơn đã duyệt</span>
                               </button>
                             )}
 
@@ -1179,10 +1248,20 @@ export default function LeaveRequests() {
                       {canCancelThis && !canReview && (
                         <button
                           type="button"
-                          onClick={(e) => handleCancelRequest(req.id, e)}
+                          onClick={(e) => handleCancelRequest(req, e)}
                           className="min-h-[44px] px-3 flex items-center justify-center text-xs text-rose-600 hover:bg-rose-50 rounded-lg"
                         >
                           Hủy
+                        </button>
+                      )}
+
+                      {canReview && req.status === 'Approved' && (
+                        <button
+                          type="button"
+                          onClick={(e) => handleCancelRequest(req, e)}
+                          className="min-h-[44px] px-3 flex items-center justify-center text-xs font-medium text-rose-700 bg-rose-50 border border-rose-200 hover:bg-rose-100 rounded-lg active:scale-95 transition-all"
+                        >
+                          Hủy đơn đã duyệt
                         </button>
                       )}
                     </div>
@@ -1675,6 +1754,18 @@ export default function LeaveRequests() {
                 </div>
               )}
 
+              {/* KHỐI LƯU Ý XỬ LÝ BUỔI DẠY KHI DUYỆT ĐƠN NGHỈ CỦA GIÁO VIÊN */}
+              {selectedRequest.requesterType === 'Teacher' && (
+                <div className="rounded-xl border border-amber-300 bg-amber-50/80 p-3.5 text-xs text-amber-900 space-y-1 leading-relaxed">
+                  <div className="font-semibold flex items-center gap-1.5">
+                    <span>⚠️</span> Cơ chế xử lý buổi dạy khi duyệt đơn nghỉ của Giáo viên:
+                  </div>
+                  <p className="text-[11px] text-amber-800">
+                    Khi đơn nghỉ của giáo viên được &ldquo;DUYỆT&rdquo; (Approved), các buổi học đang ở trạng thái &ldquo;Sắp tới (Scheduled)&rdquo; trong ngày/buổi nghỉ mà chưa có người dạy thay sẽ tự động chuyển sang trạng thái &ldquo;Tạm hoãn / Cần giáo viên dạy thay&rdquo; (Cancelled) để không còn buổi học Scheduled với giáo viên đang nghỉ.
+                  </p>
+                </div>
+              )}
+
               {/* KHỐI KẾT QUẢ XÉT DUYỆT (NẾU ĐÃ DUYỆT HOẶC TỪ CHỐI) */}
               {selectedRequest.status !== 'Pending' && (
                 <div
@@ -1757,12 +1848,23 @@ export default function LeaveRequests() {
                   (selectedRequest.requestedBy === currentUser.id || canReview) && (
                     <button
                       type="button"
-                      onClick={() => handleCancelRequest(selectedRequest.id)}
+                      onClick={() => handleCancelRequest(selectedRequest)}
                       className="text-xs text-rose-600 hover:underline font-medium"
                     >
                       Hủy đơn xin nghỉ này
                     </button>
                   )}
+
+                {/* Cho phép SuperAdmin / BranchManager hủy đơn đã duyệt */}
+                {selectedRequest.status === 'Approved' && canReview && (
+                  <button
+                    type="button"
+                    onClick={() => handleCancelRequest(selectedRequest)}
+                    className="px-3 py-1.5 bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 active:scale-[0.98] rounded-lg text-xs font-medium transition-all"
+                  >
+                    Hủy đơn đã duyệt
+                  </button>
+                )}
               </div>
 
               <div className="flex items-center gap-2">
@@ -1806,6 +1908,95 @@ export default function LeaveRequests() {
                 )}
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================ */}
+      {/* 10. MODAL XÁC NHẬN HỦY ĐƠN ĐÃ DUYỆT (REVOKE APPROVED LEAVE)   */}
+      {/* ============================================================ */}
+      {cancelApprovedModal && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-[2px]">
+          <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden modal-content">
+            <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4 bg-rose-50/40">
+              <div>
+                <h3 className="text-sm md:text-base font-bold text-slate-900">
+                  Hủy đơn nghỉ phép đã duyệt (#{cancelApprovedModal.req.id})
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {cancelApprovedModal.req.studentName || cancelApprovedModal.req.teacherName} •{' '}
+                  {formatDateWithWeekday(cancelApprovedModal.req.leaveDate)}
+                </p>
+              </div>
+              <button
+                type="button"
+                disabled={cancelApprovedModal.submitting}
+                onClick={() => setCancelApprovedModal(null)}
+                className="h-8 w-8 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleConfirmCancelApproved} className="p-5 space-y-4 text-xs">
+              {cancelApprovedModal.error && (
+                <div className="rounded-lg bg-rose-50 border border-rose-200 p-3 text-rose-700 font-medium">
+                  ⚠️ {cancelApprovedModal.error}
+                </div>
+              )}
+
+              <div className="rounded-xl border border-blue-200 bg-blue-50/80 p-3.5 text-blue-900 leading-relaxed">
+                {cancelApprovedModal.req.requesterType === 'Teacher' ? (
+                  <p>
+                    🔄 Các buổi học bị tạm hoãn từ đơn này sẽ được khôi phục lại trạng thái{' '}
+                    <strong>&ldquo;Sắp tới (Scheduled)&rdquo;</strong>.
+                  </p>
+                ) : (
+                  <p>
+                    🔄 Điểm danh <strong>&ldquo;Nghỉ có phép (ExcusedAbsent)&rdquo;</strong> đã tạo tự động từ đơn này sẽ được hoàn tác về trạng thái trước đó.
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Lý do hủy đơn đã duyệt <span className="text-rose-500">*</span>
+                </label>
+                <textarea
+                  rows={3}
+                  required
+                  maxLength={500}
+                  placeholder="Nhập lý do hủy đơn nghỉ phép đã duyệt (bắt buộc)..."
+                  value={cancelApprovedModal.reason}
+                  onChange={(e) =>
+                    setCancelApprovedModal((prev) => ({
+                      ...prev,
+                      reason: e.target.value,
+                      error: '',
+                    }))
+                  }
+                  className="w-full p-2.5 bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 text-slate-800"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  disabled={cancelApprovedModal.submitting}
+                  onClick={() => setCancelApprovedModal(null)}
+                  className="px-4 py-2 rounded-lg border border-slate-300 bg-white font-semibold text-slate-700 hover:bg-slate-50"
+                >
+                  Đóng
+                </button>
+                <button
+                  type="submit"
+                  disabled={cancelApprovedModal.submitting || !cancelApprovedModal.reason.trim()}
+                  className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold shadow-xs active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {cancelApprovedModal.submitting ? 'Đang xử lý...' : 'Xác nhận hủy đơn'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

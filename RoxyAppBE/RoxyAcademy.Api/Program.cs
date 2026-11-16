@@ -96,6 +96,11 @@ if (app.Environment.IsDevelopment())
 var seedPassword = app.Configuration["Seed:AdminPassword"];
 if (!string.IsNullOrWhiteSpace(seedPassword))
 {
+    if (!app.Environment.IsDevelopment())
+    {
+        app.Logger.LogWarning("CẢNH BÁO BẢO MẬT [PRODUCTION]: Cấu hình 'Seed:AdminPassword' vẫn đang tồn tại trên môi trường Production. Sau lần đăng nhập SuperAdmin đầu tiên, vui lòng XÓA ngay 'Seed:AdminPassword' khỏi web.config / biến môi trường để tài khoản gốc không bị tạo lại nếu DB trống.");
+    }
+
     try
     {
         using var scope = app.Services.CreateScope();
@@ -116,6 +121,11 @@ if (!string.IsNullOrWhiteSpace(seedPassword))
             db.Users.Add(admin);
             db.SaveChanges();
             app.Logger.LogInformation("Đã khởi tạo tài khoản SuperAdmin mặc định (SĐT: 0900000000).");
+
+            if (!app.Environment.IsDevelopment())
+            {
+                app.Logger.LogWarning("CẢNH BÁO BẢO MẬT [PRODUCTION]: Tài khoản SuperAdmin gốc vừa được tạo trên Production. Sau lần đăng nhập SuperAdmin đầu tiên, vui lòng XÓA ngay 'Seed:AdminPassword' khỏi web.config / biến môi trường để tài khoản gốc không bị tạo lại nếu DB trống.");
+            }
         }
     }
     catch (Exception ex)

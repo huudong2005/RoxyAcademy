@@ -420,7 +420,14 @@ export default function Schedules() {
         <span className="text-xs font-semibold text-slate-700 flex items-center gap-1">
           🕒 {formatTime(item.startTime)} – {formatTime(item.endTime)}
         </span>
-        {renderStatusBadge(item.status)}
+        <div className="flex items-center gap-1 flex-wrap">
+          {renderStatusBadge(item.status)}
+          {item.note && item.note.includes('CẦN GIÁO VIÊN DẠY THAY') && (
+            <span className="bg-amber-100 text-amber-800 border border-amber-300 text-[10px] px-2 py-0.5 rounded-full font-semibold inline-flex items-center gap-1">
+              ⚠️ Cần GV dạy thay
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Hàng 2: Tên lớp */}

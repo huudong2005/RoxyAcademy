@@ -423,3 +423,109 @@ Toàn bộ 6 hạng mục kiểm thử code, phân quyền và build/smoke test 
 > **KẾT QUẢ NGHIỆM THU: ĐẠT CHUẨN NGHIỆM THU (PASSED 100%)**  
 > Toàn bộ 4 nhóm tiêu chí (Chuông thông báo, Tài chính & Học phí, Quản lý Khóa học, Biên dịch/Linting/RBAC) đều đạt chuẩn nghiệm thu theo `GEMINI.md`. Không còn lỗi chặn.  
 > **HỆ THỐNG ĐÃ SẴN SÀNG ĐỂ BÀN GIAO CHO DEPLOY SUB-AGENT.**
+
+
+---
+
+# BÁO CÁO KIỂM THỬ QA — GIAI ĐOẠN 1M-2 (SỬA CÁC LUỒNG CHƯA HỢP LÝ TRƯỚC GO-LIVE — GUARDRAIL UX & EDGE CASES)
+**Dự án:** Roxy Academy — Hệ thống Quản trị Học tập  
+**Ngày kiểm thử:** 16/11/2026  
+**Người thực hiện:** QA Agent  
+**Tài liệu đối chiếu:** `GEMINI.md`, `docs/DESIGN.md` (Mục 16), `docs/API.md` (Mục 4, 5, 6, 7, 9, 12), `RoxyAppDB.sql`  
+**Phạm vi kiểm thử:**
+1. Xóa/sửa/tạo lớp & Ràng buộc phụ thuộc (`ClassesController.cs`, `ClassDtos.cs`, `ClassList.jsx`, `docs/API.md`)
+2. Đơn xin nghỉ của giáo viên & Hủy đơn đã duyệt (`LeaveRequestsController.cs`, `LeaveRequestDtos.cs`, `LeaveRequests.jsx`, `Schedules.jsx`, `docs/API.md`)
+3. Thanh toán trùng chờ duyệt, Hủy (Void) thanh toán & Cấm hủy học phí đã thu (`PaymentsController.cs`, `TuitionsController.cs`, `PaymentDtos.cs`, `TuitionDtos.cs`, `Tuitions.jsx`, `Payments.jsx`, `docs/API.md`)
+4. Nộp lại bài tập không xóa điểm & nhận xét cũ (`HomeworkSubmissionsController.cs`, `Homeworks.jsx`, `docs/API.md`)
+5. Kiểm tra cấu hình seed SuperAdmin ở Production (`Program.cs`, `docs/API.md`)
+6. Kiểm tra Build, Lint & An toàn chung (`RoxyAppDB.sql`, localhost, migrations)
+
+---
+
+## 1. KẾT QUẢ BIÊN DỊCH, LINT VÀ KIỂM TRA AN TOÀN HỆ THỐNG
+
+| Thành phần | Lệnh thực thi / Phương thức | Kết quả | Chi tiết đối chiếu |
+| :--- | :--- | :---: | :--- |
+| **Database Schema** | `git diff RoxyAppDB.sql` & kiểm tra thư mục `Migrations` | **PASS** | 0 thay đổi trên `RoxyAppDB.sql`, không tạo EF Migration mới |
+| **Backend Build** | `dotnet build` tại `RoxyAppBE/RoxyAcademy.Api/` | **PASS** | **0 Warning(s), 0 Error(s)**, target `net9.0` (đã dừng `RoxyAcademy.Api` trước khi build) |
+| **Frontend Lint** | `npm run lint` tại `roxy-admin/` | **PASS** | **0 problems (0 errors, 0 warnings)** |
+| **Frontend Build** | `npm run build` tại `roxy-admin/` | **PASS** | **0 Error(s)**, Vite production build transformed 105 modules trong 296ms |
+| **Kiểm tra Localhost** | Quét `roxy-admin/src/**/*.jsx` & `Controllers/*.cs` | **PASS** | 0 hard-code `localhost` trong code sản phẩm |
+
+---
+
+## 2. BẢNG TỔNG HỢP CHECKLIST KIỂM THỬ GIAI ĐOẠN 1M-2
+
+| STT | Hạng mục kiểm tra | Tiêu chí nghiệm thu | Kết quả | Dẫn chứng file & dòng code cụ thể |
+| :-: | :--- | :--- | :-: | :--- |
+| **1** | **Xóa/Đóng lớp (`DELETE /Classes/{id}`)** | - Chặn `400 Bad Request` khi còn: (1) học viên `Active`, (2) lịch học tương lai `Scheduled`, (3) bài tập chưa kết thúc/chấm xong, (4) học phí chưa thu đủ; trả về cả `message` và mảng `reasons`.<br>- UI mở `Blocking Dependencies Modal` liệt kê rõ từng lý do (không dùng `window.alert`). | **PASS** | - `ClassesController.cs` L249-312<br>- `ClassList.jsx` L54, L340-376, L2099-2190<br>- `docs/API.md` L1052-1070 |
+| **2** | **Sửa lớp (`PUT /Classes/{id}`) & Tạo lớp (`POST /Classes`)** | - Hạ `MaxStudents < activeStudentsCount` bị chặn ở cả Backend (`400`) & UI inline validation.<br>- Gán giáo viên đã khóa (`IsActive == false`) bị chặn.<br>- Đổi `Status` từ `Finished` → `Ongoing`/`Upcoming` bị chặn.<br>- Đổi `TuitionFee` khi đã có học phí phát sinh (`!IsCancelled`) bị chặn.<br>- Tạo lớp kiểm tra `Course.IsActive` và `Branch.IsActive`. | **PASS** | - `ClassesController.cs` L117-135, L176-223<br>- `ClassDtos.cs` L24<br>- `ClassList.jsx` L202-203, L280-294, L868-882, L1047-1106, L1131-1181, L1219-1235, L1281-1285<br>- `docs/API.md` L1031-1049 |
+| **3** | **Đơn xin nghỉ của Giáo viên (`PUT /LeaveRequests/{id}/review`)** | - Khi duyệt (`Approved`) đơn nghỉ của GV: nếu GV là `SubstituteTeacherId` thì gỡ `null`; nếu buổi học `Scheduled` chưa có GV dạy thay thì chuyển sang `Cancelled` kèm tag `[CẦN GIÁO VIÊN DẠY THAY - GV nghỉ phép Đơn #{id}]`.<br>- Hiển thị rõ cảnh báo trên `LeaveRequests.jsx` và badge `⚠️ Cần GV dạy thay` trên `Schedules.jsx`. | **PASS** | - `LeaveRequestsController.cs` L556-616<br>- `LeaveRequests.jsx` L1057-1061, L1758-1767<br>- `Schedules.jsx` L425-429<br>- `docs/API.md` L823-827 |
+| **4** | **Hủy đơn xin nghỉ đã duyệt (`PUT /LeaveRequests/{id}/cancel`)** | - Cho phép `SuperAdmin`/`BranchManager` hủy đơn `Approved` (bắt buộc nhập lý do `Reason`).<br>- Đơn Học viên: hoàn tác điểm danh `ExcusedAbsent` về trạng thái cũ (`[Prev:...]`) hoặc xóa bản ghi nếu trước đó chưa điểm danh (`[Prev:NONE]`).<br>- Đơn Giáo viên: khôi phục buổi học từ `Cancelled` về `Scheduled` và gỡ tag khỏi `Schedule.Note`. | **PASS** | - `LeaveRequestsController.cs` L521-530, L637-793<br>- `LeaveRequestDtos.cs` L62-69<br>- `LeaveRequests.jsx` L460, L530-593, L1130-1139, L1258-1266, L1859-1867, L1918-2002<br>- `docs/API.md` L848-872 |
+| **5** | **Chặn nộp trùng chờ duyệt (`PendingConfirm`) & Hủy (Void) thanh toán** | - `POST /Payments` tính `availableToPay = netAmount - currentConfirmedPaid - currentPendingPaid`; chặn `400` nếu nộp vượt.<br>- `TuitionDto` trả kèm `PendingAmount`; Frontend tính `payableAmount = remainingAmount - pendingAmount` ở cả 3 modal thanh toán.<br>- `PUT /Payments/{id}/cancel` (và `/void`) cho phép `SuperAdmin`/`BranchManager` hủy giao dịch `PendingConfirm` kèm lý do bắt buộc, có nút và modal trên cả `Payments.jsx` & `Tuitions.jsx`. | **PASS** | - `PaymentsController.cs` L160-192, L334-395<br>- `TuitionsController.cs` L122, L158, L196, L245<br>- `TuitionDtos.cs` L26, `PaymentDtos.cs` L57-64<br>- `Tuitions.jsx` L647-653, L1063-1093, L1176-1189, L1286-1369, L2070-2102, L2354-2406<br>- `Payments.jsx` L58-64, L189-221, L570-578, L670-676, L782-853, L909-959<br>- `docs/API.md` L286-290, L425-434, L494-515 |
+| **6** | **Cấm hủy học phí (`IsCancelled = true`) khi đã thu tiền** | - Backend `PUT /Tuitions/{id}` chặn `400 Bad Request` khi `req.IsCancelled && paidAmount > 0` (và khi còn `PendingConfirm`).<br>- Frontend `EditTuitionModal` disable checkbox `isCancelled` kèm thông báo giải thích rõ ràng. | **PASS** | - `TuitionsController.cs` L325-347<br>- `Tuitions.jsx` L1821-1822, L1991-2020<br>- `docs/API.md` L336-339 |
+| **7** | **Nộp lại bài tập không xóa điểm & nhận xét cũ** | - `PUT /HomeworkSubmissions/{id}/submit` giữ nguyên `Score`, `TeacherFeedback`, `ReviewedAt` cũ, chỉ cập nhật bài nộp mới và đặt `Status = "Submitted"`.<br>- Frontend `Homeworks.jsx` hiển thị cảnh báo *"Nộp lại sẽ gửi lại cho giáo viên chấm, điểm cũ và nhận xét cũ vẫn được giữ nguyên cho tới khi giáo viên chấm lại"* và hiển thị điểm + lời phê cũ ở cả màn hình Học viên/Phụ huynh lẫn Giáo viên khi bài đang `Submitted`. | **PASS** | - `HomeworkSubmissionsController.cs` L189-202<br>- `Homeworks.jsx` L652-667, L1517-1522, L1604-1611, L1676-1716, L1930-2008, L2017-2024<br>- `docs/API.md` L649-671 |
+| **8** | **Cấu hình Seed `SuperAdmin` ở Production** | - Chỉ seed khi có `Seed:AdminPassword`.<br>- Ghi `LogWarning` (`CẢNH BÁO BẢO MẬT [PRODUCTION]`) khi `Seed:AdminPassword` tồn tại / chạy trên môi trường không phải Development.<br>- `docs/API.md` Mục 12 có checklist xóa `Seed:AdminPassword` khỏi `web.config` / biến môi trường sau lần đăng nhập đầu tiên. | **PASS** | - `Program.cs` L96-135<br>- `docs/API.md` L1251-1263 |
+
+---
+
+## 3. PHÂN TÍCH CHI TIẾT TỪNG LUỒNG NGHIỆP VỤ
+
+### 3.1. Luồng 1: Xóa / Sửa / Tạo Lớp học (`ClassesController.cs`, `ClassDtos.cs`, `ClassList.jsx`) — PASS
+- **Đóng/xóa lớp (`DELETE /api/Classes/{id}`):**
+  - Kiểm tra đủ 4 điều kiện độc lập: học viên `Active` (`activeEnrollmentsCount`), lịch học tương lai `Scheduled` (`futureSchedulesCount`), bài tập chưa hết hạn hoặc còn bài nộp chưa `Reviewed` (`unfinishedHomeworksCount`), và khoản học phí chưa thu đủ (`unpaidTuitionsCount`).
+  - Trả về `400 Bad Request` chứa cả chuỗi tổng hợp `message` và mảng `reasons`.
+  - Trên `ClassList.jsx`, thao tác bấm **Đóng lớp** mở modal xác nhận và khi bị chặn sẽ hiển thị danh sách bullet (`<ul className="list-disc">`) liệt kê từng lý do trong modal, tuyệt đối không dùng `window.alert`.
+- **Sửa lớp (`PUT /api/Classes/{id}`) & Tạo lớp (`POST /api/Classes`):**
+  - `ClassDto` trả kèm `ActiveStudentsCount`.
+  - Khi tạo lớp mới: kiểm tra `Course.IsActive`, `Branch.IsActive`, và `Teacher.IsActive`.
+  - Khi sửa lớp: chặn hạ `MaxStudents < activeStudentsCount` (cả Backend `400` và UI inline validation + disable nút Lưu); chặn gán giáo viên `IsActive == false`; chặn mở lại lớp đã `Finished` (dropdown `status` bị `disabled` trên UI và chặn `400` ở Backend); chặn đổi `TuitionFee` khi lớp đã có bản ghi `Tuitions` chưa hủy.
+
+### 3.2. Luồng 2: Đơn xin nghỉ của Giáo viên & Hủy đơn đã duyệt (`LeaveRequestsController.cs`, `LeaveRequests.jsx`, `Schedules.jsx`) — PASS
+- **Duyệt đơn nghỉ của Giáo viên (`PUT /api/LeaveRequests/{id}/review`):**
+  - Khi `req.Status == "Approved"` và `leave.TeacherId.HasValue`, Backend tìm các buổi học liên quan: nếu giáo viên xin nghỉ đang là `SubstituteTeacherId` thì gỡ về `null`; nếu buổi học đang `Scheduled` và không có giáo viên dạy thay thì chuyển `Status = "Cancelled"` và nối tag `[CẦN GIÁO VIÊN DẠY THAY - GV nghỉ phép Đơn #{leave.Id}]` vào `Schedule.Note`.
+  - Trên `LeaveRequests.jsx`, modal duyệt đơn của giáo viên hiển thị hộp cảnh báo màu hổ phách giải thích rõ cơ chế tự động chuyển buổi học sang `Cancelled` (Cần giáo viên dạy thay).
+  - Trên `Schedules.jsx`, thẻ buổi học có ghi chú `CẦN GIÁO VIÊN DẠY THAY` hiển thị nổi bật badge `⚠️ Cần GV dạy thay` bên cạnh badge trạng thái.
+- **Hủy đơn đã duyệt (`PUT /api/LeaveRequests/{id}/cancel`):**
+  - Chỉ `SuperAdmin` và `BranchManager` (đúng chi nhánh) được hủy đơn ở trạng thái `Approved`, bắt buộc phải có lý do (`cancelReason`), nếu thiếu trả về `400 Bad Request`.
+  - Khi duyệt đơn Học viên trước đó, hệ thống lưu hậu tố `[Prev:{prevStatus}]` (hoặc `[Prev:NONE]`) trong `Attendance.Note`. Khi hủy đơn đã duyệt: nếu có trạng thái cũ hợp lệ thì khôi phục `att.Status = restoredStatus`, nếu là `[Prev:NONE]` thì xóa bản ghi `Attendance` để về trạng thái chưa điểm danh.
+  - Khi hủy đơn đã duyệt của Giáo viên: khôi phục các buổi học bị ảnh hưởng từ `Cancelled` về `Scheduled` và xóa tag `[CẦN GIÁO VIÊN DẠY THAY ...]` khỏi `Schedule.Note`.
+
+### 3.3. Luồng 3: Thanh toán trùng chờ duyệt, Hủy (Void) thanh toán & Cấm hủy học phí đã thu (`PaymentsController.cs`, `TuitionsController.cs`, `Tuitions.jsx`, `Payments.jsx`) — PASS
+- **Chặn nộp trùng khi đang có giao dịch `PendingConfirm`:**
+  - `POST /api/Payments` tính `availableToPay = Math.Max(0m, netAmount - currentConfirmedPaid - currentPendingPaid)`. Nếu `availableToPay <= 0` hoặc `req.Amount > availableToPay` thì chặn ngay bằng `400 Bad Request` kèm thông tin chi tiết số tiền đã xác nhận và số tiền đang chờ duyệt.
+  - `GET /api/Tuitions` và `GET /api/Tuitions/{id}` trả thêm `PendingAmount` trong `TuitionDto`.
+  - Trên `Tuitions.jsx` và `Payments.jsx`, cả 3 modal (`ParentPaymentModal`, `QuickPayModal`, `RecordPaymentModal`) đều tính `payableAmount = Math.max(0, remainingAmount - pendingAmount)`, giới hạn `max={payableAmount}` và hiển thị hộp cảnh báo màu vàng cam khi `pendingAmount > 0`.
+- **Hủy (Void) giao dịch `PendingConfirm` (`PUT /api/Payments/{id}/cancel` hoặc `/void`):**
+  - Cho phép `SuperAdmin` và `BranchManager` (đúng chi nhánh) hủy giao dịch đang ở trạng thái `PendingConfirm`, bắt buộc nhập lý do (`Reason` hoặc `Note`), lưu `[Hủy giao dịch]: {reason}` và gửi thông báo cho phụ huynh.
+  - Có nút `🚫 Hủy (Void)` và modal nhập lý do bắt buộc trên cả trang `Payments.jsx` lẫn bảng lịch sử thanh toán trong `TuitionDetailModal` (`Tuitions.jsx`).
+- **Cấm hủy khoản học phí đã có tiền thu (`paidAmount > 0`):**
+  - Backend `PUT /api/Tuitions/{id}` chặn `400 Bad Request` nếu `req.IsCancelled && paidAmount > 0` (cũng như khi còn giao dịch `PendingConfirm`).
+  - Frontend `EditTuitionModal` khóa checkbox `disabled={hasConfirmedPayments || hasPendingPayments}` kèm hộp giải thích rõ số tiền đã xác nhận / đang chờ xác nhận.
+
+### 3.4. Luồng 4: Nộp lại bài tập không xóa điểm (`HomeworkSubmissionsController.cs`, `Homeworks.jsx`) — PASS
+- Backend `PUT /api/HomeworkSubmissions/{id}/submit` chỉ cập nhật `SubmissionUrl`, `StudentNote`, `Status = "Submitted"`, `SubmittedAt = DateTime.UtcNow`, hoàn toàn không gán `null` vào `Score`, `TeacherFeedback` hay `ReviewedAt`, đồng thời trả lại `score`, `teacherFeedback`, `reviewedAt` trong response.
+- Frontend `Homeworks.jsx`:
+  - Hiển thị hộp cảnh báo màu vàng cam trong form nộp lại: *"Lưu ý: Nộp lại sẽ gửi lại cho giáo viên chấm, điểm cũ và nhận xét cũ vẫn được giữ nguyên cho tới khi giáo viên chấm lại."*
+  - Ở cả màn hình Học viên/Phụ huynh (`KẾT QUẢ CHẤM LẦN TRƯỚC`) lẫn màn hình Giáo viên chấm bài (`📋 Điểm & Nhận xét lần chấm trước` + badge danh sách trái `Điểm cũ: X/10`), điểm số và lời phê cũ đều được hiển thị đầy đủ khi bài đang ở trạng thái `Submitted` chờ chấm lại.
+
+### 3.5. Luồng 5: Cấu hình Seed `SuperAdmin` ở Production (`Program.cs`, `docs/API.md`) — PASS
+- `Program.cs` (L96-135) chỉ chạy khối seed khi `!string.IsNullOrWhiteSpace(seedPassword)`.
+- Khi `!app.Environment.IsDevelopment()`, ứng dụng ghi `app.Logger.LogWarning("CẢNH BÁO BẢO MẬT [PRODUCTION]: Cấu hình 'Seed:AdminPassword' vẫn đang tồn tại trên môi trường Production...")`.
+- `docs/API.md` (Mục 12, L1251-1263) ghi rõ quy trình 3 bước khi Go-Live Production, yêu cầu xóa ngay `Seed:AdminPassword` (`Seed__AdminPassword`) khỏi `web.config` / biến môi trường sau lần đăng nhập `SuperAdmin` đầu tiên.
+
+---
+
+## 4. DANH SÁCH LỖI VÀ VẤN ĐỀ CẦN XỬ LÝ (DEFECT LOG)
+
+- **Lỗi chặn (Blocker):** **0**
+- **Lỗi nghiêm trọng (Critical):** **0**
+- **Lỗi nhỏ (Minor):** **0**
+
+---
+
+## 5. KẾT LUẬN & ĐỀ NGHỊ BÀN GIAO
+
+Toàn bộ 6 nhóm tiêu chí nghiệm thu của **Giai đoạn 1M-2 (Sửa các luồng chưa hợp lý trước Go-Live)** đều **ĐẠT (PASS 100%)** cả ở Backend, Frontend lẫn Tài liệu (`docs/API.md`, `docs/DESIGN.md`). Không phát sinh lỗi biên dịch hay cảnh báo ESLint.
+
+**Trạng thái nghiệm thu Giai đoạn 1M-2:** **ĐẠT CHUẨN NGHIỆM THU (PASSED 100%)** — Sẵn sàng bàn giao cho Deploy Agent.

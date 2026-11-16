@@ -641,14 +641,14 @@ export default function Homeworks() {
     setStudentSubmitSuccess('');
 
     try {
-      await axiosClient.put(`/HomeworkSubmissions/${selectedSubmission.id}/submit`, {
+      const res = await axiosClient.put(`/HomeworkSubmissions/${selectedSubmission.id}/submit`, {
         submissionUrl: studentSubmissionUrl.trim(),
         studentNote: studentNote.trim() || null,
       });
 
       setStudentSubmitSuccess('🎉 Nộp bài tập thành công! Cô giáo sẽ chấm điểm và phản hồi sớm cho con.');
 
-      // Cập nhật lại danh sách bài nộp
+      // Cập nhật lại danh sách bài nộp (GIỮ NGUYÊN điểm cũ & lời phê cũ cho tới khi giáo viên chấm lại)
       const updatedList = submissions.map((s) =>
         s.id === selectedSubmission.id
           ? {
@@ -657,6 +657,10 @@ export default function Homeworks() {
               submissionUrl: studentSubmissionUrl.trim(),
               studentNote: studentNote.trim() || null,
               submittedAt: new Date().toISOString(),
+              score: res.data?.score !== undefined ? res.data.score : s.score,
+              teacherFeedback:
+                res.data?.teacherFeedback !== undefined ? res.data.teacherFeedback : s.teacherFeedback,
+              reviewedAt: res.data?.reviewedAt !== undefined ? res.data.reviewedAt : s.reviewedAt,
             }
           : s
       );
@@ -1506,9 +1510,16 @@ export default function Homeworks() {
                           );
                           if (sub.status === 'Submitted') {
                             statusBadge = (
-                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 font-semibold animate-pulse">
-                                📥 Chờ chấm
-                              </span>
+                              <div className="flex flex-col items-end gap-1">
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 font-semibold animate-pulse">
+                                  📥 Chờ chấm
+                                </span>
+                                {(subScore !== null || Boolean(sub.teacherFeedback)) && (
+                                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 border border-slate-200 font-mono font-medium">
+                                    {subScore !== null ? `Điểm cũ: ${subScore}/10` : 'Có nhận xét cũ'}
+                                  </span>
+                                )}
+                              </div>
                             );
                           } else if (sub.status === 'Reviewed') {
                             if (subScore !== null) {
@@ -1586,9 +1597,19 @@ export default function Homeworks() {
                                 )}
                               </div>
                             ) : selectedSubmission.status === 'Submitted' ? (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-xs font-bold text-amber-800">
-                                📥 Đã nộp bài (Chờ cô chấm)
-                              </span>
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-3 py-1 text-xs font-bold text-amber-800">
+                                  📥 Đã nộp bài (Chờ cô chấm)
+                                </span>
+                                {(getSubmissionScore(selectedSubmission) !== null ||
+                                  Boolean(selectedSubmission.teacherFeedback)) && (
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 border border-slate-300 px-2.5 py-0.5 text-xs font-semibold text-slate-700 font-mono">
+                                    {getSubmissionScore(selectedSubmission) !== null
+                                      ? `Điểm cũ: ${getSubmissionScore(selectedSubmission)}/10`
+                                      : 'Đã có nhận xét lần trước'}
+                                  </span>
+                                )}
+                              </div>
                             ) : (
                               <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600">
                                 ⏳ Chưa nộp bài
@@ -1650,6 +1671,49 @@ export default function Homeworks() {
                             </div>
                           )}
                         </div>
+
+                        {/* Hộp đối chiếu Điểm & Nhận xét lần chấm trước (Khi học viên nộp lại bài chờ chấm) */}
+                        {selectedSubmission.status === 'Submitted' &&
+                          (getSubmissionScore(selectedSubmission) !== null ||
+                            Boolean(getCleanFeedback(selectedSubmission.teacherFeedback))) && (
+                            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-2 text-xs text-slate-700">
+                              <div className="flex items-center justify-between flex-wrap gap-2">
+                                <h4 className="font-bold text-slate-800 flex items-center gap-1.5">
+                                  <span>📋</span>
+                                  <span>Điểm &amp; Nhận xét lần chấm trước</span>
+                                </h4>
+                                <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-semibold">
+                                  Chờ chấm lại bản nộp mới
+                                </span>
+                              </div>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                                <div>
+                                  <span className="text-slate-500">Điểm lần trước: </span>
+                                  <strong className="font-mono text-slate-900">
+                                    {getSubmissionScore(selectedSubmission) !== null
+                                      ? `${getSubmissionScore(selectedSubmission)} / 10`
+                                      : 'Chỉ nhận xét'}
+                                  </strong>
+                                </div>
+                                {selectedSubmission.reviewedAt && (
+                                  <div>
+                                    <span className="text-slate-500">Chấm lúc: </span>
+                                    <span className="font-medium text-slate-700">
+                                      {formatDateTime(selectedSubmission.reviewedAt)}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                              {getCleanFeedback(selectedSubmission.teacherFeedback) && (
+                                <div className="pt-1.5 border-t border-slate-200/80">
+                                  <span className="text-slate-500 block mb-0.5">Nhận xét lần trước:</span>
+                                  <p className="italic text-slate-800 whitespace-pre-line">
+                                    &ldquo;{getCleanFeedback(selectedSubmission.teacherFeedback)}&rdquo;
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          )}
 
                         {/* Khung chấm điểm & nhận xét của giáo viên */}
                         <div className="rounded-xl border border-blue-200 bg-blue-50/30 p-4 space-y-4">
@@ -1863,9 +1927,18 @@ export default function Homeworks() {
                                   )}
                                 </div>
                               ) : isSubmitted ? (
-                                <span className="font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">
-                                  📥 Đã nộp bài (Đang chờ cô chấm)
-                                </span>
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-full">
+                                    {myScore !== null || Boolean(getCleanFeedback(mySub.teacherFeedback))
+                                      ? '📥 Đã nộp lại (Chờ chấm lại)'
+                                      : '📥 Đã nộp bài (Đang chờ cô chấm)'}
+                                  </span>
+                                  {myScore !== null && (
+                                    <span className="font-bold text-emerald-900 bg-emerald-100 border border-emerald-300 px-2.5 py-0.5 rounded-full font-mono">
+                                      Điểm hiện tại: {myScore} / 10
+                                    </span>
+                                  )}
+                                </div>
                               ) : (
                                 <span className="font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
                                   ⏳ Chưa nộp bài
@@ -1874,13 +1947,27 @@ export default function Homeworks() {
                             </div>
                           </div>
 
-                          {/* KẾT QUẢ NẾU ĐÃ CHẤM */}
-                          {isReviewed && (
-                            <div className="rounded-2xl border-2 border-emerald-300 bg-emerald-50/40 p-5 space-y-4">
+                          {/* KẾT QUẢ NẾU ĐÃ CHẤM HOẶC CÓ ĐIỂM / NHẬN XÉT LẦN TRƯỚC */}
+                          {(isReviewed || myScore !== null || Boolean(getCleanFeedback(mySub.teacherFeedback))) && (
+                            <div
+                              className={`rounded-2xl border-2 p-5 space-y-4 ${
+                                isReviewed
+                                  ? 'border-emerald-300 bg-emerald-50/40'
+                                  : 'border-slate-300 bg-slate-50'
+                              }`}
+                            >
                               <div className="flex items-center justify-between flex-wrap gap-2">
-                                <h4 className="text-sm font-bold text-emerald-900 flex items-center gap-2">
-                                  <span>🌟</span>
-                                  <span>KẾT QUẢ ĐÁNH GIÁ CỦA CÔ GIÁO</span>
+                                <h4
+                                  className={`text-sm font-bold flex items-center gap-2 ${
+                                    isReviewed ? 'text-emerald-900' : 'text-slate-800'
+                                  }`}
+                                >
+                                  <span>{isReviewed ? '🌟' : '📋'}</span>
+                                  <span>
+                                    {isSubmitted
+                                      ? 'KẾT QUẢ CHẤM LẦN TRƯỚC (Đang chờ cô chấm lại bài nộp mới)'
+                                      : 'KẾT QUẢ ĐÁNH GIÁ CỦA CÔ GIÁO'}
+                                  </span>
                                 </h4>
                                 <span className="text-[11px] text-slate-500">
                                   {formatDateTime(mySub.reviewedAt)}
@@ -1924,8 +2011,17 @@ export default function Homeworks() {
                           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs space-y-4">
                             <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                               <span>📤</span>
-                              <span>{isSubmitted ? 'Cập nhật lại bài nộp' : 'Nộp bài tập cho cô'}</span>
+                              <span>{isSubmitted || isReviewed ? 'Cập nhật / Nộp lại bài tập' : 'Nộp bài tập cho cô'}</span>
                             </h4>
+
+                            {(isReviewed || myScore !== null || Boolean(mySub.teacherFeedback)) && (
+                              <div className="rounded-xl border border-amber-300 bg-amber-50 p-3.5 text-xs text-amber-900 flex items-start gap-2 leading-relaxed">
+                                <span className="shrink-0 text-sm">⚠️</span>
+                                <span>
+                                  <strong>Lưu ý:</strong> Nộp lại sẽ gửi lại cho giáo viên chấm, điểm cũ và nhận xét cũ vẫn được giữ nguyên cho tới khi giáo viên chấm lại.
+                                </span>
+                              </div>
+                            )}
 
                             {studentSubmitError && (
                               <div className="rounded-lg bg-rose-50 border border-rose-200 p-3 text-xs text-rose-700">

@@ -188,14 +188,18 @@ public class HomeworkSubmissionsController(RoxyDbContext db) : ControllerBase
 
         sub.SubmissionUrl = req.SubmissionUrl?.Trim();
         sub.StudentNote = req.StudentNote?.Trim();
-        sub.Status = "Submitted"; // Chuyển trạng thái sang Đã nộp
+        sub.Status = "Submitted"; // Chuyển trạng thái sang Đã nộp (chờ chấm lại, giữ nguyên điểm và nhận xét cũ)
         sub.SubmittedAt = DateTime.UtcNow;
-        sub.Score = null;
-        sub.TeacherFeedback = null;
-        sub.ReviewedAt = null;
 
         await db.SaveChangesAsync();
-        return Ok(new { message = "Nộp bài thành công!" });
+        return Ok(new
+        {
+            message = "Nộp bài thành công! Bài nộp mới đã được gửi chờ giáo viên chấm lại, điểm và nhận xét cũ vẫn được giữ nguyên.",
+            score = sub.Score,
+            teacherFeedback = sub.TeacherFeedback,
+            reviewedAt = sub.ReviewedAt,
+            status = sub.Status
+        });
     }
 
     [HttpPut("{id}/review")] // API DÀNH CHO GIÁO VIÊN / QUẢN LÝ CHẤM BÀI

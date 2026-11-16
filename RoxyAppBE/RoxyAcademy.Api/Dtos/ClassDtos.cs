@@ -2,7 +2,7 @@
 
 namespace RoxyAcademy.Api.Dtos;
 
-// Lấy thêm Tên Khóa, Tên Cơ sở, Tên Giáo viên để Web Admin dễ hiển thị
+// Lấy thêm Tên Khóa, Tên Cơ sở, Tên Giáo viên và Sĩ số hiện tại để Web Admin dễ hiển thị
 public record ClassDto(
     int Id,
     string ClassName,
@@ -20,7 +20,8 @@ public record ClassDto(
     bool IsOpenForRegistration,
     string Status,
     string? Note,
-    DateTime CreatedAt
+    DateTime CreatedAt,
+    int ActiveStudentsCount = 0
 );
 
 public class CreateClassRequest
@@ -38,7 +39,7 @@ public class CreateClassRequest
     public int BranchId { get; set; }
 
     [Required, StringLength(50)]
-    public string ClassType { get; set; } = "Offline"; // Ví dụ: Offline, Online
+    public string ClassType { get; set; } = "Group"; // Khớp CK_Classes_Type IN ('Group','OneToOne')
 
     [Range(1, 100, ErrorMessage = "Số học viên tối đa không hợp lệ")]
     public int? MaxStudents { get; set; }
