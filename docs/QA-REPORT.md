@@ -606,3 +606,58 @@ Toàn bộ 6 nhóm tiêu chí nghiệm thu của **Giai đoạn 1M-2 (Sửa các
 Toàn bộ 5 hạng mục kiểm thử bắt buộc của **Giai đoạn 1N-1** đều **ĐẠT (PASS)** qua đối chiếu mã nguồn chi tiết, `dotnet build --no-restore` (0 error, 0 warning) và `npm run lint` (0 error, 0 warning). Không phát sinh lỗi chặn hay vi phạm phân quyền/bảo mật theo `GEMINI.md`.
 
 **Trạng thái nghiệm thu Giai đoạn 1N-1:** **ĐẠT CHUẨN NGHIỆM THU (PASSED)** — Đủ điều kiện bàn giao.
+
+
+---
+
+# BÁO CÁO KIỂM THỬ QA — GIAI ĐOẠN 1N-1 (ĐỢT 2 — 5 TÍNH NĂNG BỔ SUNG & SEED DANH MỤC)
+**Dự án:** Roxy Academy — Hệ thống Quản trị Học tập  
+**Ngày kiểm thử:** 17/11/2026  
+**Người thực hiện:** QA Agent  
+**Tài liệu đối chiếu:** `GEMINI.md`, `docs/API.md`, `RoxyAppDB.sql`, `RoxyAppDB.Seed.Catalog.sql`  
+**Phạm vi kiểm thử:**
+- Backend: `AuthDtos.cs`, `AuthController.cs`, `SeedController.cs`, `SchedulesController.cs`, `StudentsController.cs`, `TuitionsController.cs`
+- Frontend: `App.jsx`, `ProtectedRoute.jsx`, `AuthProvider.jsx`, `ChangePasswordModal.jsx`, `AdminLayout.jsx`, `Schedules.jsx`, `Students.jsx`, `Tuitions.jsx`, `Login.jsx`
+- Script DB: `RoxyAppDB.Seed.Catalog.sql`
+
+---
+
+## 1. KẾT QUẢ BIÊN DỊCH, LINT & GIỚI HẠN MÔI TRƯỜNG RUNTIME
+
+| Thành phần | Lệnh thực thi / Phương thức | Kết quả | Chi tiết |
+| :--- | :--- | :---: | :--- |
+| **Backend Build** | `dotnet build --no-restore` tại `RoxyAppBE/RoxyAcademy.Api/` | **PASS** | **0 Warning(s), 0 Error(s)**, target `net9.0` (`RoxyAcademy.Api.dll`) |
+| **Frontend Lint** | `npm --prefix roxy-admin run lint` (`eslint .`) | **PASS** | **0 Error(s), 0 Warning(s)** |
+| **Frontend Build** | `npm run build` (`roxy-admin/`) | **PASS** | **109 modules transformed, built in 356ms** (0 Error) |
+| **Runtime API / DB** | Môi trường sandbox hiện tại | **CHƯA CHẠY E2E TRONG SANDBOX** | Sandbox không kết nối MSSQL local & giới hạn bind port/ghi file tạm ngoài phạm vi cho phép; toàn bộ 6 hạng mục được kiểm chứng chi tiết qua đối chiếu mã nguồn Backend, Frontend, SQL script và tài liệu `docs/API.md`. |
+| **Hard-code `localhost` & `[CẦN XÁC MINH]`** | Quét toàn bộ file Backend & Frontend trong phạm vi đợt 2 | **PASS** | **0** kết quả `localhost` hoặc `[CẦN XÁC MINH]`. |
+
+---
+
+## 2. BẢNG TỔNG HỢP CHECKLIST 6 HẠNG MỤC BẮT BUỘC
+
+| STT | Hạng mục kiểm tra | Tiêu chí nghiệm thu | Kết quả | Dẫn chứng file & dòng code cụ thể |
+| :-: | :--- | :--- | :---: | :--- |
+| **1** | **Đổi mật khẩu (`POST /api/Auth/change-password`)** | - Sai mật khẩu cũ bị chặn `400 Bad Request`.<br>- Mật khẩu mới tối thiểu 8 ký tự.<br>- Đổi xong cập nhật `PasswordHash`, đăng nhập lại bằng mật khẩu mới được.<br>- Menu người dùng có mục `"Đổi mật khẩu"` cho mọi vai trò đã đăng nhập; không có chức năng quên mật khẩu. | **PASS** | - `AuthDtos.cs` L40-50 (`ChangePasswordRequest`, `[MinLength(8)]`)<br>- `AuthController.cs` L75-94 (`VerifyHashedPassword` sai → `400 Bad Request`, đúng → băm mới & lưu DB)<br>- `ChangePasswordModal.jsx` L62-110<br>- `AdminLayout.jsx` L293-300, L355-365, L488-499<br>- `Login.jsx` (0 kết quả quên mật khẩu) |
+| **2** | **Giáo viên tự xếp lịch (`Schedules`)** | - `Teacher` tạo/sửa được lịch lớp mình dạy và bị chặn `403` nếu tạo/sửa lịch lớp người khác.<br>- Trên UI `Schedules.jsx`, dropdown lớp chỉ hiện lớp của giáo viên đó và ẩn nút xóa. | **PASS** | - `SchedulesController.cs` L183-201 (`POST` chặn `Teacher` nếu `cls.TeacherId != UserId` → `403`), L240-258 (`PUT` chặn `Teacher` nếu không dạy chính/dạy thay → `403`), L284-285 (`DELETE` chỉ `SuperAdmin,BranchManager`)<br>- `Schedules.jsx` L19-21, L242-247 (`availableModalClasses`), L511-520 (`canDelete` ẩn nút `🗑️`) |
+| **3** | **Xóa học viên (`DELETE /api/Students/{id}`)** | - Chỉ `SuperAdmin`/`BranchManager` thấy nút xóa.<br>- Modal xác nhận cảnh báo đúng hành vi backend: chuyển sang `Dropped`, đăng ký lớp sang `Dropped`, khóa tài khoản học viên nếu có, giữ nguyên học phí. | **PASS** | - `StudentsController.cs` L102-122 (`ApplyStatusAsync`), L267-284 (`[Authorize(Roles = "SuperAdmin,BranchManager")]`)<br>- `Students.jsx` L1252-1262 (`isStaff && stu.status !== 'Dropped'`), L2413-2492 (`deleteConfirmModal` liệt kê đủ 4 tác động) |
+| **4** | **Xóa học phí (`DELETE /api/Tuitions/{id}`)** | - Chỉ `SuperAdmin`/`BranchManager` thấy nút xóa.<br>- Khoản thu đã có thanh toán bị chặn xóa ở backend (`400`) và disable/chặn ở UI. | **PASS** | - `TuitionsController.cs` L369-389 (`[Authorize(Roles = "SuperAdmin,BranchManager")]`, kiểm tra `db.Payments.AnyAsync(p => p.TuitionId == id)` → `400`)<br>- `Tuitions.jsx` L742-763 (desktop), L882-903 (mobile), L1038-1108 (`hasPayments` disable nút `🗑️`) |
+| **5** | **`ProtectedRoute` chặn theo vai trò** | - Tải app luôn xác thực lại bằng `GET /Auth/me` (không tin `role` trong `localStorage`).<br>- Vào route sai vai trò thì thấy trang `403` và KHÔNG gọi API trang con. | **PASS** | - `AuthProvider.jsx` L4-12 (`user` khởi tạo `null`)<br>- `ProtectedRoute.jsx` L11-50 (gọi `GET /Auth/me`), L56-65 (chờ xác thực, chưa render `<Outlet />`), L67-88 (hiển thị trang `403`, không render `<Outlet />`)<br>- `App.jsx` L23-70 (phân nhóm `ALL_ROLES`, `STAFF_ROLES`, `TUITION_ROLES`, `PAYMENT_ROLES`, `SUPERADMIN_ONLY`) |
+| **6** | **Seed danh mục (`RoxyAppDB.Seed.Catalog.sql` & `POST /api/Seed/catalog`)** | - Chạy 1 lần ra đúng 2 chi nhánh + 8 khóa học theo `roxy.edu.vn`.<br>- Chạy lại không nhân đôi (idempotent), không seed học viên/giáo viên/tài khoản giả.<br>- Có tài liệu rõ trong `docs/API.md`. | **PASS** | - `RoxyAppDB.Seed.Catalog.sql` L1-63 (`IF NOT EXISTS` cho 2 chi nhánh Bình Trưng + 8 khóa học)<br>- `SeedController.cs` L13-79 (`[Authorize(Roles = "SuperAdmin")]`, `AnyAsync` idempotent)<br>- `docs/API.md` L1300-1325 (Mục 13.2 & 13.3) |
+
+---
+
+## 3. DANH SÁCH LỖI VÀ VẤN ĐỀ CẦN XỬ LÝ (DEFECT LOG)
+
+- **Lỗi chặn (Blocker):** **0**
+- **Lỗi nghiêm trọng (Critical):** **0**
+- **Lỗi nhỏ (Minor):** **0**
+- *Ghi chú tài liệu (không chặn):* `docs/API.md` chưa có mục mô tả riêng cho `DELETE /api/Students/{id}` (có thể bổ sung ở lần cập nhật docs tiếp theo).
+
+---
+
+## 4. KẾT LUẬN & ĐỀ NGHỊ BÀN GIAO
+
+Toàn bộ 6 hạng mục kiểm thử bắt buộc của **Giai đoạn 1N-1 (Đợt 2 — 5 tính năng bổ sung & Seed danh mục)** đều **ĐẠT (PASS 100%)** qua đối chiếu mã nguồn chi tiết, `dotnet build --no-restore` (0 Warning, 0 Error), `npm run lint` (0 Error, 0 Warning) và `npm run build` (109 modules transformed, built in 356ms). Không có lỗi chặn.
+
+**Trạng thái nghiệm thu Giai đoạn 1N-1 (Đợt 2):** **ĐẠT CHUẨN NGHIỆM THU (PASSED)** — Đủ điều kiện bàn giao.

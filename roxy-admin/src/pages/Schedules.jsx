@@ -16,7 +16,9 @@ export default function Schedules() {
 
   const isSuperAdmin = currentUser.role === 'SuperAdmin';
   const isBranchManager = currentUser.role === 'BranchManager';
-  const canManage = isSuperAdmin || isBranchManager;
+  const isTeacher = currentUser.role === 'Teacher';
+  const canDelete = isSuperAdmin || isBranchManager;
+  const canCreateEdit = canDelete || isTeacher;
 
   // Xử lý tuần (Thứ Hai -> Chủ Nhật)
   const getMonday = (d) => {
@@ -236,16 +238,32 @@ export default function Schedules() {
     return timeStr.slice(0, 5);
   };
 
+  // Danh sách lớp khả dụng trong modal Tạo lịch (Teacher chỉ thấy lớp mình phụ trách)
+  const availableModalClasses = useMemo(() => {
+    if (isTeacher) {
+      return classes.filter((c) => c.teacherId === currentUser.id);
+    }
+    return classes;
+  }, [isTeacher, classes, currentUser.id]);
+
   // Mở modal Tạo mới
   const handleOpenCreateModal = (defaultDate) => {
     setEditingSchedule(null);
     setModalError('');
 
-    // Tìm lớp đầu tiên có giáo viên
-    const validClass = classes.find((c) => c.teacherId);
+    let defaultClassId = '';
+    if (isTeacher) {
+      const teacherClasses = classes.filter((c) => c.teacherId === currentUser.id);
+      if (teacherClasses.length === 1) {
+        defaultClassId = teacherClasses[0].id;
+      }
+    } else {
+      const validClass = classes.find((c) => c.teacherId);
+      defaultClassId = validClass ? validClass.id : '';
+    }
 
     setFormData({
-      classId: validClass ? validClass.id : '',
+      classId: defaultClassId,
       studyDate: defaultDate || selectedMobileDate || todayISO,
       startTime: '08:00',
       endTime: '09:30',
@@ -480,24 +498,26 @@ export default function Schedules() {
           <span>Điểm danh</span>
         </button>
 
-        {canManage && (
+        {canCreateEdit && (
           <div className="flex items-center gap-1">
             <button
               type="button"
               onClick={() => handleOpenEditModal(item)}
-              className="p-1.5 text-slate-500 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors"
+              className="p-1.5 text-slate-500 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors cursor-pointer"
               title="Chỉnh sửa buổi học"
             >
               ✏️
             </button>
-            <button
-              type="button"
-              onClick={() => handleDeleteSchedule(item.id)}
-              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
-              title="Xóa buổi học"
-            >
-              🗑️
-            </button>
+            {canDelete && (
+              <button
+                type="button"
+                onClick={() => handleDeleteSchedule(item.id)}
+                className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors cursor-pointer"
+                title="Xóa buổi học"
+              >
+                🗑️
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -517,12 +537,12 @@ export default function Schedules() {
           </p>
         </div>
 
-        {/* Nút Tạo buổi học (Chỉ SuperAdmin và BranchManager) */}
-        {canManage && (
+        {/* Nút Tạo buổi học (SuperAdmin, BranchManager và Teacher) */}
+        {canCreateEdit && (
           <button
             type="button"
             onClick={() => handleOpenCreateModal()}
-            className="inline-flex items-center justify-center gap-1.5 bg-blue-600 text-white font-medium hover:bg-blue-700 active:scale-[0.98] rounded-lg shadow-xs min-h-[40px] px-4 text-xs md:text-sm transition-all"
+            className="inline-flex items-center justify-center gap-1.5 bg-blue-600 text-white font-medium hover:bg-blue-700 active:scale-[0.98] rounded-lg shadow-xs min-h-[40px] px-4 text-xs md:text-sm transition-all cursor-pointer"
           >
             <span>+</span>
             <span>Tạo buổi học</span>
@@ -692,11 +712,11 @@ export default function Schedules() {
                     {daySchedules.length === 0 ? (
                       <div className="flex-1 min-h-[140px] rounded-lg border border-dashed border-slate-200/80 bg-slate-50/50 flex flex-col items-center justify-center p-2 text-center text-xs text-slate-400">
                         <span>Trống lịch</span>
-                        {canManage && (
+                        {canCreateEdit && (
                           <button
                             type="button"
                             onClick={() => handleOpenCreateModal(dateKey)}
-                            className="mt-1 text-[11px] text-blue-600 hover:underline"
+                            className="mt-1 text-[11px] text-blue-600 hover:underline cursor-pointer"
                           >
                             + Xếp lịch
                           </button>
@@ -764,11 +784,11 @@ export default function Schedules() {
                     )}, ${selectedMobileDate.split('-').reverse().join('/')}`
                   : selectedMobileDate}
               </h3>
-              {canManage && (
+              {canCreateEdit && (
                 <button
                   type="button"
                   onClick={() => handleOpenCreateModal(selectedMobileDate)}
-                  className="text-xs font-semibold text-blue-600 hover:text-blue-800"
+                  className="text-xs font-semibold text-blue-600 hover:text-blue-800 cursor-pointer"
                 >
                   + Thêm buổi
                 </button>
@@ -780,11 +800,11 @@ export default function Schedules() {
               {(schedulesByDate[selectedMobileDate] || []).length === 0 ? (
                 <div className="rounded-xl border border-dashed border-slate-200 bg-white p-8 text-center text-xs text-slate-400 space-y-2">
                   <p>Không có buổi học nào được lên lịch trong ngày này.</p>
-                  {canManage && (
+                  {canCreateEdit && (
                     <button
                       type="button"
                       onClick={() => handleOpenCreateModal(selectedMobileDate)}
-                      className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline"
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline cursor-pointer"
                     >
                       + Tạo buổi học cho ngày này
                     </button>
@@ -840,6 +860,10 @@ export default function Schedules() {
                   <div className="w-full h-10 rounded-lg border border-slate-200 bg-slate-100 px-3 flex items-center text-slate-700 font-medium">
                     {editingSchedule.className}
                   </div>
+                ) : isTeacher && availableModalClasses.length === 0 ? (
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs font-medium text-amber-800">
+                    Bạn chưa được phân công lớp nào
+                  </div>
                 ) : (
                   <>
                     <select
@@ -851,7 +875,7 @@ export default function Schedules() {
                       className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-slate-800 focus:border-blue-600 focus:outline-none"
                     >
                       <option value="">-- Chọn lớp học --</option>
-                      {classes.map((cls) => {
+                      {availableModalClasses.map((cls) => {
                         const hasTeacher = Boolean(cls.teacherId);
                         return (
                           <option
@@ -870,7 +894,7 @@ export default function Schedules() {
 
                     {/* Cảnh báo nếu lớp chưa gán GV */}
                     {formData.classId &&
-                      !classes.find((c) => c.id === Number(formData.classId))?.teacherId && (
+                      !availableModalClasses.find((c) => c.id === Number(formData.classId))?.teacherId && (
                         <p className="mt-1 text-[11px] text-amber-700 bg-amber-50 p-2 rounded border border-amber-200">
                           ⚠️ Lớp này chưa được phân công giáo viên phụ trách. Vui lòng vào trang
                           &quot;Quản lý Lớp học&quot; để phân công giáo viên trước khi xếp lịch.
@@ -1021,8 +1045,11 @@ export default function Schedules() {
                 </button>
                 <button
                   type="submit"
-                  disabled={modalSubmitting}
-                  className="h-9 px-5 rounded-lg bg-blue-600 font-semibold text-white hover:bg-blue-700 active:scale-95 transition-all inline-flex items-center gap-1.5 shadow-xs disabled:opacity-70"
+                  disabled={
+                    modalSubmitting ||
+                    (!editingSchedule && isTeacher && availableModalClasses.length === 0)
+                  }
+                  className="h-9 px-5 rounded-lg bg-blue-600 font-semibold text-white hover:bg-blue-700 active:scale-95 transition-all inline-flex items-center gap-1.5 shadow-xs disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {modalSubmitting ? (
                     <>

@@ -1,15 +1,21 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import NotificationBell from '../components/NotificationBell';
 import ProfileModal from '../components/ProfileModal';
+import ChangePasswordModal from '../components/ChangePasswordModal';
+import { useAuth } from '../context/authContext';
 
 export default function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user: verifiedUser, setUser: setVerifiedUser } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [changePasswordModalOpen, setChangePasswordModalOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef(null);
   const [failedAvatarUrl, setFailedAvatarUrl] = useState(null);
-  const [user, setUser] = useState(() => {
+  const [localUser, setLocalUser] = useState(() => {
     try {
       const stored = localStorage.getItem('user');
       return stored ? JSON.parse(stored) : { fullName: '', role: '', branchId: null };
@@ -19,10 +25,36 @@ export default function AdminLayout() {
     }
   });
 
+  const user = verifiedUser || localUser;
+
+  useEffect(() => {
+    if (!userMenuOpen) return;
+
+    const handleClickOutside = (e) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) {
+        setUserMenuOpen(false);
+      }
+    };
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setUserMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [userMenuOpen]);
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('accessToken');
     localStorage.removeItem('user');
+    setVerifiedUser(null);
     navigate('/login', { replace: true });
   };
 
@@ -243,7 +275,7 @@ export default function AdminLayout() {
         </nav>
 
         {/* Footer Sidebar */}
-        <div className="border-t border-slate-100 p-4">
+        <div className="border-t border-slate-100 p-4 space-y-2">
           <button
             type="button"
             onClick={() => setProfileModalOpen(true)}
@@ -257,6 +289,14 @@ export default function AdminLayout() {
               </p>
               <p className="truncate text-[11px] text-slate-500">{user.role}</p>
             </div>
+          </button>
+          <button
+            type="button"
+            onClick={() => setChangePasswordModalOpen(true)}
+            className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 active:scale-[0.98] transition-all cursor-pointer"
+          >
+            <span>🔑</span>
+            <span>Đổi mật khẩu</span>
           </button>
         </div>
       </aside>
@@ -296,7 +336,7 @@ export default function AdminLayout() {
               {renderNavLinks(() => setMobileMenuOpen(false))}
             </nav>
 
-            <div className="border-t border-slate-100 p-4">
+            <div className="border-t border-slate-100 p-4 space-y-2">
               <button
                 type="button"
                 onClick={() => {
@@ -304,7 +344,7 @@ export default function AdminLayout() {
                   setProfileModalOpen(true);
                 }}
                 title="Hồ sơ cá nhân"
-                className="mb-3 flex w-full items-center gap-3 rounded-lg p-1.5 text-left hover:bg-slate-100 active:scale-[0.98] transition-all cursor-pointer"
+                className="flex w-full items-center gap-3 rounded-lg p-1.5 text-left hover:bg-slate-100 active:scale-[0.98] transition-all cursor-pointer"
               >
                 {renderUserAvatar('h-8 w-8', 'text-xs')}
                 <div className="overflow-hidden">
@@ -314,8 +354,19 @@ export default function AdminLayout() {
               </button>
               <button
                 type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setChangePasswordModalOpen(true);
+                }}
+                className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 cursor-pointer"
+              >
+                <span>🔑</span>
+                <span>Đổi mật khẩu</span>
+              </button>
+              <button
+                type="button"
                 onClick={handleLogout}
-                className="w-full flex items-center justify-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700 hover:bg-rose-100"
+                className="w-full flex items-center justify-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700 hover:bg-rose-100 cursor-pointer"
               >
                 Đăng xuất
               </button>
@@ -383,30 +434,88 @@ export default function AdminLayout() {
             {/* Badge quyền người dùng */}
             <div className="hidden sm:inline-flex">{getRoleBadge(user.role)}</div>
 
-            {/* Thông tin tên người dùng */}
-            <button
-              type="button"
-              onClick={() => setProfileModalOpen(true)}
-              title="Hồ sơ cá nhân"
-              className="flex items-center gap-2.5 rounded-lg px-2 py-1 hover:bg-slate-100 active:scale-[0.98] transition-all cursor-pointer"
-            >
-              {renderUserAvatar('h-8 w-8', 'text-xs')}
-              <span className="hidden lg:inline text-xs font-semibold text-slate-700 max-w-[140px] truncate">
-                {user.fullName || 'Người dùng'}
-              </span>
-            </button>
+            {/* User Dropdown Menu */}
+            <div className="relative" ref={userMenuRef}>
+              <button
+                type="button"
+                onClick={() => setUserMenuOpen((prev) => !prev)}
+                aria-expanded={userMenuOpen}
+                aria-haspopup="menu"
+                title="Tài khoản người dùng"
+                className="flex items-center gap-2 rounded-lg px-2 py-1 hover:bg-slate-100 active:scale-[0.98] transition-all cursor-pointer"
+              >
+                {renderUserAvatar('h-8 w-8', 'text-xs')}
+                <span className="hidden lg:inline text-xs font-semibold text-slate-700 max-w-[140px] truncate">
+                  {user.fullName || 'Người dùng'}
+                </span>
+                <svg
+                  className={`h-3.5 w-3.5 text-slate-400 transition-transform duration-150 ${
+                    userMenuOpen ? 'rotate-180' : ''
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
 
-            {/* Nút Đăng xuất */}
-            <button
-              onClick={handleLogout}
-              title="Đăng xuất khỏi hệ thống"
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700 active:scale-[0.98] transition-all cursor-pointer"
-            >
-              <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-              <span className="hidden sm:inline">Đăng xuất</span>
-            </button>
+              {userMenuOpen && (
+                <div
+                  role="menu"
+                  className="absolute right-0 mt-2 w-60 rounded-xl border border-slate-200 bg-white py-2 shadow-lg z-40"
+                >
+                  <div className="border-b border-slate-100 px-4 py-2.5">
+                    <p className="truncate text-xs font-bold text-slate-900">
+                      {user.fullName || 'Người dùng'}
+                    </p>
+                    <div className="mt-1.5">{getRoleBadge(user.role)}</div>
+                  </div>
+
+                  <div className="py-1">
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        setProfileModalOpen(true);
+                      }}
+                      className="flex w-full items-center gap-2.5 px-4 py-2 text-left text-xs font-medium text-slate-700 hover:bg-slate-50 cursor-pointer"
+                    >
+                      <span>👤</span>
+                      <span>Hồ sơ cá nhân</span>
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        setChangePasswordModalOpen(true);
+                      }}
+                      className="flex w-full items-center gap-2.5 px-4 py-2 text-left text-xs font-medium text-slate-700 hover:bg-slate-50 cursor-pointer"
+                    >
+                      <span>🔑</span>
+                      <span>Đổi mật khẩu</span>
+                    </button>
+                  </div>
+
+                  <div className="border-t border-slate-100 pt-1">
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        handleLogout();
+                      }}
+                      className="flex w-full items-center gap-2.5 px-4 py-2 text-left text-xs font-medium text-rose-600 hover:bg-rose-50 cursor-pointer"
+                    >
+                      <span>🚪</span>
+                      <span>Đăng xuất</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 
@@ -422,7 +531,18 @@ export default function AdminLayout() {
           isOpen={profileModalOpen}
           onClose={() => setProfileModalOpen(false)}
           currentUser={user}
-          onUserUpdated={(updatedUser) => setUser(updatedUser)}
+          onUserUpdated={(updatedUser) => {
+            setLocalUser(updatedUser);
+            setVerifiedUser(updatedUser);
+          }}
+        />
+      )}
+
+      {/* Modal Đổi mật khẩu */}
+      {changePasswordModalOpen && (
+        <ChangePasswordModal
+          isOpen={changePasswordModalOpen}
+          onClose={() => setChangePasswordModalOpen(false)}
         />
       )}
     </div>

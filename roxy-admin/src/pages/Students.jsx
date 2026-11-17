@@ -111,6 +111,7 @@ export default function Students() {
 
   // Modal Tạo tài khoản Học viên / Đặt lại mật khẩu Học viên
   const [accountModal, setAccountModal] = useState(null); // { mode: 'create'|'reset', student, phoneNumber, password, newPassword, submitting, error }
+  const [deleteConfirmModal, setDeleteConfirmModal] = useState(null); // { student, submitting, error }
   const [actionFeedback, setActionFeedback] = useState('');
 
   // State riêng cho Phụ huynh (role === 'Parent'): tự đăng ký lớp & theo dõi đơn đăng ký của con
@@ -416,6 +417,32 @@ export default function Students() {
       status: 'Active',
     });
     setFormModalOpen(true);
+  };
+
+  const handleOpenDeleteModal = (stu) => {
+    setDeleteConfirmModal({
+      student: stu,
+      submitting: false,
+      error: '',
+    });
+  };
+
+  const handleConfirmDeleteStudent = async () => {
+    if (!deleteConfirmModal?.student) return;
+    const { student } = deleteConfirmModal;
+    setDeleteConfirmModal((prev) => (prev ? { ...prev, submitting: true, error: '' } : prev));
+    try {
+      await axiosClient.delete(`/Students/${student.id}`);
+      setDeleteConfirmModal(null);
+      setActionFeedback(`Đã chuyển học viên ${student.fullName} sang trạng thái Đã nghỉ (Dropped).`);
+      setReloadKey((k) => k + 1);
+    } catch (err) {
+      const msg =
+        err.response?.data?.message ||
+        (typeof err.response?.data === 'string' && err.response.data) ||
+        'Không thể xóa học viên. Vui lòng thử lại.';
+      setDeleteConfirmModal((prev) => (prev ? { ...prev, submitting: false, error: msg } : prev));
+    }
   };
 
   // Mở modal Chỉnh sửa
@@ -1215,10 +1242,22 @@ export default function Students() {
                           <button
                             type="button"
                             onClick={() => handleOpenEditModal(stu)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-lg text-blue-700 bg-blue-50 hover:bg-blue-100 active:scale-95 transition-all"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-lg text-blue-700 bg-blue-50 hover:bg-blue-100 active:scale-95 transition-all cursor-pointer"
                             title="Chỉnh sửa thông tin"
                           >
                             <span>Sửa</span>
+                          </button>
+                        )}
+
+                        {/* Nút Xóa: CHỈ HIỂN THỊ cho SuperAdmin và BranchManager khi chưa Dropped */}
+                        {isStaff && stu.status !== 'Dropped' && (
+                          <button
+                            type="button"
+                            onClick={() => handleOpenDeleteModal(stu)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-lg text-rose-700 bg-rose-50 hover:bg-rose-100 active:scale-95 transition-all cursor-pointer"
+                            title="Xóa / Chuyển sang Đã nghỉ"
+                          >
+                            <span>Xóa</span>
                           </button>
                         )}
 
@@ -2366,6 +2405,88 @@ export default function Students() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Xác nhận Xóa học viên */}
+      {deleteConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="modal-backdrop fixed inset-0 bg-slate-900/40 backdrop-blur-[2px]"
+            onClick={() => !deleteConfirmModal.submitting && setDeleteConfirmModal(null)}
+            aria-hidden="true"
+          />
+          <div
+            role="dialog"
+            aria-modal="true"
+            className="modal-panel relative z-10 w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 md:p-6 shadow-xl"
+          >
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-100 text-lg text-rose-600">
+                ⚠️
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base font-bold text-slate-900">
+                  Xác nhận xóa học viên
+                </h3>
+                <p className="mt-1 text-xs text-slate-600 leading-relaxed">
+                  Bạn có chắc chắn muốn xóa học viên{' '}
+                  <span className="font-semibold text-slate-900">
+                    {deleteConfirmModal.student.fullName}
+                  </span>
+                  ?
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-xs text-amber-900 space-y-1.5">
+              <p className="font-semibold">Thao tác này sẽ thực hiện:</p>
+              <ul className="list-disc pl-4 space-y-1 text-amber-800">
+                <li>
+                  Chuyển trạng thái học viên sang <strong>Đã nghỉ (Dropped)</strong>.
+                </li>
+                <li>
+                  Tự động chuyển các đăng ký lớp đang học hoặc chờ duyệt sang <strong>Đã nghỉ</strong>.
+                </li>
+                <li>Khóa tài khoản đăng nhập của học viên (nếu có).</li>
+                <li>
+                  <strong>Giữ nguyên</strong> toàn bộ dữ liệu học phí và thanh toán.
+                </li>
+              </ul>
+            </div>
+
+            {deleteConfirmModal.error && (
+              <div className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">
+                ⚠️ {deleteConfirmModal.error}
+              </div>
+            )}
+
+            <div className="mt-5 flex items-center justify-end gap-2.5 border-t border-slate-100 pt-4">
+              <button
+                type="button"
+                disabled={deleteConfirmModal.submitting}
+                onClick={() => setDeleteConfirmModal(null)}
+                className="h-9 rounded-lg border border-slate-300 bg-white px-4 text-xs font-semibold text-slate-700 hover:bg-slate-50 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
+              >
+                Hủy
+              </button>
+              <button
+                type="button"
+                disabled={deleteConfirmModal.submitting}
+                onClick={handleConfirmDeleteStudent}
+                className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-rose-600 px-4 text-xs font-semibold text-white shadow-xs hover:bg-rose-700 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-70"
+              >
+                {deleteConfirmModal.submitting ? (
+                  <>
+                    <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    <span>Đang xử lý...</span>
+                  </>
+                ) : (
+                  <span>Xác nhận xóa</span>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

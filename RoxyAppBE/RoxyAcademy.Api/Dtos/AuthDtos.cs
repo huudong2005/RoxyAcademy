@@ -36,3 +36,15 @@ public class UpdateMeRequest
     [StringLength(500)]
     public string? AvatarUrl { get; set; }
 }
+
+public class ChangePasswordRequest
+{
+    [Required(ErrorMessage = "Vui lòng nhập mật khẩu hiện tại.")]
+    [StringLength(100)]
+    public string CurrentPassword { get; set; } = "";
+
+    [Required(ErrorMessage = "Vui lòng nhập mật khẩu mới.")]
+    [MinLength(8, ErrorMessage = "Mật khẩu mới phải có ít nhất 8 ký tự.")]
+    [StringLength(100)]
+    public string NewPassword { get; set; } = "";
+}

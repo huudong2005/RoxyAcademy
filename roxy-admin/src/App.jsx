@@ -18,37 +18,60 @@ import Messages from './pages/Messages';
 import Newsfeed from './pages/Newsfeed';
 import AdminLayout from './layouts/AdminLayout';
 import ProtectedRoute from './components/ProtectedRoute';
+import AuthProvider from './context/AuthProvider';
+
+const ALL_ROLES = ['SuperAdmin', 'BranchManager', 'Teacher', 'Parent', 'Student'];
+const STAFF_ROLES = ['SuperAdmin', 'BranchManager'];
+const TUITION_ROLES = ['SuperAdmin', 'BranchManager', 'Parent', 'Student'];
+const PAYMENT_ROLES = ['SuperAdmin', 'BranchManager', 'Parent'];
+const SUPERADMIN_ONLY = ['SuperAdmin'];
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<Login />} />
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<Login />} />
 
-        <Route element={<ProtectedRoute />}>
-          <Route element={<AdminLayout />}>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/courses" element={<Courses />} />
-            <Route path="/students" element={<Students />} />
-            <Route path="/classes" element={<ClassList />} />
-            <Route path="/schedules" element={<Schedules />} />
-            <Route path="/attendance" element={<Attendance />} />
-            <Route path="/tuitions" element={<Tuitions />} />
-            <Route path="/payments" element={<Payments />} />
-            <Route path="/homeworks" element={<Homeworks />} />
-            <Route path="/grades" element={<Grades />} />
-            <Route path="/leave-requests" element={<LeaveRequests />} />
-            <Route path="/branches" element={<Branches />} />
-            <Route path="/branches/:id" element={<BranchDetail />} />
-            <Route path="/teachers" element={<Teachers />} />
-            <Route path="/messages" element={<Messages />} />
-            <Route path="/newsfeed" element={<Newsfeed />} />
+          <Route element={<ProtectedRoute />}>
+            <Route element={<AdminLayout />}>
+              <Route element={<ProtectedRoute allowedRoles={ALL_ROLES} />}>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/students" element={<Students />} />
+                <Route path="/classes" element={<ClassList />} />
+                <Route path="/schedules" element={<Schedules />} />
+                <Route path="/attendance" element={<Attendance />} />
+                <Route path="/homeworks" element={<Homeworks />} />
+                <Route path="/grades" element={<Grades />} />
+                <Route path="/leave-requests" element={<LeaveRequests />} />
+                <Route path="/messages" element={<Messages />} />
+                <Route path="/newsfeed" element={<Newsfeed />} />
+              </Route>
+
+              <Route element={<ProtectedRoute allowedRoles={STAFF_ROLES} />}>
+                <Route path="/courses" element={<Courses />} />
+                <Route path="/teachers" element={<Teachers />} />
+              </Route>
+
+              <Route element={<ProtectedRoute allowedRoles={TUITION_ROLES} />}>
+                <Route path="/tuitions" element={<Tuitions />} />
+              </Route>
+
+              <Route element={<ProtectedRoute allowedRoles={PAYMENT_ROLES} />}>
+                <Route path="/payments" element={<Payments />} />
+              </Route>
+
+              <Route element={<ProtectedRoute allowedRoles={SUPERADMIN_ONLY} />}>
+                <Route path="/branches" element={<Branches />} />
+                <Route path="/branches/:id" element={<BranchDetail />} />
+              </Route>
+            </Route>
           </Route>
-        </Route>
 
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }

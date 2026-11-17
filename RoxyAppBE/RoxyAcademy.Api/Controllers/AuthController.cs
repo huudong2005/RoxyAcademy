@@ -72,6 +72,27 @@ public class AuthController(RoxyDbContext db, ITokenService tokens, IPasswordHas
         return Ok(ToInfo(user));
     }
 
+    [HttpPost("change-password")]
+    [Authorize]
+    public async Task<IActionResult> ChangePassword(ChangePasswordRequest req)
+    {
+        var id = int.Parse(User.FindFirstValue("sub")!);
+        var user = await db.Users.FindAsync(id);
+        if (user is null || !user.IsActive) return Unauthorized();
+
+        if (string.IsNullOrEmpty(user.PasswordHash) ||
+            hasher.VerifyHashedPassword(user, user.PasswordHash, req.CurrentPassword) == PasswordVerificationResult.Failed)
+        {
+            return BadRequest(new { message = "Mật khẩu hiện tại không đúng." });
+        }
+
+        user.PasswordHash = hasher.HashPassword(user, req.NewPassword);
+        user.UpdatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync();
+
+        return Ok(new { message = "Đổi mật khẩu thành công." });
+    }
+
     private static UserInfo ToInfo(AppUser u) =>
         new(u.Id, u.FullName, u.Role, u.BranchId, u.PreferredLanguage, u.PhoneNumber, u.Email, u.AvatarUrl);
 }

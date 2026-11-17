@@ -1258,6 +1258,70 @@ Trên môi trường không phải Development (`!app.Environment.IsDevelopment(
 
 **Quy trình bắt buộc khi triển khai Production (Go-Live):**
 - [ ] **Bước 1:** Chỉ đặt `Seed__AdminPassword` trong biến môi trường / `web.config` ở lần khởi chạy đầu tiên nếu DB chưa có tài khoản `SuperAdmin`.
-- [ ] **Bước 2:** Đăng nhập ngay bằng tài khoản `SuperAdmin` vừa khởi tạo và đổi mật khẩu mạnh qua API (`POST /api/Users/{id}/reset-password` hoặc đổi mật khẩu cá nhân).
+- [ ] **Bước 2:** Đăng nhập ngay bằng tài khoản `SuperAdmin` vừa khởi tạo và đổi mật khẩu mạnh qua API (`POST /api/Auth/change-password`).
 - [ ] **Bước 3 (Quan trọng):** **XÓA NGAY** biến `Seed:AdminPassword` (`Seed__AdminPassword`) khỏi `web.config` / biến môi trường trên server Production và khởi động lại App Pool để đảm bảo tài khoản gốc không bao giờ bị tự động tạo lại nếu DB trống hoặc có sự cố dữ liệu.
+
+---
+
+## 13. ĐỔI MẬT KHẨU & SEED DANH MỤC (AUTH & SEED API)
+
+### 13.1. Đổi mật khẩu cá nhân — `POST /api/Auth/change-password`
+Cho phép người dùng đang đăng nhập tự đổi mật khẩu của chính mình (lấy `Id` từ JWT claim `sub`).
+
+- **Quyền truy cập:** Đã đăng nhập (`[Authorize]` — mọi vai trò `SuperAdmin`, `BranchManager`, `Teacher`, `Parent`, `Student`).
+- **Request Body:**
+  ```json
+  {
+    "currentPassword": "OldPassword123",
+    "newPassword": "NewStrongPassword456"
+  }
+  ```
+  - `currentPassword` (string, required, max 100): Mật khẩu hiện tại.
+  - `newPassword` (string, required, min 8, max 100): Mật khẩu mới (tối thiểu 8 ký tự).
+- **Response:**
+  - `200 OK`:
+    ```json
+    {
+      "message": "Đổi mật khẩu thành công."
+    }
+    ```
+  - `400 Bad Request`:
+    - Dữ liệu đầu vào không hợp lệ (thiếu trường hoặc `newPassword` < 8 ký tự).
+    - Tài khoản chưa có mật khẩu hoặc `currentPassword` không khớp:
+      ```json
+      {
+        "message": "Mật khẩu hiện tại không đúng."
+      }
+      ```
+  - `401 Unauthorized`: Chưa đăng nhập hoặc tài khoản không tồn tại / đã bị khóa (`IsActive = false`).
+
+---
+
+### 13.2. Seed danh mục tối thiểu (2 chi nhánh + 8 khóa học) — `POST /api/Seed/catalog`
+Khởi tạo danh mục cơ bản gồm **2 chi nhánh tại P. Bình Trưng, TP.HCM** và **8 khóa học chuẩn** của Roxy Academy theo cơ chế idempotent (kiểm tra trùng theo `BranchName` và `CourseName`, chưa có mới chèn). Tuyệt đối không tạo học viên, giáo viên, phụ huynh hay tài khoản giả.
+
+- **Quyền truy cập:** `SuperAdmin` (`[Authorize(Roles = "SuperAdmin")]`).
+- **Request Body:** Không yêu cầu.
+- **Response:**
+  - `200 OK`:
+    ```json
+    {
+      "branchesAdded": 2,
+      "coursesAdded": 8,
+      "totalBranches": 2,
+      "totalCourses": 8
+    }
+    ```
+  - `401 Unauthorized`: Chưa đăng nhập.
+  - `403 Forbidden`: Không phải `SuperAdmin`.
+
+### 13.3. Hướng dẫn chạy SQL Seed thủ công (`RoxyAppDB.Seed.Catalog.sql`)
+Ngoài endpoint `POST /api/Seed/catalog`, có thể chạy trực tiếp script idempotent `RoxyAppDB.Seed.Catalog.sql` ở thư mục gốc repo sau khi đã tạo schema từ `RoxyAppDB.sql`:
+
+- **Qua SSMS / Azure Data Studio:** Mở kết nối tới database `RoxyAcademy`, mở file `RoxyAppDB.Seed.Catalog.sql` và nhấn **Execute**. Script dùng `IF NOT EXISTS` theo `BranchName` / `CourseName` nên chạy lại nhiều lần không bị nhân đôi dữ liệu.
+- **Qua `sqlcmd`:**
+  ```bash
+  sqlcmd -S <SERVER_HOST> -d RoxyAcademy -U <USER> -P <PASSWORD> -i RoxyAppDB.Seed.Catalog.sql -f 65001
+  ```
+
 
