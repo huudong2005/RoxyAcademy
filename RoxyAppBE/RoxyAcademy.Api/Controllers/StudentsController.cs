@@ -251,6 +251,26 @@ public class StudentsController(RoxyDbContext db, IPasswordHasher<AppUser> hashe
                     return Conflict(new { message = "Học viên đang đăng ký lớp, hãy hủy đăng ký trước khi chuyển cơ sở." });
 
                 student.BranchId = branchId!.Value;
+
+                if (student.UserId.HasValue)
+                {
+                    await db.Users
+                        .Where(u => u.Id == student.UserId.Value)
+                        .ExecuteUpdateAsync(set => set
+                            .SetProperty(u => u.BranchId, branchId.Value)
+                            .SetProperty(u => u.UpdatedAt, (DateTime?)DateTime.UtcNow));
+                }
+
+                var unpaidTuitions = await db.Tuitions
+                    .Where(t => t.StudentId == id
+                        && !t.IsCancelled
+                        && (t.Payments.Where(p => p.Status == "Confirmed").Sum(p => (decimal?)p.Amount) ?? 0m) < (t.Amount - t.Discount))
+                    .ToListAsync();
+
+                foreach (var tuition in unpaidTuitions)
+                {
+                    tuition.BranchId = branchId.Value;
+                }
             }
 
             if (req.Status != null && req.Status != student.Status)

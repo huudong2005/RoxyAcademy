@@ -434,6 +434,70 @@ export default function Dashboard() {
             </Link>
           )}
 
+          {tuition && (
+            <Link
+              to="/tuitions?status=Overdue"
+              className="group block rounded-2xl border border-slate-200/80 bg-white p-5 md:p-6 shadow-xs hover:border-slate-300 hover:shadow-sm active:scale-[0.99] transition-transform duration-150 ease-out"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <h2 className="text-sm md:text-base font-semibold text-slate-900">
+                    Học phí quá hạn (tất cả các tháng)
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Tổng hợp các khoản đã quá hạn thanh toán
+                  </p>
+                </div>
+                {(tuition.overdueTuitionCount ?? 0) > 0 ? (
+                  <span className="inline-flex items-center rounded-full bg-rose-50 border border-rose-200 px-2.5 py-1 text-xs font-semibold text-rose-700 tabular-nums shrink-0">
+                    {tuition.overdueTuitionCount ?? 0} khoản
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-1 text-xs font-semibold text-emerald-700 shrink-0">
+                    Không có nợ quá hạn
+                  </span>
+                )}
+              </div>
+
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <div className="rounded-xl bg-slate-50 border border-slate-200/80 p-3">
+                  <p className="text-[11px] font-medium text-slate-600">Số khoản quá hạn</p>
+                  <p className="mt-1 text-lg font-bold text-slate-900 tabular-nums">
+                    {tuition.overdueTuitionCount ?? 0}
+                  </p>
+                </div>
+                <div
+                  className={`rounded-xl border p-3 ${
+                    (tuition.overdueTuitionCount ?? 0) > 0
+                      ? 'bg-rose-50/70 border-rose-100'
+                      : 'bg-emerald-50/70 border-emerald-100'
+                  }`}
+                >
+                  <p
+                    className={`text-[11px] font-medium ${
+                      (tuition.overdueTuitionCount ?? 0) > 0 ? 'text-rose-700' : 'text-emerald-700'
+                    }`}
+                  >
+                    Tổng tiền quá hạn
+                  </p>
+                  <p
+                    className={`mt-1 text-lg font-bold tabular-nums ${
+                      (tuition.overdueTuitionCount ?? 0) > 0 ? 'text-rose-900' : 'text-emerald-900'
+                    }`}
+                  >
+                    {formatCurrency(tuition.overdueTuitionAmount ?? 0)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-3 flex justify-end">
+                <span className="text-xs font-semibold text-blue-600 group-hover:translate-x-0.5 transition-transform duration-150 ease-out">
+                  Xem khoản quá hạn →
+                </span>
+              </div>
+            </Link>
+          )}
+
           {/* Điểm danh hôm nay */}
           <Link
             to="/attendance"

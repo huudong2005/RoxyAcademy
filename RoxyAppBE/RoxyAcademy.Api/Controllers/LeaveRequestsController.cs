@@ -469,6 +469,10 @@ public class LeaveRequestsController(RoxyDbContext db) : ControllerBase
         leave.ReviewedBy = UserId;
         leave.ReviewedAt = DateTime.UtcNow;
 
+        var attendanceUpdated = 0;
+        var attendanceSkipped = 0;
+        var skippedDates = new List<string>();
+
         // 1. LIÊN KẾT ĐIỂM DANH (ExcusedAbsent) KHI ĐƠN HỌC VIÊN ĐƯỢC DUYỆT
         if (req.Status == "Approved" && leave.StudentId.HasValue)
         {
@@ -518,7 +522,19 @@ public class LeaveRequestsController(RoxyDbContext db) : ControllerBase
                 var attendance = await db.Attendances
                     .FirstOrDefaultAsync(a => a.ScheduleId == sched.Id && a.StudentId == studentId);
 
-                var prevStatus = attendance != null ? attendance.Status : "NONE";
+                // Không ghi đè nếu buổi học đã được điểm danh (Present, Late, v.v.)
+                if (attendance != null && !string.IsNullOrWhiteSpace(attendance.Status))
+                {
+                    attendanceSkipped++;
+                    var dateStr = sched.StudyDate.ToString("yyyy-MM-dd");
+                    if (!skippedDates.Contains(dateStr))
+                    {
+                        skippedDates.Add(dateStr);
+                    }
+                    continue;
+                }
+
+                var prevStatus = attendance != null && !string.IsNullOrWhiteSpace(attendance.Status) ? attendance.Status : "NONE";
                 var suffix = $" [Prev:{prevStatus}]";
                 var reasonText = !string.IsNullOrWhiteSpace(leave.Reason) ? $": {leave.Reason.Trim()}" : "";
                 var prefix = $"Nghỉ phép có phép (Đơn #{leave.Id}{reasonText})";
@@ -549,6 +565,8 @@ public class LeaveRequestsController(RoxyDbContext db) : ControllerBase
                         MarkedAt = DateTime.UtcNow
                     });
                 }
+
+                attendanceUpdated++;
             }
         }
 
@@ -617,15 +635,32 @@ public class LeaveRequestsController(RoxyDbContext db) : ControllerBase
 
         await db.SaveChangesAsync();
 
-        var approvedMessage = leave.TeacherId.HasValue
-            ? "Đã duyệt đơn xin nghỉ của giáo viên và cập nhật trạng thái các buổi học liên quan (Cần giáo viên dạy thay)!"
-            : "Đã duyệt đơn xin nghỉ và tự động cập nhật điểm danh (Nghỉ có phép)!";
+        string approvedMessage;
+        if (leave.TeacherId.HasValue)
+        {
+            approvedMessage = "Đã duyệt đơn xin nghỉ của giáo viên và cập nhật trạng thái các buổi học liên quan (Cần giáo viên dạy thay)!";
+        }
+        else if (attendanceSkipped > 0 && attendanceUpdated == 0)
+        {
+            approvedMessage = $"Đã duyệt đơn xin nghỉ! Có {attendanceSkipped} buổi học đã được điểm danh trước đó nên được giữ nguyên ({string.Join(", ", skippedDates)}).";
+        }
+        else if (attendanceSkipped > 0)
+        {
+            approvedMessage = $"Đã duyệt đơn xin nghỉ! Đã cập nhật điểm danh (Nghỉ có phép) cho {attendanceUpdated} buổi và giữ nguyên {attendanceSkipped} buổi đã điểm danh trước đó ({string.Join(", ", skippedDates)}).";
+        }
+        else
+        {
+            approvedMessage = "Đã duyệt đơn xin nghỉ và tự động cập nhật điểm danh (Nghỉ có phép)!";
+        }
 
         return Ok(new
         {
             message = req.Status == "Approved"
                 ? approvedMessage
-                : "Đã từ chối đơn xin nghỉ thành công!"
+                : "Đã từ chối đơn xin nghỉ thành công!",
+            attendanceUpdated,
+            attendanceSkipped,
+            skippedDates
         });
     }
 

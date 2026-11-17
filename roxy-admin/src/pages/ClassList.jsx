@@ -1081,6 +1081,13 @@ export default function ClassList() {
                         ⚠️ Giáo viên hiện tại đã bị khóa tài khoản. Vui lòng chọn sang giáo viên đang hoạt động.
                       </p>
                     )}
+                  {editingClass != null &&
+                    String(formData.teacherId) !== '' &&
+                    String(formData.teacherId) !== String(editingClass.teacherId || '') && (
+                      <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-[11px] text-amber-900 leading-relaxed">
+                        <span className="font-semibold">⚠️ Lưu ý đổi giáo viên:</span> Giáo viên mới sẽ xem được toàn bộ lịch sử lớp (kể cả bài đã chấm trước đó) để dạy tiếp; giáo viên cũ mất quyền truy cập lớp ngay khi lưu.
+                      </div>
+                    )}
                 </div>
 
                 {/* Cơ sở */}

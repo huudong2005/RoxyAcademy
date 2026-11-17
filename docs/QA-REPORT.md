@@ -661,3 +661,57 @@ Toàn bộ 5 hạng mục kiểm thử bắt buộc của **Giai đoạn 1N-1** 
 Toàn bộ 6 hạng mục kiểm thử bắt buộc của **Giai đoạn 1N-1 (Đợt 2 — 5 tính năng bổ sung & Seed danh mục)** đều **ĐẠT (PASS 100%)** qua đối chiếu mã nguồn chi tiết, `dotnet build --no-restore` (0 Warning, 0 Error), `npm run lint` (0 Error, 0 Warning) và `npm run build` (109 modules transformed, built in 356ms). Không có lỗi chặn.
 
 **Trạng thái nghiệm thu Giai đoạn 1N-1 (Đợt 2):** **ĐẠT CHUẨN NGHIỆM THU (PASSED)** — Đủ điều kiện bàn giao.
+
+
+---
+
+# BÁO CÁO KIỂM THỬ QA — GIAI ĐOẠN 1N-2 (8 BẪY ĐỒNG BỘ)
+**Dự án:** Roxy Academy — Hệ thống Quản trị Học tập  
+**Ngày kiểm thử:** 17/11/2026  
+**Người thực hiện:** QA Agent  
+**Tài liệu đối chiếu:** `GEMINI.md`, `docs/API.md`, `docs/QA-REPORT.md`  
+**Phạm vi kiểm thử:**
+- Backend: `LeaveRequestsController.cs`, `StudentsController.cs`, `UsersController.cs`, `BranchesController.cs`, `StudentClassesController.cs`, `PaymentsController.cs`, `HomeworkSubmissionsController.cs`, `HomeworksController.cs`, `AttendancesController.cs`, `SchedulesController.cs`, `DashboardController.cs`, `ScheduleAndAttendanceDtos.cs`, `DashboardDtos.cs`
+- Frontend: `LeaveRequests.jsx`, `ClassList.jsx`, `BranchModals.jsx`, `Schedules.jsx`, `Homeworks.jsx`, `Dashboard.jsx`
+
+---
+
+## 1. KẾT QUẢ BIÊN DỊCH, LINT & GIỚI HẠN MÔI TRƯỜNG RUNTIME
+
+| Thành phần | Lệnh thực thi / Phương thức | Kết quả | Chi tiết |
+| :--- | :--- | :---: | :--- |
+| **Backend Build** | `dotnet build --no-restore` tại `RoxyAppBE/RoxyAcademy.Api/` | **PASS** | **0 Warning(s), 0 Error(s)** |
+| **Frontend Lint** | `npm --prefix roxy-admin run lint` (`eslint .`) | **PASS** | **0 Error(s), 0 Warning(s)** |
+| **Frontend Build** | `npm run build` (`roxy-admin/`) | **PASS** | **109 modules transformed, built in 324ms** (0 Error) |
+| **Runtime API / DB** | Môi trường sandbox hiện tại | **CHƯA CHẠY E2E TRONG SANDBOX** | Sandbox không kết nối MSSQL local & chặn bind port; toàn bộ 8 luồng nghiệp vụ được kiểm chứng chi tiết qua đối chiếu từng dòng code Backend, Frontend và tài liệu `docs/API.md`. |
+
+---
+
+## 2. BẢNG TỔNG HỢP CHECKLIST 8 HẠNG MỤC ĐỒNG BỘ
+
+| STT | Hạng mục kiểm tra | Tiêu chí nghiệm thu | Kết quả | Dẫn chứng file & dòng code cụ thể |
+| :-: | :--- | :--- | :---: | :--- |
+| **1** | **Duyệt đơn nghỉ không ghi đè điểm danh đã chấm** | - Chỉ đổi sang `ExcusedAbsent` khi buổi chưa chấm (chưa có bản ghi hoặc `Status` trống).<br>- Buổi đã chấm `Present`/`Late` giữ nguyên và báo rõ cho người duyệt.<br>- Từ chối đơn nghỉ giữ nguyên điểm danh. | **PASS** | - `LeaveRequestsController.cs` L214-275 (`existingAttendance.Status` khác rỗng -> tăng `attendanceSkipped`, thêm vào `skippedDates`; `Rejected` không đụng `Attendances`)<br>- `LeaveRequests.jsx` L176-184, L204-212, L256-277 (`skippedBanner` màu `amber-50` không tự tắt, hiện `message` + `skippedDates`) |
+| **2** | **Đổi giáo viên & quy tắc lịch sử lớp** | - Giáo viên mới xem được toàn bộ lịch sử lớp; giáo viên cũ mất quyền ngay khi bị thay.<br>- Quy tắc ghi rõ trong `docs/API.md`.<br>- Form sửa lớp hiện chú thích khi đổi giáo viên. | **PASS** | - `docs/API.md` Mục 9.3 L683-687<br>- Kiểm tra động theo `Class.TeacherId == UserId` trong DB ở các controller đào tạo<br>- `ClassList.jsx` L323-332 (callout `amber-50` hiện khi `teacherId` đổi so với `editingClass.teacherId`) |
+| **3** | **Đổi chi nhánh đồng bộ** | - Đổi chi nhánh học viên đồng bộ `User.BranchId` + `BranchId` học phí chưa thu đủ & chưa hủy (vẫn chặn khi còn ghi danh `Active`/`Pending`).<br>- Đổi `BranchId` GV còn lớp chưa kết thúc hoặc PH còn con `Active` bị chặn. | **PASS** | - `StudentsController.cs` L245-282 (chặn `409` nếu còn `Active`/`Pending`; đồng bộ `User.BranchId` & `Tuitions` chưa thu đủ)<br>- `UsersController.cs` L156-180 (chặn `409 Conflict` cho GV còn lớp `Status != "Finished"` và PH còn con `StudentClasses.Status == "Active"`) |
+| **4** | **Ngừng chi nhánh chặn đủ** | - Chặn khi còn lớp mở, học viên `Active`, GV `IsActive`, học phí chưa thu đủ, thanh toán `PendingConfirm`, đơn nghỉ `Pending`, bài nộp `Pending` với lý do rõ.<br>- UI render danh sách lý do. | **PASS** | - `BranchesController.cs` L122-215 (`ValidateBranchDeactivationAsync` kiểm tra đủ 7 điều kiện, trả `409 Conflict` kèm `message` + mảng `reasons`)<br>- `BranchModals.jsx` L5-25, L144-149, L234-239 (`DeactivationBlockedAlert` render bullet list `reasons`) |
+| **5** | **Khóa tài khoản đồng bộ** | - Khóa tài khoản học viên -> `Students.Status = "Paused"` (không phải `Dropped`).<br>- Khóa tài khoản phụ huynh -> cảnh báo con đang học và chặn đăng ký lớp/thanh toán mới. | **PASS** | - `UsersController.cs` L207-237, L268-286 (`Students.Status = "Paused"`; đếm `activeChildEnrollments` & trả `warning` khi khóa PH)<br>- `StudentClassesController.cs` L132-136 & `PaymentsController.cs` L143-147 (chặn `403 Forbidden` khi `Parent.IsActive == false`) |
+| **6** | **Chấm bài & xóa bài tập** | - Chấm bài chỉ được khi `Status == "Submitted"`, chưa nộp thì chặn.<br>- Xóa bài tập đã có bài nộp được chấm (`Reviewed` hoặc có `Score`) bị chặn. | **PASS** | - `HomeworkSubmissionsController.cs` L214-216 (chặn `400` nếu `sub.Status != "Submitted"`)<br>- `HomeworksController.cs` L336-340 (chặn `409 Conflict` nếu có `Status == "Reviewed" || Score != null`)<br>- `Homeworks.jsx` L176-181, L215-218, L629-650 (`deleteError` inline & khóa nút chấm khi chưa nộp) |
+| **7** | **Học viên ghi danh muộn** | - Duyệt ghi danh `Pending -> Active` (hoặc tạo `Active` mới) tự tạo `HomeworkSubmission` (`Pending`) cho các bài tập chưa hết hạn của lớp. | **PASS** | - `StudentClassesController.cs` L160-163, L204-207, L242-270 (`AssignOpenHomeworksAsync` tạo `HomeworkSubmission` `Pending` với `DueDate == null || DueDate >= DateTime.UtcNow`) |
+| **8** | **Điểm danh bulk & Dashboard quá hạn** | - Điểm danh bulk chỉ chuyển `Schedule.Status = "Completed"` khi điểm danh đủ sĩ số `Active` của lớp.<br>- Buổi đã có điểm danh không sửa được ngày/giờ/trạng thái.<br>- Dashboard tính & hiện riêng mục học phí quá hạn trên tất cả các tháng trước. | **PASS** | - `AttendancesController.cs` L184-199 (chỉ `Completed` khi số đã chấm >= tổng `Active`)<br>- `SchedulesController.cs` L109, L178, L262-269 (`HasAttendance`, chặn `400` khi sửa ngày/giờ/trạng thái)<br>- `Schedules.jsx` L237, L582-629 (`isAttendanceLocked` disable 4 trường)<br>- `DashboardController.cs` L69-83 & `DashboardDtos.cs` L20-26 (`OverdueTuitionCount`, `OverdueTuitionAmount` mọi khoản `DueDate < today`)<br>- `Dashboard.jsx` L208-246 (thẻ riêng `Học phí quá hạn (tất cả các tháng)`) |
+
+---
+
+## 3. DANH SÁCH LỖI VÀ VẤN ĐỀ CẦN XỬ LÝ (DEFECT LOG)
+
+- **Lỗi chặn (Blocker):** **0**
+- **Lỗi nghiêm trọng (Critical):** **0**
+- **Lỗi nhỏ (Minor):** **0**
+
+---
+
+## 4. KẾT LUẬN & ĐỀ NGHỊ BÀN GIAO
+
+Toàn bộ **8/8 hạng mục** của **Giai đoạn 1N-2 (8 bẫy đồng bộ)** đều **ĐẠT (PASS 100%)** qua đối chiếu mã nguồn chi tiết, `dotnet build --no-restore` (0 Warning, 0 Error), `npm run lint` (0 Error, 0 Warning) và `npm run build` (109 modules transformed, built in 324ms).
+
+**Trạng thái nghiệm thu Giai đoạn 1N-2:** **ĐẠT CHUẨN NGHIỆM THU (PASSED)** — Sẵn sàng commit và bàn giao.

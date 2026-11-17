@@ -24,6 +24,7 @@ export default function Homeworks() {
   const [schedules, setSchedules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [deleteError, setDeleteError] = useState('');
   const [reloadKey, setReloadKey] = useState(0);
 
   // Bộ lọc
@@ -418,6 +419,7 @@ export default function Homeworks() {
     );
     if (!confirmed) return;
 
+    setDeleteError('');
     try {
       await axiosClient.delete(`/Homeworks/${hw.id}`);
       setReloadKey((k) => k + 1);
@@ -425,7 +427,14 @@ export default function Homeworks() {
         setDetailHomeworkId(null);
       }
     } catch (err) {
-      alert(err.response?.data?.message || 'Không thể xóa bài tập.');
+      const status = err.response?.status;
+      const serverMsg = err.response?.data?.message;
+      const msg =
+        serverMsg ||
+        (status === 409 || status === 400
+          ? 'Không thể xóa bài tập vì đã có bài nộp được chấm điểm.'
+          : 'Không thể xóa bài tập. Vui lòng thử lại.');
+      setDeleteError(msg);
     }
   };
 
@@ -535,6 +544,15 @@ export default function Homeworks() {
   const handleReviewSubmission = async (targetStatus = 'Reviewed', moveToNext = false) => {
     if (!selectedSubmission) return;
 
+    if (selectedSubmission.status !== 'Submitted') {
+      setGradingError(
+        selectedSubmission.status === 'Pending'
+          ? 'Học viên chưa nộp bài nên chưa thể chấm điểm.'
+          : 'Chỉ có thể chấm bài nộp đang ở trạng thái Chờ chấm (Đã nộp).'
+      );
+      return;
+    }
+
     // Validate điểm số nếu có nhập (cho phép để trống: null = chỉ nhận xét)
     const rawScore = gradingScore !== null && gradingScore !== undefined ? String(gradingScore).trim() : '';
     let parsedScore = null;
@@ -606,7 +624,13 @@ export default function Homeworks() {
   useEffect(() => {
     const handleKeyDown = (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-        if (detailHomeworkId && canManage && selectedSubmission && !gradingSubmitting) {
+        if (
+          detailHomeworkId &&
+          canManage &&
+          selectedSubmission &&
+          selectedSubmission.status === 'Submitted' &&
+          !gradingSubmitting
+        ) {
           e.preventDefault();
           handleReviewSubmission('Reviewed', true);
         }
@@ -714,6 +738,26 @@ export default function Homeworks() {
           </button>
         )}
       </div>
+
+      {deleteError && (
+        <div
+          role="alert"
+          className="rounded-xl border border-rose-200 bg-rose-50 p-3.5 text-sm text-rose-800 flex items-start justify-between gap-3"
+        >
+          <div className="flex items-start gap-2">
+            <span className="shrink-0">⚠️</span>
+            <span>{deleteError}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setDeleteError('')}
+            aria-label="Đóng thông báo lỗi"
+            className="shrink-0 text-rose-600 hover:text-rose-800 font-bold cursor-pointer"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* 2. Thanh Công Cụ Tìm Kiếm & Lọc Nhanh */}
       <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs">
@@ -1847,13 +1891,25 @@ export default function Homeworks() {
                             </div>
                           </div>
 
+                          {selectedSubmission.status === 'Pending' && (
+                            <div className="rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-900">
+                              <span className="font-semibold">⚠️ Học viên chưa nộp bài</span> — Chỉ có thể chấm điểm khi học viên đã nộp bài.
+                            </div>
+                          )}
+
+                          {selectedSubmission.status === 'Reviewed' && (
+                            <div className="rounded-lg border border-slate-200 bg-slate-50 p-2.5 text-xs text-slate-700">
+                              Bài nộp này đã được chấm điểm. Chỉ có thể chấm lại nếu học viên nộp bản mới.
+                            </div>
+                          )}
+
                           {/* Nút hành động chấm bài */}
                           <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-blue-100">
                             <button
                               type="button"
-                              disabled={gradingSubmitting}
+                              disabled={gradingSubmitting || selectedSubmission.status !== 'Submitted'}
                               onClick={() => handleReviewSubmission('Pending', false)}
-                              className="px-3.5 py-2 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 text-xs font-semibold hover:bg-rose-100 active:scale-95 transition-all"
+                              className="px-3.5 py-2 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 text-xs font-semibold hover:bg-rose-100 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               Yêu cầu nộp lại bài
                             </button>
@@ -1861,17 +1917,17 @@ export default function Homeworks() {
                             <div className="flex gap-2">
                               <button
                                 type="button"
-                                disabled={gradingSubmitting}
+                                disabled={gradingSubmitting || selectedSubmission.status !== 'Submitted'}
                                 onClick={() => handleReviewSubmission('Reviewed', false)}
-                                className="px-4 py-2 rounded-lg border border-slate-300 bg-white text-slate-800 text-xs font-semibold hover:bg-slate-50 active:scale-95 transition-all cursor-pointer"
+                                className="px-4 py-2 rounded-lg border border-slate-300 bg-white text-slate-800 text-xs font-semibold hover:bg-slate-50 active:scale-95 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 Lưu điểm
                               </button>
                               <button
                                 type="button"
-                                disabled={gradingSubmitting}
+                                disabled={gradingSubmitting || selectedSubmission.status !== 'Submitted'}
                                 onClick={() => handleReviewSubmission('Reviewed', true)}
-                                className="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg bg-blue-600 text-white text-xs font-bold shadow-xs hover:bg-blue-700 active:scale-[0.98] transition-all cursor-pointer"
+                                className="inline-flex items-center gap-1.5 px-5 py-2 rounded-lg bg-blue-600 text-white text-xs font-bold shadow-xs hover:bg-blue-700 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 <span>✓ Lưu &amp; Sang bé tiếp theo</span>
                               </button>

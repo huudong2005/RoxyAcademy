@@ -20,7 +20,9 @@ public record DashboardTuitionDto(
     int Year,
     decimal TotalExpected,
     decimal TotalPaid,
-    decimal TotalRemaining
+    decimal TotalRemaining,
+    int OverdueTuitionCount,
+    decimal OverdueTuitionAmount
 );
 
 public record DashboardTodayAttendanceDto(

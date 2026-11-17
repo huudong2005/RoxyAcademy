@@ -819,7 +819,9 @@ export default function Schedules() {
       )}
 
       {/* MODAL TẠO / SỬA BUỔI HỌC (SCHEDULE MODAL) */}
-      {modalOpen && (
+      {modalOpen && (() => {
+        const isAttendanceLocked = Boolean(editingSchedule?.hasAttendance);
+        return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           {/* Backdrop Scrim */}
           <div
@@ -851,6 +853,12 @@ export default function Schedules() {
             )}
 
             <form onSubmit={handleModalSubmit} className="space-y-3.5 text-xs md:text-sm">
+              {isAttendanceLocked && (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 leading-relaxed">
+                  <span className="font-semibold">⚠️ Buổi học đã có dữ liệu điểm danh:</span> Không thể thay đổi ngày học, giờ học hoặc trạng thái buổi học. Bạn chỉ có thể cập nhật phòng học, giáo viên dạy thay hoặc ghi chú.
+                </div>
+              )}
+
               {/* 1. Chọn Lớp học (BẮT BUỘC) */}
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
@@ -912,11 +920,12 @@ export default function Schedules() {
                 <input
                   type="date"
                   required
+                  disabled={isAttendanceLocked}
                   value={formData.studyDate}
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, studyDate: e.target.value }))
                   }
-                  className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-slate-800 focus:border-blue-600 focus:outline-none"
+                  className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-slate-800 focus:border-blue-600 focus:outline-none disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"
                 />
               </div>
 
@@ -929,11 +938,12 @@ export default function Schedules() {
                   <input
                     type="time"
                     required
+                    disabled={isAttendanceLocked}
                     value={formData.startTime}
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, startTime: e.target.value }))
                     }
-                    className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-slate-800 focus:border-blue-600 focus:outline-none"
+                    className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-slate-800 focus:border-blue-600 focus:outline-none disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div>
@@ -943,11 +953,12 @@ export default function Schedules() {
                   <input
                     type="time"
                     required
+                    disabled={isAttendanceLocked}
                     value={formData.endTime}
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, endTime: e.target.value }))
                     }
-                    className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-slate-800 focus:border-blue-600 focus:outline-none"
+                    className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-slate-800 focus:border-blue-600 focus:outline-none disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -1003,11 +1014,12 @@ export default function Schedules() {
                     Trạng thái buổi học
                   </label>
                   <select
+                    disabled={isAttendanceLocked}
                     value={formData.status}
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, status: e.target.value }))
                     }
-                    className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-slate-800 focus:border-blue-600 focus:outline-none"
+                    className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-slate-800 focus:border-blue-600 focus:outline-none disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"
                   >
                     <option value="Scheduled">Đã lên lịch (Scheduled)</option>
                     <option value="Completed">Đã hoàn thành / Đã điểm danh (Completed)</option>
@@ -1064,7 +1076,8 @@ export default function Schedules() {
             </form>
           </div>
         </div>
-      )}
+        );
+      })()}
     </div>
   );
 }

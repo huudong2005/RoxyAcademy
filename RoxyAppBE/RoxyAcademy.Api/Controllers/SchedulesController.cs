@@ -107,7 +107,8 @@ public class SchedulesController(RoxyDbContext db) : ControllerBase
                 s.SubstituteTeacherId,
                 s.User != null ? s.User.FullName : null,
                 s.Status,
-                s.Note
+                s.Note,
+                db.Attendances.Any(a => a.ScheduleId == s.Id)
             ))
             .ToListAsync();
 
@@ -161,6 +162,8 @@ public class SchedulesController(RoxyDbContext db) : ControllerBase
                 return Forbid();
         }
 
+        var hasAttendance = await db.Attendances.AnyAsync(a => a.ScheduleId == id);
+
         return Ok(new ScheduleDto(
             s.Id,
             s.ClassId,
@@ -176,7 +179,8 @@ public class SchedulesController(RoxyDbContext db) : ControllerBase
             s.SubstituteTeacherId,
             s.User != null ? s.User.FullName : null,
             s.Status,
-            s.Note
+            s.Note,
+            hasAttendance
         ));
     }
 
@@ -255,6 +259,16 @@ public class SchedulesController(RoxyDbContext db) : ControllerBase
         if (Role == "Teacher" && schedule.Class.TeacherId != UserId && schedule.SubstituteTeacherId != UserId)
         {
             return StatusCode(StatusCodes.Status403Forbidden, new { message = "Bạn không có quyền cập nhật lịch học này." });
+        }
+
+        var hasAttendance = await db.Attendances.AnyAsync(a => a.ScheduleId == id);
+        if (hasAttendance && (
+            req.StudyDate != schedule.StudyDate ||
+            req.StartTime != schedule.StartTime ||
+            req.EndTime != schedule.EndTime ||
+            !string.Equals(req.Status, schedule.Status, StringComparison.Ordinal)))
+        {
+            return BadRequest(new { message = "Buổi học đã có dữ liệu điểm danh, không thể sửa ngày, giờ học hoặc trạng thái." });
         }
 
         if (req.EndTime <= req.StartTime)

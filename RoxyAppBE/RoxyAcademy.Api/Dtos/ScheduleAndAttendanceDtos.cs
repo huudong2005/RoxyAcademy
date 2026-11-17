@@ -18,7 +18,8 @@ public record ScheduleDto(
     int? SubstituteTeacherId,
     string? SubstituteTeacherName,
     string Status,
-    string? Note
+    string? Note,
+    bool HasAttendance
 );
 
 public class CreateScheduleRequest

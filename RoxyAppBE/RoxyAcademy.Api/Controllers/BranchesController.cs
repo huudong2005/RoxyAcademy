@@ -123,12 +123,36 @@ public class BranchesController(RoxyDbContext db) : ControllerBase
 	{
 		var openClassesCount = await db.Classes.CountAsync(c => c.BranchId == branchId && c.Status != "Finished");
 		var activeStudentsCount = await db.Students.CountAsync(s => s.BranchId == branchId && s.Status == "Active");
+		var activeTeachersCount = await db.Users.CountAsync(u => u.Role == "Teacher" && u.BranchId == branchId && u.IsActive);
+		var unpaidTuitionsCount = await db.Tuitions.CountAsync(t =>
+			t.BranchId == branchId &&
+			!t.IsCancelled &&
+			(t.Payments.Where(p => p.Status == "Confirmed").Sum(p => (decimal?)p.Amount) ?? 0m) < (t.Amount - t.Discount));
+		var pendingPaymentsCount = await db.Payments.CountAsync(p =>
+			p.Status == "PendingConfirm" && p.Tuition.BranchId == branchId);
+		var pendingLeavesCount = await db.LeaveRequests.CountAsync(lr =>
+			lr.Status == "Pending" &&
+			((lr.Class != null && lr.Class.BranchId == branchId) ||
+			 (lr.Student != null && lr.Student.BranchId == branchId) ||
+			 (lr.User != null && lr.User.BranchId == branchId)));
+		var pendingSubmissionsCount = await db.HomeworkSubmissions.CountAsync(hs =>
+			hs.Status == "Pending" && hs.Homework.Class.BranchId == branchId);
 
-		if (openClassesCount > 0 || activeStudentsCount > 0)
+		var reasons = new List<string>();
+		if (openClassesCount > 0) reasons.Add($"{openClassesCount} lớp đang mở");
+		if (activeStudentsCount > 0) reasons.Add($"{activeStudentsCount} học viên đang học");
+		if (activeTeachersCount > 0) reasons.Add($"{activeTeachersCount} giáo viên đang hoạt động");
+		if (unpaidTuitionsCount > 0) reasons.Add($"{unpaidTuitionsCount} khoản học phí chưa thu đủ");
+		if (pendingPaymentsCount > 0) reasons.Add($"{pendingPaymentsCount} thanh toán chờ xác nhận");
+		if (pendingLeavesCount > 0) reasons.Add($"{pendingLeavesCount} đơn nghỉ phép chờ duyệt");
+		if (pendingSubmissionsCount > 0) reasons.Add($"{pendingSubmissionsCount} bài tập chưa nộp (Pending)");
+
+		if (reasons.Count > 0)
 		{
-			return BadRequest(new
+			return Conflict(new
 			{
-				message = $"Không thể ngừng hoạt động chi nhánh vì còn {openClassesCount} lớp đang mở và {activeStudentsCount} học viên đang học. Vui lòng chuyển hoặc kết thúc toàn bộ lớp và học viên trước khi ngừng chi nhánh."
+				message = $"Không thể ngừng hoạt động chi nhánh vì còn: {string.Join("; ", reasons)}. Vui lòng xử lý toàn bộ trước khi ngừng chi nhánh.",
+				reasons
 			});
 		}
 

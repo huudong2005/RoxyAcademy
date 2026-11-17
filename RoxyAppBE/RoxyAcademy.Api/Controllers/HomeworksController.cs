@@ -353,6 +353,13 @@ public class HomeworksController(RoxyDbContext db) : ControllerBase
                 return StatusCode(StatusCodes.Status403Forbidden, new { message = "Bạn không có quyền xóa bài tập này." });
         }
 
+        var hasReviewedSubmission = await db.HomeworkSubmissions
+            .AnyAsync(s => s.HomeworkId == id && (s.Status == "Reviewed" || s.Score != null));
+        if (hasReviewedSubmission)
+        {
+            return Conflict(new { message = "Không thể xóa bài tập đã có bài nộp được chấm điểm (Reviewed)." });
+        }
+
         // Xóa an toàn toàn bộ bài nộp trước để tránh xung đột khóa ngoại
         var submissions = await db.HomeworkSubmissions.Where(s => s.HomeworkId == id).ToListAsync();
         if (submissions.Count > 0)

@@ -58,7 +58,8 @@ Hỗ trợ lọc linh hoạt theo thời gian, chi nhánh, lớp học và giáo
       "substituteTeacherId": null,
       "substituteTeacherName": null,
       "status": "Scheduled",
-      "note": "Học bài nét thanh nét đậm"
+      "note": "Học bài nét thanh nét đậm",
+      "hasAttendance": false
     }
   ]
   ```
@@ -108,6 +109,7 @@ Hỗ trợ lọc linh hoạt theo thời gian, chi nhánh, lớp học và giáo
 - **Ràng buộc nghiệp vụ:**
   - `BranchManager`: Chỉ sửa buổi học thuộc chi nhánh mình.
   - `Teacher`: Chỉ sửa buổi học của lớp mình dạy chính hoặc mình dạy thay.
+  - **Khóa sửa khi đã có điểm danh:** Nếu buổi học đã có dữ liệu điểm danh (`Attendances` tồn tại), không được phép sửa `studyDate`, `startTime`, `endTime`, hoặc `status` -> trả về `400 Bad Request`: `"Buổi học đã có dữ liệu điểm danh, không thể sửa ngày, giờ học hoặc trạng thái."` (vẫn cho phép cập nhật `room`, `substituteTeacherId`, `note`).
   - `status`: Bắt buộc là một trong 3 giá trị chuẩn DB: `"Scheduled"`, `"Completed"`, `"Cancelled"`.
   - `endTime > startTime`.
 
@@ -203,7 +205,7 @@ Quản lý việc điểm danh học viên trong từng buổi học, hỗ trợ
     - `"UnexcusedAbsent"`: Nghỉ không phép
   - Tự động bỏ qua học viên không thuộc danh sách `Active` của lớp.
   - Tự động cập nhật nếu đã có bản ghi hoặc thêm mới nếu chưa có.
-  - Tự động chuyển trạng thái buổi học `Schedule.Status` từ `"Scheduled"` thành `"Completed"`.
+  - Chỉ tự động chuyển trạng thái buổi học `Schedule.Status` từ `"Scheduled"` thành `"Completed"` khi lớp có học viên đang học (`Active` > 0) và **đã điểm danh đủ toàn bộ học viên `Active`** của lớp trong buổi đó; nếu chỉ điểm danh một phần thì giữ nguyên trạng thái `"Scheduled"`.
 
 - **Request Body:**
   ```json
@@ -818,8 +820,9 @@ Quản lý đơn xin nghỉ học của học viên và nghỉ phép của giáo
     - Nếu đơn có chỉ định buổi học (`ScheduleId`): Tìm buổi học đó (đảm bảo học viên đang học `Active` trong lớp).
     - Nếu đơn không chỉ định buổi học cụ thể: Tìm tất cả các buổi học trong ngày `leaveDate` mà học viên đang theo học `Active` (thuộc lớp `classId` nếu đơn có chỉ định lớp, hoặc tất cả các lớp của học viên nếu không chọn lớp).
     - Với mỗi buổi học tìm được:
-      - Nếu buổi học **đã có bản ghi điểm danh** cho học viên: Lưu trạng thái cũ ở hậu tố `[Prev:{oldStatus}]`, tự động cập nhật `Status = "ExcusedAbsent"`, `Note = "Nghỉ phép có phép (Đơn #{id}: ...) [Prev:{oldStatus}]"`, `MarkedBy = UserId`, `MarkedAt = DateTime.UtcNow`.
-      - Nếu buổi học **chưa có bản ghi điểm danh**: Tự động tạo mới bản ghi `Attendances` với `Status = "ExcusedAbsent"`, `Note = "Nghỉ phép có phép (Đơn #{id}: ...) [Prev:NONE]"`, `MarkedBy = UserId`, `MarkedAt = DateTime.UtcNow`.
+      - Nếu buổi học **đã được điểm danh trước đó** (đã có bản ghi và `Status` khác rỗng như `Present`, `Late`, ...): **giữ nguyên**, không ghi đè; tăng bộ đếm `attendanceSkipped` và ghi nhận ngày vào `skippedDates`.
+      - Nếu buổi học **chưa có bản ghi điểm danh** (hoặc `Status` rỗng): Tự động tạo mới/cập nhật bản ghi `Attendances` với `Status = "ExcusedAbsent"`, `Note = "Nghỉ phép có phép (Đơn #{id}: ...) [Prev:NONE]"`, `MarkedBy = UserId`, `MarkedAt = DateTime.UtcNow`, và tăng `attendanceUpdated`.
+  - Khi đơn bị **Từ chối (`status = "Rejected"`)**: giữ nguyên điểm danh, không tạo bản ghi vắng.
 - **Quy tắc Tự động xử lý Buổi học khi duyệt đơn Giáo viên (`TeacherId != null`):**
   - Khi đơn xin nghỉ của giáo viên được **Duyệt (`status = "Approved"`)**:
     - Tìm tất cả buổi học bị ảnh hưởng (theo `ScheduleId` nếu có, hoặc các buổi học `Status == "Scheduled"` trong ngày `leaveDate` mà giáo viên đó dạy chính hoặc dạy thay).
@@ -835,7 +838,10 @@ Quản lý đơn xin nghỉ học của học viên và nghỉ phép của giáo
 - **Response:** `200 OK`
   ```json
   {
-    "message": "Đã duyệt đơn xin nghỉ và tự động cập nhật điểm danh (Nghỉ có phép)!"
+    "message": "Đã duyệt đơn xin nghỉ và tự động cập nhật điểm danh (Nghỉ có phép)!",
+    "attendanceUpdated": 1,
+    "attendanceSkipped": 0,
+    "skippedDates": []
   }
   ```
 - **Lỗi có thể trả về:**
@@ -953,16 +959,24 @@ Quản lý danh sách các cơ sở (chi nhánh) của Roxy Academy kèm thống
   }
   ```
 - **Ràng buộc nghiệp vụ khi ngừng hoạt động (`branch.IsActive == true && req.IsActive == false`):**
-  - Hệ thống kiểm tra số lớp đang mở (`Classes.Status != "Finished"`) và số học viên đang học (`Students.Status == "Active"`) thuộc chi nhánh.
-  - Nếu còn lớp đang mở hoặc học viên đang học (`openClassesCount > 0 || activeStudentsCount > 0`), từ chối ngừng hoạt động và trả về `400 Bad Request`:
+  - Hệ thống kiểm tra 7 điều kiện chặn thuộc chi nhánh:
+    1. Lớp đang mở (`Classes.Status != "Finished"`)
+    2. Học viên đang học (`Students.Status == "Active"`)
+    3. Giáo viên đang hoạt động (`Role == "Teacher" && BranchId == id && IsActive`)
+    4. Học phí chưa thu đủ (`!IsCancelled` và tổng `Confirmed` < `Amount - Discount`)
+    5. Thanh toán chờ xác nhận (`PendingConfirm`)
+    6. Đơn nghỉ phép chờ duyệt (`Pending` theo `Class.BranchId`, `Student.BranchId`, hoặc `Teacher.BranchId`)
+    7. Bài nộp bài tập chưa nộp (`HomeworkSubmissions.Status == "Pending"`)
+  - Nếu còn bất kỳ ràng buộc nào, từ chối ngừng hoạt động và trả về `409 Conflict` kèm `message` liệt kê rõ từng lý do và mảng `reasons`:
     ```json
     {
-      "message": "Không thể ngừng hoạt động chi nhánh vì còn {openClassesCount} lớp đang mở và {activeStudentsCount} học viên đang học. Vui lòng chuyển hoặc kết thúc toàn bộ lớp và học viên trước khi ngừng chi nhánh."
+      "message": "Không thể ngừng hoạt động chi nhánh vì còn: 2 lớp đang mở; 5 học viên đang học. Vui lòng xử lý toàn bộ trước khi ngừng chi nhánh.",
+      "reasons": ["2 lớp đang mở", "5 học viên đang học"]
     }
     ```
 - **Response:**
   - `204 No Content`: Cập nhật thành công.
-  - `400 Bad Request`: Vi phạm ràng buộc ngừng hoạt động hoặc dữ liệu không hợp lệ.
+  - `409 Conflict`: Vi phạm ràng buộc ngừng hoạt động (còn lớp/học viên/giáo viên/công nợ/đơn chờ/bài tập).
   - `403 Forbidden`: Không có quyền `SuperAdmin`.
   - `404 Not Found`: `{ "message": "Không tìm thấy cơ sở này." }`
 
@@ -972,16 +986,11 @@ Quản lý danh sách các cơ sở (chi nhánh) của Roxy Academy kèm thống
 - **Quyền truy cập:** Chỉ `SuperAdmin`.
 - **Cơ chế:** Xóa mềm bằng cách đặt `IsActive = false` để bảo toàn dữ liệu lịch sử và khóa ngoại.
 - **Ràng buộc nghiệp vụ:**
-  - Kiểm tra số lớp đang mở (`Classes.Status != "Finished"`) và số học viên đang học (`Students.Status == "Active"`) thuộc chi nhánh.
-  - Nếu `openClassesCount > 0 || activeStudentsCount > 0`, từ chối ngừng hoạt động và trả về `400 Bad Request`:
-    ```json
-    {
-      "message": "Không thể ngừng hoạt động chi nhánh vì còn {openClassesCount} lớp đang mở và {activeStudentsCount} học viên đang học. Vui lòng chuyển hoặc kết thúc toàn bộ lớp và học viên trước khi ngừng chi nhánh."
-    }
-    ```
+  - Áp dụng cùng 7 kiểm tra ràng buộc như `PUT /api/Branches/{id}` khi ngừng hoạt động (`ValidateBranchDeactivationAsync`).
+  - Nếu còn ràng buộc, trả về `409 Conflict` với `message` và mảng `reasons`.
 - **Response:**
   - `204 No Content`: Ngừng hoạt động thành công.
-  - `400 Bad Request`: Chi nhánh còn lớp đang mở hoặc học viên đang học.
+  - `409 Conflict`: Chi nhánh còn dữ liệu đang hoạt động / chưa xử lý xong.
   - `403 Forbidden`: Không có quyền `SuperAdmin`.
   - `404 Not Found`: `{ "message": "Không tìm thấy cơ sở này." }`
 
@@ -1046,6 +1055,10 @@ Quản lý danh sách các cơ sở (chi nhánh) của Roxy Academy kèm thống
   2. **Không hạ sĩ số tối đa (`maxStudents`) xuống dưới sĩ số đang theo học (`activeStudentsCount`):** Nếu `maxStudents < activeStudentsCount` -> `"Không thể hạ sĩ số tối đa ({maxStudents}) xuống dưới sĩ số học viên đang theo học hiện tại ({activeStudentsCount} học viên)."`
   3. **Không đổi trạng thái từ `Finished` quay lại `Ongoing` / `Upcoming`:** Nếu lớp đã `Finished` và gửi `status != "Finished"` -> `"Lớp học đã kết thúc (Finished), không thể chuyển trạng thái quay lại Đang học (Ongoing)."`
   4. **Không đổi học phí của lớp (`tuitionFee`) khi đã có học phí phát sinh:** Nếu `tuitionFee` thay đổi và lớp đã có bản ghi `Tuitions` (`!IsCancelled`) -> `"Không thể thay đổi học phí của lớp khi đã có khoản thu học phí phát sinh cho lớp này."`
+- **Quy tắc phân quyền khi Đổi giáo viên phụ trách (`teacherId`):**
+  - Toàn bộ các API phân quyền giáo viên (`Classes`, `Schedules`, `Attendances`, `Homeworks`, `HomeworkSubmissions`, `LessonProgresses`, `Students`, `StudentClasses`, `Dashboard`) đều kiểm tra động theo `Class.TeacherId == UserId` trong database hiện tại (không cache quyền cũ).
+  - **Giáo viên mới** được xem toàn bộ lịch sử lớp (kể cả bài đã chấm, tiến độ bài học, điểm danh trước khi nhận lớp) để tiếp tục giảng dạy.
+  - **Giáo viên cũ** mất quyền truy cập lớp ngay lập tức khi bị thay thế.
 
 ---
 

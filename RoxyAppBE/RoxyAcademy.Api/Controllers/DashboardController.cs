@@ -67,12 +67,27 @@ public class DashboardController(RoxyDbContext db) : ControllerBase
             var totalPaidTuition = tuitionRows.Sum(x => x.PaidAmount);
             var totalRemainingTuition = tuitionRows.Sum(x => Math.Max(0m, x.NetAmount - x.PaidAmount));
 
+            var overdueRows = await VisibleTuitionsQuery()
+                .Where(t => !t.IsCancelled && t.DueDate < today)
+                .Select(t => new
+                {
+                    NetAmount = t.Amount - t.Discount,
+                    PaidAmount = t.Payments.Where(p => p.Status == "Confirmed").Sum(p => (decimal?)p.Amount) ?? 0m
+                })
+                .Where(x => x.PaidAmount < x.NetAmount)
+                .ToListAsync();
+
+            var overdueTuitionCount = overdueRows.Count;
+            var overdueTuitionAmount = overdueRows.Sum(x => Math.Max(0m, x.NetAmount - x.PaidAmount));
+
             tuition = new DashboardTuitionDto(
                 month,
                 year,
                 totalExpectedTuition,
                 totalPaidTuition,
-                totalRemainingTuition
+                totalRemainingTuition,
+                overdueTuitionCount,
+                overdueTuitionAmount
             );
         }
 

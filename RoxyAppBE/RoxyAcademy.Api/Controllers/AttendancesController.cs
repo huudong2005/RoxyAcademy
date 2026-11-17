@@ -190,6 +190,11 @@ public class AttendancesController(RoxyDbContext db) : ControllerBase
             .Where(a => a.ScheduleId == req.ScheduleId)
             .ToListAsync();
 
+        var markedStudentIds = existingAttendances
+            .Where(a => enrolledStudentIds.Contains(a.StudentId) && !string.IsNullOrWhiteSpace(a.Status))
+            .Select(a => a.StudentId)
+            .ToHashSet();
+
         foreach (var record in req.Records)
         {
             if (!enrolledStudentIds.Contains(record.StudentId))
@@ -218,10 +223,15 @@ public class AttendancesController(RoxyDbContext db) : ControllerBase
                     MarkedAt = DateTime.UtcNow
                 });
             }
+
+            if (!string.IsNullOrWhiteSpace(record.Status))
+            {
+                markedStudentIds.Add(record.StudentId);
+            }
         }
 
-        // Tự động chuyển trạng thái buổi học thành Completed sau khi điểm danh (nếu đang là Scheduled)
-        if (schedule.Status == "Scheduled")
+        // Chỉ chuyển trạng thái buổi học thành Completed khi đã điểm danh đủ toàn bộ học viên Active (và lớp có > 0 học viên)
+        if (schedule.Status == "Scheduled" && enrolledStudentIds.Count > 0 && markedStudentIds.Count >= enrolledStudentIds.Count)
         {
             schedule.Status = "Completed";
         }

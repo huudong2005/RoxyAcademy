@@ -94,6 +94,9 @@ export default function LeaveRequests() {
     }, 4000);
   }, []);
 
+  // Banner cảnh báo không tự tắt khi duyệt đơn có buổi đã chấm Present/Late được giữ nguyên
+  const [skippedBanner, setSkippedBanner] = useState(null);
+
   // Debounce thanh tìm kiếm 300ms
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -483,7 +486,19 @@ export default function LeaveRequests() {
         reviewNote: reviewNote.trim() || (newStatus === 'Approved' ? 'Đã duyệt đơn xin nghỉ phép.' : ''),
       };
 
-      await axiosClient.put(`/LeaveRequests/${selectedRequest.id}/review`, payload);
+      const res = await axiosClient.put(`/LeaveRequests/${selectedRequest.id}/review`, payload);
+
+      const skippedDates = Array.isArray(res.data?.skippedDates) ? res.data.skippedDates : [];
+      const attendanceSkipped = res.data?.attendanceSkipped ?? 0;
+      if (newStatus === 'Approved' && (attendanceSkipped > 0 || skippedDates.length > 0)) {
+        setSkippedBanner({
+          message:
+            res.data?.message ||
+            'Một số buổi học đã được chấm Có mặt/Đi muộn nên điểm danh được giữ nguyên.',
+          skippedDates,
+          attendanceSkipped,
+        });
+      }
 
       const successMsg =
         newStatus === 'Approved'
@@ -513,10 +528,21 @@ export default function LeaveRequests() {
     }
 
     try {
-      await axiosClient.put(`/LeaveRequests/${req.id}/review`, {
+      const res = await axiosClient.put(`/LeaveRequests/${req.id}/review`, {
         status: 'Approved',
         reviewNote: 'Đã duyệt nhanh từ danh sách.',
       });
+      const skippedDates = Array.isArray(res.data?.skippedDates) ? res.data.skippedDates : [];
+      const attendanceSkipped = res.data?.attendanceSkipped ?? 0;
+      if (attendanceSkipped > 0 || skippedDates.length > 0) {
+        setSkippedBanner({
+          message:
+            res.data?.message ||
+            'Một số buổi học đã được chấm Có mặt/Đi muộn nên điểm danh được giữ nguyên.',
+          skippedDates,
+          attendanceSkipped,
+        });
+      }
       showToast('success', `Đã duyệt đơn #${req.id} và tự động đồng bộ điểm danh!`);
       setReloadKey((k) => k + 1);
     } catch (err) {
@@ -698,6 +724,39 @@ export default function LeaveRequests() {
           <span>Gửi đơn xin nghỉ</span>
         </button>
       </div>
+
+      {/* BANNER CẢNH BÁO KHÔNG TỰ TẮT KHI CÓ BUỔI ĐÃ CHẤM PRESENT/LATE ĐƯỢC GIỮ NGUYÊN */}
+      {skippedBanner && (
+        <div
+          role="alert"
+          className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900 shadow-xs flex items-start justify-between gap-3"
+        >
+          <div className="flex items-start gap-2.5 text-sm">
+            <span className="text-base shrink-0 mt-0.5">⚠️</span>
+            <div className="space-y-1.5">
+              <p className="font-semibold">
+                {skippedBanner.message}
+              </p>
+              {skippedBanner.skippedDates.length > 0 && (
+                <div className="text-xs text-amber-800">
+                  <span className="font-semibold">Các ngày được giữ nguyên điểm danh: </span>
+                  <span className="font-mono">
+                    {skippedBanner.skippedDates.map((d) => formatDate(d)).join(', ')}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSkippedBanner(null)}
+            aria-label="Đóng thông báo"
+            className="shrink-0 min-h-[32px] min-w-[32px] flex items-center justify-center rounded-lg text-amber-700 hover:bg-amber-100 hover:text-amber-900 font-bold cursor-pointer"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* BỘ LỌC ĐA NĂNG (FILTER TOOLBAR) */}
       <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs space-y-3.5">

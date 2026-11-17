@@ -148,6 +148,10 @@ public class PaymentsController(RoxyDbContext db) : ControllerBase
         if (tuition.IsCancelled)
             return BadRequest(new { message = "Khoản học phí này đã bị hủy, không thể thực hiện thanh toán." });
 
+        var parent = await db.Users.FindAsync(tuition.Student.ParentId);
+        if (parent == null || !parent.IsActive)
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = "Tài khoản phụ huynh đã bị khóa, không thể đăng ký lớp hoặc thanh toán mới." });
+
         if (Role == "Parent" && tuition.Student.ParentId != UserId)
             return StatusCode(StatusCodes.Status403Forbidden, new { message = "Không thể thanh toán khoản thu của học viên khác." });
 

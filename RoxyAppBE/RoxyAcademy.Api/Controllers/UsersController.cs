@@ -160,12 +160,27 @@ public class UsersController(RoxyDbContext db, IPasswordHasher<AppUser> hasher) 
             {
                 var (branchId, error) = await ResolveBranchAsync(user.Role, req.BranchId);
                 if (error != null) return BadRequest(new { message = error });
+
+                if (branchId != user.BranchId)
+                {
+                    if (user.Role == "Teacher" && await db.Classes.AnyAsync(c => c.TeacherId == id && c.Status != "Finished"))
+                    {
+                        return Conflict(new { message = "Giáo viên đang phụ trách lớp chưa kết thúc, không thể chuyển chi nhánh." });
+                    }
+
+                    if (user.Role == "Parent" && await db.StudentClasses.AnyAsync(sc => sc.Student.ParentId == id && sc.Status == "Active"))
+                    {
+                        return Conflict(new { message = "Phụ huynh đang có con theo học lớp (Active), không thể chuyển chi nhánh." });
+                    }
+                }
+
                 user.BranchId = branchId;
             }
         }
         // BranchManager: bỏ qua req.BranchId, không được chuyển người sang cơ sở khác
 
-        if (!req.IsActive && user.IsActive)
+        var isDeactivating = !req.IsActive && user.IsActive;
+        if (isDeactivating)
         {
             var blocker = await DeactivationBlockerAsync(user);
             if (blocker != null) return Conflict(new { message = blocker });
@@ -178,7 +193,37 @@ public class UsersController(RoxyDbContext db, IPasswordHasher<AppUser> hasher) 
         user.IsActive = req.IsActive;
         user.UpdatedAt = DateTime.UtcNow;
 
+        if (isDeactivating && user.Role == "Student")
+        {
+            var linkedStudents = await db.Students
+                .Where(s => s.UserId == id && s.Status != "Dropped" && s.Status != "Paused")
+                .ToListAsync();
+            foreach (var st in linkedStudents)
+            {
+                st.Status = "Paused";
+                st.UpdatedAt = DateTime.UtcNow;
+            }
+        }
+
+        int activeChildEnrollments = 0;
+        if (isDeactivating && user.Role == "Parent")
+        {
+            activeChildEnrollments = await db.StudentClasses
+                .CountAsync(sc => sc.Student.ParentId == id && sc.Status == "Active");
+        }
+
         await db.SaveChangesAsync();
+
+        if (activeChildEnrollments > 0)
+        {
+            return Ok(new
+            {
+                message = $"Đã khóa tài khoản phụ huynh. Lưu ý: phụ huynh này vẫn còn {activeChildEnrollments} ghi danh lớp đang hoạt động (Active) của con.",
+                warning = $"Phụ huynh vẫn còn {activeChildEnrollments} ghi danh lớp đang học (Active).",
+                activeChildEnrollments
+            });
+        }
+
         return NoContent();
     }
 
@@ -195,9 +240,40 @@ public class UsersController(RoxyDbContext db, IPasswordHasher<AppUser> hasher) 
         var blocker = await DeactivationBlockerAsync(user);
         if (blocker != null) return Conflict(new { message = blocker });
 
+        var wasActive = user.IsActive;
         user.IsActive = false;
         user.UpdatedAt = DateTime.UtcNow;
+
+        if (wasActive && user.Role == "Student")
+        {
+            var linkedStudents = await db.Students
+                .Where(s => s.UserId == id && s.Status != "Dropped" && s.Status != "Paused")
+                .ToListAsync();
+            foreach (var st in linkedStudents)
+            {
+                st.Status = "Paused";
+                st.UpdatedAt = DateTime.UtcNow;
+            }
+        }
+
+        int activeChildEnrollments = 0;
+        if (wasActive && user.Role == "Parent")
+        {
+            activeChildEnrollments = await db.StudentClasses
+                .CountAsync(sc => sc.Student.ParentId == id && sc.Status == "Active");
+        }
+
         await db.SaveChangesAsync();
+
+        if (activeChildEnrollments > 0)
+        {
+            return Ok(new
+            {
+                message = $"Đã khóa tài khoản phụ huynh. Lưu ý: phụ huynh này vẫn còn {activeChildEnrollments} ghi danh lớp đang hoạt động (Active) của con.",
+                warning = $"Phụ huynh vẫn còn {activeChildEnrollments} ghi danh lớp đang học (Active).",
+                activeChildEnrollments
+            });
+        }
 
         return NoContent();
     }

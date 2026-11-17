@@ -3,16 +3,25 @@ import { Link } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
 
 /**
- * Khối cảnh báo lỗi 400 khi không thể ngừng hoạt động chi nhánh.
+ * Khối cảnh báo lỗi 400/409 khi không thể ngừng hoạt động chi nhánh.
  */
-function DeactivationBlockedAlert({ branchId, message, onNavigate }) {
+function DeactivationBlockedAlert({ branchId, message, reasons = [], onNavigate }) {
   return (
     <div className="bg-rose-50 border-2 border-rose-300 rounded-xl p-4 text-rose-900 space-y-3">
       <div className="flex items-start gap-2.5">
         <span className="text-lg shrink-0">❌</span>
-        <div className="space-y-1 text-sm">
+        <div className="space-y-1.5 text-sm min-w-0 flex-1">
           <p className="font-bold text-rose-900">Không thể ngừng hoạt động chi nhánh này!</p>
           <p className="text-rose-800 leading-relaxed">{message}</p>
+          {Array.isArray(reasons) && reasons.length > 0 && (
+            <ul className="mt-2 list-disc list-inside space-y-1 text-xs text-rose-800 bg-white/70 border border-rose-200 rounded-lg p-3">
+              {reasons.map((reason, idx) => (
+                <li key={idx} className="leading-relaxed">
+                  {reason}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
 
@@ -56,6 +65,7 @@ export function CreateEditBranchModal({ branch, onClose, onSuccess }) {
   const [fieldErrors, setFieldErrors] = useState({});
   const [submitError, setSubmitError] = useState('');
   const [isDeactivationBlocked, setIsDeactivationBlocked] = useState(false);
+  const [blockedReasons, setBlockedReasons] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Đóng modal bằng phím Escape
@@ -104,6 +114,7 @@ export function CreateEditBranchModal({ branch, onClose, onSuccess }) {
 
     setSubmitError('');
     setIsDeactivationBlocked(false);
+    setBlockedReasons([]);
 
     if (!validate()) return;
 
@@ -131,9 +142,17 @@ export function CreateEditBranchModal({ branch, onClose, onSuccess }) {
       const status = err.response?.status;
       const serverMsg =
         err.response?.data?.message || 'Không thể lưu thông tin chi nhánh. Vui lòng thử lại.';
+      const serverReasons = Array.isArray(err.response?.data?.reasons)
+        ? err.response.data.reasons
+        : [];
       setSubmitError(serverMsg);
-      if (isEdit && status === 400 && !isActive && branch?.isActive) {
+      if (
+        isEdit &&
+        (status === 400 || status === 409) &&
+        ((!isActive && branch?.isActive) || serverReasons.length > 0)
+      ) {
         setIsDeactivationBlocked(true);
+        setBlockedReasons(serverReasons);
       }
     } finally {
       setIsSubmitting(false);
@@ -195,6 +214,7 @@ export function CreateEditBranchModal({ branch, onClose, onSuccess }) {
               <DeactivationBlockedAlert
                 branchId={branch.id}
                 message={submitError}
+                reasons={blockedReasons}
                 onNavigate={onClose}
               />
             ) : (
@@ -303,6 +323,7 @@ export function CreateEditBranchModal({ branch, onClose, onSuccess }) {
                   onChange={(e) => {
                     setIsActive(e.target.checked);
                     setIsDeactivationBlocked(false);
+                    setBlockedReasons([]);
                     setSubmitError('');
                   }}
                   className="h-5 w-5 accent-blue-600 rounded cursor-pointer shrink-0"
@@ -352,6 +373,7 @@ export function CreateEditBranchModal({ branch, onClose, onSuccess }) {
 export function DeactivateBranchModal({ branch, onClose, onSuccess }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error400, setError400] = useState('');
+  const [blockedReasons, setBlockedReasons] = useState([]);
   const [otherError, setOtherError] = useState('');
 
   useEffect(() => {
@@ -369,6 +391,7 @@ export function DeactivateBranchModal({ branch, onClose, onSuccess }) {
 
     setIsSubmitting(true);
     setError400('');
+    setBlockedReasons([]);
     setOtherError('');
     try {
       await axiosClient.delete(`/Branches/${branch.id}`);
@@ -379,8 +402,12 @@ export function DeactivateBranchModal({ branch, onClose, onSuccess }) {
       const serverMsg =
         err.response?.data?.message ||
         'Không thể ngừng hoạt động chi nhánh. Vui lòng thử lại.';
-      if (status === 400) {
+      const serverReasons = Array.isArray(err.response?.data?.reasons)
+        ? err.response.data.reasons
+        : [];
+      if (status === 400 || status === 409) {
         setError400(serverMsg);
+        setBlockedReasons(serverReasons);
       } else {
         setOtherError(serverMsg);
       }
@@ -438,6 +465,7 @@ export function DeactivateBranchModal({ branch, onClose, onSuccess }) {
             <DeactivationBlockedAlert
               branchId={branch.id}
               message={error400}
+              reasons={blockedReasons}
               onNavigate={onClose}
             />
           )}

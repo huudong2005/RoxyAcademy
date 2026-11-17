@@ -62,6 +62,10 @@ public class StudentClassesController(RoxyDbContext db) : ControllerBase
 		if (student == null || student.Status == "Dropped")
 			return BadRequest(new { message = "Học viên không tồn tại hoặc đã ngừng học." });
 
+		var parent = await db.Users.FindAsync(student.ParentId);
+		if (parent == null || !parent.IsActive)
+			return StatusCode(StatusCodes.Status403Forbidden, new { message = "Tài khoản phụ huynh đã bị khóa, không thể đăng ký lớp hoặc thanh toán mới." });
+
 		if (Role == "Parent" && student.ParentId != UserId)
 			return StatusCode(StatusCodes.Status403Forbidden, new { message = "Bạn chỉ có thể đăng ký lớp cho con của mình." });
 
@@ -106,6 +110,12 @@ public class StudentClassesController(RoxyDbContext db) : ControllerBase
 		db.StudentClasses.Add(studentClass);
 		await db.SaveChangesAsync();
 
+		if (isApproved)
+		{
+			await AssignOpenHomeworksAsync(studentClass.ClassId, studentClass.StudentId);
+			await db.SaveChangesAsync();
+		}
+
 		return Ok(new { message = "Đăng ký thành công!", id = studentClass.Id });
 	}
 
@@ -134,9 +144,37 @@ public class StudentClassesController(RoxyDbContext db) : ControllerBase
 		{
 			sc.ApprovedBy = UserId;
 			sc.ApprovedAt = DateTime.UtcNow;
+			await AssignOpenHomeworksAsync(sc.ClassId, sc.StudentId);
 		}
 
 		await db.SaveChangesAsync();
 		return NoContent();
+	}
+
+	private async Task AssignOpenHomeworksAsync(int classId, int studentId)
+	{
+		var now = DateTime.UtcNow;
+		var openHomeworkIds = await db.Homeworks
+			.Where(h => h.ClassId == classId && (h.DueDate == null || h.DueDate >= now))
+			.Select(h => h.Id)
+			.ToListAsync();
+
+		if (openHomeworkIds.Count == 0) return;
+
+		var existingHomeworkIds = await db.HomeworkSubmissions
+			.Where(hs => hs.ClassId == classId && hs.StudentId == studentId && openHomeworkIds.Contains(hs.HomeworkId))
+			.Select(hs => hs.HomeworkId)
+			.ToListAsync();
+
+		foreach (var homeworkId in openHomeworkIds.Except(existingHomeworkIds))
+		{
+			db.HomeworkSubmissions.Add(new HomeworkSubmission
+			{
+				HomeworkId = homeworkId,
+				ClassId = classId,
+				StudentId = studentId,
+				Status = "Pending"
+			});
+		}
 	}
 }

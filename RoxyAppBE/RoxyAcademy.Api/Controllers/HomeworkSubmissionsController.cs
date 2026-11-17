@@ -238,6 +238,11 @@ public class HomeworkSubmissionsController(RoxyDbContext db) : ControllerBase
             }
         }
 
+        if (sub.Status != "Submitted")
+        {
+            return BadRequest(new { message = "Chỉ được chấm bài khi học viên đã nộp bài (Submitted)." });
+        }
+
         // Chuẩn hóa status khớp DB check constraint: ('Pending','Submitted','Reviewed')
         sub.Status = string.Equals(req.Status, "Pending", StringComparison.OrdinalIgnoreCase) ? "Pending" : "Reviewed";
         sub.TeacherFeedback = req.TeacherFeedback?.Trim();
