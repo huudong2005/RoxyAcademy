@@ -444,14 +444,16 @@ export default function Payments() {
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
-                    <th className="px-4 py-3">Mã GD &amp; Ngày</th>
-                    <th className="px-4 py-3">Học viên &amp; Khoản thu</th>
-                    <th className="px-4 py-3 text-right">Số tiền</th>
-                    <th className="px-3 py-3">Phương thức</th>
-                    <th className="px-3 py-3">Chứng từ</th>
-                    <th className="px-3 py-3 text-center">Trạng thái</th>
-                    <th className="px-4 py-3">Người xác nhận</th>
-                    <th className="px-4 py-3 text-center">Thao tác</th>
+                    <th className="px-3 py-3">Mã GD &amp; Ngày</th>
+                    <th className="px-3 py-3">Học viên &amp; Khoản thu</th>
+                    <th className="px-3 py-3 text-right">Số tiền</th>
+                    <th className="px-2.5 py-3">Phương thức</th>
+                    <th className="px-2.5 py-3">Chứng từ</th>
+                    <th className="px-2.5 py-3 text-center">Trạng thái</th>
+                    <th className="px-3 py-3">Người xác nhận</th>
+                    <th className="sticky right-0 z-20 bg-slate-50 px-3 py-3 text-center whitespace-nowrap shadow-[-4px_0_8px_-4px_rgba(15,23,42,0.08)]">
+                      Thao tác
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -459,9 +461,9 @@ export default function Payments() {
                     const isPending = p.status === 'PendingConfirm';
 
                     return (
-                      <tr key={p.id} className="hover:bg-slate-50/70 transition-colors">
+                      <tr key={p.id} className="group hover:bg-slate-50/70 transition-colors">
                         {/* Mã GD & Thời gian */}
-                        <td className="px-4 py-3.5 whitespace-nowrap">
+                        <td className="px-3 py-3 whitespace-nowrap">
                           <div className="font-mono font-semibold text-blue-700 text-sm">
                             {p.transactionCode || `#TX-${p.id}`}
                           </div>
@@ -471,27 +473,29 @@ export default function Payments() {
                         </td>
 
                         {/* Học viên & Khoản thu */}
-                        <td className="px-4 py-3.5 max-w-[260px]">
-                          <div className="font-semibold text-slate-900 text-sm">{p.studentName}</div>
-                          <div className="text-slate-500 text-xs truncate mt-0.5" title={p.tuitionTitle}>
+                        <td className="px-3 py-3 max-w-[200px]">
+                          <div className="font-semibold text-slate-900 text-sm break-words">
+                            {p.studentName}
+                          </div>
+                          <div className="text-slate-500 text-xs mt-0.5 break-words" title={p.tuitionTitle}>
                             {p.tuitionTitle}
                           </div>
                         </td>
 
                         {/* Số tiền */}
-                        <td className="px-4 py-3.5 text-right font-mono tabular-nums whitespace-nowrap">
+                        <td className="px-3 py-3 text-right font-mono tabular-nums whitespace-nowrap">
                           <div className="font-bold text-slate-900 text-sm">
                             {formatCurrency(p.amount)}
                           </div>
                         </td>
 
                         {/* Phương thức */}
-                        <td className="px-3 py-3.5 whitespace-nowrap">
+                        <td className="px-2.5 py-3 whitespace-nowrap">
                           {renderPaymentMethodBadge(p.paymentMethod)}
                         </td>
 
                         {/* Chứng từ / Ảnh */}
-                        <td className="px-3 py-3.5 whitespace-nowrap">
+                        <td className="px-2.5 py-3 whitespace-nowrap">
                           {p.proofImageUrl ? (
                             <div className="flex items-center gap-2">
                               <img
@@ -514,11 +518,11 @@ export default function Payments() {
                         </td>
 
                         {/* Trạng thái */}
-                        <td className="px-3 py-3.5 text-center whitespace-nowrap">
+                        <td className="px-2.5 py-3 text-center max-w-[160px]">
                           {renderPaymentStatusBadge(p.status)}
                           {p.status === 'Rejected' && p.note && (
                             <span
-                              className="block text-[11px] text-rose-600 italic mt-1 max-w-[150px] truncate mx-auto"
+                              className="block text-[11px] text-rose-600 italic mt-1 break-words"
                               title={`Lý do từ chối: ${p.note}`}
                             >
                               Lý do: {p.note}
@@ -527,21 +531,23 @@ export default function Payments() {
                         </td>
 
                         {/* Người duyệt / tạo */}
-                        <td className="px-4 py-3.5 whitespace-nowrap">
+                        <td className="px-3 py-3 max-w-[140px]">
                           {p.confirmedByName ? (
                             <div>
-                              <div className="text-slate-800 font-medium text-xs">{p.confirmedByName}</div>
-                              <div className="text-[11px] text-slate-400">
+                              <div className="text-slate-800 font-medium text-xs break-words">
+                                {p.confirmedByName}
+                              </div>
+                              <div className="text-[11px] text-slate-400 whitespace-nowrap">
                                 {formatDateTime(p.confirmedAt)}
                               </div>
                             </div>
                           ) : (
-                            <span className="text-slate-400 text-xs italic">Chờ duyệt</span>
+                            <span className="text-slate-400 text-xs italic whitespace-nowrap">Chờ duyệt</span>
                           )}
                         </td>
 
                         {/* Thao tác */}
-                        <td className="px-4 py-3.5 text-center whitespace-nowrap">
+                        <td className="sticky right-0 z-10 bg-white group-hover:bg-slate-50 px-3 py-3 text-center whitespace-nowrap shadow-[-4px_0_8px_-4px_rgba(15,23,42,0.08)] transition-colors">
                           <div className="inline-flex items-center gap-1.5">
                             {/* Nút Xem chi tiết */}
                             <button

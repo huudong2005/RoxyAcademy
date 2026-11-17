@@ -605,15 +605,17 @@ export default function Tuitions() {
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
-                    <th className="px-4 py-3">Học viên</th>
-                    <th className="px-4 py-3">Khoản thu &amp; Lớp</th>
-                    <th className="px-3 py-3">Cơ sở</th>
-                    <th className="px-4 py-3 text-right">Phải thu</th>
-                    <th className="px-4 py-3 text-right">Đã đóng</th>
-                    <th className="px-4 py-3 text-right">Còn nợ</th>
-                    <th className="px-3 py-3 text-center">Hạn nộp</th>
-                    <th className="px-3 py-3 text-center">Trạng thái</th>
-                    <th className="px-4 py-3 text-center">Thao tác</th>
+                    <th className="px-3 py-3">Học viên</th>
+                    <th className="px-3 py-3">Khoản thu &amp; Lớp</th>
+                    <th className="px-2.5 py-3">Cơ sở</th>
+                    <th className="px-3 py-3 text-right">Phải thu</th>
+                    <th className="px-3 py-3 text-right">Đã đóng</th>
+                    <th className="px-3 py-3 text-right">Còn nợ</th>
+                    <th className="px-2.5 py-3 text-center">Hạn nộp</th>
+                    <th className="px-2.5 py-3 text-center">Trạng thái</th>
+                    <th className="sticky right-0 z-20 bg-slate-50 px-3 py-3 text-center whitespace-nowrap shadow-[-4px_0_8px_-4px_rgba(15,23,42,0.08)]">
+                      Thao tác
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -623,27 +625,29 @@ export default function Tuitions() {
                     const isFullyPaid = (t.remainingAmount || 0) <= 0 && !t.isCancelled;
 
                     return (
-                      <tr key={t.id} className="hover:bg-slate-50/70 transition-colors">
+                      <tr key={t.id} className="group hover:bg-slate-50/70 transition-colors">
                         {/* Học viên */}
-                        <td className="px-4 py-3.5">
+                        <td className="px-3 py-3 max-w-[200px]">
                           <div className="flex items-center gap-2.5">
                             <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold text-xs flex items-center justify-center shrink-0">
                               {t.studentName ? t.studentName.charAt(0).toUpperCase() : 'H'}
                             </div>
-                            <div>
-                              <div className="font-semibold text-slate-900 text-sm">{t.studentName}</div>
+                            <div className="min-w-0">
+                              <div className="font-semibold text-slate-900 text-sm break-words">
+                                {t.studentName}
+                              </div>
                               <div className="text-[11px] text-slate-400 font-mono">#STU-{t.studentId}</div>
                             </div>
                           </div>
                         </td>
 
                         {/* Khoản thu & Lớp */}
-                        <td className="px-4 py-3.5 max-w-[240px]">
-                          <div className="font-medium text-slate-800 truncate" title={t.title}>
+                        <td className="px-3 py-3 max-w-[210px]">
+                          <div className="font-medium text-slate-800 break-words" title={t.title}>
                             {t.title}
                           </div>
                           {t.className ? (
-                            <span className="inline-block mt-0.5 px-2 py-0.5 text-[11px] bg-slate-100 text-slate-600 rounded border border-slate-200">
+                            <span className="inline-block mt-0.5 px-2 py-0.5 text-[11px] bg-slate-100 text-slate-600 rounded border border-slate-200 break-words">
                               🏫 {t.className}
                             </span>
                           ) : (
@@ -654,12 +658,12 @@ export default function Tuitions() {
                         </td>
 
                         {/* Chi nhánh */}
-                        <td className="px-3 py-3.5 text-slate-600 whitespace-nowrap text-xs">
+                        <td className="px-2.5 py-3 text-slate-600 text-xs max-w-[120px] break-words">
                           {t.branchName || '—'}
                         </td>
 
                         {/* Phải thu */}
-                        <td className="px-4 py-3.5 text-right font-mono tabular-nums whitespace-nowrap">
+                        <td className="px-3 py-3 text-right font-mono tabular-nums whitespace-nowrap">
                           <div className="font-semibold text-slate-900 text-sm">
                             {formatCurrency(finalAmount)}
                           </div>
@@ -672,7 +676,7 @@ export default function Tuitions() {
                         </td>
 
                         {/* Đã đóng */}
-                        <td className="px-4 py-3.5 text-right font-mono tabular-nums whitespace-nowrap">
+                        <td className="px-3 py-3 text-right font-mono tabular-nums whitespace-nowrap">
                           <div className="font-medium text-emerald-700 text-sm">
                             {formatCurrency(t.paidAmount)}
                           </div>
@@ -692,7 +696,7 @@ export default function Tuitions() {
                         </td>
 
                         {/* Còn nợ (NỔI BẬT) */}
-                        <td className="px-4 py-3.5 text-right font-mono tabular-nums whitespace-nowrap">
+                        <td className="px-3 py-3 text-right font-mono tabular-nums whitespace-nowrap">
                           {t.isCancelled ? (
                             <span className="text-slate-400 text-xs">—</span>
                           ) : isFullyPaid ? (
@@ -707,7 +711,7 @@ export default function Tuitions() {
                         </td>
 
                         {/* Hạn nộp */}
-                        <td className="px-3 py-3.5 text-center whitespace-nowrap">
+                        <td className="px-2.5 py-3 text-center whitespace-nowrap">
                           <div className={`text-xs ${t.isOverdue ? 'text-rose-600 font-bold' : 'text-slate-700'}`}>
                             {formatDate(t.dueDate)}
                           </div>
@@ -719,12 +723,12 @@ export default function Tuitions() {
                         </td>
 
                         {/* Trạng thái */}
-                        <td className="px-3 py-3.5 text-center whitespace-nowrap">
+                        <td className="px-2.5 py-3 text-center whitespace-nowrap">
                           {renderStatusBadge(t)}
                         </td>
 
                         {/* Thao tác */}
-                        <td className="px-4 py-3.5 text-center whitespace-nowrap">
+                        <td className="sticky right-0 z-10 bg-white group-hover:bg-slate-50 px-3 py-3 text-center whitespace-nowrap shadow-[-4px_0_8px_-4px_rgba(15,23,42,0.08)] transition-colors">
                           <div className="inline-flex items-center gap-1">
                             {/* Nút Xem chi tiết */}
                             <button

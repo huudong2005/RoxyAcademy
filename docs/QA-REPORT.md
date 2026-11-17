@@ -741,3 +741,29 @@ Toàn bộ **8/8 hạng mục** của **Giai đoạn 1N-2 (8 bẫy đồng bộ)
 - `npm --prefix roxy-admin run lint`: **PASS** (0 error, 0 warning).
 - `npm run build` (`roxy-admin/`): **PASS** (`111 modules transformed, built in 375ms`).
 - **Giới hạn môi trường sandbox:** Không thể chạy trình duyệt / API + MSSQL local trong sandbox để thực thi trực tiếp thao tác tạo & duyệt đơn xin nghỉ test cho phụ huynh `0922222222` (Nguyễn Văn B) và `SuperAdmin`; cần kiểm chứng E2E bước này trên máy dev có MSSQL đang chạy.
+
+
+---
+
+# BÁO CÁO QA — FIX ĐỢT 2B: BẢNG THANH TOÁN & BẢNG HỌC PHÍ (`Payments.jsx`, `Tuitions.jsx`)
+**Ngày kiểm tra:** 17/11/2026  
+**Người thực hiện:** QA Agent  
+**Phạm vi:** Chỉ sửa frontend (`roxy-admin/src/pages/Payments.jsx`, `roxy-admin/src/pages/Tuitions.jsx`), giữ nguyên backend, DB và luồng nghiệp vụ.
+
+## 1. Kết quả Lint & Build
+- `npm --prefix roxy-admin run lint` (`eslint .`): **PASS** (0 error, 0 warning).
+- `npm run build` tại `roxy-admin/`: **PASS** (`111 modules transformed, built in 304ms`).
+
+## 2. Kết quả đối chiếu mã nguồn & CSS/Layout
+| Màn hình | Hạng mục kiểm tra | Kết quả | Dẫn chứng file & dòng code |
+| :--- | :--- | :---: | :--- |
+| **`Payments.jsx`** | Ghim cột **Thao tác** (`sticky right-0`) với nền đặc, `z-index` và bóng trái | **PASS** | - `<th>` (L454–456): `sticky right-0 z-20 bg-slate-50 px-3 py-3 text-center whitespace-nowrap shadow-[-4px_0_8px_-4px_rgba(15,23,42,0.08)]`<br>- `<td>` (L550): `sticky right-0 z-10 bg-white group-hover:bg-slate-50 px-3 py-3 text-center whitespace-nowrap shadow-[-4px_0_8px_-4px_rgba(15,23,42,0.08)] transition-colors` (trên `<tr className="group hover:bg-slate-50/70 ...">` L464) |
+| **`Payments.jsx`** | Xuống dòng các cột dễ dài (`max-w-...` + `break-words`, bỏ `truncate`/`whitespace-nowrap`) | **PASS** | - Học viên & Khoản thu (`<td>` L476–483): `max-w-[200px]`, `studentName` và `tuitionTitle` dùng `break-words`<br>- Trạng thái & Lý do từ chối (`<td>` L521–531): `max-w-[160px]`, `p.note` dùng `break-words`<br>- Người xác nhận (`<td>` L534–547): `max-w-[140px]`, `confirmedByName` dùng `break-words` |
+| **`Payments.jsx`** | Giữ nguyên nút thao tác & `ConfirmModal` | **PASS** | - L553–596: Giữ nguyên đủ nút Xem chi tiết (`👁️`), `✓ Duyệt`, `✕ Từ chối`, `🚫 Hủy (Void)` theo đúng điều kiện `canManage && isPending`.<br>- `ConfirmModal` (L5, L137–173, L907–917) giữ nguyên không đổi. |
+| **`Tuitions.jsx`** | Ghim cột **Thao tác** (`sticky right-0`) với nền đặc, `z-index` và bóng trái | **PASS** | - `<th>` (L616–618): `sticky right-0 z-20 bg-slate-50 px-3 py-3 text-center whitespace-nowrap shadow-[-4px_0_8px_-4px_rgba(15,23,42,0.08)]`<br>- `<td>` (L731): `sticky right-0 z-10 bg-white group-hover:bg-slate-50 px-3 py-3 text-center whitespace-nowrap shadow-[-4px_0_8px_-4px_rgba(15,23,42,0.08)] transition-colors` (trên `<tr className="group hover:bg-slate-50/70 ...">` L628) |
+| **`Tuitions.jsx`** | Xuống dòng các cột dễ dài (`max-w-...` + `break-words`, bỏ `truncate`/`whitespace-nowrap`) | **PASS** | - Học viên (`<td>` L630–642): `max-w-[200px]`, `min-w-0`, `studentName` dùng `break-words`<br>- Khoản thu & Lớp (`<td>` L645–658): `max-w-[210px]`, `t.title` và badge `t.className` dùng `break-words`<br>- Cơ sở (`<td>` L661–663): `max-w-[120px] break-words` |
+| **`Tuitions.jsx`** | Giữ nguyên nút thao tác & luồng nghiệp vụ | **PASS** | - L733–804: Giữ nguyên đủ nút Xem chi tiết (`👁️`), Sửa (`✏️`), Xóa (`🗑️` disable khi `hasPayments`), `💳 Thanh toán` (Phụ huynh), `⚡ Thu tiền` (Staff). |
+
+## 3. Giới hạn môi trường sandbox & Kết luận
+- **Giới hạn môi trường sandbox:** Không thể mở trình duyệt hoặc chạy API/DB thực tế trong sandbox để test tay trực quan tại các viewport `1280px`, `1440px`, `1920px`. Theo đối chiếu CSS/layout trên mã nguồn (`overflow-x-auto`, `sticky right-0`, `z-10`/`z-20`, nền đặc, bóng trái và `max-w-*` + `break-words`), thiết kế đáp ứng đúng yêu cầu chống tràn bảng và chống đè chữ khi cuộn ngang; cần kiểm tra nhanh bằng mắt trên trình duyệt ở 3 mốc `1280px / 1440px / 1920px` khi chạy máy dev có dữ liệu thật.
+- **Lỗi chặn (Blocker):** **0** — **ĐẠT (PASS)**.
