@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import axiosClient from '../api/axiosClient';
 import { formatDate, formatDateTime } from '../utils/formatters';
+import ConfirmModal from '../components/ConfirmModal';
 
 export default function Homeworks() {
   // 1. Phân quyền người dùng hiện tại
@@ -413,29 +414,33 @@ export default function Homeworks() {
     }
   };
 
-  const handleDeleteHomework = async (hw) => {
-    const confirmed = window.confirm(
-      `Bạn có chắc chắn muốn xóa bài tập "${hw.title}"?\nToàn bộ dữ liệu bài nộp của học sinh thuộc bài tập này cũng sẽ bị xóa vĩnh viễn.`
-    );
-    if (!confirmed) return;
+  const [confirmModal, setConfirmModal] = useState(null);
 
-    setDeleteError('');
-    try {
-      await axiosClient.delete(`/Homeworks/${hw.id}`);
-      setReloadKey((k) => k + 1);
-      if (detailHomeworkId === hw.id) {
-        setDetailHomeworkId(null);
-      }
-    } catch (err) {
-      const status = err.response?.status;
-      const serverMsg = err.response?.data?.message;
-      const msg =
-        serverMsg ||
-        (status === 409 || status === 400
-          ? 'Không thể xóa bài tập vì đã có bài nộp được chấm điểm.'
-          : 'Không thể xóa bài tập. Vui lòng thử lại.');
-      setDeleteError(msg);
-    }
+  const handleDeleteHomework = (hw) => {
+    setConfirmModal({
+      mode: 'confirm',
+      title: 'Xác nhận xóa bài tập',
+      message: `Bạn có chắc chắn muốn xóa bài tập "${hw.title}"?\nToàn bộ dữ liệu bài nộp của học sinh thuộc bài tập này cũng sẽ bị xóa vĩnh viễn.`,
+      onConfirm: async () => {
+        setDeleteError('');
+        try {
+          await axiosClient.delete(`/Homeworks/${hw.id}`);
+          setReloadKey((k) => k + 1);
+          if (detailHomeworkId === hw.id) {
+            setDetailHomeworkId(null);
+          }
+        } catch (err) {
+          const status = err.response?.status;
+          const serverMsg = err.response?.data?.message;
+          const msg =
+            serverMsg ||
+            (status === 409 || status === 400
+              ? 'Không thể xóa bài tập vì đã có bài nộp được chấm điểm.'
+              : 'Không thể xóa bài tập. Vui lòng thử lại.');
+          setDeleteError(msg);
+        }
+      },
+    });
   };
 
   // ==========================================
@@ -2162,6 +2167,19 @@ export default function Homeworks() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        open={Boolean(confirmModal)}
+        mode={confirmModal?.mode || 'confirm'}
+        title={confirmModal?.title}
+        message={confirmModal?.message}
+        onConfirm={() => {
+          const action = confirmModal?.onConfirm;
+          setConfirmModal(null);
+          action?.();
+        }}
+        onCancel={() => setConfirmModal(null)}
+      />
     </div>
   );
 }

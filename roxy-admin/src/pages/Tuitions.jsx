@@ -2697,7 +2697,7 @@ function ParentPaymentModal({ tuition, onClose, onSuccess }) {
                 min={1000}
                 max={payableAmount}
                 disabled={payableAmount <= 0}
-                step={10000}
+                step={1000}
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 className="w-full h-10 px-3 text-xs md:text-sm font-mono font-bold text-slate-900 bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-slate-100 disabled:text-slate-400"

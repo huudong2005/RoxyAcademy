@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
 import { formatCurrency, formatDateTime, numberToVietnameseWords } from '../utils/formatters';
+import ConfirmModal from '../components/ConfirmModal';
 
 export default function Payments() {
   const navigate = useNavigate();
@@ -133,23 +134,28 @@ export default function Payments() {
     });
   }, [payments, searchTerm]);
 
-  // 3. Xử lý Xác nhận thanh toán (PUT /api/Payments/{id}/confirm với status='Confirmed')
-  const handleConfirmPayment = async (payment) => {
-    if (!window.confirm(`Xác nhận duyệt giao dịch thanh toán ${formatCurrency(payment.amount)} của học viên ${payment.studentName}?`)) {
-      return;
-    }
+  const [confirmModal, setConfirmModal] = useState(null);
 
-    try {
-      const res = await axiosClient.put(`/Payments/${payment.id}/confirm`, {
-        status: 'Confirmed',
-        note: 'Đã kiểm tra sao kê, xác nhận thu tiền thành công.',
-      });
-      showToast(res.data?.message || 'Xác nhận thanh toán thành công!');
-      setReloadKey((k) => k + 1);
-    } catch (err) {
-      console.error('Lỗi khi xác nhận thanh toán:', err);
-      showToast(err.response?.data?.message || 'Không thể xác nhận giao dịch.', 'error');
-    }
+  // 3. Xử lý Xác nhận thanh toán (PUT /api/Payments/{id}/confirm với status='Confirmed')
+  const handleConfirmPayment = (payment) => {
+    setConfirmModal({
+      mode: 'confirm',
+      title: 'Xác nhận duyệt giao dịch',
+      message: `Xác nhận duyệt giao dịch thanh toán ${formatCurrency(payment.amount)} của học viên ${payment.studentName}?`,
+      onConfirm: async () => {
+        try {
+          const res = await axiosClient.put(`/Payments/${payment.id}/confirm`, {
+            status: 'Confirmed',
+            note: 'Đã kiểm tra sao kê, xác nhận thu tiền thành công.',
+          });
+          showToast(res.data?.message || 'Xác nhận thanh toán thành công!');
+          setReloadKey((k) => k + 1);
+        } catch (err) {
+          console.error('Lỗi khi xác nhận thanh toán:', err);
+          showToast(err.response?.data?.message || 'Không thể xác nhận giao dịch.', 'error');
+        }
+      },
+    });
   };
 
   // 4. Mở modal từ chối thanh toán
@@ -164,7 +170,11 @@ export default function Payments() {
     if (!rejectPaymentItem) return;
 
     if (!rejectReason.trim()) {
-      alert('Vui lòng nhập lý do từ chối giao dịch.');
+      setConfirmModal({
+        mode: 'alert',
+        title: 'Thiếu thông tin',
+        message: 'Vui lòng nhập lý do từ chối giao dịch.',
+      });
       return;
     }
 
@@ -887,6 +897,19 @@ export default function Payments() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        open={Boolean(confirmModal)}
+        mode={confirmModal?.mode || 'confirm'}
+        title={confirmModal?.title}
+        message={confirmModal?.message}
+        onConfirm={() => {
+          const action = confirmModal?.onConfirm;
+          setConfirmModal(null);
+          action?.();
+        }}
+        onCancel={() => setConfirmModal(null)}
+      />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
+import ConfirmModal from '../components/ConfirmModal';
 
 export default function Attendance() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -278,8 +279,10 @@ export default function Attendance() {
     );
   };
 
+  const [confirmModal, setConfirmModal] = useState(null);
+
   // Lưu điểm danh hàng loạt (POST /api/Attendances/bulk)
-  const handleSaveAttendance = async () => {
+  const handleSaveAttendance = () => {
     if (!canEditAttendance || !selectedScheduleId) return;
 
     setSaveSuccessMessage('');
@@ -287,12 +290,19 @@ export default function Attendance() {
 
     // Kiểm tra xem có bao nhiêu học viên chưa chọn trạng thái
     if (metrics.unmarked > 0) {
-      const confirmSave = window.confirm(
-        `Còn ${metrics.unmarked} học viên chưa được chọn trạng thái. Bạn có muốn lưu những học viên đã chọn không?`
-      );
-      if (!confirmSave) return;
+      setConfirmModal({
+        mode: 'confirm',
+        title: 'Xác nhận lưu điểm danh',
+        message: `Còn ${metrics.unmarked} học viên chưa được chọn trạng thái. Bạn có muốn lưu những học viên đã chọn không?`,
+        onConfirm: executeSaveAttendance,
+      });
+      return;
     }
 
+    executeSaveAttendance();
+  };
+
+  const executeSaveAttendance = async () => {
     const payloadRecords = records
       .filter((r) => r.status)
       .map((r) => ({
@@ -940,6 +950,19 @@ export default function Attendance() {
           )}
         </>
       )}
+
+      <ConfirmModal
+        open={Boolean(confirmModal)}
+        mode={confirmModal?.mode || 'confirm'}
+        title={confirmModal?.title}
+        message={confirmModal?.message}
+        onConfirm={() => {
+          const action = confirmModal?.onConfirm;
+          setConfirmModal(null);
+          action?.();
+        }}
+        onCancel={() => setConfirmModal(null)}
+      />
     </div>
   );
 }

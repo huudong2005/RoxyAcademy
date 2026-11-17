@@ -319,7 +319,7 @@ export default function BranchDetail() {
           <span>Quay lại Quản lý chi nhánh</span>
         </Link>
         <span className="text-slate-300">/</span>
-        <span className="font-semibold text-slate-900 truncate max-w-[200px] sm:max-w-md">
+        <span className="font-semibold text-slate-900 break-words">
           {branch.branchName}
         </span>
         <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">

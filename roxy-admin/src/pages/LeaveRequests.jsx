@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
 import { formatDate, formatDateTime } from '../utils/formatters';
+import ConfirmModal from '../components/ConfirmModal';
 
 // Helper: Định dạng ngày kèm thứ tiếng Việt (VD: "Thứ Sáu, 14/11/2026")
 function formatDateWithWeekday(dateString) {
@@ -520,40 +521,45 @@ export default function LeaveRequests() {
     }
   };
 
-  // Duyệt nhanh từ danh sách (Quick Approve)
-  const handleQuickApprove = async (req, e) => {
-    e.stopPropagation();
-    if (!window.confirm(`Xác nhận phê duyệt đơn xin nghỉ #${req.id} cho ${req.studentName || req.teacherName}?`)) {
-      return;
-    }
+  const [confirmModal, setConfirmModal] = useState(null);
 
-    try {
-      const res = await axiosClient.put(`/LeaveRequests/${req.id}/review`, {
-        status: 'Approved',
-        reviewNote: 'Đã duyệt nhanh từ danh sách.',
-      });
-      const skippedDates = Array.isArray(res.data?.skippedDates) ? res.data.skippedDates : [];
-      const attendanceSkipped = res.data?.attendanceSkipped ?? 0;
-      if (attendanceSkipped > 0 || skippedDates.length > 0) {
-        setSkippedBanner({
-          message:
-            res.data?.message ||
-            'Một số buổi học đã được chấm Có mặt/Đi muộn nên điểm danh được giữ nguyên.',
-          skippedDates,
-          attendanceSkipped,
-        });
-      }
-      showToast('success', `Đã duyệt đơn #${req.id} và tự động đồng bộ điểm danh!`);
-      setReloadKey((k) => k + 1);
-    } catch (err) {
-      console.error('Lỗi duyệt nhanh đơn:', err);
-      const msg = err.response?.data?.message || 'Không thể phê duyệt đơn này.';
-      showToast('error', msg);
-    }
+  // Duyệt nhanh từ danh sách (Quick Approve)
+  const handleQuickApprove = (req, e) => {
+    e.stopPropagation();
+    setConfirmModal({
+      mode: 'confirm',
+      title: 'Xác nhận phê duyệt',
+      message: `Xác nhận phê duyệt đơn xin nghỉ #${req.id} cho ${req.studentName || req.teacherName}?`,
+      onConfirm: async () => {
+        try {
+          const res = await axiosClient.put(`/LeaveRequests/${req.id}/review`, {
+            status: 'Approved',
+            reviewNote: 'Đã duyệt nhanh từ danh sách.',
+          });
+          const skippedDates = Array.isArray(res.data?.skippedDates) ? res.data.skippedDates : [];
+          const attendanceSkipped = res.data?.attendanceSkipped ?? 0;
+          if (attendanceSkipped > 0 || skippedDates.length > 0) {
+            setSkippedBanner({
+              message:
+                res.data?.message ||
+                'Một số buổi học đã được chấm Có mặt/Đi muộn nên điểm danh được giữ nguyên.',
+              skippedDates,
+              attendanceSkipped,
+            });
+          }
+          showToast('success', `Đã duyệt đơn #${req.id} và tự động đồng bộ điểm danh!`);
+          setReloadKey((k) => k + 1);
+        } catch (err) {
+          console.error('Lỗi duyệt nhanh đơn:', err);
+          const msg = err.response?.data?.message || 'Không thể phê duyệt đơn này.';
+          showToast('error', msg);
+        }
+      },
+    });
   };
 
   // Hủy đơn xin nghỉ (Pending: hủy nhanh; Approved: mở modal bắt buộc nhập lý do)
-  const handleCancelRequest = async (reqOrId, e) => {
+  const handleCancelRequest = (reqOrId, e) => {
     if (e) e.stopPropagation();
     const reqObj =
       typeof reqOrId === 'object'
@@ -571,18 +577,23 @@ export default function LeaveRequests() {
       return;
     }
 
-    if (!window.confirm('Bạn có chắc chắn muốn hủy đơn xin nghỉ này không?')) return;
-
-    try {
-      await axiosClient.put(`/LeaveRequests/${reqId}/cancel`, { reason: 'Hủy đơn chờ duyệt' });
-      showToast('success', 'Đã hủy đơn xin nghỉ phép thành công.');
-      if (detailModalOpen) setDetailModalOpen(false);
-      setReloadKey((k) => k + 1);
-    } catch (err) {
-      console.error('Lỗi hủy đơn xin nghỉ:', err);
-      const msg = err.response?.data?.message || 'Không thể hủy đơn này.';
-      showToast('error', msg);
-    }
+    setConfirmModal({
+      mode: 'confirm',
+      title: 'Xác nhận hủy đơn',
+      message: 'Bạn có chắc chắn muốn hủy đơn xin nghỉ này không?',
+      onConfirm: async () => {
+        try {
+          await axiosClient.put(`/LeaveRequests/${reqId}/cancel`, { reason: 'Hủy đơn chờ duyệt' });
+          showToast('success', 'Đã hủy đơn xin nghỉ phép thành công.');
+          if (detailModalOpen) setDetailModalOpen(false);
+          setReloadKey((k) => k + 1);
+        } catch (err) {
+          console.error('Lỗi hủy đơn xin nghỉ:', err);
+          const msg = err.response?.data?.message || 'Không thể hủy đơn này.';
+          showToast('error', msg);
+        }
+      },
+    });
   };
 
   // Submit hủy đơn đã duyệt (Approved -> Cancelled kèm lý do bắt buộc)
@@ -843,10 +854,10 @@ export default function LeaveRequests() {
             {isBranchManager ? (
               <div
                 title="Chi nhánh bị khóa theo quyền quản lý cơ sở"
-                className="w-full h-10 px-3 flex items-center gap-1.5 text-sm bg-slate-100 border border-slate-200 rounded-lg text-slate-600 cursor-not-allowed select-none"
+                className="w-full min-h-[40px] px-3 py-2 flex items-center gap-1.5 text-sm bg-slate-100 border border-slate-200 rounded-lg text-slate-600 cursor-not-allowed select-none"
               >
-                <span>🔒</span>
-                <span className="truncate">
+                <span className="shrink-0">🔒</span>
+                <span className="break-words">
                   {branches.find((b) => b.id === currentUser.branchId)?.branchName || 'Cơ sở của tôi'}
                 </span>
               </div>
@@ -2059,6 +2070,19 @@ export default function LeaveRequests() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        open={Boolean(confirmModal)}
+        mode={confirmModal?.mode || 'confirm'}
+        title={confirmModal?.title}
+        message={confirmModal?.message}
+        onConfirm={() => {
+          const action = confirmModal?.onConfirm;
+          setConfirmModal(null);
+          action?.();
+        }}
+        onCancel={() => setConfirmModal(null)}
+      />
     </div>
   );
 }

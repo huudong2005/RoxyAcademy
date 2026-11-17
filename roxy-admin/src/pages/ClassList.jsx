@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
 import { formatDateTime } from '../utils/formatters';
+import ConfirmModal from '../components/ConfirmModal';
 
 export default function ClassList() {
   // Lấy quyền từ user đang đăng nhập
@@ -636,20 +637,28 @@ export default function ClassList() {
     }
   };
 
-  const handleDeleteProgress = async (lp) => {
-    const confirmed = window.confirm(
-      `Bạn có chắc chắn muốn xóa ghi nhận tiến độ ngày ${formatDate(lp.lessonDate)}?`
-    );
-    if (!confirmed) return;
+  const [confirmModal, setConfirmModal] = useState(null);
 
-    try {
-      await axiosClient.delete(`/LessonProgresses/${lp.id}`);
-      if (selectedDetailClass) {
-        loadLessonProgresses(selectedDetailClass.id);
-      }
-    } catch (err) {
-      alert(err.response?.data?.message || 'Không thể xóa tiến độ bài học.');
-    }
+  const handleDeleteProgress = (lp) => {
+    setConfirmModal({
+      mode: 'confirm',
+      title: 'Xác nhận xóa tiến độ',
+      message: `Bạn có chắc chắn muốn xóa ghi nhận tiến độ ngày ${formatDate(lp.lessonDate)}?`,
+      onConfirm: async () => {
+        try {
+          await axiosClient.delete(`/LessonProgresses/${lp.id}`);
+          if (selectedDetailClass) {
+            loadLessonProgresses(selectedDetailClass.id);
+          }
+        } catch (err) {
+          setConfirmModal({
+            mode: 'alert',
+            title: 'Lỗi',
+            message: err.response?.data?.message || 'Không thể xóa tiến độ bài học.',
+          });
+        }
+      },
+    });
   };
 
   return (
@@ -2195,6 +2204,19 @@ export default function ClassList() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        open={Boolean(confirmModal)}
+        mode={confirmModal?.mode || 'confirm'}
+        title={confirmModal?.title}
+        message={confirmModal?.message}
+        onConfirm={() => {
+          const action = confirmModal?.onConfirm;
+          setConfirmModal(null);
+          action?.();
+        }}
+        onCancel={() => setConfirmModal(null)}
+      />
     </div>
   );
 }
