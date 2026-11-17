@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
 import { formatCurrency, formatDate, formatDateTime, numberToVietnameseWords } from '../utils/formatters';
+import { fetchAllStudents } from '../utils/fetchAllStudents';
 
 export default function Tuitions() {
   const navigate = useNavigate();
@@ -49,6 +50,7 @@ export default function Tuitions() {
   const [branches, setBranches] = useState([]);
   const [classes, setClasses] = useState([]);
   const [students, setStudents] = useState([]);
+  const [studentsLoadError, setStudentsLoadError] = useState('');
 
   // Toast thông báo
   const [toastMessage, setToastMessage] = useState(null);
@@ -83,23 +85,31 @@ export default function Tuitions() {
 
     let ignore = false;
     const fetchMetadata = async () => {
+      setStudentsLoadError('');
       try {
         const [branchRes, classRes, studentRes] = await Promise.allSettled([
           axiosClient.get('/Branches'),
           axiosClient.get('/Classes'),
-          axiosClient.get('/Students?pageSize=300'),
+          fetchAllStudents(),
         ]);
 
         if (!ignore) {
           if (branchRes.status === 'fulfilled') setBranches(branchRes.value.data || []);
           if (classRes.status === 'fulfilled') setClasses(classRes.value.data || []);
           if (studentRes.status === 'fulfilled') {
-            const data = studentRes.value.data;
-            setStudents(data.items || data || []);
+            setStudents(studentRes.value || []);
+          } else {
+            const msg =
+              studentRes.reason?.response?.data?.message ||
+              'Không thể tải danh sách học viên cho bộ lọc và form tạo khoản thu.';
+            setStudentsLoadError(msg);
           }
         }
       } catch (err) {
         console.warn('Lỗi tải danh mục cho Tuitions:', err);
+        if (!ignore) {
+          setStudentsLoadError('Không thể tải danh sách học viên.');
+        }
       }
     };
 
@@ -971,6 +981,7 @@ export default function Tuitions() {
         <CreateTuitionModal
           branches={branches}
           students={students}
+          studentsLoadError={studentsLoadError}
           classes={classes}
           currentUser={currentUser}
           isBranchManager={isBranchManager}
@@ -1565,7 +1576,15 @@ function TuitionDetailModal({
 }
 
 // ==================== 2. MODAL TẠO KHOẢN THU MỚI ====================
-function CreateTuitionModal({ branches, students, currentUser, isBranchManager, onClose, onSuccess }) {
+function CreateTuitionModal({
+  branches,
+  students,
+  studentsLoadError,
+  currentUser,
+  isBranchManager,
+  onClose,
+  onSuccess,
+}) {
   const [branchId, setBranchId] = useState(() => {
     if (isBranchManager && currentUser.branchId) return String(currentUser.branchId);
     return branches[0]?.id ? String(branches[0].id) : '';
@@ -1756,6 +1775,11 @@ function CreateTuitionModal({ branches, students, currentUser, isBranchManager, 
               <label className="block font-semibold text-slate-700 mb-1">
                 Chọn học viên <span className="text-rose-500">*</span>
               </label>
+              {studentsLoadError && (
+                <p className="mb-1.5 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs text-rose-700">
+                  ⚠️ {studentsLoadError}
+                </p>
+              )}
               <select
                 value={studentId}
                 onChange={(e) => handleStudentChange(e.target.value)}

@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
 import { formatDate, formatDateTime } from '../utils/formatters';
 import ConfirmModal from '../components/ConfirmModal';
+import { fetchAllStudents } from '../utils/fetchAllStudents';
 
 // Helper: Định dạng ngày kèm thứ tiếng Việt (VD: "Thứ Sáu, 14/11/2026")
 function formatDateWithWeekday(dateString) {
@@ -97,6 +98,7 @@ export default function LeaveRequests() {
 
   // Banner cảnh báo không tự tắt khi duyệt đơn có buổi đã chấm Present/Late được giữ nguyên
   const [skippedBanner, setSkippedBanner] = useState(null);
+  const [studentsLoadError, setStudentsLoadError] = useState('');
 
   // Debounce thanh tìm kiếm 300ms
   useEffect(() => {
@@ -136,24 +138,39 @@ export default function LeaveRequests() {
           }
         }
 
-        // Tải danh sách học viên
+        // Tải danh sách học viên (phân trang pageSize <= 100 theo ràng buộc StudentQuery)
+        setStudentsLoadError('');
         try {
-          const studentRes = await axiosClient.get('/Students?pageSize=200');
+          const stuList = await fetchAllStudents();
           if (!ignore) {
-            const raw = studentRes.data;
-            const stuList = Array.isArray(raw?.items) ? raw.items : Array.isArray(raw) ? raw : [];
             if (isParent) {
-              setStudents(stuList.filter((s) => s.parentId === currentUser.id));
+              setStudents(
+                stuList.filter((s) => Number(s.parentId) === Number(currentUser.id))
+              );
             } else if (isStudent) {
-              setStudents(stuList.filter((s) => s.userId === currentUser.id || s.id === currentUser.studentId));
+              setStudents(
+                stuList.filter(
+                  (s) =>
+                    Number(s.userId) === Number(currentUser.id) ||
+                    Number(s.id) === Number(currentUser.studentId)
+                )
+              );
             } else if (isBranchManager && currentUser.branchId) {
-              setStudents(stuList.filter((s) => s.branchId === currentUser.branchId));
+              setStudents(
+                stuList.filter((s) => Number(s.branchId) === Number(currentUser.branchId))
+              );
             } else {
               setStudents(stuList);
             }
           }
         } catch (sErr) {
           console.warn('Lỗi tải danh sách học viên:', sErr);
+          if (!ignore) {
+            const msg =
+              sErr?.response?.data?.message ||
+              'Không thể tải danh sách học viên. Vui lòng thử tải lại trang.';
+            setStudentsLoadError(msg);
+          }
         }
 
         // Tải danh sách giáo viên (chỉ staff cần để duyệt hoặc chọn)
@@ -1459,6 +1476,11 @@ export default function LeaveRequests() {
                       <label className="block text-xs font-semibold text-slate-700 mt-2 mb-1">
                         Chọn học viên: <span className="text-rose-500">*</span>
                       </label>
+                      {studentsLoadError && (
+                        <p className="mb-1.5 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs text-rose-700">
+                          ⚠️ {studentsLoadError}
+                        </p>
+                      )}
                       <select
                         value={createFormData.studentId}
                         onChange={(e) =>
@@ -1514,6 +1536,11 @@ export default function LeaveRequests() {
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Chọn học viên (con của bạn): <span className="text-rose-500">*</span>
                   </label>
+                  {studentsLoadError && (
+                    <p className="mb-1.5 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs text-rose-700">
+                      ⚠️ {studentsLoadError}
+                    </p>
+                  )}
                   <select
                     value={createFormData.studentId}
                     onChange={(e) =>

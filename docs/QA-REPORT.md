@@ -715,3 +715,29 @@ Toàn bộ 6 hạng mục kiểm thử bắt buộc của **Giai đoạn 1N-1 (�
 Toàn bộ **8/8 hạng mục** của **Giai đoạn 1N-2 (8 bẫy đồng bộ)** đều **ĐẠT (PASS 100%)** qua đối chiếu mã nguồn chi tiết, `dotnet build --no-restore` (0 Warning, 0 Error), `npm run lint` (0 Error, 0 Warning) và `npm run build` (109 modules transformed, built in 324ms).
 
 **Trạng thái nghiệm thu Giai đoạn 1N-2:** **ĐẠT CHUẨN NGHIỆM THU (PASSED)** — Sẵn sàng commit và bàn giao.
+
+
+---
+
+# BÁO CÁO QA — FIX ĐỢT 2A: DROPDOWN HỌC VIÊN TRỐNG (`Tuitions`, `LeaveRequests`, `Grades`)
+**Ngày kiểm tra:** 17/11/2026  
+**Phạm vi:** Chỉ sửa frontend (`roxy-admin/`), giữ nguyên backend & DB.
+
+## 1. Nguyên nhân gốc (Root Cause)
+- Tại backend `RoxyAppBE/RoxyAcademy.Api/Dtos/StudentDtos.cs` (dòng 88–89), thuộc tính `StudentQuery.PageSize` gắn `[Range(1, 100)]`.
+- Các màn hình gọi `GET /api/Students` với `pageSize > 100` đều bị ASP.NET Core trả về **`400 Bad Request`** (lỗi validation `PageSize must be between 1 and 100`), trong khi:
+  1. `Tuitions.jsx` (dòng 90) gọi `GET /Students?pageSize=300` qua `Promise.allSettled` và chỉ kiểm tra `studentRes.status === 'fulfilled'`, nên lỗi `400` bị bỏ qua lặng lẽ khiến `students = []` ở cả bộ lọc lẫn modal **"Tạo khoản thu"**.
+  2. `LeaveRequests.jsx` (dòng 141) gọi `GET /Students?pageSize=200`, bắt lỗi trong `catch (sErr)` và chỉ `console.warn(...)` không hiện lỗi ra UI, khiến dropdown học viên trống ở cả **Phụ huynh** và **SuperAdmin** (trong khi dropdown Giáo viên gọi `/Users?role=Teacher&pageSize=100` vẫn hợp lệ nên có dữ liệu, và trang Hồ sơ học viên dùng `pageSize <= 100` nên chạy bình thường).
+  3. `Grades.jsx` (dòng 293) gọi `GET /Students` với `pageSize: 200` nên cũng bị `400` và rơi vào nhánh fallback `/StudentClasses`.
+
+## 2. Giải pháp đã áp dụng
+- Tạo helper dùng chung `roxy-admin/src/utils/fetchAllStudents.js`: phân trang `GET /Students` với `pageSize = 100` (`page = 1, 2, ...` đến khi đủ `total`), bảo đảm luôn nằm trong giới hạn `[1, 100]` của `StudentQuery`.
+- Cập nhật `Tuitions.jsx`, `LeaveRequests.jsx`, `Grades.jsx` sử dụng `fetchAllStudents()`.
+- Chuẩn hóa ép kiểu `Number(...)` khi so sánh `parentId`, `userId`, `branchId` trong `LeaveRequests.jsx`.
+- Bổ sung state `studentsLoadError` hiển thị thông báo lỗi rõ ràng ngay trên UI (`CreateTuitionModal` và form tạo đơn trong `LeaveRequests.jsx`) nếu API tải học viên thất bại, không để dropdown trống lặng lẽ.
+
+## 3. Kết quả kiểm tra
+- Quét toàn bộ `roxy-admin/src` với pattern `pageSize\s*[:=]\s*(200|300|500|1000)`: **0 kết quả**.
+- `npm --prefix roxy-admin run lint`: **PASS** (0 error, 0 warning).
+- `npm run build` (`roxy-admin/`): **PASS** (`111 modules transformed, built in 375ms`).
+- **Giới hạn môi trường sandbox:** Không thể chạy trình duyệt / API + MSSQL local trong sandbox để thực thi trực tiếp thao tác tạo & duyệt đơn xin nghỉ test cho phụ huynh `0922222222` (Nguyễn Văn B) và `SuperAdmin`; cần kiểm chứng E2E bước này trên máy dev có MSSQL đang chạy.

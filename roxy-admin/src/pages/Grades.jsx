@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import axiosClient from '../api/axiosClient';
 import { formatDate, formatDateTime } from '../utils/formatters';
+import { fetchAllStudents } from '../utils/fetchAllStudents';
 
 // 5 giá trị Enum ExamType khớp chính xác 100% với DB CK_Grades_Type & Backend DTO
 const EXAM_TYPES = [
@@ -290,14 +291,8 @@ export default function Grades() {
           }
         } else {
           try {
-            const res = await axiosClient.get('/Students', { params: { pageSize: 200 } });
+            const list = await fetchAllStudents();
             if (!ignore) {
-              const raw = res.data;
-              const list = Array.isArray(raw?.items)
-                ? raw.items
-                : Array.isArray(raw)
-                ? raw
-                : [];
               setFilterStudents(
                 list
                   .map((s) => ({
