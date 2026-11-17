@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import NotificationBell from '../components/NotificationBell';
+import ProfileModal from '../components/ProfileModal';
 
 export default function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [user] = useState(() => {
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [failedAvatarUrl, setFailedAvatarUrl] = useState(null);
+  const [user, setUser] = useState(() => {
     try {
       const stored = localStorage.getItem('user');
       return stored ? JSON.parse(stored) : { fullName: '', role: '', branchId: null };
@@ -69,6 +72,27 @@ export default function AdminLayout() {
     const parts = name.trim().split(/\s+/);
     if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
     return (parts[parts.length - 2].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+  };
+
+  const renderUserAvatar = (sizeClass = 'h-8 w-8', textClass = 'text-xs') => {
+    const url = typeof user?.avatarUrl === 'string' ? user.avatarUrl.trim() : '';
+    if (url && failedAvatarUrl !== url) {
+      return (
+        <img
+          src={url}
+          alt={user?.fullName || 'Ảnh đại diện'}
+          onError={() => setFailedAvatarUrl(url)}
+          className={`${sizeClass} shrink-0 rounded-full border border-slate-200 object-cover bg-white shadow-xs`}
+        />
+      );
+    }
+    return (
+      <div
+        className={`flex ${sizeClass} shrink-0 items-center justify-center rounded-full bg-blue-100 ${textClass} font-bold text-blue-700 shadow-xs`}
+      >
+        {getInitials(user.fullName)}
+      </div>
+    );
   };
 
   const navItemClass = ({ isActive }) =>
@@ -220,17 +244,20 @@ export default function AdminLayout() {
 
         {/* Footer Sidebar */}
         <div className="border-t border-slate-100 p-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-700">
-              {getInitials(user.fullName)}
-            </div>
+          <button
+            type="button"
+            onClick={() => setProfileModalOpen(true)}
+            title="Hồ sơ cá nhân"
+            className="flex w-full items-center gap-3 rounded-lg p-1.5 text-left hover:bg-slate-100 active:scale-[0.98] transition-all cursor-pointer"
+          >
+            {renderUserAvatar('h-9 w-9', 'text-xs')}
             <div className="flex-1 overflow-hidden">
               <p className="truncate text-xs font-semibold text-slate-800">
                 {user.fullName || 'Cán bộ quản trị'}
               </p>
               <p className="truncate text-[11px] text-slate-500">{user.role}</p>
             </div>
-          </div>
+          </button>
         </div>
       </aside>
 
@@ -270,15 +297,21 @@ export default function AdminLayout() {
             </nav>
 
             <div className="border-t border-slate-100 p-4">
-              <div className="mb-3 flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-700">
-                  {getInitials(user.fullName)}
-                </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setProfileModalOpen(true);
+                }}
+                title="Hồ sơ cá nhân"
+                className="mb-3 flex w-full items-center gap-3 rounded-lg p-1.5 text-left hover:bg-slate-100 active:scale-[0.98] transition-all cursor-pointer"
+              >
+                {renderUserAvatar('h-8 w-8', 'text-xs')}
                 <div className="overflow-hidden">
                   <p className="truncate text-xs font-semibold text-slate-800">{user.fullName}</p>
                   <div className="mt-0.5">{getRoleBadge(user.role)}</div>
                 </div>
-              </div>
+              </button>
               <button
                 type="button"
                 onClick={handleLogout}
@@ -351,14 +384,17 @@ export default function AdminLayout() {
             <div className="hidden sm:inline-flex">{getRoleBadge(user.role)}</div>
 
             {/* Thông tin tên người dùng */}
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-700 shadow-xs">
-                {getInitials(user.fullName)}
-              </div>
+            <button
+              type="button"
+              onClick={() => setProfileModalOpen(true)}
+              title="Hồ sơ cá nhân"
+              className="flex items-center gap-2.5 rounded-lg px-2 py-1 hover:bg-slate-100 active:scale-[0.98] transition-all cursor-pointer"
+            >
+              {renderUserAvatar('h-8 w-8', 'text-xs')}
               <span className="hidden lg:inline text-xs font-semibold text-slate-700 max-w-[140px] truncate">
                 {user.fullName || 'Người dùng'}
               </span>
-            </div>
+            </button>
 
             {/* Nút Đăng xuất */}
             <button
@@ -379,6 +415,16 @@ export default function AdminLayout() {
           <Outlet />
         </main>
       </div>
+
+      {/* Modal Hồ sơ cá nhân */}
+      {profileModalOpen && (
+        <ProfileModal
+          isOpen={profileModalOpen}
+          onClose={() => setProfileModalOpen(false)}
+          currentUser={user}
+          onUserUpdated={(updatedUser) => setUser(updatedUser)}
+        />
+      )}
     </div>
   );
 }

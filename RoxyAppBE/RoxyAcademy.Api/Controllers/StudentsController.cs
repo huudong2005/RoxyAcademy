@@ -200,8 +200,29 @@ public class StudentsController(RoxyDbContext db, IPasswordHasher<AppUser> hashe
     [Authorize(Roles = "SuperAdmin,BranchManager,Parent")]
     public async Task<IActionResult> UpdateStudent(int id, UpdateStudentRequest req)
     {
+        if (Role == "Parent")
+        {
+            var ownStudent = await db.Students.FirstOrDefaultAsync(s => s.Id == id);
+            if (ownStudent == null) return NotFound(new { message = "Không tìm thấy học viên này." });
+            if (ownStudent.ParentId != User.GetUserId())
+                return StatusCode(StatusCodes.Status403Forbidden,
+                    new { message = "Bạn không có quyền chỉnh sửa thông tin học viên này." });
+
+            // Parent chỉ được phép cập nhật School, Grade, AvatarUrl; mọi trường khác đều bị bỏ qua
+            ownStudent.School = Clean(req.School);
+            ownStudent.Grade = Clean(req.Grade);
+            ownStudent.AvatarUrl = Clean(req.AvatarUrl);
+            ownStudent.UpdatedAt = DateTime.UtcNow;
+
+            await db.SaveChangesAsync();
+            return NoContent();
+        }
+
         var student = await VisibleStudents().FirstOrDefaultAsync(s => s.Id == id);
         if (student == null) return NotFound(new { message = "Không tìm thấy học viên này." });
+
+        if (string.IsNullOrWhiteSpace(req.FullName))
+            return BadRequest(new { message = "Họ tên học viên là bắt buộc." });
 
         var dobError = ValidateDob(req.DOB);
         if (dobError != null) return BadRequest(new { message = dobError });

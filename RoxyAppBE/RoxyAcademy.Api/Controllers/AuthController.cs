@@ -51,6 +51,27 @@ public class AuthController(RoxyDbContext db, ITokenService tokens, IPasswordHas
         return ToInfo(user);
     }
 
+    [HttpPut("me")]
+    [Authorize]
+    public async Task<ActionResult<UserInfo>> UpdateMe(UpdateMeRequest req)
+    {
+        var id = int.Parse(User.FindFirstValue("sub")!);
+        var user = await db.Users.FindAsync(id);
+        if (user is null || !user.IsActive) return Unauthorized();
+
+        var phone = req.PhoneNumber.Trim();
+        if (await db.Users.AnyAsync(u => u.PhoneNumber == phone && u.Id != id))
+            return Conflict(new { message = "Số điện thoại này đã được đăng ký." });
+
+        user.PhoneNumber = phone;
+        user.Email = string.IsNullOrWhiteSpace(req.Email) ? null : req.Email.Trim();
+        user.AvatarUrl = string.IsNullOrWhiteSpace(req.AvatarUrl) ? null : req.AvatarUrl.Trim();
+        user.UpdatedAt = DateTime.UtcNow;
+
+        await db.SaveChangesAsync();
+        return Ok(ToInfo(user));
+    }
+
     private static UserInfo ToInfo(AppUser u) =>
-        new(u.Id, u.FullName, u.Role, u.BranchId, u.PreferredLanguage);
+        new(u.Id, u.FullName, u.Role, u.BranchId, u.PreferredLanguage, u.PhoneNumber, u.Email, u.AvatarUrl);
 }

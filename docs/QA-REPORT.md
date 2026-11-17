@@ -529,3 +529,80 @@ Toàn bộ 6 hạng mục kiểm thử code, phân quyền và build/smoke test 
 Toàn bộ 6 nhóm tiêu chí nghiệm thu của **Giai đoạn 1M-2 (Sửa các luồng chưa hợp lý trước Go-Live)** đều **ĐẠT (PASS 100%)** cả ở Backend, Frontend lẫn Tài liệu (`docs/API.md`, `docs/DESIGN.md`). Không phát sinh lỗi biên dịch hay cảnh báo ESLint.
 
 **Trạng thái nghiệm thu Giai đoạn 1M-2:** **ĐẠT CHUẨN NGHIỆM THU (PASSED 100%)** — Sẵn sàng bàn giao cho Deploy Agent.
+
+---
+
+# BÁO CÁO KIỂM THỬ QA — GIAI ĐOẠN 1N-1 (PHỤ HUYNH CẬP NHẬT THÔNG TIN LIÊN HỆ HỌC VIÊN & HỒ SƠ CÁ NHÂN)
+**Dự án:** Roxy Academy — Hệ thống Quản trị Học tập  
+**Ngày kiểm thử:** 17/11/2026  
+**Người thực hiện:** QA Agent  
+**Tài liệu đối chiếu:** `GEMINI.md`, `docs/DESIGN.md`, `docs/API.md`, `RoxyAppDB.sql`  
+**Phạm vi kiểm thử:**
+- Backend: `RoxyAppBE/RoxyAcademy.Api/Controllers/StudentsController.cs`, `RoxyAppBE/RoxyAcademy.Api/Dtos/StudentDtos.cs`, `RoxyAppBE/RoxyAcademy.Api/Controllers/AuthController.cs`, `RoxyAppBE/RoxyAcademy.Api/Dtos/AuthDtos.cs`
+- Frontend: `roxy-admin/src/pages/Students.jsx`, `roxy-admin/src/components/ProfileModal.jsx`, `roxy-admin/src/layouts/AdminLayout.jsx`
+
+---
+
+## 1. KẾT QUẢ BIÊN DỊCH, LINT & KIỂM TRA MÔI TRƯỜNG RUNTIME
+
+| Thành phần | Lệnh thực thi / Phương thức | Kết quả | Chi tiết |
+| :--- | :--- | :---: | :--- |
+| **Backend Build** | `dotnet build --no-restore` tại `RoxyAppBE/RoxyAcademy.Api/` | **PASS** | **0 Warning(s), 0 Error(s)**, target `net9.0` (`RoxyAcademy.Api.dll` built in 1.21s) |
+| **Frontend Lint** | `npm --prefix roxy-admin run lint` (`eslint .`) | **PASS** | **0 Error(s), 0 Warning(s)** |
+| **Frontend Build** | `npm --prefix roxy-admin run build` (`vite build`) | **BỊ CHẶN SANDBOX (EPERM)** | Không chạy được trong sandbox do lỗi quyền ghi file tạm `EPERM: operation not permitted, open '.../node_modules/.vite-temp/vite.config.js.timestamp-*.mjs'`. (Theo ghi nhận bàn giao từ agent trước ngoài sandbox: `npm run build` đã pass 0 error). |
+| **API Runtime Test** | `dotnet run --no-build --urls http://127.0.0.1:5199` + `curl.exe` | **CHƯA CHẠY ĐƯỢC TRONG SANDBOX** | Sandbox chặn bind port / kết nối mạng local & MSSQL (`curl.exe` exit code 1, không kết nối được `127.0.0.1:5199`). Đã dừng tiến trình `dotnet run` ngay sau khi kiểm tra. Toàn bộ logic API được đối chiếu chi tiết từng dòng code bên dưới. |
+| **Hard-code `localhost` & `[CẦN XÁC MINH]`** | Quét 7 file Backend & Frontend trong phạm vi | **PASS** | **0** kết quả `localhost` hoặc `[CẦN XÁC MINH]`. |
+
+---
+
+## 2. BẢNG TỔNG HỢP CHECKLIST 5 HẠNG MỤC BẮT BUỘC (GIAI ĐOẠN 1N-1)
+
+| STT | Hạng mục kiểm tra | Tiêu chí nghiệm thu | Kết quả (Code Audit) | Dẫn chứng file & dòng code cụ thể |
+| :-: | :--- | :--- | :---: | :--- |
+| **1** | **Phụ huynh sửa `School`, `Grade`, `AvatarUrl` của con & `PhoneNumber`, `Email`, `AvatarUrl` của chính mình** | - `PUT /api/Students/{id}` cho phép role `Parent` sửa `School`, `Grade`, `AvatarUrl` của con mình (không bắt buộc gửi `FullName`).<br>- `PUT /api/Auth/me` cho phép user đã đăng nhập (bao gồm `Parent`) sửa `PhoneNumber` (`^0\d{9}$`, kiểm tra trùng `409 Conflict`), `Email`, `AvatarUrl`, trả về `UserInfo` mới. | **PASS** | - `StudentsController.cs` L199-219<br>- `StudentDtos.cs` L43-65 (`FullName` là `string?`, không `[Required]`)<br>- `AuthController.cs` L44-76 (`Me`, `UpdateMe`, `ToInfo`)<br>- `AuthDtos.cs` L14-38 (`UserInfo`, `UpdateMeRequest`) |
+| **2** | **Phụ huynh gửi `FullName` / `Status` / `Note` / `DOB` / `Gender` / `BranchId` khác đi ở `PUT /api/Students/{id}` thì Backend không ghi nhận** | - Khi `Role == "Parent"`, backend chỉ gán `School`, `Grade`, `AvatarUrl`, `UpdatedAt` rồi `SaveChangesAsync()` và `return NoContent()`, bỏ qua hoàn toàn các trường nhạy cảm/quản trị khác. | **PASS** | - `StudentsController.cs` L203-219: Nhánh `if (Role == "Parent")` chỉ cập nhật `ownStudent.School`, `ownStudent.Grade`, `ownStudent.AvatarUrl`, `ownStudent.UpdatedAt` (L212-215) và thoát sớm bằng `return NoContent();` (L218), không đi xuống khối staff (L221-264). |
+| **3** | **Phụ huynh sửa hồ sơ con người khác (`student.ParentId != UserId`) bị chặn `403 Forbidden`** | - Kiểm tra `ownStudent.ParentId != User.GetUserId()` và trả về HTTP `403 Forbidden`. | **PASS** | - `StudentsController.cs` L205-209: `if (ownStudent.ParentId != User.GetUserId()) return StatusCode(StatusCodes.Status403Forbidden, new { message = "Bạn không có quyền chỉnh sửa thông tin học viên này." });` |
+| **4** | **`SuperAdmin` và `BranchManager` vẫn sửa đầy đủ như cũ ở `PUT /api/Students/{id}`** | - Giữ nguyên kiểm tra `VisibleStudents()`, bắt buộc `FullName`, validate `DOB`, cập nhật `Gender`, `Note`, `BranchId` (chỉ `SuperAdmin`, kiểm tra đăng ký lớp), `Status` (`ApplyStatusAsync`) trong transaction. | **PASS** | - `StudentsController.cs` L221-264 |
+| **5** | **Frontend `Students.jsx`, `ProfileModal.jsx`, `AdminLayout.jsx`** | - `Students.jsx`: Phụ huynh thấy nút `"Cập nhật thông tin liên hệ"`, form modal chỉ có 3 trường `AvatarUrl`, `School`, `Grade` (không hiện họ tên, ngày sinh, giới tính, ghi chú, chi nhánh, trạng thái).<br>- `ProfileModal.jsx` + `AdminLayout.jsx`: Phụ huynh mở modal hồ sơ cá nhân từ sidebar/header/mobile drawer, sửa được `PhoneNumber`, `Email`, `AvatarUrl` (không hiện/sửa `Role`, `BranchId`, `IsActive`). | **PASS** | - `Students.jsx` L136-201, L1225-1235, L1564-1572, L2239-2371<br>- `ProfileModal.jsx` L52-345 (L214-237 card read-only, L252-339 form 3 trường)<br>- `AdminLayout.jsx` L4, L10-11, L77-96, L247-260, L300-314, L387-397, L420-427 |
+
+---
+
+## 3. CHI TIẾT ĐỐI CHIẾU MÃ NGUỒN (CODE AUDIT)
+
+### 3.1. Backend (`StudentsController.cs`, `StudentDtos.cs`, `AuthController.cs`, `AuthDtos.cs`)
+1. **`PUT /api/Students/{id}` (`StudentsController.cs` L199-265, `StudentDtos.cs` L43-65):**
+   - Attribute `[Authorize(Roles = "SuperAdmin,BranchManager,Parent")]` cho phép `Parent` gọi endpoint.
+   - `UpdateStudentRequest.FullName` đổi sang `string?` (bỏ `[Required]`) để payload 3 trường từ `Parent` không bị lỗi model validation 400; đồng thời nhánh `SuperAdmin`/`BranchManager` vẫn kiểm tra `string.IsNullOrWhiteSpace(req.FullName)` ở L224-225.
+   - Nhánh `if (Role == "Parent")` (L203-219) tìm học viên theo `id`, trả `404` nếu không tồn tại, trả `403 Forbidden` nếu `ownStudent.ParentId != User.GetUserId()`, và chỉ cập nhật `School`, `Grade`, `AvatarUrl`, `UpdatedAt` rồi trả `204 No Content`. Mọi trường khác (`FullName`, `DOB`, `Gender`, `Note`, `Status`, `BranchId`) nếu bị gửi kèm đều bị bỏ qua hoàn toàn.
+   - Nhánh Staff (L221-264) giữ nguyên toàn bộ logic cũ, có `BeginTransactionAsync()`, `VisibleStudents()`, `ApplyStatusAsync()`, và chuyển cơ sở cho `SuperAdmin`.
+2. **`GET/PUT /api/Auth/me` (`AuthController.cs` L44-76, `AuthDtos.cs` L14-38):**
+   - `UserInfo` bổ sung `PhoneNumber`, `Email`, `AvatarUrl` (L14-23), được trả về đồng nhất ở `Login`, `Me`, và `UpdateMe`.
+   - `UpdateMeRequest` validate `PhoneNumber` (`[Required]`, `^0\d{9}$`), `Email` (`[EmailAddress]`, max 150), `AvatarUrl` (max 500).
+   - `UpdateMe` kiểm tra user tồn tại & `IsActive`, kiểm tra trùng SĐT với user khác (`409 Conflict`), chỉ cập nhật `PhoneNumber`, `Email`, `AvatarUrl`, `UpdatedAt` và trả `200 OK` với `UserInfo` mới. Không cho phép thay đổi `Role`, `BranchId`, `IsActive`, `FullName`.
+
+### 3.2. Frontend (`Students.jsx`, `ProfileModal.jsx`, `AdminLayout.jsx`)
+1. **`Students.jsx`:**
+   - Trong bảng danh sách (L1226-1235) và modal chi tiết học viên (L1564-1572), chỉ khi `isParent` mới hiển thị nút `"Cập nhật thông tin liên hệ"`. Nút `"Sửa"` của staff (L1214-1223) ẩn với `Parent`.
+   - Modal `parentEditOpen` (L2240-2371) hiển thị tiêu đề + tên/mã học viên ở dạng read-only, và form chỉ có đúng 3 trường: `Ảnh đại diện (URL)` (kèm live preview `StudentAvatar`), `Trường học`, `Khối / Lớp`. Không có trường họ tên, ngày sinh, giới tính, ghi chú nội bộ, chi nhánh, trạng thái.
+   - `handleSubmitParentEdit` (L158-201) kiểm tra URL `http://`/`https://` nếu có nhập, gửi `PUT /Students/${parentEditStudent.id}` chỉ với `{ school, grade, avatarUrl }`, cập nhật lại state `selectedStudent` (nếu đang mở modal chi tiết) và reload danh sách.
+2. **`ProfileModal.jsx` & `AdminLayout.jsx`:**
+   - `AdminLayout.jsx` gắn sự kiện mở `ProfileModal` tại cả 3 vị trí: footer sidebar desktop (L247-260), mobile drawer (L300-314), và top header bar (L387-397), đồng thời hiển thị avatar từ `user.avatarUrl` (L77-96).
+   - `ProfileModal.jsx` gọi `GET /Auth/me` khi mở, hiển thị phần trên read-only (Avatar, `FullName`, badge `Role`), phần dưới là form chỉ gồm 3 trường: `Số điện thoại *`, `Email (tùy chọn)`, `Ảnh đại diện (URL) (tùy chọn)`. Không hiển thị hay cho sửa `Role`, `BranchId`, `IsActive`.
+   - Khi lưu (`PUT /Auth/me`), cập nhật `localStorage.setItem('user', ...)` và gọi `onUserUpdated(updatedUser)` để đồng bộ ngay trên `AdminLayout`.
+
+---
+
+## 4. DANH SÁCH LỖI VÀ VẤN ĐỀ CẦN XỬ LÝ (DEFECT LOG)
+
+- **Lỗi chặn (Blocker):** **0**
+- **Lỗi nghiêm trọng (Critical):** **0**
+- **Lỗi nhỏ (Minor):** **0**
+- **Lưu ý môi trường kiểm thử:** Trong sandbox hiện tại, `vite build` bị chặn ghi vào `node_modules/.vite-temp` (`EPERM`) và `dotnet run` không bind được port / kết nối MSSQL local để test HTTP trực tiếp; khuyến nghị kiểm tra lại 1 lượt smoke test E2E trên máy dev có MSSQL + trình duyệt trước khi deploy production.
+
+---
+
+## 5. KẾT LUẬN & ĐỀ NGHỊ BÀN GIAO
+
+Toàn bộ 5 hạng mục kiểm thử bắt buộc của **Giai đoạn 1N-1** đều **ĐẠT (PASS)** qua đối chiếu mã nguồn chi tiết, `dotnet build --no-restore` (0 error, 0 warning) và `npm run lint` (0 error, 0 warning). Không phát sinh lỗi chặn hay vi phạm phân quyền/bảo mật theo `GEMINI.md`.
+
+**Trạng thái nghiệm thu Giai đoạn 1N-1:** **ĐẠT CHUẨN NGHIỆM THU (PASSED)** — Đủ điều kiện bàn giao.

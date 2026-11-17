@@ -11,6 +11,28 @@ public class LoginRequest
     public string Password { get; set; } = "";
 }
 
-public record UserInfo(int Id, string FullName, string Role, int? BranchId, string PreferredLanguage);
+public record UserInfo(
+    int Id,
+    string FullName,
+    string Role,
+    int? BranchId,
+    string PreferredLanguage,
+    string PhoneNumber,
+    string? Email,
+    string? AvatarUrl
+);
 
 public record LoginResponse(string AccessToken, DateTime ExpiresAt, UserInfo User);
+
+public class UpdateMeRequest
+{
+    [Required(ErrorMessage = "Số điện thoại là bắt buộc"),
+     RegularExpression(@"^0\d{9}$", ErrorMessage = "Số điện thoại phải gồm 10 chữ số và bắt đầu bằng 0")]
+    public string PhoneNumber { get; set; } = "";
+
+    [EmailAddress(ErrorMessage = "Email không hợp lệ"), StringLength(150)]
+    public string? Email { get; set; }
+
+    [StringLength(500)]
+    public string? AvatarUrl { get; set; }
+}

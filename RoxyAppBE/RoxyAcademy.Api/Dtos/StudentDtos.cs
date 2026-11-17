@@ -42,8 +42,9 @@ public class CreateStudentRequest
 
 public class UpdateStudentRequest
 {
-    [Required(ErrorMessage = "Họ tên học viên là bắt buộc"), StringLength(150)]
-    public string FullName { get; set; } = "";
+    // Bắt buộc với SuperAdmin/BranchManager (kiểm tra trong controller); Parent chỉ sửa School, Grade, AvatarUrl
+    [StringLength(150)]
+    public string? FullName { get; set; }
 
     public DateOnly? DOB { get; set; }
 
