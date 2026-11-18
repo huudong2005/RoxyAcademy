@@ -605,15 +605,15 @@ export default function Tuitions() {
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
-                    <th className="px-3 py-3">Học viên</th>
-                    <th className="px-3 py-3">Khoản thu &amp; Lớp</th>
-                    <th className="px-2.5 py-3">Cơ sở</th>
-                    <th className="px-3 py-3 text-right">Phải thu</th>
-                    <th className="px-3 py-3 text-right">Đã đóng</th>
-                    <th className="px-3 py-3 text-right">Còn nợ</th>
-                    <th className="px-2.5 py-3 text-center">Hạn nộp</th>
-                    <th className="px-2.5 py-3 text-center">Trạng thái</th>
-                    <th className="sticky right-0 z-20 bg-slate-50 px-3 py-3 text-center whitespace-nowrap shadow-[-4px_0_8px_-4px_rgba(15,23,42,0.08)]">
+                    <th className="px-1.5 py-2.5 whitespace-nowrap">Học viên</th>
+                    <th className="px-1.5 py-2.5 min-w-[115px]">Khoản thu &amp; Lớp</th>
+                    <th className="px-1.5 py-2.5 min-w-[76px] max-w-[95px] whitespace-nowrap">Cơ sở</th>
+                    <th className="px-1.5 py-2.5 text-right whitespace-nowrap">Phải thu</th>
+                    <th className="px-1.5 py-2.5 text-right whitespace-nowrap">Đã đóng</th>
+                    <th className="px-1.5 py-2.5 text-right whitespace-nowrap">Còn nợ</th>
+                    <th className="px-1.5 py-2.5 text-center min-w-[78px] whitespace-nowrap">Hạn nộp</th>
+                    <th className="px-1.5 py-2.5 text-center min-w-[110px] whitespace-nowrap">Trạng thái</th>
+                    <th className="sticky right-0 z-20 bg-slate-50 px-1.5 py-2.5 text-center whitespace-nowrap shadow-[-4px_0_8px_-4px_rgba(15,23,42,0.08)]">
                       Thao tác
                     </th>
                   </tr>
@@ -627,44 +627,39 @@ export default function Tuitions() {
                     return (
                       <tr key={t.id} className="group hover:bg-slate-50/70 transition-colors">
                         {/* Học viên */}
-                        <td className="px-3 py-3 max-w-[200px]">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold text-xs flex items-center justify-center shrink-0">
-                              {t.studentName ? t.studentName.charAt(0).toUpperCase() : 'H'}
+                        <td className="px-1.5 py-2.5 max-w-[140px]">
+                          <div className="min-w-0">
+                            <div className="font-semibold text-slate-900 text-xs break-words">
+                              {t.studentName}
                             </div>
-                            <div className="min-w-0">
-                              <div className="font-semibold text-slate-900 text-sm break-words">
-                                {t.studentName}
-                              </div>
-                              <div className="text-[11px] text-slate-400 font-mono">#STU-{t.studentId}</div>
-                            </div>
+                            <div className="text-[11px] text-slate-400 font-mono">#STU-{t.studentId}</div>
                           </div>
                         </td>
 
                         {/* Khoản thu & Lớp */}
-                        <td className="px-3 py-3 max-w-[210px]">
+                        <td className="px-1.5 py-2.5 min-w-[115px] max-w-[145px]">
                           <div className="font-medium text-slate-800 break-words" title={t.title}>
                             {t.title}
                           </div>
                           {t.className ? (
-                            <span className="inline-block mt-0.5 px-2 py-0.5 text-[11px] bg-slate-100 text-slate-600 rounded border border-slate-200 break-words">
+                            <span className="inline-block mt-0.5 px-1.5 py-0.5 text-[11px] bg-slate-100 text-slate-600 rounded border border-slate-200 break-words">
                               🏫 {t.className}
                             </span>
                           ) : (
-                            <span className="inline-block mt-0.5 px-2 py-0.5 text-[11px] bg-slate-50 text-slate-400 rounded border border-slate-200">
+                            <span className="inline-block mt-0.5 px-1.5 py-0.5 text-[11px] bg-slate-50 text-slate-400 rounded border border-slate-200">
                               Thu ngoài lớp
                             </span>
                           )}
                         </td>
 
                         {/* Chi nhánh */}
-                        <td className="px-2.5 py-3 text-slate-600 text-xs max-w-[120px] break-words">
+                        <td className="px-1.5 py-2.5 text-slate-600 text-xs min-w-[76px] max-w-[95px] break-words">
                           {t.branchName || '—'}
                         </td>
 
                         {/* Phải thu */}
-                        <td className="px-3 py-3 text-right font-mono tabular-nums whitespace-nowrap">
-                          <div className="font-semibold text-slate-900 text-sm">
+                        <td className="px-1.5 py-2.5 text-right font-mono tabular-nums whitespace-nowrap">
+                          <div className="font-semibold text-slate-900 text-xs">
                             {formatCurrency(finalAmount)}
                           </div>
                           {t.discount > 0 && (
@@ -676,11 +671,11 @@ export default function Tuitions() {
                         </td>
 
                         {/* Đã đóng */}
-                        <td className="px-3 py-3 text-right font-mono tabular-nums whitespace-nowrap">
-                          <div className="font-medium text-emerald-700 text-sm">
+                        <td className="px-1.5 py-2.5 text-right font-mono tabular-nums whitespace-nowrap">
+                          <div className="font-medium text-emerald-700 text-xs">
                             {formatCurrency(t.paidAmount)}
                           </div>
-                          <div className="w-20 ml-auto h-1.5 bg-slate-100 rounded-full overflow-hidden mt-1">
+                          <div className="w-14 ml-auto h-1.5 bg-slate-100 rounded-full overflow-hidden mt-1">
                             <div
                               className="h-full bg-emerald-500 rounded-full"
                               style={{ width: `${paidPercent}%` }}
@@ -688,7 +683,7 @@ export default function Tuitions() {
                           </div>
                           {(t.pendingAmount || 0) > 0 && (
                             <div className="mt-1">
-                              <span className="inline-block bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded text-[11px] font-mono font-semibold">
+                              <span className="inline-block bg-amber-50 text-amber-800 border border-amber-200 px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold">
                                 ⏳ Chờ duyệt: {formatCurrency(t.pendingAmount)}
                               </span>
                             </div>
@@ -696,7 +691,7 @@ export default function Tuitions() {
                         </td>
 
                         {/* Còn nợ (NỔI BẬT) */}
-                        <td className="px-3 py-3 text-right font-mono tabular-nums whitespace-nowrap">
+                        <td className="px-1.5 py-2.5 text-right font-mono tabular-nums whitespace-nowrap">
                           {t.isCancelled ? (
                             <span className="text-slate-400 text-xs">—</span>
                           ) : isFullyPaid ? (
@@ -704,14 +699,14 @@ export default function Tuitions() {
                               ✓ 0 đ
                             </span>
                           ) : (
-                            <div className="font-bold text-sm text-rose-600">
+                            <div className="font-bold text-xs text-rose-600">
                               {formatCurrency(t.remainingAmount)}
                             </div>
                           )}
                         </td>
 
                         {/* Hạn nộp */}
-                        <td className="px-2.5 py-3 text-center whitespace-nowrap">
+                        <td className="px-1.5 py-2.5 text-center whitespace-nowrap min-w-[78px]">
                           <div className={`text-xs ${t.isOverdue ? 'text-rose-600 font-bold' : 'text-slate-700'}`}>
                             {formatDate(t.dueDate)}
                           </div>
@@ -723,19 +718,19 @@ export default function Tuitions() {
                         </td>
 
                         {/* Trạng thái */}
-                        <td className="px-2.5 py-3 text-center whitespace-nowrap">
+                        <td className="px-1.5 py-2.5 text-center whitespace-nowrap min-w-[110px]">
                           {renderStatusBadge(t)}
                         </td>
 
                         {/* Thao tác */}
-                        <td className="sticky right-0 z-10 bg-white group-hover:bg-slate-50 px-3 py-3 text-center whitespace-nowrap shadow-[-4px_0_8px_-4px_rgba(15,23,42,0.08)] transition-colors">
-                          <div className="inline-flex items-center gap-1">
+                        <td className="sticky right-0 z-10 bg-white group-hover:bg-slate-50 px-1.5 py-2.5 text-center whitespace-nowrap shadow-[-4px_0_8px_-4px_rgba(15,23,42,0.08)] transition-colors">
+                          <div className="inline-flex items-center gap-0.5">
                             {/* Nút Xem chi tiết */}
                             <button
                               type="button"
                               onClick={() => handleOpenDetail(t)}
                               title="Xem chi tiết & lịch sử thanh toán"
-                              className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors cursor-pointer"
+                              className="p-1 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors cursor-pointer"
                             >
                               👁️
                             </button>
@@ -746,7 +741,7 @@ export default function Tuitions() {
                                 type="button"
                                 onClick={() => handleOpenEdit(t)}
                                 title="Chỉnh sửa thông tin khoản thu"
-                                className="p-1.5 text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors cursor-pointer"
+                                className="p-1 text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors cursor-pointer"
                               >
                                 ✏️
                               </button>
@@ -765,7 +760,7 @@ export default function Tuitions() {
                                       ? 'Không thể xóa khoản thu đã có thanh toán hoặc đang chờ duyệt'
                                       : 'Xóa khoản thu'
                                   }
-                                  className={`p-1.5 rounded-md transition-colors ${
+                                  className={`p-1 rounded-md transition-colors ${
                                     hasPayments
                                       ? 'text-slate-300 opacity-50 cursor-not-allowed'
                                       : 'text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer'
@@ -782,7 +777,7 @@ export default function Tuitions() {
                                 type="button"
                                 onClick={() => handleOpenParentPayment(t)}
                                 title="Thanh toán trực tuyến khoản học phí này"
-                                className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-semibold text-xs rounded-md shadow-2xs transition-all cursor-pointer"
+                                className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-semibold text-[11px] rounded-md shadow-2xs transition-all cursor-pointer"
                               >
                                 <span>💳</span>
                                 <span>Thanh toán</span>
@@ -795,7 +790,7 @@ export default function Tuitions() {
                                 type="button"
                                 onClick={() => handleOpenQuickPay(t)}
                                 title="Ghi nhận thanh toán nhanh"
-                                className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white border border-blue-200 font-semibold text-xs rounded-md shadow-2xs active:scale-95 transition-all cursor-pointer"
+                                className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white border border-blue-200 font-semibold text-[11px] rounded-md shadow-2xs active:scale-95 transition-all cursor-pointer"
                               >
                                 <span>⚡</span>
                                 <span>Thu tiền</span>
@@ -1166,7 +1161,7 @@ export default function Tuitions() {
 function renderStatusBadge(tuition) {
   if (tuition.isCancelled || tuition.status === 'Cancelled') {
     return (
-      <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-400 border border-slate-200 line-through px-2.5 py-0.5 rounded-full text-xs font-medium">
+      <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-400 border border-slate-200 line-through px-2 py-0.5 rounded-full text-[11px] font-medium whitespace-nowrap">
         Đã hủy
       </span>
     );
@@ -1175,8 +1170,8 @@ function renderStatusBadge(tuition) {
   const remaining = tuition.remainingAmount ?? (tuition.finalAmount - tuition.paidAmount);
   if (remaining <= 0) {
     return (
-      <span className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-800 border border-emerald-300 font-semibold px-2.5 py-0.5 rounded-full text-xs">
-        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+      <span className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-800 border border-emerald-300 font-semibold px-2 py-0.5 rounded-full text-[11px] whitespace-nowrap">
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
         Đã thanh toán
       </span>
     );
@@ -1184,8 +1179,8 @@ function renderStatusBadge(tuition) {
 
   if (tuition.isOverdue || tuition.status === 'Overdue') {
     return (
-      <span className="inline-flex items-center gap-1.5 bg-rose-50 text-rose-800 border border-rose-300 font-bold px-2.5 py-0.5 rounded-full text-xs animate-pulse">
-        <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+      <span className="inline-flex items-center gap-1.5 bg-rose-50 text-rose-800 border border-rose-300 font-bold px-2 py-0.5 rounded-full text-[11px] animate-pulse whitespace-nowrap">
+        <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
         Quá hạn
       </span>
     );
@@ -1193,16 +1188,16 @@ function renderStatusBadge(tuition) {
 
   if ((tuition.paidAmount || 0) > 0) {
     return (
-      <span className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-800 border border-amber-300 font-semibold px-2.5 py-0.5 rounded-full text-xs">
-        <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+      <span className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-800 border border-amber-300 font-semibold px-2 py-0.5 rounded-full text-[11px] whitespace-nowrap">
+        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
         Đóng một phần
       </span>
     );
   }
 
   return (
-    <span className="inline-flex items-center gap-1.5 bg-slate-100 text-slate-700 border border-slate-300 font-medium px-2.5 py-0.5 rounded-full text-xs">
-      <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+    <span className="inline-flex items-center gap-1.5 bg-slate-100 text-slate-700 border border-slate-300 font-medium px-2 py-0.5 rounded-full text-[11px] whitespace-nowrap">
+      <span className="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0" />
       Chưa thanh toán
     </span>
   );

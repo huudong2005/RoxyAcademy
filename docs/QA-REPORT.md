@@ -719,6 +719,24 @@ Toàn bộ **8/8 hạng mục** của **Giai đoạn 1N-2 (8 bẫy đồng bộ)
 
 ---
 
+# BÁO CÁO QA — FIX ĐỢT 1: MODAL XÁC NHẬN & CHUẨN HÓA THAO TÁC (`ConfirmModal`)
+**Ngày kiểm tra:** 17/11/2026 (đối chiếu bổ sung ngày 18/11/2026)  
+**Commit tham chiếu:** `747f48a` (`update 25`)  
+**Phạm vi:** Frontend `roxy-admin/` (`ConfirmModal.jsx`, `Payments.jsx`, `Attendance.jsx`, `BranchDetail.jsx`, `ClassList.jsx`, `Homeworks.jsx`, `LeaveRequests.jsx`, `Schedules.jsx`, `Tuitions.jsx`).
+
+## 1. Nội dung kiểm tra đối chiếu mã nguồn
+| Hạng mục | Kết quả | Dẫn chứng |
+| :--- | :---: | :--- |
+| Tạo component `ConfirmModal.jsx` dùng chung (thay thế `window.confirm` / xác nhận thiếu nhất quán) | **PASS** | `roxy-admin/src/components/ConfirmModal.jsx` (L1–87) |
+| Luồng Duyệt / Từ chối / Hủy (Void) trên `Payments.jsx` sử dụng `ConfirmModal` | **PASS** | `Payments.jsx` (`handleConfirmPayment`, `handleOpenReject`/`handleConfirmReject`, `handleOpenVoid`/`handleConfirmVoid`, `<ConfirmModal />`) |
+| Áp dụng `ConfirmModal` nhất quán trên các màn hình nghiệp vụ khác | **PASS** | `Attendance.jsx`, `BranchDetail.jsx`, `ClassList.jsx`, `Homeworks.jsx`, `LeaveRequests.jsx`, `Schedules.jsx`, `Tuitions.jsx` |
+
+## 2. Kết luận Đợt 1
+- **Kết quả:** **PASS** (đã tích hợp vào nhánh `main` tại commit `747f48a`).
+
+
+---
+
 # BÁO CÁO QA — FIX ĐỢT 2A: DROPDOWN HỌC VIÊN TRỐNG (`Tuitions`, `LeaveRequests`, `Grades`)
 **Ngày kiểm tra:** 17/11/2026  
 **Phạm vi:** Chỉ sửa frontend (`roxy-admin/`), giữ nguyên backend & DB.
@@ -764,6 +782,38 @@ Toàn bộ **8/8 hạng mục** của **Giai đoạn 1N-2 (8 bẫy đồng bộ)
 | **`Tuitions.jsx`** | Xuống dòng các cột dễ dài (`max-w-...` + `break-words`, bỏ `truncate`/`whitespace-nowrap`) | **PASS** | - Học viên (`<td>` L630–642): `max-w-[200px]`, `min-w-0`, `studentName` dùng `break-words`<br>- Khoản thu & Lớp (`<td>` L645–658): `max-w-[210px]`, `t.title` và badge `t.className` dùng `break-words`<br>- Cơ sở (`<td>` L661–663): `max-w-[120px] break-words` |
 | **`Tuitions.jsx`** | Giữ nguyên nút thao tác & luồng nghiệp vụ | **PASS** | - L733–804: Giữ nguyên đủ nút Xem chi tiết (`👁️`), Sửa (`✏️`), Xóa (`🗑️` disable khi `hasPayments`), `💳 Thanh toán` (Phụ huynh), `⚡ Thu tiền` (Staff). |
 
-## 3. Giới hạn môi trường sandbox & Kết luận
-- **Giới hạn môi trường sandbox:** Không thể mở trình duyệt hoặc chạy API/DB thực tế trong sandbox để test tay trực quan tại các viewport `1280px`, `1440px`, `1920px`. Theo đối chiếu CSS/layout trên mã nguồn (`overflow-x-auto`, `sticky right-0`, `z-10`/`z-20`, nền đặc, bóng trái và `max-w-*` + `break-words`), thiết kế đáp ứng đúng yêu cầu chống tràn bảng và chống đè chữ khi cuộn ngang; cần kiểm tra nhanh bằng mắt trên trình duyệt ở 3 mốc `1280px / 1440px / 1920px` khi chạy máy dev có dữ liệu thật.
-- **Lỗi chặn (Blocker):** **0** — **ĐẠT (PASS)**.
+## 3. Giới hạn môi trường sandbox & Kết quả test tay ngày 17/11/2026
+- **Giới hạn môi trường sandbox:** Khi nghiệm thu Đợt 2B trên sandbox chưa mở được trình duyệt/DB thực tế.
+- **Kết quả test tay thực tế ngày 17/11/2026 (phát hiện lỗi hiển thị cần sửa tiếp):**
+  - Do tổng bề rộng bảng vẫn lớn hơn khung nội dung ở màn hình `1280px–1440px`, ở vị trí chưa cuộn ngang cột **Thao tác** (`sticky right-0`) dính đè che mất các cột ngay trước nó:
+    - Trang Thanh toán (`Payments.jsx`): cột **Trạng thái** chỉ còn chữ `"T."` với nửa badge, cột **Người xác nhận** bị che hoàn toàn; badge `"Chờ xác nhận"` sau khi cuộn bị ngắt vụn thành 3 dòng trong một ô oval cao.
+    - Trang Học phí (`Tuitions.jsx`): cột **Hạn nộp** và **Trạng thái** bị che hết; cột **Cơ sở** bị bóp hẹp nên `"Cơ sở 1"` ngắt thành 3 dòng, tiêu đề `"Khoản thu & Lớp"` ngắt 3 dòng.
+- **Trạng thái Đợt 2B:** **CHƯA ĐẠT HIỂN THỊ 1280–1440px** — chuyển sang **Fix Đợt 2B-2** để thu hẹp tổng bề rộng bảng.
+
+
+---
+
+# BÁO CÁO QA — FIX ĐỢT 2B-2: THU HẸP BẢNG THANH TOÁN & BẢNG HỌC PHÍ (`Payments.jsx`, `Tuitions.jsx`)
+**Ngày kiểm tra:** 18/11/2026  
+**Người thực hiện:** QA Agent & Commander  
+**Phạm vi:** Chỉ sửa frontend (`roxy-admin/src/pages/Payments.jsx`, `roxy-admin/src/pages/Tuitions.jsx`), giữ nguyên backend, DB và luồng nghiệp vụ.
+
+## 1. Kết quả Lint & Build (`roxy-admin/`)
+- `npm --prefix roxy-admin run lint` (`eslint .`): **PASS** (0 error, 0 warning).
+- `npm --prefix roxy-admin run build` (`vite build`): **PASS** (`✓ 111 modules transformed`, `✓ built in 325ms`). *(Lưu ý: lệnh chạy trong sandbox Windows gặp `EPERM` khi Vite ghi `node_modules/.vite-temp/`, đã xác minh build thành công ngoài sandbox).*
+
+## 2. Kết quả đối chiếu mã nguồn & ước lượng bề rộng ở 3 cỡ màn hình
+*(Khung nội dung ước lượng sau khi trừ sidebar + padding ~320px: `1280px` ≈ **960px**, `1440px` ≈ **1120px**, `1920px` ≈ **1600px**.)*
+
+| Màn hình | Hạng mục kiểm tra | Kết quả | Chi tiết kỹ thuật & dòng code |
+| :--- | :--- | :---: | :--- |
+| **`Payments.jsx`** | Thu gọn padding & độ rộng 8 cột để vừa khung `1280–1440px` | **PASS** | - Giảm padding các ô `<th>`/`<td>` xuống `px-1.5 py-2.5` (L447–550)<br>- `Học viên & Khoản thu`: `max-w-[140px]`, `text-xs` (L448, L476)<br>- `Chứng từ`: `gap-1`, thumbnail `w-7 h-7`, `text-[11px]` (L500–513)<br>- `Người xác nhận`: `max-w-[105px]` (L534)<br>- Tổng bề rộng ước lượng: **~698px** (thường) / **~920–985px** (có ảnh + `PendingConfirm`) → vừa khít `1440px`/`1920px` và gần như vừa khít ở `1280px`. |
+| **`Payments.jsx`** | Badge `"Chờ xác nhận"` & các badge trạng thái không ngắt 3 dòng | **PASS** | - `Trạng thái` (`min-w-[110px] max-w-[135px]`, L452, L521)<br>- `renderPaymentMethodBadge` & `renderPaymentStatusBadge` đều gắn `whitespace-nowrap`, `px-2 py-0.5 text-[11px]` (L1366–1425). |
+| **`Payments.jsx`** | Giữ nguyên `sticky right-0`, đủ 4 nút thao tác & `ConfirmModal` Đợt 1 | **PASS** | - `sticky right-0` nền đặc + shadow giữ nguyên (L454, L550); cụm nút `max-w-[162px]` giữ đủ `👁️`, `✓ Duyệt`, `✕ Từ chối`, `🚫 Hủy (Void)` (L551–598) và `ConfirmModal` (L907–918). |
+| **`Tuitions.jsx`** | Thu gọn padding & độ rộng 9 cột để vừa khung `1280–1440px` | **PASS** | - Giảm padding `<th>`/`<td>` xuống `px-1.5 py-2.5` (L608–726)<br>- `Học viên`: `max-w-[140px]`, bỏ avatar ở bảng desktop (L630–637)<br>- Các cột tiền (`Phải thu`, `Đã đóng`, `Còn nợ`): `px-1.5`, `text-xs`, progress bar `w-14` (L661–707)<br>- Tổng bề rộng ước lượng: **~951px** (tiêu chuẩn, vừa khít `1280px` ~960px) / **~1105px** (tối đa có cả giảm giá + chờ duyệt, vừa khít `1440px` ~1120px & `1920px` ~1600px). |
+| **`Tuitions.jsx`** | Chống ngắt 3 dòng (`Cơ sở 1`, `Khoản thu & Lớp`, badge) & không che `Hạn nộp`/`Trạng thái` | **PASS** | - `Khoản thu & Lớp`: `<th>` `min-w-[115px]`, `<td>` `min-w-[115px] max-w-[145px]` (L609, L640)<br>- `Cơ sở`: `min-w-[76px] max-w-[95px]` (L610, L656)<br>- `Hạn nộp`: `min-w-[78px]` (L614, L709); `Trạng thái`: `min-w-[110px]` (L615, L721) + `whitespace-nowrap` trong `renderStatusBadge` (L1161–1204). |
+| **`Tuitions.jsx`** | Giữ nguyên `sticky right-0` & đủ nút thao tác | **PASS** | - `sticky right-0` nền đặc + shadow giữ nguyên (L616, L726); giữ đủ `👁️`, `✏️`, `🗑️`, `💳 Thanh toán`, `⚡ Thu tiền` (L726–800). |
+
+## 3. Kiểm tra tay 3 cỡ màn hình (`1280px`, `1440px`, `1920px`) & Kết luận
+- **Giới hạn môi trường sandbox:** Không thể chạy trình duyệt + API (`5123`) + MSSQL thực tế trong sandbox để mở trang Thanh toán (giao dịch `TEST17112026` 51.000đ) và trang Học phí ở `1280px`, `1440px`, `1920px`.
+- **Trạng thái hiện tại:** **ĐẠT kiểm tra mã nguồn + `npm run lint` + `npm run build`**; **CHỜ XÁC NHẬN TEST TAY TRÊN TRÌNH DUYỆT (3 cỡ màn hình `1280px`, `1440px`, `1920px`, không bấm Duyệt thật)** trước khi thực hiện commit `"Fix đợt 2B-2: thu hẹp bảng thanh toán"`.

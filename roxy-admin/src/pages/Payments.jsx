@@ -444,14 +444,14 @@ export default function Payments() {
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
-                    <th className="px-3 py-3">Mã GD &amp; Ngày</th>
-                    <th className="px-3 py-3">Học viên &amp; Khoản thu</th>
-                    <th className="px-3 py-3 text-right">Số tiền</th>
-                    <th className="px-2.5 py-3">Phương thức</th>
-                    <th className="px-2.5 py-3">Chứng từ</th>
-                    <th className="px-2.5 py-3 text-center">Trạng thái</th>
-                    <th className="px-3 py-3">Người xác nhận</th>
-                    <th className="sticky right-0 z-20 bg-slate-50 px-3 py-3 text-center whitespace-nowrap shadow-[-4px_0_8px_-4px_rgba(15,23,42,0.08)]">
+                    <th className="px-1.5 py-2.5 whitespace-nowrap">Mã GD &amp; Ngày</th>
+                    <th className="px-1.5 py-2.5 min-w-[115px] max-w-[140px]">Học viên &amp; Khoản thu</th>
+                    <th className="px-1.5 py-2.5 text-right whitespace-nowrap">Số tiền</th>
+                    <th className="px-1.5 py-2.5 whitespace-nowrap">Phương thức</th>
+                    <th className="px-1.5 py-2.5 whitespace-nowrap">Chứng từ</th>
+                    <th className="px-1.5 py-2.5 text-center whitespace-nowrap min-w-[110px] max-w-[135px]">Trạng thái</th>
+                    <th className="px-1.5 py-2.5 whitespace-nowrap max-w-[105px]">Người xác nhận</th>
+                    <th className="sticky right-0 z-20 bg-slate-50 px-1.5 py-2.5 text-center whitespace-nowrap shadow-[-4px_0_8px_-4px_rgba(15,23,42,0.08)]">
                       Thao tác
                     </th>
                   </tr>
@@ -463,46 +463,46 @@ export default function Payments() {
                     return (
                       <tr key={p.id} className="group hover:bg-slate-50/70 transition-colors">
                         {/* Mã GD & Thời gian */}
-                        <td className="px-3 py-3 whitespace-nowrap">
-                          <div className="font-mono font-semibold text-blue-700 text-sm">
+                        <td className="px-1.5 py-2.5">
+                          <div className="font-mono font-semibold text-blue-700 text-xs sm:text-[13px] break-all">
                             {p.transactionCode || `#TX-${p.id}`}
                           </div>
-                          <div className="text-[11px] text-slate-400 mt-0.5">
+                          <div className="text-[11px] text-slate-400 mt-0.5 whitespace-nowrap">
                             {formatDateTime(p.paidAt || p.createdAt)}
                           </div>
                         </td>
 
                         {/* Học viên & Khoản thu */}
-                        <td className="px-3 py-3 max-w-[200px]">
-                          <div className="font-semibold text-slate-900 text-sm break-words">
+                        <td className="px-1.5 py-2.5 max-w-[140px]">
+                          <div className="font-semibold text-slate-900 text-xs break-words">
                             {p.studentName}
                           </div>
-                          <div className="text-slate-500 text-xs mt-0.5 break-words" title={p.tuitionTitle}>
+                          <div className="text-slate-500 text-[11px] mt-0.5 break-words" title={p.tuitionTitle}>
                             {p.tuitionTitle}
                           </div>
                         </td>
 
                         {/* Số tiền */}
-                        <td className="px-3 py-3 text-right font-mono tabular-nums whitespace-nowrap">
-                          <div className="font-bold text-slate-900 text-sm">
+                        <td className="px-1.5 py-2.5 text-right font-mono tabular-nums whitespace-nowrap">
+                          <div className="font-bold text-slate-900 text-xs">
                             {formatCurrency(p.amount)}
                           </div>
                         </td>
 
                         {/* Phương thức */}
-                        <td className="px-2.5 py-3 whitespace-nowrap">
+                        <td className="px-1.5 py-2.5 whitespace-nowrap">
                           {renderPaymentMethodBadge(p.paymentMethod)}
                         </td>
 
                         {/* Chứng từ / Ảnh */}
-                        <td className="px-2.5 py-3 whitespace-nowrap">
+                        <td className="px-1.5 py-2.5 whitespace-nowrap">
                           {p.proofImageUrl ? (
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1">
                               <img
                                 src={p.proofImageUrl}
                                 alt="Biên lai"
                                 onClick={() => setLightboxImageUrl(p.proofImageUrl)}
-                                className="w-9 h-9 rounded-md border border-slate-200 object-cover cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all shadow-2xs"
+                                className="w-7 h-7 rounded-md border border-slate-200 object-cover cursor-pointer hover:ring-2 hover:ring-blue-400 transition-all shadow-2xs shrink-0"
                               />
                               <button
                                 type="button"
@@ -518,7 +518,7 @@ export default function Payments() {
                         </td>
 
                         {/* Trạng thái */}
-                        <td className="px-2.5 py-3 text-center max-w-[160px]">
+                        <td className="px-1.5 py-2.5 text-center min-w-[110px] max-w-[135px]">
                           {renderPaymentStatusBadge(p.status)}
                           {p.status === 'Rejected' && p.note && (
                             <span
@@ -531,13 +531,13 @@ export default function Payments() {
                         </td>
 
                         {/* Người duyệt / tạo */}
-                        <td className="px-3 py-3 max-w-[140px]">
+                        <td className="px-1.5 py-2.5 max-w-[105px]">
                           {p.confirmedByName ? (
                             <div>
                               <div className="text-slate-800 font-medium text-xs break-words">
                                 {p.confirmedByName}
                               </div>
-                              <div className="text-[11px] text-slate-400 whitespace-nowrap">
+                              <div className="text-[11px] text-slate-400">
                                 {formatDateTime(p.confirmedAt)}
                               </div>
                             </div>
@@ -547,8 +547,8 @@ export default function Payments() {
                         </td>
 
                         {/* Thao tác */}
-                        <td className="sticky right-0 z-10 bg-white group-hover:bg-slate-50 px-3 py-3 text-center whitespace-nowrap shadow-[-4px_0_8px_-4px_rgba(15,23,42,0.08)] transition-colors">
-                          <div className="inline-flex items-center gap-1.5">
+                        <td className="sticky right-0 z-10 bg-white group-hover:bg-slate-50 px-1.5 py-2.5 text-center shadow-[-4px_0_8px_-4px_rgba(15,23,42,0.08)] transition-colors">
+                          <div className={`inline-flex items-center justify-center gap-1 ${canManage && isPending ? 'flex-wrap max-w-[162px]' : 'whitespace-nowrap'}`}>
                             {/* Nút Xem chi tiết */}
                             <button
                               type="button"
@@ -557,7 +557,7 @@ export default function Payments() {
                                 setDetailModalOpen(true);
                               }}
                               title="Xem chi tiết giao dịch"
-                              className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors cursor-pointer"
+                              className="p-1 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors cursor-pointer"
                             >
                               👁️
                             </button>
@@ -569,7 +569,7 @@ export default function Payments() {
                                   type="button"
                                   onClick={() => handleConfirmPayment(p)}
                                   title="Xác nhận giao dịch"
-                                  className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-semibold text-xs rounded-md shadow-2xs transition-all cursor-pointer"
+                                  className="inline-flex items-center gap-0.5 px-2 py-1 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-semibold text-[11px] rounded-md shadow-2xs transition-all cursor-pointer whitespace-nowrap"
                                 >
                                   <span>✓</span>
                                   <span>Duyệt</span>
@@ -578,7 +578,7 @@ export default function Payments() {
                                   type="button"
                                   onClick={() => handleOpenReject(p)}
                                   title="Từ chối giao dịch"
-                                  className="inline-flex items-center gap-1 px-2.5 py-1 bg-rose-50 hover:bg-rose-100 active:scale-95 text-rose-700 border border-rose-200 font-semibold text-xs rounded-md transition-all cursor-pointer"
+                                  className="inline-flex items-center gap-0.5 px-2 py-1 bg-rose-50 hover:bg-rose-100 active:scale-95 text-rose-700 border border-rose-200 font-semibold text-[11px] rounded-md transition-all cursor-pointer whitespace-nowrap"
                                 >
                                   <span>✕</span>
                                   <span>Từ chối</span>
@@ -587,7 +587,7 @@ export default function Payments() {
                                   type="button"
                                   onClick={() => handleOpenVoid(p)}
                                   title="Hủy (Void) giao dịch đang chờ xác nhận"
-                                  className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-100 text-slate-700 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 border border-slate-300 font-medium text-xs rounded-md active:scale-95 transition-all cursor-pointer"
+                                  className="inline-flex items-center gap-0.5 px-2 py-1 bg-slate-100 text-slate-700 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 border border-slate-300 font-medium text-[11px] rounded-md active:scale-95 transition-all cursor-pointer whitespace-nowrap"
                                 >
                                   <span>🚫</span>
                                   <span>Hủy (Void)</span>
@@ -1367,25 +1367,25 @@ function renderPaymentMethodBadge(method) {
   switch (method) {
     case 'BankTransfer':
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-sky-50 text-sky-800 border border-sky-200">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-sky-50 text-sky-800 border border-sky-200 whitespace-nowrap">
           <span>🏦</span> Chuyển khoản
         </span>
       );
     case 'Cash':
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-50 text-emerald-800 border border-emerald-200">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-50 text-emerald-800 border border-emerald-200 whitespace-nowrap">
           <span>💵</span> Tiền mặt
         </span>
       );
     case 'ZaloPay':
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-blue-50 text-blue-800 border border-blue-200">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-blue-50 text-blue-800 border border-blue-200 whitespace-nowrap">
           <span>📱</span> ZaloPay
         </span>
       );
     default:
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200 whitespace-nowrap">
           <span>🏷️</span> {method || 'Khác'}
         </span>
       );
@@ -1396,28 +1396,28 @@ function renderPaymentStatusBadge(status) {
   switch (status) {
     case 'Confirmed':
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-300">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-300 whitespace-nowrap">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
           Đã xác nhận
         </span>
       );
     case 'PendingConfirm':
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-300 animate-pulse">
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-300 animate-pulse whitespace-nowrap">
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
           Chờ xác nhận
         </span>
       );
     case 'Rejected':
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-50 text-rose-800 border border-rose-300">
-          <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-rose-50 text-rose-800 border border-rose-300 whitespace-nowrap">
+          <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
           Đã từ chối
         </span>
       );
     default:
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-700 border border-slate-200 whitespace-nowrap">
           {status}
         </span>
       );
