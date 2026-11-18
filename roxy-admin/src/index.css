@@ -1,5 +1,29 @@
 @import "tailwindcss";
 
+@theme {
+  --color-teal: #2F4F4A;
+  --color-teal-hover: #243F3B;
+  --color-teal-deep: #1E2E2B;
+  --color-gold: #D9A441;
+  --color-gold-hover: #C69232;
+  --color-gold-active: #B58226;
+  --color-gold-soft: #FBF4E4;
+  --color-mint-canvas: #F3F6F4;
+  --color-surface: #FFFFFF;
+  --color-surface-subtle: #F8FAF9;
+  --color-line: #DCE5E0;
+  --color-line-strong: #C5D3CC;
+  --color-ink: #1E2E2B;
+  --color-ink-secondary: #435A55;
+  --color-ink-muted: #6E827D;
+  --radius-card: 1rem;
+  --radius-card-lg: 1.5rem;
+  --radius-pill: 9999px;
+  --shadow-card: 0 2px 10px -2px rgba(30, 46, 43, 0.05), 0 1px 3px 0 rgba(30, 46, 43, 0.04);
+  --shadow-card-hover: 0 10px 24px -6px rgba(30, 46, 43, 0.08), 0 4px 8px -4px rgba(30, 46, 43, 0.04);
+  --shadow-modal: 0 24px 48px -12px rgba(30, 46, 43, 0.18), 0 8px 16px -6px rgba(30, 46, 43, 0.08);
+}
+
 @layer base {
   :root {
     --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -15,8 +39,8 @@
     padding: 0;
     width: 100%;
     min-height: 100vh;
-    background-color: #f8fafc; /* slate-50 */
-    color: #0f172a; /* slate-900 */
+    background-color: var(--color-mint-canvas);
+    color: var(--color-ink);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;

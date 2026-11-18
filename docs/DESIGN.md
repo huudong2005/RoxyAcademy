@@ -4140,3 +4140,79 @@ Khi triển khai code thực tế, Frontend Developer và QA đối chiếu nghi
     - **Tiêu đề khối:** **`📋 Điểm / Nhận xét lần chấm trước`** (kèm badge nhỏ `Chờ chấm lại bản nộp mới` màu xanh dương `bg-blue-50 text-blue-700 border-blue-200`).
     - **Style thẻ:** `bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-sm text-slate-700` (nền xám dịu để phân biệt rõ đây là kết quả của lần chấm trước, đang chờ giáo viên cập nhật điểm mới cho bản nộp lại).
     - Hiển thị đầy đủ: **Điểm lần trước: `{score}/10`** và **Nhận xét lần trước: `"{teacherFeedback}"`**.
+
+---
+
+## 17. NGÔN NGỮ THIẾT KẾ MỚI — ĐỢT TRÙNG TU R1 (TEAL & GOLD)
+
+> **Phạm vi áp dụng:** Đợt trùng tu giao diện R1 cho toàn bộ `roxy-admin` (nền tảng Design Tokens + App Shell + chuẩn hóa Component).  
+> **Cảm hứng & Định hướng:** Học hỏi bố cục gọn gàng, khoảng thở rộng và hệ thống thẻ sạch sẽ của *Flight Dashboard*, được tùy biến ấm áp, tin cậy và thân thiện cho môi trường trung tâm giáo dục trẻ em gần 20 năm (**Roxy Academy**).
+
+### 17.1. Lý do lựa chọn & Tinh chỉnh bảng màu (Color Rationale)
+
+1. **Xanh Teal đậm (`#2F4F4A`) cho Sidebar & Nhận diện khung:** Thay cho màu xanh công nghiệp (`#1D4ED8`) hoặc xám lạnh (`#0F172A`), sắc xanh rừng/teal trầm mang lại cảm giác điềm tĩnh, an toàn và gần gũi sư phạm — phù hợp với phụ huynh, giáo viên mầm non – tiểu học – can thiệp đặc biệt.
+2. **Nền Mint rất nhạt (`#F3F6F4`) cho vùng nội dung:** Giảm độ chói so với nền trắng toàn phần hoặc xám lạnh, giúp giáo viên và nhân sự nhìn bảng điểm danh/học phí lâu không mỏi mắt, đồng thời làm các thẻ trắng (`#FFFFFF`) nổi khối tự nhiên mà không cần viền đậm.
+3. **MỘT màu nhấn duy nhất — Vàng Gold (`#D9A441`):** Đại diện cho sự ấm áp, ánh sáng và thành tựu học tập của trẻ. Việc giới hạn chỉ 1 màu nhấn giúp người dùng nhận diện tức thì nút hành động chính (CTA) và mục đang chọn trên toàn trang.
+4. **LUẬT CỨNG TƯƠNG PHẢN (WCAG Contrast Rule):**  
+   - Chữ và icon trên nền vàng gold (`#D9A441` / `#C69232`) **BẮT BUỘC dùng màu teal đậm `#2F4F4A`** (hoặc `#1E2E2B`).  
+   - **TUYỆT ĐỐI KHÔNG** dùng chữ trắng (`#FFFFFF`) trên nền vàng gold vì không đạt độ tương phản đọc chữ.
+
+### 17.2. Hệ thống Design Tokens cho Tailwind CSS v4 (`@theme`)
+
+Khối `@theme` chuẩn dưới đây được cài đặt trực tiếp vào `roxy-admin/src/index.css` (ngay sau `@import "tailwindcss";`):
+
+```css
+@theme {
+  /* === MÀU THƯƠNG HIỆU & NHẤN (TEAL & GOLD) === */
+  --color-teal: #2F4F4A;
+  --color-teal-hover: #243F3B;
+  --color-teal-deep: #1E2E2B;
+
+  --color-gold: #D9A441;
+  --color-gold-hover: #C69232;
+  --color-gold-active: #B58226;
+  --color-gold-soft: #FBF4E4;
+
+  /* === BỀ MẶT & NỀN (CANVAS & SURFACES) === */
+  --color-mint-canvas: #F3F6F4;
+  --color-surface: #FFFFFF;
+  --color-surface-subtle: #F8FAF9;
+
+  /* === VIỀN & ĐƯỜNG KẺ (BORDERS) === */
+  --color-line: #DCE5E0;
+  --color-line-strong: #C5D3CC;
+
+  /* === MÀU CHỮ (TYPOGRAPHY INK) === */
+  --color-ink: #1E2E2B;
+  --color-ink-secondary: #435A55;
+  --color-ink-muted: #6E827D;
+
+  /* === BO GÓC (RADIUS) === */
+  --radius-card: 1rem;      /* 16px - thẻ, bảng, khung dữ liệu */
+  --radius-card-lg: 1.5rem; /* 24px - modal, thẻ lớn, panel nổi bật */
+  --radius-pill: 9999px;    /* pill cho nút, ô nhập, badge */
+
+  /* === ĐỔ BÓNG (SHADOWS) === */
+  --shadow-card: 0 2px 10px -2px rgba(30, 46, 43, 0.05), 0 1px 3px 0 rgba(30, 46, 43, 0.04);
+  --shadow-card-hover: 0 10px 24px -6px rgba(30, 46, 43, 0.08), 0 4px 8px -4px rgba(30, 46, 43, 0.04);
+  --shadow-modal: 0 24px 48px -12px rgba(30, 46, 43, 0.18), 0 8px 16px -6px rgba(30, 46, 43, 0.08);
+}
+```
+
+> **Lưu ý nền & chữ mặc định trong `@layer base`:** `html, body` đặt `background-color: var(--color-mint-canvas);` (`#F3F6F4`) và `color: var(--color-ink);` (`#1E2E2B`).
+
+### 17.3. Quy tắc sử dụng Component chuẩn hóa (R1 Standard Specs)
+
+| Thành phần | Quy cách & Tailwind Classes chuẩn | Ghi chú tương tác (Apple / Emil Kowalski) |
+| :--- | :--- | :--- |
+| **Sidebar dọc** | Nền `bg-teal` (`#2F4F4A`), chữ mặc định `text-white/80`, hover `hover:bg-white/[0.08] hover:text-white rounded-xl`. Mục đang chọn: `bg-white/[0.14] text-gold font-semibold` (icon cùng màu `text-gold`). | Phản hồi `active:scale-[0.98]` tức thì khi nhấn; drawer mobile trượt từ trái giữ nguyên `cubic-bezier(0.32, 0.72, 0, 1)`. |
+| **Nút chính (Primary)** | `bg-gold hover:bg-gold-hover active:bg-gold-active text-teal font-semibold rounded-full px-5 py-2.5 text-sm shadow-xs` | **Luật cứng:** chữ luôn là `text-teal` (`#2F4F4A`). `active:scale-[0.98] transition-[transform,background-color] duration-150 ease-out`. |
+| **Nút phụ (Secondary)** | `bg-surface hover:bg-mint-canvas text-teal border border-line hover:border-line-strong font-medium rounded-full px-5 py-2.5 text-sm` | Dùng cho Hủy, Đóng, Lọc phụ, Xuất file. `active:scale-[0.98]`. |
+| **Ô nhập (Input / Select)** | 1 dòng: `bg-surface border border-line rounded-full px-4 py-2.5 text-sm text-ink placeholder:text-ink-muted focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/25`. Textarea: thay `rounded-full` bằng `rounded-2xl px-4 py-3`. | Giữ chiều cao tối thiểu ~40–42px để chạm thoải mái trên mobile (`font-size >= 14px`, riêng mobile input `16px` nếu cần tránh auto-zoom iOS). |
+| **Badge trạng thái** | `inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] uppercase tracking-wider font-semibold border` | Giữ nguyên hệ màu ngữ nghĩa trạng thái (`emerald`, `amber`, `rose`, `blue`, `slate`) để phân biệt nghiệp vụ rõ ràng. |
+| **Thẻ (Card)** | `bg-surface rounded-card border border-line/80 shadow-card` (hoặc `rounded-card-lg` cho khối lớn). | Không dùng hiệu ứng nảy quá đà; hover nhẹ nếu là thẻ bấm được (`hover:shadow-card-hover`). |
+| **Thẻ số liệu (Stat Card)** | Hàng ngang đều đặn (`grid-cols-2 lg:grid-cols-4 gap-4`), nhãn viết hoa nhỏ `text-[11px] uppercase tracking-wider font-semibold text-ink-muted`, số đậm cỡ lớn `text-2xl sm:text-3xl font-bold tracking-tight text-ink tabular-nums`. | Số liệu trọng tâm trên nền trắng dùng `text-teal` (`#2F4F4A`) hoặc `text-gold-active` (`#B58226`); trên nền tối `bg-teal` dùng `text-gold` (`#D9A441`). |
+| **Tiêu đề trang (Page Header)** | Tầng trên (Eyebrow): `text-[11px] uppercase tracking-[0.12em] font-semibold text-ink-muted`. Tầng dưới (H1): `text-2xl font-bold tracking-[-0.02em] text-ink`. | Cụm nút hành động nằm bên phải trên desktop, xếp gọn bên dưới trên mobile. |
+| **Bảng (Table)** | Khung bọc `bg-surface rounded-card border border-line/80 shadow-card overflow-hidden`. Header `bg-surface-subtle text-[11px] uppercase tracking-wider font-semibold text-ink-muted`. Hàng `divide-y divide-line/60 hover:bg-mint-canvas/60`. | Giữ mật độ vừa phải, không cắt cụt tên học viên/lớp học. |
+| **Modal** | Khung `bg-surface rounded-card-lg shadow-modal border border-line/60 modal-panel`. Backdrop `bg-teal-deep/40 backdrop-blur-[2px] modal-backdrop`. | Giữ nguyên keyframes `modalEnter`: `scale(0.96) -> 1`, `opacity: 0 -> 1`, `180ms cubic-bezier(0.23, 1, 0.32, 1)`. |
+

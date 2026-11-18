@@ -2,6 +2,13 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
 import { formatCurrency } from '../utils/formatters';
+import {
+  Card,
+  PageHeader,
+  PrimaryButton,
+  SecondaryButton,
+  StatCard,
+} from '../components/ui';
 
 const SCHEDULE_STATUS_MAP = {
   Scheduled: {
@@ -21,59 +28,60 @@ const SCHEDULE_STATUS_MAP = {
 function DashboardSkeleton() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto animate-pulse" aria-busy="true" aria-label="Đang tải dữ liệu tổng quan">
-      <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs">
+      <div className="rounded-card-lg border border-line/80 bg-surface p-6 shadow-card">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="space-y-2.5">
-            <div className="h-7 w-64 rounded-lg bg-slate-200" />
-            <div className="h-4 w-80 max-w-full rounded bg-slate-100" />
+            <div className="h-3 w-48 rounded bg-mint-canvas" />
+            <div className="h-7 w-64 rounded-lg bg-line/60" />
+            <div className="h-4 w-80 max-w-full rounded bg-mint-canvas" />
           </div>
           <div className="flex gap-2">
-            <div className="h-9 w-32 rounded-lg bg-slate-200" />
-            <div className="h-9 w-32 rounded-lg bg-slate-100" />
+            <div className="h-10 w-36 rounded-full bg-line/60" />
+            <div className="h-10 w-36 rounded-full bg-mint-canvas" />
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs space-y-3">
+          <div key={i} className="rounded-card border border-line/80 bg-surface p-5 shadow-card space-y-3">
             <div className="flex items-center justify-between">
-              <div className="h-3.5 w-28 rounded bg-slate-200" />
-              <div className="h-6 w-6 rounded-md bg-slate-100" />
+              <div className="h-3.5 w-28 rounded bg-line/60" />
+              <div className="h-6 w-6 rounded-md bg-mint-canvas" />
             </div>
-            <div className="h-8 w-16 rounded-md bg-slate-200" />
-            <div className="h-3 w-36 rounded bg-slate-100" />
+            <div className="h-8 w-16 rounded-md bg-line/60" />
+            <div className="h-3 w-36 rounded bg-mint-canvas" />
           </div>
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-5 space-y-6">
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs space-y-4">
-            <div className="h-5 w-44 rounded bg-slate-200" />
-            <div className="h-2.5 w-full rounded-full bg-slate-100" />
+          <div className="rounded-card-lg border border-line/80 bg-surface p-6 shadow-card space-y-4">
+            <div className="h-5 w-44 rounded bg-line/60" />
+            <div className="h-2.5 w-full rounded-full bg-mint-canvas" />
             <div className="grid grid-cols-3 gap-3">
-              <div className="h-14 rounded-xl bg-slate-100" />
-              <div className="h-14 rounded-xl bg-slate-100" />
-              <div className="h-14 rounded-xl bg-slate-100" />
+              <div className="h-14 rounded-xl bg-mint-canvas" />
+              <div className="h-14 rounded-xl bg-mint-canvas" />
+              <div className="h-14 rounded-xl bg-mint-canvas" />
             </div>
           </div>
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs space-y-4">
-            <div className="h-5 w-40 rounded bg-slate-200" />
+          <div className="rounded-card-lg border border-line/80 bg-surface p-6 shadow-card space-y-4">
+            <div className="h-5 w-40 rounded bg-line/60" />
             <div className="grid grid-cols-2 gap-3">
-              <div className="h-16 rounded-xl bg-slate-100" />
-              <div className="h-16 rounded-xl bg-slate-100" />
-              <div className="h-16 rounded-xl bg-slate-100" />
-              <div className="h-16 rounded-xl bg-slate-100" />
+              <div className="h-16 rounded-xl bg-mint-canvas" />
+              <div className="h-16 rounded-xl bg-mint-canvas" />
+              <div className="h-16 rounded-xl bg-mint-canvas" />
+              <div className="h-16 rounded-xl bg-mint-canvas" />
             </div>
           </div>
         </div>
         <div className="lg:col-span-7">
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xs space-y-4">
-            <div className="h-5 w-44 rounded bg-slate-200" />
+          <div className="rounded-card-lg border border-line/80 bg-surface p-6 shadow-card space-y-4">
+            <div className="h-5 w-44 rounded bg-line/60" />
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="h-20 rounded-xl bg-slate-100" />
+                <div key={i} className="h-20 rounded-xl bg-mint-canvas" />
               ))}
             </div>
           </div>
@@ -156,24 +164,23 @@ export default function Dashboard() {
   if (error || !summary) {
     return (
       <div className="max-w-7xl mx-auto">
-        <div className="rounded-2xl border border-rose-200 bg-white p-8 text-center shadow-xs">
+        <Card large className="border-rose-200 p-8 text-center">
           <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-rose-50 text-xl text-rose-600">
             ⚠️
           </div>
-          <h2 className="text-base font-semibold text-slate-900">
+          <h2 className="text-base font-semibold text-ink">
             Không tải được bảng tổng quan
           </h2>
-          <p className="mt-1.5 text-sm text-slate-600 max-w-md mx-auto">
+          <p className="mt-1.5 text-sm text-ink-secondary max-w-md mx-auto">
             {error || 'Dữ liệu tổng quan hiện không khả dụng.'}
           </p>
-          <button
-            type="button"
+          <PrimaryButton
             onClick={handleRetry}
-            className="mt-5 inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-blue-700 active:scale-[0.97] transition-transform duration-150 ease-out cursor-pointer"
+            className="mt-5 px-5 py-2 text-xs"
           >
             Thử lại
-          </button>
-        </div>
+          </PrimaryButton>
+        </Card>
       </div>
     );
   }
@@ -207,7 +214,7 @@ export default function Dashboard() {
         ? 'Hồ sơ đang kích hoạt'
         : 'Trạng thái Đang học',
       icon: '🎓',
-      accent: 'border-l-blue-500',
+      accent: 'teal',
       to: isFamily ? '/students' : '/students?status=Active',
     },
     {
@@ -223,7 +230,7 @@ export default function Dashboard() {
           ? `${overview.upcomingClasses} lớp sắp mở`
           : 'Đang diễn ra',
       icon: '🏫',
-      accent: 'border-l-emerald-500',
+      accent: 'emerald',
       to: '/classes?status=Ongoing',
     },
     ...(showTeachersCard
@@ -236,7 +243,7 @@ export default function Dashboard() {
               ? 'Đang công tác tại cơ sở'
               : 'Đang công tác toàn hệ thống',
             icon: '👩‍🏫',
-            accent: 'border-l-indigo-500',
+            accent: 'gold',
             to: null,
           },
         ]
@@ -250,7 +257,7 @@ export default function Dashboard() {
           ? 'Đang chờ xử lý'
           : 'Không có đơn chờ duyệt',
       icon: '📝',
-      accent: 'border-l-amber-500',
+      accent: 'amber',
       to: '/leave-requests?status=Pending',
     },
   ];
@@ -266,55 +273,35 @@ export default function Dashboard() {
     ? 'Bạn'
     : 'Quý Thầy/Cô';
 
+  const headerActions = isStaff ? (
+    <>
+      <PrimaryButton as={Link} to="/students" className="px-4 py-2 text-xs">
+        <span>+ Xem Học viên</span>
+      </PrimaryButton>
+      <SecondaryButton as={Link} to="/classes" className="px-4 py-2 text-xs">
+        <span>Quản lý Lớp học</span>
+      </SecondaryButton>
+    </>
+  ) : isTeacher ? (
+    <>
+      <PrimaryButton as={Link} to="/attendance" className="px-4 py-2 text-xs">
+        <span>Điểm danh hôm nay</span>
+      </PrimaryButton>
+      <SecondaryButton as={Link} to="/schedules" className="px-4 py-2 text-xs">
+        <span>Xem Lịch dạy</span>
+      </SecondaryButton>
+    </>
+  ) : null;
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Banner Chào Mừng */}
-      <div className="rounded-2xl border border-slate-200/80 bg-white p-5 md:p-6 shadow-xs">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900">
-              Chào mừng trở lại, {user.fullName || defaultDisplayName}!
-            </h1>
-            <p className="mt-1 text-xs md:text-sm text-slate-500">
-              {todayStr} • Hệ thống quản lý học tập Roxy Academy
-            </p>
-          </div>
-
-          {isStaff && (
-            <div className="flex flex-wrap items-center gap-2">
-              <Link
-                to="/students"
-                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-blue-600 text-white text-xs font-semibold shadow-xs hover:bg-blue-700 active:scale-[0.97] transition-transform duration-150 ease-out"
-              >
-                <span>+ Xem Học viên</span>
-              </Link>
-              <Link
-                to="/classes"
-                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-300 bg-white text-slate-700 text-xs font-semibold shadow-xs hover:bg-slate-50 active:scale-[0.97] transition-transform duration-150 ease-out"
-              >
-                <span>Quản lý Lớp học</span>
-              </Link>
-            </div>
-          )}
-
-          {isTeacher && (
-            <div className="flex flex-wrap items-center gap-2">
-              <Link
-                to="/attendance"
-                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg bg-blue-600 text-white text-xs font-semibold shadow-xs hover:bg-blue-700 active:scale-[0.97] transition-transform duration-150 ease-out"
-              >
-                <span>Điểm danh hôm nay</span>
-              </Link>
-              <Link
-                to="/schedules"
-                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-300 bg-white text-slate-700 text-xs font-semibold shadow-xs hover:bg-slate-50 active:scale-[0.97] transition-transform duration-150 ease-out"
-              >
-                <span>Xem Lịch dạy</span>
-              </Link>
-            </div>
-          )}
-        </div>
-      </div>
+      <PageHeader
+        eyebrow={`${todayStr} • Roxy Academy`}
+        title={`Chào mừng trở lại, ${user.fullName || defaultDisplayName}!`}
+        description="Hệ thống quản lý học tập Roxy Academy"
+        actions={headerActions}
+      />
 
       {/* Khối Tổng Quan */}
       <div
@@ -322,54 +309,17 @@ export default function Dashboard() {
           showTeachersCard ? 'lg:grid-cols-4' : 'lg:grid-cols-3'
         } gap-4`}
       >
-        {overviewCards.map((card) => {
-          const cardContent = (
-            <>
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
-                  {card.title}
-                </span>
-                <span className="text-lg" aria-hidden="true">
-                  {card.icon}
-                </span>
-              </div>
-              <div className="mt-3 flex items-baseline gap-2">
-                <span className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 tabular-nums">
-                  {card.value}
-                </span>
-              </div>
-              <div className="mt-1.5 flex items-center justify-between gap-2">
-                <p className="text-xs text-slate-500">{card.note}</p>
-                {card.to && (
-                  <span className="text-[11px] font-semibold text-blue-600 group-hover:translate-x-0.5 transition-transform duration-150 ease-out">
-                    Chi tiết →
-                  </span>
-                )}
-              </div>
-            </>
-          );
-
-          if (!card.to) {
-            return (
-              <div
-                key={card.key}
-                className={`rounded-xl border border-slate-200 bg-white p-5 shadow-xs border-l-4 ${card.accent}`}
-              >
-                {cardContent}
-              </div>
-            );
-          }
-
-          return (
-            <Link
-              key={card.key}
-              to={card.to}
-              className={`group block rounded-xl border border-slate-200 bg-white p-5 shadow-xs border-l-4 ${card.accent} hover:border-slate-300 hover:shadow-sm active:scale-[0.99] transition-transform duration-150 ease-out`}
-            >
-              {cardContent}
-            </Link>
-          );
-        })}
+        {overviewCards.map((card) => (
+          <StatCard
+            key={card.key}
+            title={card.title}
+            value={card.value}
+            note={card.note}
+            icon={card.icon}
+            accent={card.accent}
+            to={card.to}
+          />
+        ))}
       </div>
 
       {/* Khối Chi Tiết: Học phí + Điểm danh + Lịch học hôm nay */}
@@ -379,27 +329,27 @@ export default function Dashboard() {
           {tuition && (
             <Link
               to="/tuitions?status=Unpaid"
-              className="group block rounded-2xl border border-slate-200/80 bg-white p-5 md:p-6 shadow-xs hover:border-slate-300 hover:shadow-sm active:scale-[0.99] transition-transform duration-150 ease-out"
+              className="group block rounded-card-lg border border-line/80 bg-surface p-5 md:p-6 shadow-card hover:border-line-strong hover:shadow-card-hover active:scale-[0.99] transition-[transform,box-shadow,border-color] duration-150 ease-out"
             >
               <div className="flex items-center justify-between gap-2">
                 <div>
-                  <h2 className="text-sm md:text-base font-semibold text-slate-900">
+                  <h2 className="text-sm md:text-base font-semibold text-ink">
                     Học phí tháng {tuition.month}/{tuition.year}
                   </h2>
-                  <p className="text-xs text-slate-500 mt-0.5">
+                  <p className="text-xs text-ink-secondary mt-0.5">
                     {isFamily ? 'Tổng hợp học phí trong tháng' : 'Tình hình thu học phí tháng này'}
                   </p>
                 </div>
-                <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 tabular-nums">
+                <span className="inline-flex items-center gap-1 rounded-full border border-gold/40 bg-gold-soft px-2.5 py-1 text-xs font-semibold text-teal tabular-nums">
                   {tuitionPercent}%
                 </span>
               </div>
 
               {/* Thanh tiến độ thu học phí */}
               <div className="mt-4">
-                <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
+                <div className="h-2.5 w-full overflow-hidden rounded-full bg-mint-canvas">
                   <div
-                    className="h-full rounded-full bg-emerald-500 transition-[width] duration-300 ease-out"
+                    className="h-full rounded-full bg-teal transition-[width] duration-300 ease-out"
                     style={{ width: `${tuitionPercent}%` }}
                   />
                 </div>
@@ -418,16 +368,16 @@ export default function Dashboard() {
                     {formatCurrency(tuition.totalRemaining)}
                   </p>
                 </div>
-                <div className="rounded-xl bg-slate-50 border border-slate-200/80 p-3">
-                  <p className="text-[11px] font-medium text-slate-600">Tổng phải thu</p>
-                  <p className="mt-1 text-sm font-bold text-slate-900 tabular-nums">
+                <div className="rounded-xl bg-surface-subtle border border-line/80 p-3">
+                  <p className="text-[11px] font-medium text-ink-secondary">Tổng phải thu</p>
+                  <p className="mt-1 text-sm font-bold text-ink tabular-nums">
                     {formatCurrency(tuition.totalExpected)}
                   </p>
                 </div>
               </div>
 
               <div className="mt-3 flex justify-end">
-                <span className="text-xs font-semibold text-blue-600 group-hover:translate-x-0.5 transition-transform duration-150 ease-out">
+                <span className="text-xs font-semibold text-teal group-hover:text-gold-active group-hover:translate-x-0.5 transition-[transform,color] duration-150 ease-out">
                   Xem khoản chưa thu →
                 </span>
               </div>
@@ -437,14 +387,14 @@ export default function Dashboard() {
           {tuition && (
             <Link
               to="/tuitions?status=Overdue"
-              className="group block rounded-2xl border border-slate-200/80 bg-white p-5 md:p-6 shadow-xs hover:border-slate-300 hover:shadow-sm active:scale-[0.99] transition-transform duration-150 ease-out"
+              className="group block rounded-card-lg border border-line/80 bg-surface p-5 md:p-6 shadow-card hover:border-line-strong hover:shadow-card-hover active:scale-[0.99] transition-[transform,box-shadow,border-color] duration-150 ease-out"
             >
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <h2 className="text-sm md:text-base font-semibold text-slate-900">
+                  <h2 className="text-sm md:text-base font-semibold text-ink">
                     Học phí quá hạn (tất cả các tháng)
                   </h2>
-                  <p className="text-xs text-slate-500 mt-0.5">
+                  <p className="text-xs text-ink-secondary mt-0.5">
                     Tổng hợp các khoản đã quá hạn thanh toán
                   </p>
                 </div>
@@ -460,9 +410,9 @@ export default function Dashboard() {
               </div>
 
               <div className="mt-4 grid grid-cols-2 gap-3">
-                <div className="rounded-xl bg-slate-50 border border-slate-200/80 p-3">
-                  <p className="text-[11px] font-medium text-slate-600">Số khoản quá hạn</p>
-                  <p className="mt-1 text-lg font-bold text-slate-900 tabular-nums">
+                <div className="rounded-xl bg-surface-subtle border border-line/80 p-3">
+                  <p className="text-[11px] font-medium text-ink-secondary">Số khoản quá hạn</p>
+                  <p className="mt-1 text-lg font-bold text-ink tabular-nums">
                     {tuition.overdueTuitionCount ?? 0}
                   </p>
                 </div>
@@ -491,7 +441,7 @@ export default function Dashboard() {
               </div>
 
               <div className="mt-3 flex justify-end">
-                <span className="text-xs font-semibold text-blue-600 group-hover:translate-x-0.5 transition-transform duration-150 ease-out">
+                <span className="text-xs font-semibold text-teal group-hover:text-gold-active group-hover:translate-x-0.5 transition-[transform,color] duration-150 ease-out">
                   Xem khoản quá hạn →
                 </span>
               </div>
@@ -501,18 +451,18 @@ export default function Dashboard() {
           {/* Điểm danh hôm nay */}
           <Link
             to="/attendance"
-            className="group block rounded-2xl border border-slate-200/80 bg-white p-5 md:p-6 shadow-xs hover:border-slate-300 hover:shadow-sm active:scale-[0.99] transition-transform duration-150 ease-out"
+            className="group block rounded-card-lg border border-line/80 bg-surface p-5 md:p-6 shadow-card hover:border-line-strong hover:shadow-card-hover active:scale-[0.99] transition-[transform,box-shadow,border-color] duration-150 ease-out"
           >
             <div className="flex items-center justify-between gap-2">
               <div>
-                <h2 className="text-sm md:text-base font-semibold text-slate-900">
+                <h2 className="text-sm md:text-base font-semibold text-ink">
                   Điểm danh hôm nay
                 </h2>
-                <p className="text-xs text-slate-500 mt-0.5 tabular-nums">
-                  Tổng lượt dự kiến: <strong className="text-slate-700">{todayAttendance.totalExpected}</strong>
+                <p className="text-xs text-ink-secondary mt-0.5 tabular-nums">
+                  Tổng lượt dự kiến: <strong className="text-ink">{todayAttendance.totalExpected}</strong>
                 </p>
               </div>
-              <span className="text-xs font-semibold text-blue-600 group-hover:translate-x-0.5 transition-transform duration-150 ease-out">
+              <span className="text-xs font-semibold text-teal group-hover:text-gold-active group-hover:translate-x-0.5 transition-[transform,color] duration-150 ease-out">
                 Mở điểm danh →
               </span>
             </div>
@@ -548,13 +498,13 @@ export default function Dashboard() {
 
         {/* Cột Phải: Lịch học hôm nay */}
         <div className="lg:col-span-7">
-          <div className="rounded-2xl border border-slate-200/80 bg-white p-5 md:p-6 shadow-xs">
-            <div className="flex items-center justify-between gap-2 pb-4 border-b border-slate-100">
+          <Card large className="p-5 md:p-6">
+            <div className="flex items-center justify-between gap-2 pb-4 border-b border-line/70">
               <div>
-                <h2 className="text-sm md:text-base font-semibold text-slate-900">
+                <h2 className="text-sm md:text-base font-semibold text-ink">
                   Lịch học hôm nay
                 </h2>
-                <p className="text-xs text-slate-500 mt-0.5 tabular-nums">
+                <p className="text-xs text-ink-secondary mt-0.5 tabular-nums">
                   {todaySchedules.length > 0
                     ? `${todaySchedules.length} buổi học trong ngày`
                     : 'Không có lịch học trong ngày'}
@@ -562,7 +512,7 @@ export default function Dashboard() {
               </div>
               <Link
                 to="/schedules"
-                className="text-xs font-semibold text-blue-600 hover:text-blue-700"
+                className="text-xs font-semibold text-teal hover:text-gold-active transition-colors"
               >
                 Xem tất cả lịch →
               </Link>
@@ -570,28 +520,29 @@ export default function Dashboard() {
 
             {todaySchedules.length === 0 ? (
               <div className="py-10 text-center">
-                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-xl">
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-mint-canvas text-xl">
                   📅
                 </div>
-                <p className="text-sm font-semibold text-slate-800">
+                <p className="text-sm font-semibold text-ink">
                   Hôm nay chưa có buổi học nào
                 </p>
-                <p className="mt-1 text-xs text-slate-500 max-w-sm mx-auto">
+                <p className="mt-1 text-xs text-ink-secondary max-w-sm mx-auto">
                   Các buổi học được xếp lịch trong ngày sẽ hiển thị tại đây để bạn theo dõi và điểm danh nhanh.
                 </p>
-                <Link
+                <SecondaryButton
+                  as={Link}
                   to="/schedules"
-                  className="mt-4 inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 shadow-xs hover:bg-slate-50 active:scale-[0.97] transition-transform duration-150 ease-out"
+                  className="mt-4 px-4 py-2 text-xs"
                 >
                   Xem Thời khóa biểu
-                </Link>
+                </SecondaryButton>
               </div>
             ) : (
               <div className="mt-4 space-y-3">
                 {todaySchedules.map((s) => {
                   const statusMeta = SCHEDULE_STATUS_MAP[s.status] || {
                     label: s.status || 'Chưa rõ',
-                    className: 'bg-slate-100 text-slate-700 border-slate-200',
+                    className: 'bg-surface-subtle text-ink-secondary border-line',
                   };
                   const targetUrl = isFamily
                     ? '/schedules'
@@ -601,21 +552,21 @@ export default function Dashboard() {
                     <Link
                       key={s.id}
                       to={targetUrl}
-                      className="group flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-xl border border-slate-200/90 bg-slate-50/40 p-4 hover:border-blue-300 hover:bg-blue-50/30 active:scale-[0.995] transition-transform duration-150 ease-out"
+                      className="group flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-card border border-line/80 bg-surface-subtle/60 p-4 hover:border-gold/60 hover:bg-gold-soft/30 active:scale-[0.995] transition-[transform,background-color,border-color] duration-150 ease-out"
                     >
                       <div className="flex items-start gap-3.5 min-w-0">
-                        <div className="shrink-0 rounded-lg bg-white border border-slate-200 px-2.5 py-1.5 text-center shadow-2xs">
-                          <p className="text-xs font-bold text-slate-900 tabular-nums">
+                        <div className="shrink-0 rounded-xl bg-surface border border-line px-2.5 py-1.5 text-center shadow-2xs">
+                          <p className="text-xs font-bold text-teal tabular-nums">
                             {s.startTime}
                           </p>
-                          <p className="text-[11px] text-slate-500 tabular-nums">
+                          <p className="text-[11px] text-ink-muted tabular-nums">
                             {s.endTime}
                           </p>
                         </div>
 
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-2">
-                            <h3 className="text-sm font-semibold text-slate-900 truncate">
+                            <h3 className="text-sm font-semibold text-ink truncate">
                               {s.className}
                             </h3>
                             <span
@@ -624,7 +575,7 @@ export default function Dashboard() {
                               {statusMeta.label}
                             </span>
                           </div>
-                          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
+                          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-secondary">
                             {s.room && <span>Phòng: {s.room}</span>}
                             {s.branchName && <span>{s.branchName}</span>}
                             {s.teacherName && (
@@ -638,7 +589,7 @@ export default function Dashboard() {
                       </div>
 
                       <div className="shrink-0 self-end sm:self-center">
-                        <span className="text-xs font-semibold text-blue-600 group-hover:translate-x-0.5 inline-block transition-transform duration-150 ease-out">
+                        <span className="text-xs font-semibold text-teal group-hover:text-gold-active group-hover:translate-x-0.5 inline-block transition-[transform,color] duration-150 ease-out">
                           {isFamily ? 'Xem lịch →' : 'Điểm danh →'}
                         </span>
                       </div>
@@ -647,7 +598,7 @@ export default function Dashboard() {
                 })}
               </div>
             )}
-          </div>
+          </Card>
         </div>
       </div>
     </div>

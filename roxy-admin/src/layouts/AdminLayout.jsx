@@ -114,13 +114,13 @@ export default function AdminLayout() {
           src={url}
           alt={user?.fullName || 'Ảnh đại diện'}
           onError={() => setFailedAvatarUrl(url)}
-          className={`${sizeClass} shrink-0 rounded-full border border-slate-200 object-cover bg-white shadow-xs`}
+          className={`${sizeClass} shrink-0 rounded-full border border-line object-cover bg-surface shadow-xs`}
         />
       );
     }
     return (
       <div
-        className={`flex ${sizeClass} shrink-0 items-center justify-center rounded-full bg-blue-100 ${textClass} font-bold text-blue-700 shadow-xs`}
+        className={`flex ${sizeClass} shrink-0 items-center justify-center rounded-full bg-gold-soft border border-gold/40 ${textClass} font-bold text-teal shadow-xs`}
       >
         {getInitials(user.fullName)}
       </div>
@@ -128,10 +128,10 @@ export default function AdminLayout() {
   };
 
   const navItemClass = ({ isActive }) =>
-    `flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150 ${
+    `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm transition-[background-color,color,transform] duration-150 active:scale-[0.98] ${
       isActive
-        ? 'bg-blue-50 text-blue-700 font-semibold border-l-4 border-blue-600 pl-2.5 shadow-xs'
-        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+        ? 'bg-white/[0.14] text-gold font-semibold'
+        : 'text-white/80 font-medium hover:bg-white/[0.08] hover:text-white'
     }`;
 
   const isStaff = user.role === 'SuperAdmin' || user.role === 'BranchManager';
@@ -142,7 +142,7 @@ export default function AdminLayout() {
 
   const renderNavLinks = (onItemClick) => (
     <>
-      <div className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+      <div className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-white/50">
         Nghiệp vụ đào tạo
       </div>
       <NavLink to="/" end className={navItemClass} onClick={onItemClick}>
@@ -185,7 +185,7 @@ export default function AdminLayout() {
       </NavLink>
 
       {/* GIAO TIẾP & BẢNG TIN: HIỂN THỊ CHO TẤT CẢ VAI TRÒ ĐÃ ĐĂNG NHẬP */}
-      <div className="pt-4 px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+      <div className="pt-4 px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-white/50">
         Giao tiếp &amp; Bảng tin
       </div>
       <NavLink to="/messages" className={navItemClass} onClick={onItemClick}>
@@ -200,7 +200,7 @@ export default function AdminLayout() {
       {/* PHÂN HỆ NHÂN SỰ: CHỈ HIỂN THỊ CHO SUPERADMIN VÀ BRANCHMANAGER (ẨN HOÀN TOÀN VỚI TEACHER) */}
       {isStaff && (
         <>
-          <div className="pt-4 px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+          <div className="pt-4 px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-white/50">
             Nhân sự &amp; Giáo viên
           </div>
           <NavLink to="/teachers" className={navItemClass} onClick={onItemClick}>
@@ -213,7 +213,7 @@ export default function AdminLayout() {
       {/* PHÂN HỆ TÀI CHÍNH: HIỂN THỊ CHO STAFF VÀ PHỤ HUYNH / HỌC VIÊN (ẨN HOÀN TOÀN VỚI TEACHER) */}
       {!isTeacher && (
         <>
-          <div className="pt-4 px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+          <div className="pt-4 px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-white/50">
             {isParent || isStudent ? 'Học phí & Thanh toán' : 'Tài chính & Sổ quỹ'}
           </div>
           <NavLink to="/tuitions" className={navItemClass} onClick={onItemClick}>
@@ -232,7 +232,7 @@ export default function AdminLayout() {
       {/* PHÂN HỆ HỆ THỐNG: CHỈ HIỂN THỊ CHO SUPERADMIN */}
       {isSuperAdmin && (
         <>
-          <div className="pt-4 px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+          <div className="pt-4 px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-white/50">
             Hệ thống &amp; Thiết lập
           </div>
           <NavLink to="/branches" className={navItemClass} onClick={onItemClick}>
@@ -242,58 +242,58 @@ export default function AdminLayout() {
         </>
       )}
 
-      <div className="pt-5 px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+      <div className="pt-5 px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-white/50">
         Phân hệ sắp tới
       </div>
-      <div className="flex items-center justify-between px-3.5 py-2 text-xs font-medium text-slate-400 opacity-60">
+      <div className="flex items-center justify-between px-3.5 py-2 text-xs font-medium text-white/50">
         <span className="flex items-center gap-2">
           <span>📱</span> Zalo Mini App
         </span>
-        <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-500">Giai đoạn 2</span>
+        <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] text-white/75">Giai đoạn 2</span>
       </div>
     </>
   );
 
   return (
-    <div className="flex h-screen w-full bg-slate-50 font-sans text-slate-900 overflow-hidden">
+    <div className="flex h-screen w-full bg-mint-canvas font-sans text-ink overflow-hidden">
       {/* SIDEBAR CỐ ĐỊNH TRÊN DESKTOP (>= 768px) */}
-      <aside className="hidden md:flex w-64 flex-col border-r border-slate-200 bg-white shadow-xs">
+      <aside className="hidden md:flex w-64 flex-col bg-teal text-white/80 shadow-card">
         {/* Brand Logo Header */}
-        <div className="flex h-16 items-center gap-3 border-b border-slate-100 px-6">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 font-bold text-white shadow-xs">
+        <div className="flex h-16 items-center gap-3 border-b border-white/10 px-6">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gold font-bold text-teal shadow-xs">
             R
           </div>
           <div>
-            <h1 className="text-base font-bold leading-tight text-slate-900">Roxy Academy</h1>
-            <p className="text-[11px] text-slate-500">Quản trị học tập</p>
+            <h1 className="text-base font-bold leading-tight text-white">Roxy Academy</h1>
+            <p className="text-[11px] text-white/60">Quản trị học tập</p>
           </div>
         </div>
 
         {/* Navigation items */}
-        <nav className="flex-1 space-y-1.5 p-4 overflow-y-auto">
+        <nav className="flex-1 space-y-1 p-4 overflow-y-auto">
           {renderNavLinks()}
         </nav>
 
         {/* Footer Sidebar */}
-        <div className="border-t border-slate-100 p-4 space-y-2">
+        <div className="border-t border-white/10 p-4 space-y-2">
           <button
             type="button"
             onClick={() => setProfileModalOpen(true)}
             title="Hồ sơ cá nhân"
-            className="flex w-full items-center gap-3 rounded-lg p-1.5 text-left hover:bg-slate-100 active:scale-[0.98] transition-all cursor-pointer"
+            className="flex w-full items-center gap-3 rounded-xl p-1.5 text-left hover:bg-white/[0.08] active:scale-[0.98] transition-all cursor-pointer"
           >
             {renderUserAvatar('h-9 w-9', 'text-xs')}
             <div className="flex-1 overflow-hidden">
-              <p className="truncate text-xs font-semibold text-slate-800">
+              <p className="truncate text-xs font-semibold text-white">
                 {user.fullName || 'Cán bộ quản trị'}
               </p>
-              <p className="truncate text-[11px] text-slate-500">{user.role}</p>
+              <p className="truncate text-[11px] text-white/60">{user.role}</p>
             </div>
           </button>
           <button
             type="button"
             onClick={() => setChangePasswordModalOpen(true)}
-            className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 active:scale-[0.98] transition-all cursor-pointer"
+            className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-white/15 bg-white/[0.08] px-3 py-1.5 text-xs font-medium text-white/90 hover:bg-white/[0.14] active:scale-[0.98] transition-all cursor-pointer"
           >
             <span>🔑</span>
             <span>Đổi mật khẩu</span>
@@ -306,24 +306,24 @@ export default function AdminLayout() {
         <div className="fixed inset-0 z-50 md:hidden flex">
           {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-[2px] transition-opacity"
+            className="fixed inset-0 bg-teal-deep/40 backdrop-blur-[2px] transition-opacity"
             onClick={() => setMobileMenuOpen(false)}
             aria-hidden="true"
           />
 
           {/* Drawer panel */}
-          <div className="relative flex w-72 max-w-[80%] flex-1 flex-col bg-white shadow-xl transition-transform duration-200 ease-out z-10">
-            <div className="flex h-16 items-center justify-between border-b border-slate-100 px-5">
+          <div className="relative flex w-72 max-w-[80%] flex-1 flex-col bg-teal text-white/80 shadow-modal transition-transform duration-200 ease-out z-10">
+            <div className="flex h-16 items-center justify-between border-b border-white/10 px-5">
               <div className="flex items-center gap-2.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 font-bold text-white text-sm">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gold font-bold text-teal text-sm shadow-xs">
                   R
                 </div>
-                <span className="font-bold text-slate-900">Roxy Academy</span>
+                <span className="font-bold text-white">Roxy Academy</span>
               </div>
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100"
+                className="flex h-9 w-9 items-center justify-center rounded-xl text-white/75 hover:bg-white/10 hover:text-white cursor-pointer"
                 aria-label="Đóng menu"
               >
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -332,11 +332,11 @@ export default function AdminLayout() {
               </button>
             </div>
 
-            <nav className="flex-1 space-y-1.5 p-4 overflow-y-auto">
+            <nav className="flex-1 space-y-1 p-4 overflow-y-auto">
               {renderNavLinks(() => setMobileMenuOpen(false))}
             </nav>
 
-            <div className="border-t border-slate-100 p-4 space-y-2">
+            <div className="border-t border-white/10 p-4 space-y-2">
               <button
                 type="button"
                 onClick={() => {
@@ -344,11 +344,11 @@ export default function AdminLayout() {
                   setProfileModalOpen(true);
                 }}
                 title="Hồ sơ cá nhân"
-                className="flex w-full items-center gap-3 rounded-lg p-1.5 text-left hover:bg-slate-100 active:scale-[0.98] transition-all cursor-pointer"
+                className="flex w-full items-center gap-3 rounded-xl p-1.5 text-left hover:bg-white/[0.08] active:scale-[0.98] transition-all cursor-pointer"
               >
                 {renderUserAvatar('h-8 w-8', 'text-xs')}
                 <div className="overflow-hidden">
-                  <p className="truncate text-xs font-semibold text-slate-800">{user.fullName}</p>
+                  <p className="truncate text-xs font-semibold text-white">{user.fullName}</p>
                   <div className="mt-0.5">{getRoleBadge(user.role)}</div>
                 </div>
               </button>
@@ -358,7 +358,7 @@ export default function AdminLayout() {
                   setMobileMenuOpen(false);
                   setChangePasswordModalOpen(true);
                 }}
-                className="w-full flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 cursor-pointer"
+                className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-white/15 bg-white/[0.08] px-3 py-2 text-xs font-medium text-white/90 hover:bg-white/[0.14] cursor-pointer"
               >
                 <span>🔑</span>
                 <span>Đổi mật khẩu</span>
@@ -366,7 +366,7 @@ export default function AdminLayout() {
               <button
                 type="button"
                 onClick={handleLogout}
-                className="w-full flex items-center justify-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700 hover:bg-rose-100 cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 rounded-xl border border-rose-300/30 bg-rose-500/20 px-3 py-2 text-xs font-medium text-rose-100 hover:bg-rose-500/30 cursor-pointer"
               >
                 Đăng xuất
               </button>
@@ -378,13 +378,13 @@ export default function AdminLayout() {
       {/* KHU VỰC NỘI DUNG CHÍNH */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Top Header Bar */}
-        <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 md:px-8 shadow-xs">
+        <header className="flex h-16 items-center justify-between border-b border-line bg-surface/95 backdrop-blur px-4 md:px-8">
           <div className="flex items-center gap-3">
             {/* Hamburger Button trên Mobile (min 44px x 44px touch target) */}
             <button
               type="button"
               onClick={() => setMobileMenuOpen(true)}
-              className="flex h-11 w-11 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 focus:outline-none md:hidden active:scale-95 transition-transform"
+              className="flex h-11 w-11 items-center justify-center rounded-xl border border-line text-teal hover:bg-mint-canvas focus:outline-none md:hidden active:scale-95 transition-transform cursor-pointer"
               aria-label="Mở menu điều hướng"
             >
               <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -393,7 +393,7 @@ export default function AdminLayout() {
             </button>
 
             <div>
-              <h2 className="text-sm md:text-base font-semibold text-slate-800">
+              <h2 className="text-sm md:text-base font-semibold text-ink">
                 {location.pathname.startsWith('/courses')
                   ? 'Quản lý Khóa học'
                   : location.pathname.startsWith('/students')
@@ -442,14 +442,14 @@ export default function AdminLayout() {
                 aria-expanded={userMenuOpen}
                 aria-haspopup="menu"
                 title="Tài khoản người dùng"
-                className="flex items-center gap-2 rounded-lg px-2 py-1 hover:bg-slate-100 active:scale-[0.98] transition-all cursor-pointer"
+                className="flex items-center gap-2 rounded-full px-2 py-1 hover:bg-mint-canvas active:scale-[0.98] transition-all cursor-pointer"
               >
                 {renderUserAvatar('h-8 w-8', 'text-xs')}
-                <span className="hidden lg:inline text-xs font-semibold text-slate-700 max-w-[140px] truncate">
+                <span className="hidden lg:inline text-xs font-semibold text-ink-secondary max-w-[140px] truncate">
                   {user.fullName || 'Người dùng'}
                 </span>
                 <svg
-                  className={`h-3.5 w-3.5 text-slate-400 transition-transform duration-150 ${
+                  className={`h-3.5 w-3.5 text-ink-muted transition-transform duration-150 ${
                     userMenuOpen ? 'rotate-180' : ''
                   }`}
                   fill="none"
@@ -463,10 +463,10 @@ export default function AdminLayout() {
               {userMenuOpen && (
                 <div
                   role="menu"
-                  className="absolute right-0 mt-2 w-60 rounded-xl border border-slate-200 bg-white py-2 shadow-lg z-40"
+                  className="absolute right-0 mt-2 w-60 rounded-card border border-line bg-surface py-2 shadow-modal z-40"
                 >
-                  <div className="border-b border-slate-100 px-4 py-2.5">
-                    <p className="truncate text-xs font-bold text-slate-900">
+                  <div className="border-b border-line/70 px-4 py-2.5">
+                    <p className="truncate text-xs font-bold text-ink">
                       {user.fullName || 'Người dùng'}
                     </p>
                     <div className="mt-1.5">{getRoleBadge(user.role)}</div>
@@ -480,7 +480,7 @@ export default function AdminLayout() {
                         setUserMenuOpen(false);
                         setProfileModalOpen(true);
                       }}
-                      className="flex w-full items-center gap-2.5 px-4 py-2 text-left text-xs font-medium text-slate-700 hover:bg-slate-50 cursor-pointer"
+                      className="flex w-full items-center gap-2.5 px-4 py-2 text-left text-xs font-medium text-ink-secondary hover:bg-mint-canvas cursor-pointer"
                     >
                       <span>👤</span>
                       <span>Hồ sơ cá nhân</span>
@@ -492,14 +492,14 @@ export default function AdminLayout() {
                         setUserMenuOpen(false);
                         setChangePasswordModalOpen(true);
                       }}
-                      className="flex w-full items-center gap-2.5 px-4 py-2 text-left text-xs font-medium text-slate-700 hover:bg-slate-50 cursor-pointer"
+                      className="flex w-full items-center gap-2.5 px-4 py-2 text-left text-xs font-medium text-ink-secondary hover:bg-mint-canvas cursor-pointer"
                     >
                       <span>🔑</span>
                       <span>Đổi mật khẩu</span>
                     </button>
                   </div>
 
-                  <div className="border-t border-slate-100 pt-1">
+                  <div className="border-t border-line/70 pt-1">
                     <button
                       type="button"
                       role="menuitem"
@@ -520,7 +520,7 @@ export default function AdminLayout() {
         </header>
 
         {/* Content Page (Scrollable area) */}
-        <main className="flex-1 overflow-y-auto bg-slate-50 p-4 md:p-6 lg:p-8">
+        <main className="flex-1 overflow-y-auto bg-mint-canvas p-4 md:p-6 lg:p-8">
           <Outlet />
         </main>
       </div>

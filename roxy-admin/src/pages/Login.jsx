@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
+import { Card, InputPill, PrimaryButton } from '../components/ui';
 
 export default function Login() {
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -64,17 +65,17 @@ export default function Login() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-100 p-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl border border-slate-200/80">
+    <div className="flex min-h-screen items-center justify-center bg-mint-canvas p-4">
+      <Card large className="w-full max-w-md p-8">
         {/* Header Thương hiệu */}
         <div className="mb-6 text-center">
-          <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600 text-white font-bold text-xl shadow-md mb-3">
+          <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gold text-teal font-bold text-xl shadow-xs mb-3">
             R
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+          <h1 className="text-2xl font-bold tracking-tight text-ink">
             Roxy Academy
           </h1>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-ink-secondary">
             Hệ thống quản lý học tập dành cho cán bộ &amp; giáo viên
           </p>
         </div>
@@ -83,7 +84,7 @@ export default function Login() {
         {error && (
           <div
             role="alert"
-            className="mb-5 flex items-start gap-2.5 rounded-lg bg-rose-50 border border-rose-200 p-3 text-xs text-rose-700"
+            className="mb-5 flex items-start gap-2.5 rounded-card bg-rose-50 border border-rose-200 p-3 text-xs text-rose-700"
           >
             <svg
               className="h-4 w-4 shrink-0 mt-0.5 text-rose-500"
@@ -104,11 +105,11 @@ export default function Login() {
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-ink-secondary mb-1.5">
               Số điện thoại
             </label>
             <div className="relative">
-              <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+              <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-ink-muted">
                 <svg
                   className="h-4 w-4"
                   fill="none"
@@ -123,7 +124,7 @@ export default function Login() {
                   />
                 </svg>
               </span>
-              <input
+              <InputPill
                 type="tel"
                 autoComplete="tel"
                 required
@@ -131,17 +132,17 @@ export default function Login() {
                 placeholder="0900000000"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
-                className="w-full h-10 rounded-lg border border-slate-300 bg-white pl-9 pr-3 text-sm text-slate-800 transition placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none disabled:bg-slate-50 disabled:cursor-not-allowed"
+                className="pl-10 pr-4"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+            <label className="block text-xs font-semibold uppercase tracking-wider text-ink-secondary mb-1.5">
               Mật khẩu
             </label>
             <div className="relative">
-              <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+              <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-ink-muted">
                 <svg
                   className="h-4 w-4"
                   fill="none"
@@ -156,7 +157,7 @@ export default function Login() {
                   />
                 </svg>
               </span>
-              <input
+              <InputPill
                 type={showPassword ? 'text' : 'password'}
                 autoComplete="current-password"
                 required
@@ -164,12 +165,12 @@ export default function Login() {
                 placeholder="Nhập mật khẩu của bạn"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full h-10 rounded-lg border border-slate-300 bg-white pl-9 pr-10 text-sm text-slate-800 transition placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none disabled:bg-slate-50 disabled:cursor-not-allowed"
+                className="pl-10 pr-10"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 focus:outline-none"
+                className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-ink-muted hover:text-ink-secondary focus:outline-none cursor-pointer"
                 tabIndex={-1}
                 aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
               >
@@ -187,15 +188,15 @@ export default function Login() {
             </div>
           </div>
 
-          <button
+          <PrimaryButton
             type="submit"
             disabled={loading}
-            className="w-full mt-2 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg shadow-xs hover:bg-blue-700 active:scale-[0.98] transition-transform duration-150 ease-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 disabled:opacity-70 disabled:pointer-events-none cursor-pointer"
+            className="w-full mt-2"
           >
             {loading ? (
               <>
                 <svg
-                  className="h-4 w-4 animate-spin text-white"
+                  className="h-4 w-4 animate-spin text-teal"
                   fill="none"
                   viewBox="0 0 24 24"
                 >
@@ -218,13 +219,13 @@ export default function Login() {
             ) : (
               'Đăng Nhập'
             )}
-          </button>
+          </PrimaryButton>
         </form>
 
-        <div className="mt-6 border-t border-slate-100 pt-4 text-center text-[11px] text-slate-400">
+        <div className="mt-6 border-t border-line/70 pt-4 text-center text-[11px] text-ink-muted">
           Roxy Academy © 2026 • Bảo mật thông tin học viên &amp; nội bộ
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

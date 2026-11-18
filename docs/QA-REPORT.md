@@ -997,3 +997,28 @@ Toàn bộ **8/8 hạng mục** của **Giai đoạn 1N-2 (8 bẫy đồng bộ)
 ## 3. Kiểm thử runtime trên `localhost:5123` + `localhost:5173` & Kết luận
 - **Giới hạn môi trường sandbox:** Cổng `5123` (API) và `5173` (Web) không chạy trong sandbox, nên chưa tái hiện/test trực tiếp trên trình duyệt 3 kịch bản runtime (tạo thông báo mới kiểm tra chuông, tạo→duyệt→xem lại bằng Phụ huynh, tạo đơn cho học viên 1 lớp vs đơn cũ không có lớp).
 - **Trạng thái hiện tại:** **ĐẠT `dotnet build` + `npm run lint` + `npm run build` & đối chiếu mã nguồn 100%**; **CHỜ TEST RUNTIME CẢ 3 LỖI TRÊN LOCALHOST (`5123` + `5173`)** trước khi commit `"Fix đợt 2E: giờ thông báo, người duyệt, lớp/chi nhánh đơn nghỉ"`.
+
+
+---
+
+# BÁO CÁO QA — ĐỢT TRÙNG TU GIAO DIỆN R1: DESIGN TOKENS + SHELL
+**Ngày kiểm tra:** 18/11/2026  
+**Người thực hiện:** QA Agent & Commander  
+**Commit gốc:** `4adc5ac` (sau Fix đợt 2E)  
+**Phạm vi:** Chỉ R1 (`docs/DESIGN.md` Mục 17, `roxy-admin/src/index.css`, `src/components/ui.jsx`, `src/layouts/AdminLayout.jsx`, `src/pages/Dashboard.jsx`, `src/pages/Login.jsx`); không lan sang trang khác, không đổi API/DB/logic/phân quyền.
+
+## 1. Kết quả Lint & Build (`roxy-admin/`)
+- `npm --prefix roxy-admin run lint` (`eslint .`): **PASS** (0 error, 0 warning).
+- `npm --prefix roxy-admin run build` (`vite build`): **PASS** (`✓ 113 modules transformed`, `✓ built in 309ms`).
+
+## 2. Kết quả đối chiếu thiết kế & mã nguồn R1
+| Hạng mục kiểm tra | Kết quả | Chi tiết đối chiếu |
+| :--- | :---: | :--- |
+| Phạm vi R1 (`git status -s`) | **PASS** | - Chỉ sửa/tạo đúng 6 file R1 (`docs/DESIGN.md`, `index.css`, `ui.jsx`, `AdminLayout.jsx`, `Dashboard.jsx`, `Login.jsx`); không đụng các trang khác hay backend. |
+| Tokens `@theme` (`index.css` vs `docs/DESIGN.md` Mục 17) | **PASS** | - Khớp 100%: `--color-teal` (`#2F4F4A`), `--color-gold` (`#D9A441`), `--color-mint-canvas` (`#F3F6F4`), `--color-surface` (`#FFFFFF`), `--color-ink` (`#1E2E2B`), `--radius-card` / `--radius-card-lg` / `--radius-pill`, `--shadow-card` / `--shadow-card-hover` / `--shadow-modal`; `html, body` dùng `var(--color-mint-canvas)`. |
+| Luật tương phản & không còn nút chính xanh dương/indigo | **PASS** | - Mọi nền `bg-gold` (`PrimaryButton`, badge logo `R`) đều dùng chữ `text-teal` (0 trường hợp `text-white` trên nền vàng).<br>- 0 nút chính `bg-blue-600`, `bg-blue-700` hay `bg-indigo-*` trong 5 file R1 (chỉ giữ màu ngữ nghĩa trạng thái/badge). |
+| Shell & 2 trang mẫu (`AdminLayout`, `Dashboard`, `Login`) | **PASS** | - `AdminLayout.jsx`: sidebar & mobile drawer `bg-teal`, active item `bg-white/[0.14] text-gold font-semibold`, nền chính `bg-mint-canvas`, giữ nguyên phân quyền menu & drawer mobile.<br>- `Dashboard.jsx` & `Login.jsx`: dùng `PageHeader`, `PrimaryButton`/`SecondaryButton`, `InputPill`, `Card`, `StatCard` (nhãn uppercase nhỏ + số đậm lớn `tabular-nums`); giữ nguyên toàn bộ logic, API (`/Dashboard/summary`, `/Auth/login`, `/Auth/me`) và route. |
+
+## 3. Kiểm tra trình duyệt ở `1440px` & `1280px` & Kết luận
+- **Giới hạn môi trường sandbox:** Không mở được trình duyệt/API local trong sandbox để kiểm tra trực quan `Dashboard` và `Login` ở `1440px` và `1280px`.
+- **Trạng thái hiện tại:** **ĐẠT `npm run lint` + `npm run build` & đối chiếu design system 100%**; **CHỜ XEM TRỰC QUAN TRÊN TRÌNH DUYỆT (`1440px` & `1280px`)** trước khi commit `"Trùng tu giao diện R1: design tokens + shell"`.
