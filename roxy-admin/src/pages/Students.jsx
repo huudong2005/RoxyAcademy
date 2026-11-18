@@ -982,7 +982,7 @@ export default function Students() {
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
-                <span>+ Thêm học viên</span>
+                <span>Thêm học viên</span>
               </PrimaryButton>
             )}
 
@@ -1001,9 +1001,9 @@ export default function Students() {
 
       {/* 2. Thanh Công Cụ Tìm Kiếm & Lọc (Filter Toolbar) */}
       <Card className="p-4">
-        <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        <form onSubmit={handleSearchSubmit} className="flex flex-wrap items-center gap-3">
           {/* Ô Tìm kiếm */}
-          <div className="lg:col-span-2 relative">
+          <div className="relative flex-1 min-w-[240px]">
             <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-ink-muted">
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -1019,70 +1019,64 @@ export default function Students() {
           </div>
 
           {/* Lọc theo Chi nhánh */}
-          <div>
-            <select
-              value={branchFilter}
-              onChange={(e) => {
-                setBranchFilter(e.target.value);
-                setPage(1);
-              }}
-              disabled={isBranchManager} // BranchManager bị khóa theo chi nhánh mình
-              className="w-full rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink transition focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted"
-            >
-              {!isBranchManager && <option value="">Tất cả cơ sở</option>}
-              {branches.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.branchName}
-                </option>
-              ))}
-            </select>
-          </div>
+          <select
+            value={branchFilter}
+            onChange={(e) => {
+              setBranchFilter(e.target.value);
+              setPage(1);
+            }}
+            disabled={isBranchManager} // BranchManager bị khóa theo chi nhánh mình
+            className="w-full sm:w-auto min-w-[165px] rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink transition focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted"
+          >
+            {!isBranchManager && <option value="">Tất cả cơ sở</option>}
+            {branches.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.branchName}
+              </option>
+            ))}
+          </select>
 
           {/* Lọc theo Lớp học */}
-          <div>
-            <select
-              value={classFilter}
-              onChange={(e) => {
-                setClassFilter(e.target.value);
-                setPage(1);
-              }}
-              className="w-full rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink transition focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted"
-            >
-              <option value="">Tất cả lớp học</option>
-              {classes.map((cls) => (
-                <option key={cls.id} value={cls.id}>
-                  {cls.className}
-                </option>
-              ))}
-            </select>
-          </div>
+          <select
+            value={classFilter}
+            onChange={(e) => {
+              setClassFilter(e.target.value);
+              setPage(1);
+            }}
+            className="w-full sm:w-auto min-w-[165px] rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink transition focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted"
+          >
+            <option value="">Tất cả lớp học</option>
+            {classes.map((cls) => (
+              <option key={cls.id} value={cls.id}>
+                {cls.className}
+              </option>
+            ))}
+          </select>
 
-          {/* Lọc theo Trạng thái & Nút thao tác */}
-          <div className="flex items-center gap-2">
-            <select
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value);
-                setPage(1);
-              }}
-              className="flex-1 w-full rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink transition focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted"
-            >
-              <option value="">Tất cả trạng thái</option>
-              <option value="Active">Đang học</option>
-              <option value="Paused">Tạm dừng</option>
-              <option value="Graduated">Tốt nghiệp</option>
-              <option value="Dropped">Thôi học</option>
-            </select>
+          {/* Lọc theo Trạng thái */}
+          <select
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setPage(1);
+            }}
+            className="w-full sm:w-auto min-w-[175px] rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink transition focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted"
+          >
+            <option value="">Tất cả trạng thái</option>
+            <option value="Active">Đang học</option>
+            <option value="Paused">Tạm dừng</option>
+            <option value="Graduated">Tốt nghiệp</option>
+            <option value="Dropped">Thôi học</option>
+          </select>
 
-            <SecondaryButton
-              type="button"
-              onClick={handleResetFilters}
-              title="Đặt lại bộ lọc"
-              className="px-4 py-2 text-xs shrink-0"
-            >
-              Đặt lại
-            </SecondaryButton>
-          </div>
+          <SecondaryButton
+            type="button"
+            onClick={handleResetFilters}
+            title="Đặt lại bộ lọc"
+            className="px-4 py-2 text-xs shrink-0"
+          >
+            Đặt lại
+          </SecondaryButton>
         </form>
       </Card>
 
@@ -1114,14 +1108,14 @@ export default function Students() {
           <table className="min-w-full divide-y divide-line text-left text-xs md:text-sm">
             <thead className="bg-surface-subtle border-b border-line text-[11px] uppercase font-semibold tracking-wider text-ink-muted">
               <tr>
-                <th scope="col" className="px-4 py-3.5">Học viên</th>
-                <th scope="col" className="px-4 py-3.5">Ngày sinh &amp; Giới tính</th>
-                <th scope="col" className="px-4 py-3.5">Phụ huynh &amp; SĐT</th>
-                <th scope="col" className="px-4 py-3.5">Cơ sở</th>
-                <th scope="col" className="px-4 py-3.5">Trường / Khối lớp</th>
-                <th scope="col" className="px-4 py-3.5">Trạng thái</th>
-                <th scope="col" className="px-4 py-3.5">Tài khoản</th>
-                <th scope="col" className="px-4 py-3.5 text-right">Thao tác</th>
+                <th scope="col" className="px-2 py-2.5">Học viên</th>
+                <th scope="col" className="px-2 py-2.5">Ngày sinh &amp; Giới tính</th>
+                <th scope="col" className="px-2 py-2.5">Phụ huynh &amp; SĐT</th>
+                <th scope="col" className="px-2 py-2.5">Cơ sở</th>
+                <th scope="col" className="px-2 py-2.5">Trường / Khối lớp</th>
+                <th scope="col" className="px-2 py-2.5">Trạng thái</th>
+                <th scope="col" className="px-2 py-2.5">Tài khoản</th>
+                <th scope="col" className="px-2 py-2.5 text-right sticky right-0 z-20 bg-surface-subtle shadow-[-4px_0_8px_-4px_rgba(30,46,43,0.08)]">Thao tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line/60 bg-surface">
@@ -1151,10 +1145,10 @@ export default function Students() {
                 students.map((stu) => (
                   <tr key={stu.id} className="hover:bg-mint-canvas/60 transition-colors duration-100">
                     {/* Cột 1: Học viên */}
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="flex items-center gap-3">
-                        <StudentAvatar src={stu.avatarUrl} name={stu.fullName} sizeClass="h-9 w-9" textClass="text-xs" />
-                        <div>
+                    <td className="px-2 py-2.5 max-w-[170px]">
+                      <div className="flex items-center gap-2.5">
+                        <StudentAvatar src={stu.avatarUrl} name={stu.fullName} sizeClass="h-9 w-9 shrink-0" textClass="text-xs" />
+                        <div className="min-w-0">
                           <div className="font-semibold text-ink">{stu.fullName}</div>
                           <div className="text-[11px] text-ink-muted">#STU-{stu.id}</div>
                         </div>
@@ -1162,7 +1156,7 @@ export default function Students() {
                     </td>
 
                     {/* Cột 2: Ngày sinh & Giới tính */}
-                    <td className="px-4 py-3 whitespace-nowrap">
+                    <td className="px-2 py-2.5 whitespace-nowrap">
                       <div className="text-ink font-medium">
                         {formatDate(stu.dob)}{' '}
                         <span className="text-[11px] text-ink-muted">{calculateAge(stu.dob)}</span>
@@ -1171,7 +1165,7 @@ export default function Students() {
                     </td>
 
                     {/* Cột 3: Phụ huynh & SĐT */}
-                    <td className="px-4 py-3 whitespace-nowrap">
+                    <td className="px-2 py-2.5 max-w-[155px]">
                       <div className="font-medium text-ink">{stu.parentName || '—'}</div>
                       {stu.parentPhone ? (
                         <a
@@ -1186,27 +1180,27 @@ export default function Students() {
                     </td>
 
                     {/* Cột 4: Cơ sở */}
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <span className="inline-flex items-center rounded-full bg-surface-subtle border border-line px-2.5 py-0.5 text-xs text-ink-secondary font-medium">
+                    <td className="px-2 py-2.5 min-w-[85px] max-w-[115px]">
+                      <span className="inline-flex items-center rounded-full bg-surface-subtle border border-line px-2 py-0.5 text-xs text-ink-secondary font-medium">
                         {stu.branchName || `Cơ sở #${stu.branchId}`}
                       </span>
                     </td>
 
                     {/* Cột 5: Trường / Khối lớp */}
-                    <td className="px-4 py-3 whitespace-nowrap text-ink-secondary">
+                    <td className="px-2 py-2.5 max-w-[150px] text-ink-secondary">
                       <div>{stu.school || '—'}</div>
                       {stu.grade && <div className="text-[11px] text-ink-muted">Khối: {stu.grade}</div>}
                     </td>
 
                     {/* Cột 6: Trạng thái */}
-                    <td className="px-4 py-3 whitespace-nowrap">
+                    <td className="px-2 py-2.5 whitespace-nowrap">
                       {renderStatusBadge(stu.status)}
                     </td>
 
                     {/* Cột 7: Tài khoản Học viên */}
-                    <td className="px-4 py-3 whitespace-nowrap">
+                    <td className="px-2 py-2.5 min-w-[110px]">
                       {stu.userId ? (
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex flex-wrap items-center gap-1">
                           <Badge variant="emerald" className="normal-case tracking-normal">
                             Đã có TK
                           </Badge>
@@ -1214,7 +1208,7 @@ export default function Students() {
                             <button
                               type="button"
                               onClick={() => handleOpenResetAccountModal(stu)}
-                              className="px-2.5 py-1 rounded-full text-[11px] font-semibold text-teal bg-surface border border-line hover:bg-mint-canvas active:scale-[0.97] transition-transform duration-150 cursor-pointer"
+                              className="px-2 py-0.5 rounded-full text-[11px] font-semibold text-teal bg-surface border border-line hover:bg-mint-canvas active:scale-[0.97] transition-transform duration-150 cursor-pointer"
                               title="Đặt lại mật khẩu tài khoản học viên"
                             >
                               Đặt lại MK
@@ -1222,7 +1216,7 @@ export default function Students() {
                           )}
                         </div>
                       ) : (
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex flex-wrap items-center gap-1">
                           <Badge variant="neutral" className="normal-case tracking-normal">
                             Chưa có
                           </Badge>
@@ -1230,7 +1224,7 @@ export default function Students() {
                             <button
                               type="button"
                               onClick={() => handleOpenCreateAccountModal(stu)}
-                              className="px-2.5 py-1 rounded-full text-[11px] font-semibold text-teal bg-gold-soft border border-gold/40 hover:bg-gold/30 active:scale-[0.97] transition-transform duration-150 cursor-pointer"
+                              className="px-2 py-0.5 rounded-full text-[11px] font-semibold text-teal bg-gold-soft border border-gold/40 hover:bg-gold/30 active:scale-[0.97] transition-transform duration-150 cursor-pointer"
                               title="Tạo tài khoản đăng nhập cho học viên"
                             >
                               Tạo tài khoản
@@ -1241,13 +1235,13 @@ export default function Students() {
                     </td>
 
                     {/* Cột 8: Thao tác */}
-                    <td className="px-4 py-3 whitespace-nowrap text-right">
-                      <div className="inline-flex items-center gap-1.5">
+                    <td className="px-2 py-2.5 whitespace-nowrap text-right sticky right-0 z-10 bg-surface shadow-[-4px_0_8px_-4px_rgba(30,46,43,0.08)]">
+                      <div className="inline-flex items-center gap-1">
                         {/* Nút Xem chi tiết (Tất cả vai trò đều bấm được) */}
                         <button
                           type="button"
                           onClick={() => handleOpenDetail(stu)}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium text-teal hover:bg-gold-soft active:scale-95 transition-all cursor-pointer"
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-medium text-teal hover:bg-gold-soft active:scale-95 transition-all cursor-pointer"
                           title="Xem chi tiết hồ sơ"
                         >
                           <span>Chi tiết</span>
@@ -1258,7 +1252,7 @@ export default function Students() {
                           <button
                             type="button"
                             onClick={() => handleOpenEditModal(stu)}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-teal bg-gold-soft/70 hover:bg-gold-soft border border-gold/30 active:scale-95 transition-all cursor-pointer"
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-semibold text-teal bg-gold-soft/70 hover:bg-gold-soft border border-gold/30 active:scale-95 transition-all cursor-pointer"
                             title="Chỉnh sửa thông tin"
                           >
                             <span>Sửa</span>
@@ -1270,7 +1264,7 @@ export default function Students() {
                           <button
                             type="button"
                             onClick={() => handleOpenDeleteModal(stu)}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium text-rose-600 hover:bg-rose-50 active:scale-95 transition-all cursor-pointer"
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-medium text-rose-600 hover:bg-rose-50 active:scale-95 transition-all cursor-pointer"
                             title="Xóa / Chuyển sang Đã nghỉ"
                           >
                             <span>Xóa</span>
@@ -1282,7 +1276,7 @@ export default function Students() {
                           <button
                             type="button"
                             onClick={() => handleOpenParentEditModal(stu)}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-teal bg-gold-soft/70 hover:bg-gold-soft border border-gold/30 active:scale-95 transition-all cursor-pointer"
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-semibold text-teal bg-gold-soft/70 hover:bg-gold-soft border border-gold/30 active:scale-95 transition-all cursor-pointer"
                             title="Cập nhật thông tin liên hệ"
                           >
                             <span>Cập nhật thông tin liên hệ</span>

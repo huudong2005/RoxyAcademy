@@ -1046,3 +1046,27 @@ Toàn bộ **8/8 hạng mục** của **Giai đoạn 1N-2 (8 bẫy đồng bộ)
 ## 3. Kiểm tra trình duyệt ở `1440px` & `1280px` & Kết luận
 - **Giới hạn môi trường sandbox:** Cổng `5123` (API) và `5173` (Web) không chạy trong sandbox, nên chưa mở được trình duyệt kiểm tra trực quan `Students` + `ClassList` ở `1440px` & `1280px` (và đối chiếu số liệu tải từ API `localhost:5123`).
 - **Trạng thái hiện tại:** **ĐẠT `npm run lint` + `npm run build` & đối chiếu design system 100%**; **CHỜ KIỂM TRA TRỰC QUAN TRÊN TRÌNH DUYỆT (`1440px` & `1280px`, API `localhost:5123` đang chạy)** trước khi commit `"Trùng tu giao diện R2a: Students + Classes"`.
+
+
+---
+
+# BÁO CÁO QA — ĐỢT TRÙNG TU GIAO DIỆN R2a-fix: LỌC + BẢNG + NÚT THÊM (`Students.jsx` + `ClassList.jsx`)
+**Ngày kiểm tra:** 18/11/2026  
+**Người thực hiện:** QA Agent & Commander  
+**Commit gốc:** `9c55dd2` (sau Đợt trùng tu R2a)  
+**Phạm vi:** Chỉ sửa 3 lỗi bố cục ở `roxy-admin/src/pages/Students.jsx` và `roxy-admin/src/pages/ClassList.jsx`; không đổi logic, API, dữ liệu hay phân quyền.
+
+## 1. Kết quả Lint & Build (`roxy-admin/`)
+- `npm --prefix roxy-admin run lint` (`eslint .`): **PASS** (0 error, 0 warning).
+- `npm --prefix roxy-admin run build` (`vite build`): **PASS** (`✓ 113 modules transformed`, `✓ built in 316ms`).
+
+## 2. Kết quả đối chiếu 3 lỗi trên mã nguồn & ước lượng ở `1440px`
+| Lỗi | Hạng mục kiểm tra | Kết quả | Chi tiết đối chiếu |
+| :--- | :--- | :---: | :--- |
+| **Lỗi 1** | Nút thêm thừa dấu `+` | **PASS** | - `Students.jsx` (L982–985): giữ 1 icon `<svg>` `+` và `<span>Thêm học viên</span>`.<br>- `ClassList.jsx` (L687–690): giữ 1 icon `<svg>` `+` và `<span>Tạo lớp học mới</span>`. |
+| **Lỗi 2** | Select lọc & placeholder ô tìm kiếm bị cắt chữ | **PASS** | - Cả 2 trang (`Students.jsx` L1004–1080, `ClassList.jsx` L698–781) chuyển sang `flex flex-wrap items-center gap-3`, ô tìm kiếm `flex-1 min-w-[240px]`, các `<select>` đứng độc lập với `min-w-[165px]` (`statusFilter` `min-w-[175px]`), tách khỏi nút `Đặt lại` (`shrink-0`). |
+| **Lỗi 3** | Bảng ở `1440px` (~1120px khả dụng) | **PASS (Static)** | - Siết padding `px-2 py-2.5`, thu gọn nút thao tác `px-2 py-1 text-[11px]`, giữ `overflow-x-auto` + `sticky right-0` cho cột `Thao tác`.<br>- `Students.jsx` (8 cột): ước lượng **~955–1140px** (vừa khung với dữ liệu thông thường; dữ liệu dài cực đại cuộn nhẹ có `sticky right-0`).<br>- `ClassList.jsx` (9 cột): ước lượng **~1025–1205px** (vừa khung với dữ liệu ngắn–trung bình; khi nhiều cột chạm `max-w-*` cùng lúc vẫn cần cuộn ngang nội bộ nhẹ với `sticky right-0` giữ cột `Thao tác`). |
+
+## 3. Kiểm tra trực quan trên trình duyệt ở `1440px` & Kết luận
+- **Giới hạn môi trường sandbox:** Không có dev server + API đăng nhập chạy trong sandbox để mở trình duyệt xem trực quan ở `1440px`.
+- **Trạng thái hiện tại:** **ĐẠT `npm run lint` + `npm run build` & đối chiếu 3 lỗi trên mã nguồn**; **CHỜ XEM TRỰC QUAN TRÊN TRÌNH DUYỆT Ở `1440px`** trước khi commit `"Trùng tu giao diện R2a-fix: lọc + bảng + nút thêm"`.

@@ -687,7 +687,7 @@ export default function ClassList() {
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              <span>+ Tạo lớp học mới</span>
+              <span>Tạo lớp học mới</span>
             </PrimaryButton>
           )
         }
@@ -695,9 +695,9 @@ export default function ClassList() {
 
       {/* 2. Thanh Công Cụ Tìm Kiếm & Lọc */}
       <Card className="p-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           {/* Ô Tìm kiếm */}
-          <div className="relative">
+          <div className="relative flex-1 min-w-[240px]">
             <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-ink-muted">
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -716,74 +716,68 @@ export default function ClassList() {
           </div>
 
           {/* Lọc theo Cơ sở */}
-          <div>
-            <select
-              value={branchFilter}
-              onChange={(e) => {
-                setBranchFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-full rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink transition focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
-            >
-              <option value="">Tất cả cơ sở</option>
-              {branches.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.branchName}
-                </option>
-              ))}
-            </select>
-          </div>
+          <select
+            value={branchFilter}
+            onChange={(e) => {
+              setBranchFilter(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="w-full sm:w-auto min-w-[165px] rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink transition focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
+          >
+            <option value="">Tất cả cơ sở</option>
+            {branches.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.branchName}
+              </option>
+            ))}
+          </select>
 
           {/* Lọc theo Khóa học */}
-          <div>
-            <select
-              value={courseFilter}
-              onChange={(e) => {
-                setCourseFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-full rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink transition focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
-            >
-              <option value="">Tất cả khóa học</option>
-              {courses.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.courseName}
-                </option>
-              ))}
-            </select>
-          </div>
+          <select
+            value={courseFilter}
+            onChange={(e) => {
+              setCourseFilter(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="w-full sm:w-auto min-w-[165px] rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink transition focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
+          >
+            <option value="">Tất cả khóa học</option>
+            {courses.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.courseName}
+              </option>
+            ))}
+          </select>
 
-          {/* Lọc theo Trạng thái & Nút reset */}
-          <div className="flex items-center gap-2">
-            <select
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="flex-1 w-full rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink transition focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
-            >
-              <option value="">Tất cả trạng thái</option>
-              <option value="Upcoming">Sắp mở</option>
-              <option value="Ongoing">Đang học</option>
-              <option value="Finished">Đã kết thúc</option>
-            </select>
+          {/* Lọc theo Trạng thái */}
+          <select
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="w-full sm:w-auto min-w-[175px] rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink transition focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
+          >
+            <option value="">Tất cả trạng thái</option>
+            <option value="Upcoming">Sắp mở</option>
+            <option value="Ongoing">Đang học</option>
+            <option value="Finished">Đã kết thúc</option>
+          </select>
 
-            <SecondaryButton
-              type="button"
-              onClick={() => {
-                setSearch('');
-                setBranchFilter('');
-                setCourseFilter('');
-                setStatusFilter('');
-                setCurrentPage(1);
-              }}
-              title="Đặt lại bộ lọc"
-              className="px-4 py-2 text-xs shrink-0"
-            >
-              Đặt lại
-            </SecondaryButton>
-          </div>
+          <SecondaryButton
+            type="button"
+            onClick={() => {
+              setSearch('');
+              setBranchFilter('');
+              setCourseFilter('');
+              setStatusFilter('');
+              setCurrentPage(1);
+            }}
+            title="Đặt lại bộ lọc"
+            className="px-4 py-2 text-xs shrink-0"
+          >
+            Đặt lại
+          </SecondaryButton>
         </div>
       </Card>
 
@@ -801,15 +795,15 @@ export default function ClassList() {
           <table className="min-w-full divide-y divide-line text-left text-xs md:text-sm">
             <thead className="bg-surface-subtle border-b border-line text-[11px] uppercase font-semibold tracking-wider text-ink-muted">
               <tr>
-                <th scope="col" className="px-4 py-3.5">Tên lớp</th>
-                <th scope="col" className="px-4 py-3.5">Khóa học</th>
-                <th scope="col" className="px-4 py-3.5">Giáo viên</th>
-                <th scope="col" className="px-4 py-3.5">Cơ sở</th>
-                <th scope="col" className="px-4 py-3.5">Sĩ số</th>
-                <th scope="col" className="px-4 py-3.5">Hình thức &amp; Lịch</th>
-                <th scope="col" className="px-4 py-3.5">Học phí</th>
-                <th scope="col" className="px-4 py-3.5">Trạng thái</th>
-                <th scope="col" className="px-4 py-3.5 text-right">Thao tác</th>
+                <th scope="col" className="px-2 py-2.5">Tên lớp</th>
+                <th scope="col" className="px-2 py-2.5">Khóa học</th>
+                <th scope="col" className="px-2 py-2.5">Giáo viên</th>
+                <th scope="col" className="px-2 py-2.5">Cơ sở</th>
+                <th scope="col" className="px-2 py-2.5">Sĩ số</th>
+                <th scope="col" className="px-2 py-2.5">Hình thức &amp; Lịch</th>
+                <th scope="col" className="px-2 py-2.5">Học phí</th>
+                <th scope="col" className="px-2 py-2.5">Trạng thái</th>
+                <th scope="col" className="px-2 py-2.5 text-right sticky right-0 z-20 bg-surface-subtle shadow-[-4px_0_8px_-4px_rgba(30,46,43,0.08)]">Thao tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line/60 bg-surface">
@@ -839,7 +833,7 @@ export default function ClassList() {
                 paginatedClasses.map((cls) => (
                   <tr key={cls.id} className="hover:bg-mint-canvas/60 transition-colors duration-100">
                     {/* Cột 1: Tên lớp */}
-                    <td className="px-4 py-3 whitespace-nowrap">
+                    <td className="px-2 py-2.5 max-w-[160px]">
                       <div
                         onClick={() => handleOpenDetail(cls)}
                         className="font-bold text-teal hover:text-gold-active hover:underline cursor-pointer transition-colors"
@@ -851,30 +845,30 @@ export default function ClassList() {
                     </td>
 
                     {/* Cột 2: Khóa học */}
-                    <td className="px-4 py-3 whitespace-nowrap">
+                    <td className="px-2 py-2.5 max-w-[130px]">
                       <span className="font-medium text-ink">{cls.courseName || '—'}</span>
                     </td>
 
                     {/* Cột 3: Giáo viên phụ trách */}
-                    <td className="px-4 py-3 whitespace-nowrap">
+                    <td className="px-2 py-2.5 max-w-[130px]">
                       <div className="flex items-center gap-1.5 text-ink">
-                        <span>👩‍🏫</span>
+                        <span className="shrink-0">👩‍🏫</span>
                         <span className="font-medium">{cls.teacherName || 'Chưa phân công'}</span>
                       </div>
                     </td>
 
                     {/* Cột 4: Cơ sở */}
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <span className="inline-flex items-center rounded-full bg-surface-subtle border border-line px-2.5 py-0.5 text-xs text-ink-secondary font-medium">
+                    <td className="px-2 py-2.5 min-w-[80px] max-w-[105px]">
+                      <span className="inline-flex items-center rounded-full bg-surface-subtle border border-line px-2 py-0.5 text-xs text-ink-secondary font-medium">
                         {cls.branchName || `Cơ sở #${cls.branchId}`}
                       </span>
                     </td>
 
                     {/* Cột 5: Sĩ số hiện tại / tối đa */}
-                    <td className="px-4 py-3 whitespace-nowrap text-ink-secondary">
-                      <div className="flex items-center gap-1.5">
+                    <td className="px-2 py-2.5 text-ink-secondary">
+                      <div className="flex flex-wrap items-center gap-1">
                         <span
-                          className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-mono font-semibold ${
+                          className={`inline-flex items-center whitespace-nowrap rounded-full border px-2 py-0.5 text-xs font-mono font-semibold ${
                             cls.maxStudents && (cls.activeStudentsCount ?? 0) >= cls.maxStudents
                               ? 'bg-amber-50 text-amber-800 border-amber-200'
                               : 'bg-surface-subtle text-ink-secondary border-line'
@@ -883,7 +877,7 @@ export default function ClassList() {
                           {cls.activeStudentsCount ?? 0} / {cls.maxStudents ?? '—'} học viên
                         </span>
                         {cls.maxStudents && (cls.activeStudentsCount ?? 0) >= cls.maxStudents && (
-                          <Badge variant="amber" className="normal-case tracking-normal text-[10px] px-2 py-0.5">
+                          <Badge variant="amber" className="normal-case tracking-normal text-[10px] px-2 py-0.5 whitespace-nowrap">
                             (Đầy)
                           </Badge>
                         )}
@@ -891,7 +885,7 @@ export default function ClassList() {
                     </td>
 
                     {/* Cột 6: Hình thức & Lịch */}
-                    <td className="px-4 py-3 whitespace-nowrap">
+                    <td className="px-2 py-2.5 max-w-[140px]">
                       <div className="font-medium text-ink">
                         {cls.classType === 'OneToOne' ? 'Kèm 1-1' : 'Lớp nhóm'}
                       </div>
@@ -901,22 +895,22 @@ export default function ClassList() {
                     </td>
 
                     {/* Cột 7: Học phí */}
-                    <td className="px-4 py-3 whitespace-nowrap font-medium text-ink">
+                    <td className="px-2 py-2.5 whitespace-nowrap font-medium text-ink">
                       {formatFee(cls.tuitionFee)}
                     </td>
 
                     {/* Cột 8: Trạng thái */}
-                    <td className="px-4 py-3 whitespace-nowrap">
+                    <td className="px-2 py-2.5 whitespace-nowrap">
                       {renderStatusBadge(cls.status)}
                     </td>
 
                     {/* Cột 9: Thao tác */}
-                    <td className="px-4 py-3 whitespace-nowrap text-right">
-                      <div className="inline-flex items-center gap-1.5">
+                    <td className="px-2 py-2.5 whitespace-nowrap text-right sticky right-0 z-10 bg-surface shadow-[-4px_0_8px_-4px_rgba(30,46,43,0.08)]">
+                      <div className="inline-flex items-center gap-1">
                         <button
                           type="button"
                           onClick={() => handleOpenDetail(cls)}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-teal bg-gold-soft/70 hover:bg-gold-soft border border-gold/30 active:scale-95 transition-all cursor-pointer"
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-semibold text-teal bg-gold-soft/70 hover:bg-gold-soft border border-gold/30 active:scale-95 transition-all cursor-pointer"
                           title="Xem tiến độ bài học & chi tiết lớp"
                         >
                           <span>👁 Chi tiết</span>
@@ -927,7 +921,7 @@ export default function ClassList() {
                             <button
                               type="button"
                               onClick={() => handleOpenEditModal(cls)}
-                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium text-teal hover:bg-mint-canvas border border-line active:scale-95 transition-all cursor-pointer"
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-medium text-teal hover:bg-mint-canvas border border-line active:scale-95 transition-all cursor-pointer"
                               title="Sửa thông tin lớp"
                             >
                               <span>Sửa</span>
@@ -936,7 +930,7 @@ export default function ClassList() {
                               <button
                                 type="button"
                                 onClick={() => handleCloseClass(cls)}
-                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium text-rose-600 hover:bg-rose-50 active:scale-95 transition-all cursor-pointer"
+                                className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-medium text-rose-600 hover:bg-rose-50 active:scale-95 transition-all cursor-pointer"
                                 title="Đóng lớp học (Xóa mềm)"
                               >
                                 <span>Đóng lớp</span>
