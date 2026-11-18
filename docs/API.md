@@ -1337,4 +1337,56 @@ Ngoài endpoint `POST /api/Seed/catalog`, có thể chạy trực tiếp script 
   sqlcmd -S <SERVER_HOST> -d RoxyAcademy -U <USER> -P <PASSWORD> -i RoxyAppDB.Seed.Catalog.sql -f 65001
   ```
 
+---
+
+## 14. PHÂN HỆ TỔNG QUAN (DASHBOARD API)
+
+### 14.1. Lấy dữ liệu tổng quan — `GET /api/Dashboard/summary`
+- **Quyền truy cập:** Đã đăng nhập (`SuperAdmin`, `BranchManager`, `Teacher`, `Parent`, `Student`).
+- **Phân quyền dữ liệu (Scoping theo vai trò):**
+  - `SuperAdmin`: toàn hệ thống.
+  - `BranchManager`: lọc theo `BranchId` của quản lý.
+  - `Teacher`: chỉ lớp mình dạy chính (`Class.TeacherId == UserId`) hoặc dạy thay (`SubstituteTeacherId == UserId`); trường `tuition` trả về `null`.
+  - `Parent`: chỉ học viên là con mình (`Student.ParentId == UserId`).
+  - `Student`: chỉ chính mình (`Student.UserId == UserId`).
+- **Response:** `200 OK` (`DashboardSummaryDto`)
+  ```json
+  {
+    "overview": {
+      "activeStudents": 42,
+      "ongoingClasses": 6,
+      "upcomingClasses": 1,
+      "activeTeachers": 8,
+      "pendingLeaveRequests": 2
+    },
+    "tuition": {
+      "month": 11,
+      "year": 2026,
+      "totalExpected": 0,
+      "totalPaid": 0,
+      "totalRemaining": 0,
+      "overdueTuitionCount": 1,
+      "overdueTuitionAmount": 1350000
+    },
+    "todayAttendance": {
+      "date": "2026-11-18",
+      "totalExpected": 0,
+      "present": 0,
+      "late": 0,
+      "excusedAbsent": 0,
+      "unexcusedAbsent": 0
+    },
+    "todaySchedules": []
+  }
+  ```
+- **Quy tắc tính toán block `tuition` (QUAN TRỌNG — tránh nhầm lẫn):**
+  1. **Tổng tháng hiện tại (`totalExpected`, `totalPaid`, `totalRemaining`):**
+     - Chỉ tính các khoản thu chưa bị hủy (`!IsCancelled`) có **hạn nộp (`DueDate`) rơi vào đúng tháng/năm hiện tại theo giờ Việt Nam (UTC+7)** (`t.DueDate.Month == month && t.DueDate.Year == year`), **KHÔNG** tính theo ngày tạo khoản thu (`CreatedAt`) và **KHÔNG** gộp nợ quá hạn từ các tháng trước.
+     - Công thức: `NetAmount = Amount - Discount`; `PaidAmount = SUM(Payments.Amount với Status == "Confirmed")`; `totalRemaining = SUM(Math.Max(0, NetAmount - PaidAmount))`.
+     - **Hành vi đúng thiết kế:** Nếu học viên/phụ huynh có nợ quá hạn ở tháng trước (ví dụ hạn nộp tháng 10 = `1.350.000đ`) nhưng không có khoản nào có hạn nộp trong tháng 11/2026, thì card **"Học phí tháng 11/2026"** sẽ hiển thị `Đã thu 0đ / Chưa thu 0đ / Tổng phải thu 0đ`.
+  2. **Nợ quá hạn (`overdueTuitionCount`, `overdueTuitionAmount`):**
+     - Được tính tách riêng trên **tất cả các tháng** với điều kiện `!IsCancelled && DueDate < today && PaidAmount < NetAmount` (với `today` theo UTC+7).
+     - Khoản nợ quá hạn từ các tháng trước sẽ hiển thị ở card **"Học phí quá hạn (tất cả các tháng)"** ngay bên dưới card học phí tháng trên Dashboard, khớp với danh sách lọc `Overdue` tại trang Học phí (`/tuitions?status=Overdue`).
+
+
 

@@ -841,3 +841,28 @@ Toàn bộ **8/8 hạng mục** của **Giai đoạn 1N-2 (8 bẫy đồng bộ)
 ## 3. Kiểm tra tay 2 cỡ màn hình (`1280px`, `1440px`) & Kết luận
 - **Giới hạn môi trường sandbox:** Không thể mở trình duyệt/API (`5123`) để kiểm tra trực quan giao dịch `TEST17112026` (`51.000đ`) trên viewport `1280px` và `1440px`.
 - **Trạng thái hiện tại:** **ĐẠT kiểm tra tĩnh + `npm run lint` + `npm run build`**; **CHỜ XÁC NHẬN MẮT THƯỜNG TRÊN TRÌNH DUYỆT (1280px & 1440px, không bấm Duyệt thật)** trước khi commit `"Fix đợt 2B-3: giãn cột số tiền - phương thức"`.
+
+
+---
+
+# BÁO CÁO QA — FIX ĐỢT 2C: DASHBOARD THÁNG (`GET /api/Dashboard/summary`)
+**Ngày kiểm tra:** 18/11/2026  
+**Người thực hiện:** QA Agent & Commander  
+**Commit gốc:** `1c1b8f2` (sau Fix đợt 2B-3)  
+**Phạm vi:** Kiểm tra logic `DashboardController.cs`, đối chiếu `TuitionsController.cs` & `Dashboard.jsx`, bổ sung tài liệu quy tắc vào `docs/API.md` (không sửa code backend/frontend, không đổi DB).
+
+## 1. Kết quả Lint & Build (`roxy-admin/`)
+- `npm --prefix roxy-admin run lint` (`eslint .`): **PASS** (0 error, 0 warning).
+- `npm --prefix roxy-admin run build` (`vite build`): **PASS** (`✓ 111 modules transformed`, `✓ built in 381ms`).
+
+## 2. Kết quả đối chiếu quy tắc Dashboard tháng & nợ quá hạn
+| Hạng mục kiểm tra | Kết quả | Chi tiết đối chiếu |
+| :--- | :---: | :--- |
+| Quy tắc tính tổng tháng (`totalExpected`, `totalPaid`, `totalRemaining`) | **PASS** | - `DashboardController.cs` (L26–29, L57–68) lọc `!t.IsCancelled && t.DueDate.Month == month && t.DueDate.Year == year` theo giờ VN (UTC+7).<br>- Tính theo **hạn nộp (`DueDate`)**, không tính theo `CreatedAt` và không gộp nợ quá hạn các tháng trước → khi tháng 11/2026 không có khoản đến hạn thì 3 chỉ số bằng `0đ` là đúng thiết kế. |
+| Tách riêng nợ quá hạn (`overdueTuitionCount`, `overdueTuitionAmount`) | **PASS** | - `DashboardController.cs` (L70–81) query riêng `!t.IsCancelled && t.DueDate < today && PaidAmount < NetAmount` trên **tất cả các tháng**.<br>- `Dashboard.jsx` (L437–499) hiển thị riêng card **"Học phí quá hạn (tất cả các tháng)"** ngay dưới card học phí tháng. |
+| Khớp scoping & công thức `Parent` với trang Học phí | **PASS** | - Cả `DashboardController.VisibleTuitionsQuery()` (L250) và `TuitionsController.GetTuitions()` (L48) đều lọc `t.Student.ParentId == UserId`, dùng cùng công thức `NetAmount - PaidAmount` (`Status == "Confirmed"`) và điều kiện quá hạn `DueDate < today`. |
+| Cập nhật tài liệu `docs/API.md` | **PASS** | - Bổ sung mục **14.1 (`GET /api/Dashboard/summary`)** vào `docs/API.md`, ghi rõ quy tắc tính theo `DueDate` tháng hiện tại và tách riêng `overdueTuitionCount`/`overdueTuitionAmount`. |
+
+## 3. Kiểm chứng tài khoản Phụ huynh Trần Thị D & Kết luận
+- **Giới hạn môi trường sandbox:** Không thể khởi chạy MSSQL Database và ASP.NET Core API trong sandbox để đăng nhập runtime tài khoản Phụ huynh **Trần Thị D** đối chiếu số liệu `1.350.000đ` thực tế; toàn bộ logic và scoping đã được xác minh khớp 100% qua mã nguồn (`DashboardController.cs`, `DashboardDtos.cs`, `TuitionsController.cs`, `Dashboard.jsx`) và `docs/API.md`.
+- **Trạng thái hiện tại:** **ĐẠT kiểm tra mã nguồn, tài liệu & `lint`/`build`**; **CHỜ XÁC NHẬN RUNTIME BẰNG TÀI KHOẢN PHỤ HUYNH TRẦN THỊ D** trước khi commit `"Fix đợt 2C: dashboard tháng"`.
