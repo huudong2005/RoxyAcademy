@@ -923,3 +923,28 @@ Toàn bộ **8/8 hạng mục** của **Giai đoạn 1N-2 (8 bẫy đồng bộ)
 ## 3. Kiểm thử runtime trên localhost & Kết luận
 - **Giới hạn môi trường sandbox:** Không thể khởi chạy API bind port `localhost` / kết nối SQL Server local trong sandbox để quan sát trực tiếp log console lúc khởi động và gọi `POST /api/Billing/generate-monthly` trên server đang chạy.
 - **Trạng thái hiện tại:** **ĐẠT `dotnet build` (0 warning, 0 error) & đối chiếu mã nguồn 100%**; **CHỜ XÁC MINH RUNTIME TRÊN LOCALHOST** (khởi động API kiểm tra log chờ `06:00` + gọi thử `POST /api/Billing/generate-monthly`) trước khi commit `"Tính năng tự động tạo khoản thu (3B): chạy nền + thông báo admin"`.
+
+
+---
+
+# BÁO CÁO QA — UPLOAD ẢNH (2D-1): ENDPOINT UPLOAD & PHỤC VỤ FILE TĨNH
+**Ngày kiểm tra:** 18/11/2026  
+**Người thực hiện:** QA Agent & Commander  
+**Commit gốc:** `dbb5036` (sau Tính năng 3B)  
+**Phạm vi:** Chỉ Backend (`RoxyAppBE/RoxyAcademy.Api/Program.cs`, `Controllers/UploadsController.cs`) + `docs/API.md` §16.1; không đổi DB/migration, không đổi dữ liệu test, không sửa frontend.
+
+## 1. Kết quả Build (`RoxyAppBE/RoxyAcademy.Api`)
+- `dotnet build RoxyAppBE/RoxyAcademy.Api --no-restore`: **PASS** (**0 Warning(s), 0 Error(s)**, `RoxyAcademy.Api.dll` biên dịch thành công).
+
+## 2. Kết quả đối chiếu mã nguồn & tài liệu (5/5 yêu cầu)
+| Hạng mục kiểm tra | Kết quả | Chi tiết đối chiếu |
+| :--- | :---: | :--- |
+| `UseStaticFiles` & tạo sẵn `wwwroot/uploads/` | **PASS** | - `Program.cs` (L15–26, L156–165): tạo sẵn `wwwroot/uploads` trước `CreateBuilder` và theo `ContentRootPath`, gán `WebRootPath`/`WebRootFileProvider` nếu null; `app.UseStaticFiles()` đặt trước `UseCors`, `UseAuthentication`, `UseAuthorization`, `MapControllers`. |
+| `UploadsController` & phân quyền | **PASS** | - `UploadsController.cs` (L6–57): `POST /api/Uploads/image`, `[Authorize]` (mọi tài khoản đăng nhập đều dùng được, không token trả `401`). Nhận `IFormFile? file` và `folder` (`payments`, `newsfeed`, mặc định `general`; giá trị lạ trả `400`). |
+| Validate loại file & dung lượng | **PASS** | - `UploadsController.cs` (L11, L20–34, L59–81): tối đa `5MB`, kiểm tra cả đuôi file (`.jpg`, `.jpeg`, `.png`, `.webp`) và `Content-Type` (`image/jpeg`, `image/jpg`, `image/png`, `image/webp`); thiếu file, quá 5MB hoặc sai định dạng đều trả `400` tiếng Việt rõ ràng. |
+| Lưu file tên `Guid` & trả URL tuyệt đối | **PASS** | - `UploadsController.cs` (L83–99): lưu `{Guid.NewGuid():N}{ext}` vào `wwwroot/uploads/{safeFolder}/`, trả `{ "url": "<Scheme>://<Host><PathBase>/uploads/{safeFolder}/{safeFileName}" }`. |
+| Tài liệu `docs/API.md` (§16.1) | **PASS** | - Ghi đầy đủ endpoint, giới hạn loại file/dung lượng, ví dụ response `200`/`400`/`401`, và lưu ý deploy FTP không xóa/ghi đè thư mục `wwwroot/uploads/`. |
+
+## 3. Kiểm thử runtime trên `http://localhost:5123` & Kết luận
+- **Giới hạn môi trường sandbox:** `http://localhost:5123` chưa có server chạy trong sandbox, nên chưa thực thi trực tiếp 4 case HTTP runtime (upload ảnh `.jpg` thật & mở URL tĩnh, upload `.txt`/`.exe`, upload file >5MB, upload không token `401`).
+- **Trạng thái hiện tại:** **ĐẠT `dotnet build` (0 warning, 0 error) & đối chiếu mã nguồn 100%**; **CHỜ TEST UPLOAD THẬT TRÊN `http://localhost:5123`** trước khi commit `"Upload ảnh (2D-1): endpoint upload + phục vụ file tĩnh"`.

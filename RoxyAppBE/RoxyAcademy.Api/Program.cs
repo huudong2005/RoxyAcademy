@@ -7,10 +7,23 @@ using Microsoft.AspNetCore.Identity;
 using RoxyAcademy.Api.Models;
 using RoxyAcademy.Api.Services;
 using Microsoft.OpenApi.Models;
+using Microsoft.Extensions.FileProviders;
 // 1. Thêm dòng này lên nhóm using ở trên cùng của file
 using Scalar.AspNetCore;
 
+// Tạo sẵn thư mục wwwroot/uploads trước CreateBuilder để tránh WebRootPath bị null trong ASP.NET Core
+var defaultWebRoot = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+Directory.CreateDirectory(Path.Combine(defaultWebRoot, "uploads"));
+
 var builder = WebApplication.CreateBuilder(args);
+
+var contentWebRoot = Path.Combine(builder.Environment.ContentRootPath, "wwwroot");
+Directory.CreateDirectory(Path.Combine(contentWebRoot, "uploads"));
+if (string.IsNullOrEmpty(builder.Environment.WebRootPath))
+{
+    builder.Environment.WebRootPath = contentWebRoot;
+    builder.Environment.WebRootFileProvider = new PhysicalFileProvider(contentWebRoot);
+}
 
 // 1. Cấu hình CORS - Giới hạn đúng các origin hợp lệ của hệ thống (dev + production)
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
@@ -138,6 +151,9 @@ if (!string.IsNullOrWhiteSpace(seedPassword))
 }
 
 app.UseHttpsRedirection();
+
+// Phục vụ file tĩnh (ảnh đã upload trong wwwroot/uploads/...)
+app.UseStaticFiles();
 
 // 3. Kích hoạt CORS (Phải đặt trước Auth)
 app.UseCors("RoxyCors");

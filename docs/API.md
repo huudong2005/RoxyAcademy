@@ -1462,3 +1462,36 @@ Quét các ghi danh đang hoạt động (`StudentClass.Status == "Active"`) ở
 
 
 
+
+---
+
+## 16. PHÂN HỆ TẢI ẢNH (UPLOADS API)
+
+Cung cấp endpoint tải ảnh lên máy chủ và trả về URL công khai (phục vụ tĩnh qua `wwwroot/uploads/`) để dùng cho bằng chứng chuyển khoản thanh toán, ảnh bài đăng bảng tin, v.v.
+
+### 16.1. Upload ảnh — `POST /api/Uploads/image`
+
+- **Quyền truy cập:** Đã đăng nhập (`SuperAdmin`, `BranchManager`, `Teacher`, `Parent`, `Student`). Chưa đăng nhập trả về `401 Unauthorized`.
+- **Request (`multipart/form-data`):**
+  - `file` (`IFormFile`, bắt buộc): Tệp ảnh cần tải lên.
+  - `folder` (`string`, tùy chọn — nhận qua form field hoặc query string): Thư mục con lưu trữ. Chỉ chấp nhận 1 trong 3 giá trị: `payments`, `newsfeed`, `general`. Mặc định là `general`.
+- **Giới hạn & Kiểm tra hợp lệ:**
+  - Định dạng cho phép: chỉ nhận `.jpg`, `.jpeg`, `.png`, `.webp` (kiểm tra **cả đuôi file** và **`Content-Type`**: `image/jpeg`, `image/jpg`, `image/png`, `image/webp`).
+  - Dung lượng tối đa: **5MB** (`5 * 1024 * 1024` bytes).
+  - Tên file lưu trữ được sinh ngẫu nhiên (`{Guid:N}{ext}`), không sử dụng tên file gốc của client.
+- **Response:**
+  - `200 OK`:
+    ```json
+    {
+      "url": "http://localhost:5123/uploads/payments/<guid>.jpg"
+    }
+    ```
+  - `400 Bad Request`:
+    - Thiếu file hoặc file rỗng: `{ "message": "Vui lòng chọn tệp ảnh để tải lên." }`
+    - Vượt quá 5MB: `{ "message": "Dung lượng ảnh vượt quá giới hạn cho phép (tối đa 5MB)." }`
+    - Sai đuôi file hoặc sai `Content-Type`: `{ "message": "Định dạng tệp không hợp lệ. Chỉ chấp nhận ảnh JPG, JPEG, PNG hoặc WEBP." }`
+    - `folder` ngoài whitelist (`payments`, `newsfeed`, `general`): `{ "message": "Thư mục lưu ảnh không hợp lệ. Chỉ chấp nhận: payments, newsfeed, general." }`
+  - `401 Unauthorized`: Chưa đăng nhập hoặc token không hợp lệ.
+
+- **Lưu ý deploy production (QUAN TRỌNG):**
+  - Khi upload code lên production bằng FTP, **KHÔNG** được xóa hoặc ghi đè xóa sạch thư mục `wwwroot/uploads/` (toàn bộ ảnh đã upload của phụ huynh và bảng tin phải được giữ nguyên).
