@@ -175,7 +175,7 @@ export default function Branches() {
         eyebrow="Hệ thống cơ sở"
         title={
           <span className="inline-flex items-center gap-2.5 flex-wrap">
-            <span>Quản lý Chi nhánh Cơ sở</span>
+            <span>Quản lý Chi nhánh</span>
             <Badge variant="gold">{summaryStats.activeCount}/{summaryStats.total} hoạt động</Badge>
           </span>
         }
@@ -203,7 +203,7 @@ export default function Branches() {
             🏛️
           </div>
           <div className="min-w-0">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted truncate">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted leading-snug">
               Chi nhánh hoạt động
             </p>
             <p className="text-lg font-bold text-teal tabular-nums">
@@ -220,7 +220,7 @@ export default function Branches() {
             🏫
           </div>
           <div className="min-w-0">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted truncate">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted leading-snug">
               Lớp đang mở
             </p>
             <p className="text-lg font-bold text-teal tabular-nums">
@@ -234,7 +234,7 @@ export default function Branches() {
             🎓
           </div>
           <div className="min-w-0">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted truncate">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted leading-snug">
               Học viên đang học
             </p>
             <p className="text-lg font-bold text-emerald-700 tabular-nums">
@@ -248,7 +248,7 @@ export default function Branches() {
             👩‍🏫
           </div>
           <div className="min-w-0">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted truncate">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted leading-snug">
               Giáo viên cơ sở
             </p>
             <p className="text-lg font-bold text-amber-700 tabular-nums">

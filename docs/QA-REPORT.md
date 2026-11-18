@@ -1118,3 +1118,28 @@ Toàn bộ **8/8 hạng mục** của **Giai đoạn 1N-2 (8 bẫy đồng bộ)
 ## 3. Kiểm tra trình duyệt ở `1440px` & `1280px` & Kết luận
 - **Giới hạn môi trường sandbox:** Không mở được trình duyệt trong sandbox để kiểm tra trực quan `Teachers`, `Branches` (+ chi tiết 1 chi nhánh), `Courses` ở `1440px` & `1280px`.
 - **Trạng thái hiện tại:** **ĐẠT `npm run lint` + `npm run build` & đối chiếu mã nguồn 100%**; **CHỜ XEM TRỰC QUAN TRÊN TRÌNH DUYỆT (`1440px` & `1280px`)** trước khi commit `"Trùng tu giao diện R2b: Teachers + Branches + Courses"`.
+
+
+---
+
+# BÁO CÁO QA — ĐỢT TRÙNG TU GIAO DIỆN R2b-fix: CĂN LỀ CỘT THAO TÁC + NHÃN THỐNG KÊ
+**Ngày kiểm tra:** 18/11/2026  
+**Người thực hiện:** QA Agent & Commander  
+**Commit gốc:** `7027745` (sau Đợt trùng tu R2b)  
+**Phạm vi:** Chỉ 3 file (`roxy-admin/src/pages/Teachers.jsx`, `Courses.jsx`, `Branches.jsx`); không đụng `Students.jsx`, `ClassList.jsx` hay backend; không đổi logic, API, dữ liệu hay phân quyền.
+
+## 1. Kết quả Lint & Build (`roxy-admin/`)
+- `npm --prefix roxy-admin run lint` (`eslint .`): **PASS** (0 error, 0 warning).
+- `npm --prefix roxy-admin run build` (`vite build`): **PASS** (`✓ 113 modules transformed`, `✓ built in 389ms`).
+
+## 2. Kết quả đối chiếu 4 hạng mục sửa trên mã nguồn
+| Hạng mục | Kiểm tra | Kết quả | Chi tiết đối chiếu |
+| :--- | :--- | :---: | :--- |
+| **1. Cột `Thao tác`** | Đồng bộ `<th>` & `<td>` giữa `Teachers.jsx`, `Courses.jsx` với `Students.jsx`, `ClassList.jsx` | **PASS** | - Trước sửa (đo ở `1438px`): `Teachers.jsx` lệch mép phải ~`15px`, `Courses.jsx` lệch ~`30px` (do `text-center w-28` + `justify-center`).<br>- Sau sửa: `Teachers.jsx` & `Courses.jsx` đồng bộ `px-2 py-2.5 text-right whitespace-nowrap sticky right-0` + shadow ở cả `<th>` và `<td>`, cụm icon `inline-flex items-center justify-end gap-1` khớp mẫu `Students.jsx` & `ClassList.jsx`. |
+| **2. Thẻ thống kê Chi nhánh** | Bỏ cắt chữ `…` ở `Branches.jsx` | **PASS** | - Bỏ `truncate` ở 4 nhãn (`Chi nhánh hoạt động`, `Lớp đang mở`, `Học viên đang học`, `Giáo viên cơ sở`), thay bằng `leading-snug` để đọc đủ chữ. |
+| **3. Tiêu đề Chi nhánh** | Bỏ chữ thừa ở `Branches.jsx` | **PASS** | - L178: đổi `"Quản lý Chi nhánh Cơ sở"` → `"Quản lý Chi nhánh"`. |
+| **4. Badge Giáo viên** | Chống ngắt 3 dòng ở `Teachers.jsx` | **PASS** | - 4 `<Badge>` (`Đang hoạt động`, `Đã khóa`, `Đã đặt mật khẩu`, `Chưa có mật khẩu`) gắn `whitespace-nowrap`; `<td>` đặt `min-w-[130px]` / `min-w-[140px]`. |
+
+## 3. Đo `getBoundingClientRect()` trên trình duyệt (`1440px` & `1280px`) & Kết luận
+- **Giới hạn môi trường sandbox:** Không có trình duyệt/Playwright trong sandbox để mở trang và đo `getBoundingClientRect()` mép phải `<th>` "Thao tác" vs icon cuối cùng sau khi sửa.
+- **Trạng thái hiện tại:** **ĐẠT `npm run lint` + `npm run build` & đối chiếu mã nguồn**; **CHỜ ĐO TRỰC QUAN `getBoundingClientRect()` TRÊN TRÌNH DUYỆT (`1440px` & `1280px`, sai số <= 2px)** trước khi commit `"Trùng tu giao diện R2b-fix: căn lề cột thao tác + nhãn thống kê"`.

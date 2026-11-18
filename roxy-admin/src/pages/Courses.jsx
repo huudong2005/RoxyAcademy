@@ -313,19 +313,19 @@ export default function Courses() {
               <table className="w-full text-left text-xs md:text-sm border-collapse">
                 <thead>
                   <tr className="border-b border-line bg-surface-subtle text-[11px] font-semibold uppercase tracking-wider text-ink-muted">
-                    <th className="px-2.5 py-2.5">Mã khóa</th>
-                    <th className="px-2.5 py-2.5">Tên khóa học</th>
-                    <th className="px-2.5 py-2.5">Mô tả</th>
-                    <th className="px-2.5 py-2.5 text-center">Số buổi</th>
-                    <th className="px-2.5 py-2.5 text-right">Học phí chuẩn</th>
-                    <th className="px-2.5 py-2.5 text-center">Trạng thái</th>
-                    <th className="px-2.5 py-2.5 text-center w-28">Thao tác</th>
+                    <th className="px-2 py-2.5">Mã khóa</th>
+                    <th className="px-2 py-2.5">Tên khóa học</th>
+                    <th className="px-2 py-2.5">Mô tả</th>
+                    <th className="px-2 py-2.5 text-center">Số buổi</th>
+                    <th className="px-2 py-2.5 text-right">Học phí chuẩn</th>
+                    <th className="px-2 py-2.5 text-center">Trạng thái</th>
+                    <th scope="col" className="px-2 py-2.5 text-right whitespace-nowrap sticky right-0 z-20 bg-surface-subtle shadow-[-4px_0_8px_-4px_rgba(30,46,43,0.08)]">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line/60">
                   {filteredCourses.map((c) => (
                     <tr key={c.id} className="hover:bg-mint-canvas/60 transition-colors">
-                      <td className="px-2.5 py-2.5 font-mono font-medium text-ink">
+                      <td className="px-2 py-2.5 font-mono font-medium text-ink">
                         {c.courseCode ? (
                           <span className="inline-block rounded-full bg-surface-subtle px-2.5 py-0.5 text-xs font-semibold text-ink border border-line">
                             {c.courseCode}
@@ -334,27 +334,27 @@ export default function Courses() {
                           <span className="text-ink-muted">—</span>
                         )}
                       </td>
-                      <td className="px-2.5 py-2.5 font-semibold text-ink">
+                      <td className="px-2 py-2.5 font-semibold text-ink">
                         {c.courseName}
                       </td>
-                      <td className="px-2.5 py-2.5 text-ink-secondary max-w-xs truncate" title={c.description}>
+                      <td className="px-2 py-2.5 text-ink-secondary max-w-xs truncate" title={c.description}>
                         {c.description || <span className="text-ink-muted italic">Chưa có mô tả</span>}
                       </td>
-                      <td className="px-2.5 py-2.5 text-center font-medium text-ink tabular-nums">
+                      <td className="px-2 py-2.5 text-center font-medium text-ink tabular-nums">
                         {c.totalSessions ? `${c.totalSessions} buổi` : '—'}
                       </td>
-                      <td className="px-2.5 py-2.5 text-right font-semibold text-teal font-mono tabular-nums">
+                      <td className="px-2 py-2.5 text-right font-semibold text-teal font-mono tabular-nums">
                         {formatCurrency(c.defaultFee)}
                       </td>
-                      <td className="px-2.5 py-2.5 text-center">
+                      <td className="px-2 py-2.5 text-center">
                         {c.isActive ? (
                           <Badge variant="emerald">Đang mở</Badge>
                         ) : (
                           <Badge variant="neutral">Tạm ngưng</Badge>
                         )}
                       </td>
-                      <td className="px-2.5 py-2.5 text-center">
-                        <div className="flex items-center justify-center gap-1.5">
+                      <td className="px-2 py-2.5 whitespace-nowrap text-right sticky right-0 z-10 bg-surface shadow-[-4px_0_8px_-4px_rgba(30,46,43,0.08)]">
+                        <div className="inline-flex items-center justify-end gap-1">
                           <IconButton
                             variant="neutral"
                             onClick={() => handleOpenEdit(c)}
