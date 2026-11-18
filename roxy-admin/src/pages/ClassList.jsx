@@ -6,6 +6,7 @@ import ConfirmModal from '../components/ConfirmModal';
 import {
   PrimaryButton,
   SecondaryButton,
+  IconButton,
   InputPill,
   Badge,
   Card,
@@ -906,35 +907,42 @@ export default function ClassList() {
 
                     {/* Cột 9: Thao tác */}
                     <td className="px-2 py-2.5 whitespace-nowrap text-right sticky right-0 z-10 bg-surface shadow-[-4px_0_8px_-4px_rgba(30,46,43,0.08)]">
-                      <div className="inline-flex items-center gap-1">
-                        <button
-                          type="button"
+                      <div className="inline-flex items-center gap-1.5">
+                        <IconButton
+                          variant="neutral"
                           onClick={() => handleOpenDetail(cls)}
-                          className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-semibold text-teal bg-gold-soft/70 hover:bg-gold-soft border border-gold/30 active:scale-95 transition-all cursor-pointer"
                           title="Xem tiến độ bài học & chi tiết lớp"
+                          aria-label="Xem tiến độ bài học & chi tiết lớp"
                         >
-                          <span>👁 Chi tiết</span>
-                        </button>
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" aria-hidden="true">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                          </svg>
+                        </IconButton>
 
                         {isSuperAdmin && (
                           <>
-                            <button
-                              type="button"
+                            <IconButton
+                              variant="neutral"
                               onClick={() => handleOpenEditModal(cls)}
-                              className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-medium text-teal hover:bg-mint-canvas border border-line active:scale-95 transition-all cursor-pointer"
                               title="Sửa thông tin lớp"
+                              aria-label="Sửa thông tin lớp"
                             >
-                              <span>Sửa</span>
-                            </button>
+                              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" aria-hidden="true">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                              </svg>
+                            </IconButton>
                             {cls.status !== 'Finished' && (
-                              <button
-                                type="button"
+                              <IconButton
+                                variant="danger"
                                 onClick={() => handleCloseClass(cls)}
-                                className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-medium text-rose-600 hover:bg-rose-50 active:scale-95 transition-all cursor-pointer"
                                 title="Đóng lớp học (Xóa mềm)"
+                                aria-label="Đóng lớp học (Xóa mềm)"
                               >
-                                <span>Đóng lớp</span>
-                              </button>
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" aria-hidden="true">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                                </svg>
+                              </IconButton>
                             )}
                           </>
                         )}

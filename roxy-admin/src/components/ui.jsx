@@ -57,6 +57,35 @@ export function SecondaryButton({
   );
 }
 
+const ICON_BUTTON_VARIANTS = {
+  neutral: 'bg-gold-soft/70 border-gold/30 text-teal hover:bg-gold-soft hover:border-gold/50',
+  danger: 'bg-rose-50/60 border-rose-200/70 text-rose-600 hover:bg-rose-100 hover:border-rose-300',
+};
+
+/** Nút icon tròn gọn cho cột thao tác trong bảng. */
+export function IconButton({
+  variant = 'neutral',
+  type = 'button',
+  title,
+  className = '',
+  children,
+  ...props
+}) {
+  const variantClass = ICON_BUTTON_VARIANTS[variant] || ICON_BUTTON_VARIANTS.neutral;
+  const ariaLabel = props['aria-label'] || title;
+  return (
+    <button
+      type={type}
+      title={title}
+      aria-label={ariaLabel}
+      className={`inline-flex h-9 w-9 items-center justify-center rounded-full border active:scale-95 transition-[transform,background-color,border-color] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 focus-visible:ring-offset-1 disabled:opacity-50 disabled:pointer-events-none cursor-pointer ${variantClass} ${className}`}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+}
+
 /** Ô nhập dạng pill 1 dòng. */
 export function InputPill({ className = '', ...props }) {
   return (

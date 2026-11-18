@@ -1070,3 +1070,27 @@ Toàn bộ **8/8 hạng mục** của **Giai đoạn 1N-2 (8 bẫy đồng bộ)
 ## 3. Kiểm tra trực quan trên trình duyệt ở `1440px` & Kết luận
 - **Giới hạn môi trường sandbox:** Không có dev server + API đăng nhập chạy trong sandbox để mở trình duyệt xem trực quan ở `1440px`.
 - **Trạng thái hiện tại:** **ĐẠT `npm run lint` + `npm run build` & đối chiếu 3 lỗi trên mã nguồn**; **CHỜ XEM TRỰC QUAN TRÊN TRÌNH DUYỆT Ở `1440px`** trước khi commit `"Trùng tu giao diện R2a-fix: lọc + bảng + nút thêm"`.
+
+
+---
+
+# BÁO CÁO QA — ĐỢT TRÙNG TU GIAO DIỆN R2a-fix2: NÚT THAO TÁC DẠNG ICON
+**Ngày kiểm tra:** 18/11/2026  
+**Người thực hiện:** QA Agent & Commander  
+**Commit gốc:** `2eccc1a` (sau Đợt trùng tu R2a-fix)  
+**Phạm vi:** Chỉ `roxy-admin/src/components/ui.jsx` (`IconButton`), cột `Thao tác` trong `roxy-admin/src/pages/Students.jsx` và `roxy-admin/src/pages/ClassList.jsx`; không đổi logic, API, dữ liệu hay phân quyền.
+
+## 1. Kết quả Lint & Build (`roxy-admin/`)
+- `npm --prefix roxy-admin run lint` (`eslint .`): **PASS** (0 error, 0 warning).
+- `npm --prefix roxy-admin run build` (`vite build`): **PASS** (`✓ 113 modules transformed`, `✓ built in 328ms`).
+
+## 2. Kết quả đối chiếu mã nguồn & bề rộng tại `1440px` / `1280px`
+| Hạng mục kiểm tra | Kết quả | Chi tiết đối chiếu |
+| :--- | :---: | :--- |
+| `IconButton` dùng chung (`ui.jsx`) | **PASS** | - `h-9 w-9` (~36px), `rounded-full`, `neutral` (`bg-gold-soft/70 border-gold/30 text-teal`) và `danger` (`bg-rose-50/60 border-rose-200/70 text-rose-600`), hỗ trợ `title` + `aria-label`, `focus-visible:ring-gold/50`. |
+| Cột `Thao tác` (`Students.jsx` & `ClassList.jsx`) | **PASS** | - Chỉ còn `<IconButton>` + SVG inline (`h-4 w-4`): mắt (chi tiết), bút chì (sửa / parent cập nhật liên hệ), thùng rác (xóa học viên), khóa (đóng lớp); 0 nút chữ, 0 emoji.<br>- Giữ nguyên nút `"Tạo tài khoản"` / `"Đặt lại MK"` (cột Tài khoản `Students.jsx`), các nút chữ trong panel chi tiết lớp (`ClassList.jsx`), phân quyền và `ConfirmModal`. |
+| Bề rộng bảng tại `1440px` & `1280px` | **PASS (Static)** | - Cột `Thao tác` thu gọn còn ~136px.<br>- **`1440px` (~1120px khả dụng):** `Students` (~906–1171px) và `ClassList` (~951–1176px) hết cuộn ngang với dữ liệu thông thường/ngắn–trung bình (trường hợp nhiều cột cùng chạm `max-w` chỉ cuộn nhẹ ~20–56px có `sticky right-0`).<br>- **`1280px` (~960px khả dụng):** Với dữ liệu trung bình/dài cả 2 bảng vẫn còn cuộn ngang nội bộ nhẹ (~40–216px) trong `overflow-x-auto` với cột `Thao tác` sticky. |
+
+## 3. Kiểm tra trình duyệt ở `1440px` & `1280px` & Kết luận
+- **Giới hạn môi trường sandbox:** Không mở được trình duyệt trong sandbox để kiểm tra tooltip hover và đo DOM thực tế ở `1440px` & `1280px`.
+- **Trạng thái hiện tại:** **ĐẠT `npm run lint` + `npm run build` & đối chiếu mã nguồn**; **CHỜ XEM TRỰC QUAN TRÊN TRÌNH DUYỆT (`1440px` & `1280px`)** trước khi commit `"Trùng tu giao diện R2a-fix2: nút thao tác dạng icon"`.
