@@ -1362,10 +1362,10 @@ Ngoài endpoint `POST /api/Seed/catalog`, có thể chạy trực tiếp script 
     "tuition": {
       "month": 11,
       "year": 2026,
-      "totalExpected": 0,
+      "totalExpected": 100000,
       "totalPaid": 0,
-      "totalRemaining": 0,
-      "overdueTuitionCount": 1,
+      "totalRemaining": 100000,
+      "overdueTuitionCount": 2,
       "overdueTuitionAmount": 1350000
     },
     "todayAttendance": {
@@ -1383,7 +1383,7 @@ Ngoài endpoint `POST /api/Seed/catalog`, có thể chạy trực tiếp script 
   1. **Tổng tháng hiện tại (`totalExpected`, `totalPaid`, `totalRemaining`):**
      - Chỉ tính các khoản thu chưa bị hủy (`!IsCancelled`) có **hạn nộp (`DueDate`) rơi vào đúng tháng/năm hiện tại theo giờ Việt Nam (UTC+7)** (`t.DueDate.Month == month && t.DueDate.Year == year`), **KHÔNG** tính theo ngày tạo khoản thu (`CreatedAt`) và **KHÔNG** gộp nợ quá hạn từ các tháng trước.
      - Công thức: `NetAmount = Amount - Discount`; `PaidAmount = SUM(Payments.Amount với Status == "Confirmed")`; `totalRemaining = SUM(Math.Max(0, NetAmount - PaidAmount))`.
-     - **Hành vi đúng thiết kế:** Nếu học viên/phụ huynh có nợ quá hạn ở tháng trước (ví dụ hạn nộp tháng 10 = `1.350.000đ`) nhưng không có khoản nào có hạn nộp trong tháng 11/2026, thì card **"Học phí tháng 11/2026"** sẽ hiển thị `Đã thu 0đ / Chưa thu 0đ / Tổng phải thu 0đ`.
+     - **Hành vi đúng thiết kế (ví dụ dữ liệu thực tế Phụ huynh Trần Thị D):** Thẻ **"Học phí tháng 11/2026"** hiển thị `Đã thu 0đ / Chưa thu 100.000đ / Tổng phải thu 100.000đ` vì có khoản `"TEST Học phí đợt 2A"` hạn nộp `30/11/2026` còn nợ `100.000đ` (trong khi 2 khoản nợ quá hạn `100.000đ` hạn `23/10/2026` và `1.250.000đ` còn nợ hạn `30/10/2026`, tổng `1.350.000đ`, hiển thị ở thẻ **"Học phí quá hạn (tất cả các tháng)"**). Thẻ học phí tháng chỉ hiển thị `Đã thu 0đ / Chưa thu 0đ / Tổng phải thu 0đ` khi không có khoản thu nào có hạn nộp (`DueDate`) rơi vào tháng đó.
   2. **Nợ quá hạn (`overdueTuitionCount`, `overdueTuitionAmount`):**
      - Được tính tách riêng trên **tất cả các tháng** với điều kiện `!IsCancelled && DueDate < today && PaidAmount < NetAmount` (với `today` theo UTC+7).
      - Khoản nợ quá hạn từ các tháng trước sẽ hiển thị ở card **"Học phí quá hạn (tất cả các tháng)"** ngay bên dưới card học phí tháng trên Dashboard, khớp với danh sách lọc `Overdue` tại trang Học phí (`/tuitions?status=Overdue`).

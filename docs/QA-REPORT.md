@@ -863,6 +863,11 @@ Toàn bộ **8/8 hạng mục** của **Giai đoạn 1N-2 (8 bẫy đồng bộ)
 | Khớp scoping & công thức `Parent` với trang Học phí | **PASS** | - Cả `DashboardController.VisibleTuitionsQuery()` (L250) và `TuitionsController.GetTuitions()` (L48) đều lọc `t.Student.ParentId == UserId`, dùng cùng công thức `NetAmount - PaidAmount` (`Status == "Confirmed"`) và điều kiện quá hạn `DueDate < today`. |
 | Cập nhật tài liệu `docs/API.md` | **PASS** | - Bổ sung mục **14.1 (`GET /api/Dashboard/summary`)** vào `docs/API.md`, ghi rõ quy tắc tính theo `DueDate` tháng hiện tại và tách riêng `overdueTuitionCount`/`overdueTuitionAmount`. |
 
-## 3. Kiểm chứng tài khoản Phụ huynh Trần Thị D & Kết luận
-- **Giới hạn môi trường sandbox:** Không thể khởi chạy MSSQL Database và ASP.NET Core API trong sandbox để đăng nhập runtime tài khoản Phụ huynh **Trần Thị D** đối chiếu số liệu `1.350.000đ` thực tế; toàn bộ logic và scoping đã được xác minh khớp 100% qua mã nguồn (`DashboardController.cs`, `DashboardDtos.cs`, `TuitionsController.cs`, `Dashboard.jsx`) và `docs/API.md`.
-- **Trạng thái hiện tại:** **ĐẠT kiểm tra mã nguồn, tài liệu & `lint`/`build`**; **CHỜ XÁC NHẬN RUNTIME BẰNG TÀI KHOẢN PHỤ HUYNH TRẦN THỊ D** trước khi commit `"Fix đợt 2C: dashboard tháng"`.
+## 3. Kiểm chứng tài khoản Phụ huynh Trần Thị D & Kết luận (Cập nhật Fix đợt 2C-2 — 18/11/2026)
+- **Kết quả kiểm chứng thực tế bằng tài khoản Phụ huynh Trần Thị D (18/11/2026):**
+  - **Thẻ Học phí quá hạn (tất cả các tháng):** Khớp **2 khoản / 1.350.000đ** (gồm `100.000đ` hạn `23/10/2026` và `1.250.000đ` còn nợ hạn `30/10/2026`).
+  - **Thẻ Học phí tháng 11/2026:** Hiển thị **Đã thu 0đ / Chưa thu 100.000đ / Tổng phải thu 100.000đ**, khớp khoản `"TEST Học phí đợt 2A"` hạn nộp `30/11/2026` — xác nhận logic tính theo **`DueDate`** đúng 100%.
+- **Cập nhật tài liệu (`docs/API.md` §14.1, Fix đợt 2C-2):**
+  - Sửa ví dụ JSON (`totalExpected: 100000`, `totalPaid: 0`, `totalRemaining: 100000`, `overdueTuitionCount: 2`, giữ `overdueTuitionAmount: 1350000`).
+  - Sửa câu giải thích khớp với dữ liệu thực tế hiện tại và ghi chú thẻ học phí tháng chỉ hiện `0đ / 0đ / 0đ` khi không có khoản nào có hạn nộp trong tháng đó.
+- **Kết luận cuối cùng (Đợt 2C & 2C-2):** **PASS 100%** — Sẵn sàng commit `"Fix đợt 2C-2: sửa số liệu ví dụ dashboard"`.
