@@ -948,3 +948,27 @@ Toàn bộ **8/8 hạng mục** của **Giai đoạn 1N-2 (8 bẫy đồng bộ)
 ## 3. Kiểm thử runtime trên `http://localhost:5123` & Kết luận
 - **Giới hạn môi trường sandbox:** `http://localhost:5123` chưa có server chạy trong sandbox, nên chưa thực thi trực tiếp 4 case HTTP runtime (upload ảnh `.jpg` thật & mở URL tĩnh, upload `.txt`/`.exe`, upload file >5MB, upload không token `401`).
 - **Trạng thái hiện tại:** **ĐẠT `dotnet build` (0 warning, 0 error) & đối chiếu mã nguồn 100%**; **CHỜ TEST UPLOAD THẬT TRÊN `http://localhost:5123`** trước khi commit `"Upload ảnh (2D-1): endpoint upload + phục vụ file tĩnh"`.
+
+
+---
+
+# BÁO CÁO QA — UPLOAD ẢNH (2D-2): CHỌN FILE & XEM TRƯỚC Ở FORM THANH TOÁN VÀ BẢNG TIN
+**Ngày kiểm tra:** 18/11/2026  
+**Người thực hiện:** QA Agent & Commander  
+**Commit gốc:** `9516e03` (sau Upload ảnh 2D-1)  
+**Phạm vi:** Chỉ Frontend (`roxy-admin/src/components/ImageUpload.jsx`, `pages/Tuitions.jsx`, `components/NewsfeedModals.jsx`); không sửa backend, không đổi DB/luồng nghiệp vụ.
+
+## 1. Kết quả Lint & Build (`roxy-admin/`)
+- `npm --prefix roxy-admin run lint` (`eslint .`): **PASS** (0 error, 0 warning).
+- `npm --prefix roxy-admin run build` (`vite build`): **PASS** (`✓ 112 modules transformed`, `✓ built in 390ms`; chạy ngoài sandbox do sandbox Windows chặn `EPERM` tại `node_modules/.vite-temp/`).
+
+## 2. Kết quả đối chiếu mã nguồn (3/3 yêu cầu)
+| Hạng mục kiểm tra | Kết quả | Chi tiết đối chiếu |
+| :--- | :---: | :--- |
+| Component dùng chung `ImageUpload.jsx` | **PASS** | - `<input type="file" accept="image/*" />` (L92–95), validate client-side `.jpg/.jpeg/.png/.webp` & MIME type + dung lượng `<= 5MB` với thông báo tiếng Việt rõ ràng (L4–6, L37–49).<br>- Gửi `FormData` (`file`, `folder`) tới `POST /api/Uploads/image` qua `axiosClient.post` ghi đè `headers: { 'Content-Type': 'multipart/form-data' }` (L51–59).<br>- Hiện `"Đang tải lên..."`, thumbnail xem trước + nút `Xóa ảnh` để chọn lại; khi lỗi không gọi `onChange` (không ghi URL sai vào form). |
+| Tích hợp vào 2 form thanh toán (`Tuitions.jsx`) | **PASS** | - `QuickPayModal` (L2460–2470) và `ParentPaymentModal` (L2776–2786) dùng `<ImageUpload folder="payments" value={proofImageUrl} onChange={setProofImageUrl} ... />`, giữ nguyên logic submit và hiển thị ảnh bằng chứng cũ. |
+| Tích hợp vào bảng tin (`NewsfeedModals.jsx`) | **PASS** | - `CreateEditNewsfeedModal` (L423–433) dùng `<ImageUpload folder="newsfeed" value={imageUrl} ... />`; `validate()` (L230) chấp nhận URL tuyệt đối `http://...` / `https://...` trả về từ `UploadsController`; giữ nguyên `NewsfeedDetailModal`. |
+
+## 3. Kiểm thử runtime E2E trên `http://localhost:5173` & Kết luận
+- **Giới hạn môi trường sandbox:** Cổng `5173` (Vite) và `5123` (API) không chạy trong sandbox, nên chưa test thực tế trên trình duyệt 4 kịch bản (Phụ huynh nộp thanh toán upload `.jpg` thật, SuperAdmin đăng bảng tin upload ảnh thật, thử file `.txt` & file `>5MB`).
+- **Trạng thái hiện tại:** **ĐẠT `npm run lint` + `npm run build` & đối chiếu mã nguồn 100%**; **CHỜ TEST UPLOAD THẬT TRÊN `http://localhost:5173` + `http://localhost:5123`** trước khi commit `"Upload ảnh (2D-2): chọn file + xem trước ở form thanh toán và bảng tin"`.

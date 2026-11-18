@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axiosClient from '../api/axiosClient';
 import { formatDateTime, NEWSFEED_AUDIENCE_META } from '../utils/formatters';
+import ImageUpload from './ImageUpload';
 
 /**
  * Modal xem chi tiết bài đăng Bảng tin.
@@ -418,25 +419,18 @@ export function CreateEditNewsfeedModal({
             )}
           </div>
 
-          {/* URL Ảnh */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-              URL hình ảnh (tùy chọn)
-            </label>
-            <input
-              type="text"
-              value={imageUrl}
-              onChange={(e) => {
-                setImageUrl(e.target.value);
-                setFieldErrors((prev) => ({ ...prev, imageUrl: '' }));
-              }}
-              placeholder="https://..."
-              className="w-full min-h-[42px] rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none"
-            />
-            {fieldErrors.imageUrl && (
-              <p className="mt-1 text-xs font-medium text-rose-600">{fieldErrors.imageUrl}</p>
-            )}
-          </div>
+          {/* Hình ảnh */}
+          <ImageUpload
+            label="Hình ảnh (tùy chọn)"
+            value={imageUrl}
+            onChange={(url) => {
+              setImageUrl(url);
+              setFieldErrors((prev) => ({ ...prev, imageUrl: '' }));
+            }}
+            folder="newsfeed"
+            disabled={isSubmitting}
+            error={fieldErrors.imageUrl}
+          />
 
           {/* Checkboxes */}
           <div className="flex flex-wrap gap-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">

@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
 import { formatCurrency, formatDate, formatDateTime, numberToVietnameseWords } from '../utils/formatters';
 import { fetchAllStudents } from '../utils/fetchAllStudents';
+import ImageUpload from '../components/ImageUpload';
 
 export default function Tuitions() {
   const navigate = useNavigate();
@@ -2455,19 +2456,18 @@ function QuickPayModal({ tuition, onClose, onSuccess }) {
               />
             </div>
 
-            {/* URL ảnh chứng từ */}
-            <div>
-              <label className="block font-semibold text-slate-700 mb-1">
-                URL ảnh chụp biên lai / Chứng từ <span className="text-slate-400 font-normal">(Tùy chọn)</span>
-              </label>
-              <input
-                type="url"
-                placeholder="https://..."
-                value={proofImageUrl}
-                onChange={(e) => setProofImageUrl(e.target.value)}
-                className="w-full h-10 px-3 bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500 text-slate-700 text-xs"
-              />
-            </div>
+            {/* Ảnh chứng từ */}
+            <ImageUpload
+              label={
+                <>
+                  Ảnh chụp biên lai / Chứng từ <span className="text-slate-400 font-normal">(Tùy chọn)</span>
+                </>
+              }
+              value={proofImageUrl}
+              onChange={setProofImageUrl}
+              folder="payments"
+              disabled={submitting}
+            />
 
             {/* Ghi chú */}
             <div>
@@ -2772,19 +2772,18 @@ function ParentPaymentModal({ tuition, onClose, onSuccess }) {
               </span>
             </div>
 
-            {/* Link ảnh chứng từ chuyển khoản */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Link ảnh chứng từ / Biên lai chuyển khoản <span className="text-slate-400 font-normal">(tùy chọn)</span>
-              </label>
-              <input
-                type="url"
-                placeholder="https://..."
-                value={proofImageUrl}
-                onChange={(e) => setProofImageUrl(e.target.value)}
-                className="w-full h-10 px-3 text-xs md:text-sm bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 placeholder:text-slate-400"
-              />
-            </div>
+            {/* Ảnh chứng từ chuyển khoản */}
+            <ImageUpload
+              label={
+                <>
+                  Ảnh chứng từ / Biên lai chuyển khoản <span className="text-slate-400 font-normal">(tùy chọn)</span>
+                </>
+              }
+              value={proofImageUrl}
+              onChange={setProofImageUrl}
+              folder="payments"
+              disabled={submitting}
+            />
 
             {/* Ghi chú */}
             <div>
