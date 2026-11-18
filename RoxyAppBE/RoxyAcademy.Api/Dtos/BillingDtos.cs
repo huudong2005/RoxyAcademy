@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace RoxyAcademy.Api.Dtos;
 
 public class GenerateMonthlyBillingRequest
@@ -23,7 +25,8 @@ public record UncreatedMonthlyTuitionItemDto(
     string StudentName,
     int ClassId,
     string ClassName,
-    string Reason
+    string Reason,
+    [property: JsonIgnore] int BranchId = 0
 );
 
 public record MonthlyBillingSummaryDto(
@@ -36,5 +39,6 @@ public record MonthlyBillingSummaryDto(
     List<CreatedMonthlyTuitionItemDto> CreatedItems,
     int SkippedDuplicateCount,
     int UncreatedCount,
-    List<UncreatedMonthlyTuitionItemDto> UncreatedItems
+    List<UncreatedMonthlyTuitionItemDto> UncreatedItems,
+    [property: JsonIgnore] Dictionary<int, int>? SkippedDuplicateCountByBranch = null
 );

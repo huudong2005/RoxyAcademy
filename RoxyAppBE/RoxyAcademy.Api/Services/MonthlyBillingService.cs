@@ -70,6 +70,7 @@ public class MonthlyBillingService(
         var createdItems = new List<CreatedMonthlyTuitionItemDto>();
         var uncreatedItems = new List<UncreatedMonthlyTuitionItemDto>();
         var skippedDuplicateCount = 0;
+        var skippedDuplicateCountByBranch = new Dictionary<int, int>();
         var note = $"Tự động tạo bởi hệ thống ngày {vnNow:dd/MM/yyyy}";
 
         foreach (var sc in enrollments)
@@ -77,6 +78,8 @@ public class MonthlyBillingService(
             if (existingSet.Contains((sc.StudentId, sc.ClassId)))
             {
                 skippedDuplicateCount++;
+                skippedDuplicateCountByBranch[sc.Class.BranchId] =
+                    skippedDuplicateCountByBranch.GetValueOrDefault(sc.Class.BranchId) + 1;
                 continue;
             }
 
@@ -88,7 +91,8 @@ public class MonthlyBillingService(
                     sc.Student.FullName,
                     sc.ClassId,
                     sc.Class.ClassName,
-                    "Lớp và khóa học chưa thiết lập học phí."));
+                    "Lớp và khóa học chưa thiết lập học phí.",
+                    sc.Class.BranchId));
                 continue;
             }
 
@@ -99,7 +103,8 @@ public class MonthlyBillingService(
                     sc.Student.FullName,
                     sc.ClassId,
                     sc.Class.ClassName,
-                    "Học phí thiết lập không hợp lệ (< 0)."));
+                    "Học phí thiết lập không hợp lệ (< 0).",
+                    sc.Class.BranchId));
                 continue;
             }
 
@@ -126,7 +131,8 @@ public class MonthlyBillingService(
                     sc.Student.FullName,
                     sc.ClassId,
                     sc.Class.ClassName,
-                    createResult.ErrorMessage ?? "Không thể tạo khoản thu."));
+                    createResult.ErrorMessage ?? "Không thể tạo khoản thu.",
+                    sc.Class.BranchId));
                 continue;
             }
 
@@ -197,6 +203,7 @@ public class MonthlyBillingService(
             createdItems,
             skippedDuplicateCount,
             uncreatedItems.Count,
-            uncreatedItems);
+            uncreatedItems,
+            skippedDuplicateCountByBranch);
     }
 }

@@ -1454,6 +1454,11 @@ Quét các ghi danh đang hoạt động (`StudentClass.Status == "Active"`) ở
   - `401 Unauthorized`: Chưa đăng nhập.
   - `403 Forbidden`: Không thuộc vai trò `SuperAdmin`/`BranchManager` hoặc `BranchManager` chưa được gán chi nhánh.
 
+- **Vận hành chạy nền tự động (3B):**
+  - Job nền (`MonthlyBillingBackgroundService`) tự động chạy mỗi ngày lúc **06:00 sáng (UTC+7)** cho tháng/năm hiện tại và gửi thông báo tổng hợp (`Notification`, `Type = "Tuition"`, `RefId = null`) cho từng `SuperAdmin` (toàn hệ thống) và `BranchManager` (riêng chi nhánh mình).
+  - Việc chạy nền cần API luôn hoạt động — khi deploy production cần nhờ hosting bật **Always On** cho site API.
+  - Nếu API dừng đúng lúc 06:00 thì hôm sau job chạy lại sẽ tự tạo bù các khoản còn thiếu (nhờ quy tắc tạo bù + chống trùng theo tháng của 3A); ngoài ra nhân viên luôn có thể chạy tay bằng `POST /api/Billing/generate-monthly`.
+
 
 
 

@@ -898,3 +898,28 @@ Toàn bộ **8/8 hạng mục** của **Giai đoạn 1N-2 (8 bẫy đồng bộ)
 ## 3. Kiểm thử thủ công trên `http://localhost:5123` & Kết luận
 - **Giới hạn môi trường sandbox:** Không thể kết nối `http://localhost:5123` / MSSQL local từ trong sandbox (`Unable to connect to the remote server`), nên chưa thực thi trực tiếp 5 kịch bản HTTP thủ công (tạo lần 1, gọi lần 2 chống trùng, lớp `Finished`/ghi danh không `Active`, lớp chưa đặt học phí, kiểm tra thông báo bằng tài khoản Phụ huynh).
 - **Trạng thái hiện tại:** **ĐẠT `dotnet build` (0 warning, 0 error) & đối chiếu mã nguồn 100%**; **CHỜ TEST THỦ CÔNG ENDPOINT TRÊN `http://localhost:5123`** trước khi commit `"Tính năng tự động tạo khoản thu (3A): logic + endpoint thủ công"`.
+
+
+---
+
+# BÁO CÁO QA — GIAI ĐOẠN 3B: CHẠY NỀN & THÔNG BÁO ADMIN (`MonthlyBillingBackgroundService`)
+**Ngày kiểm tra:** 18/11/2026  
+**Người thực hiện:** QA Agent & Commander  
+**Commit gốc:** `5504cdc` (sau Giai đoạn 3A)  
+**Phạm vi:** Chỉ Backend (`RoxyAppBE/`) + `docs/API.md` §15.1; không sửa DB/migration, không sửa dữ liệu test, không sửa quy tắc tính phí 3A, không sửa frontend (`roxy-admin/`).
+
+## 1. Kết quả Build & Đăng ký Hosted Service (`RoxyAppBE/RoxyAcademy.Api`)
+- `dotnet build RoxyAppBE/RoxyAcademy.Api --no-restore`: **PASS** (**0 Warning(s), 0 Error(s)**, `RoxyAcademy.Api.dll` biên dịch thành công).
+- `Program.cs` (L58): đã đăng ký `builder.Services.AddHostedService<MonthlyBillingBackgroundService>();`.
+
+## 2. Kết quả đối chiếu mã nguồn & tài liệu (4/4 yêu cầu)
+| Hạng mục kiểm tra | Kết quả | Chi tiết đối chiếu |
+| :--- | :---: | :--- |
+| Yêu cầu 1 (`BackgroundService`, `06:00` UTC+7, scope riêng, gọi service 3A) | **PASS** | - `MonthlyBillingBackgroundService.cs`: dùng `IServiceScopeFactory.CreateScope()` mỗi lần chạy (không giữ `DbContext` chung), tính `vnNow = DateTime.UtcNow.AddHours(7)`, lập lịch `06:00:00` UTC+7 tiếp theo.<br>- Lúc khởi động chỉ ghi `LogInformation` chờ tới `06:00` và `Task.Delay(delay, stoppingToken)` — không chạy tạo khoản thu ngay.<br>- Gọi đúng `IMonthlyBillingService.GenerateMonthlyTuitionsAsync(null, null, "SuperAdmin", null, stoppingToken)` của 3A. |
+| Yêu cầu 2 (Thông báo tổng hợp `SuperAdmin` & từng `BranchManager`, giữ nguyên JSON contract) | **PASS** | - Tạo `Notification` (`Type = "Tuition"`, `RefId = null`, `Title = "Đã tạo khoản thu tháng {MM/yyyy}"`) cho mọi user `IsActive`: `SuperAdmin` nhận tổng hợp toàn hệ thống; `BranchManager` (`BranchId.HasValue`) lọc đúng theo chi nhánh (`CreatedItems`, `UncreatedItems`, `SkippedDuplicateCountByBranch`), `Body` ghi rõ số khoản tạo + tổng tiền, số bỏ qua vì trùng, số chưa tạo kèm tên lớp.<br>- `[property: JsonIgnore]` trong `BillingDtos.cs` giữ nguyên 100% JSON response của `POST /api/Billing/generate-monthly`. |
+| Yêu cầu 3 (Logging & xử lý lỗi) | **PASS** | - Ghi `LogInformation` sau mỗi lần chạy xong; toàn bộ lần chạy bọc `try/catch` (`OperationCanceledException` vs `Exception`), lỗi chỉ ghi `LogError` và không tạo thông báo tổng hợp sai lệch. |
+| Yêu cầu 4 (Ghi chú `docs/API.md` §15.1) | **PASS** | - Bổ sung đầy đủ ghi chú vận hành: chạy nền `06:00` UTC+7, cần bật **Always On** trên hosting khi deploy production, cơ chế tự tạo bù hôm sau nếu dừng lúc `06:00`, và chạy tay qua `POST /api/Billing/generate-monthly`. |
+
+## 3. Kiểm thử runtime trên localhost & Kết luận
+- **Giới hạn môi trường sandbox:** Không thể khởi chạy API bind port `localhost` / kết nối SQL Server local trong sandbox để quan sát trực tiếp log console lúc khởi động và gọi `POST /api/Billing/generate-monthly` trên server đang chạy.
+- **Trạng thái hiện tại:** **ĐẠT `dotnet build` (0 warning, 0 error) & đối chiếu mã nguồn 100%**; **CHỜ XÁC MINH RUNTIME TRÊN LOCALHOST** (khởi động API kiểm tra log chờ `06:00` + gọi thử `POST /api/Billing/generate-monthly`) trước khi commit `"Tính năng tự động tạo khoản thu (3B): chạy nền + thông báo admin"`.
