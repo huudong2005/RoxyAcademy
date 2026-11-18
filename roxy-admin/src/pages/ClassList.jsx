@@ -3,6 +3,14 @@ import { useSearchParams } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
 import { formatDateTime } from '../utils/formatters';
 import ConfirmModal from '../components/ConfirmModal';
+import {
+  PrimaryButton,
+  SecondaryButton,
+  InputPill,
+  Badge,
+  Card,
+  PageHeader,
+} from '../components/ui';
 
 export default function ClassList() {
   // Lấy quyền từ user đang đăng nhập
@@ -400,31 +408,31 @@ export default function ClassList() {
     switch (status) {
       case 'Upcoming':
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-800">
+          <Badge variant="blue" className="normal-case tracking-normal text-xs">
             <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
             Sắp mở
-          </span>
+          </Badge>
         );
       case 'Ongoing':
       case 'Active':
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-800">
+          <Badge variant="emerald" className="normal-case tracking-normal text-xs">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
             Đang học
-          </span>
+          </Badge>
         );
       case 'Finished':
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">
-            <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
+          <Badge variant="neutral" className="normal-case tracking-normal text-xs">
+            <span className="h-1.5 w-1.5 rounded-full bg-ink-muted" />
             Đã kết thúc
-          </span>
+          </Badge>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-medium text-slate-600">
+          <Badge variant="neutral" className="normal-case tracking-normal text-xs">
             {status}
-          </span>
+          </Badge>
         );
     }
   };
@@ -664,47 +672,38 @@ export default function ClassList() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* 1. Header Trang & Phân Quyền Nút Thao Tác */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900">
-              Quản lý Lớp học
-            </h1>
-            <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700 border border-blue-200">
-              Tổng số: {classes.length} lớp
-            </span>
-          </div>
-          <p className="mt-1 text-xs text-slate-500">
-            Quản lý kế hoạch mở lớp, phân công giáo viên và theo dõi quy mô sĩ số
-          </p>
-        </div>
-
-        {/* Nút Tạo Lớp Mới: Chỉ hiển thị cho SuperAdmin theo phân quyền backend */}
-        {isSuperAdmin && (
-          <button
-            type="button"
-            onClick={handleOpenCreateModal}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white text-xs md:text-sm font-semibold rounded-lg shadow-xs hover:bg-blue-700 active:scale-[0.98] transition-transform duration-150 ease-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 cursor-pointer self-start sm:self-auto"
-          >
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            <span>+ Tạo lớp học mới</span>
-          </button>
-        )}
-      </div>
+      <PageHeader
+        eyebrow="Quản lý đào tạo"
+        title={
+          <span className="inline-flex flex-wrap items-center gap-2.5">
+            <span>Quản lý Lớp học</span>
+            <Badge variant="gold">Tổng số: {classes.length} lớp</Badge>
+          </span>
+        }
+        description="Quản lý kế hoạch mở lớp, phân công giáo viên và theo dõi quy mô sĩ số"
+        actions={
+          isSuperAdmin && (
+            <PrimaryButton onClick={handleOpenCreateModal}>
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              <span>+ Tạo lớp học mới</span>
+            </PrimaryButton>
+          )
+        }
+      />
 
       {/* 2. Thanh Công Cụ Tìm Kiếm & Lọc */}
-      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs">
+      <Card className="p-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* Ô Tìm kiếm */}
           <div className="relative">
-            <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+            <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-ink-muted">
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </span>
-            <input
+            <InputPill
               type="text"
               placeholder="Tìm theo tên lớp, khóa, giáo viên..."
               value={search}
@@ -712,7 +711,7 @@ export default function ClassList() {
                 setSearch(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full h-10 rounded-lg border border-slate-300 bg-white pl-9 pr-3 text-xs md:text-sm text-slate-800 transition placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none"
+              className="pl-9"
             />
           </div>
 
@@ -724,7 +723,7 @@ export default function ClassList() {
                 setBranchFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-xs md:text-sm text-slate-800 transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none"
+              className="w-full rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink transition focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
             >
               <option value="">Tất cả cơ sở</option>
               {branches.map((b) => (
@@ -743,7 +742,7 @@ export default function ClassList() {
                 setCourseFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-xs md:text-sm text-slate-800 transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none"
+              className="w-full rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink transition focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
             >
               <option value="">Tất cả khóa học</option>
               {courses.map((c) => (
@@ -755,14 +754,14 @@ export default function ClassList() {
           </div>
 
           {/* Lọc theo Trạng thái & Nút reset */}
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
             <select
               value={statusFilter}
               onChange={(e) => {
                 setStatusFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="flex-1 h-10 rounded-lg border border-slate-300 bg-white px-3 text-xs md:text-sm text-slate-800 transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none"
+              className="flex-1 w-full rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink transition focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
             >
               <option value="">Tất cả trạng thái</option>
               <option value="Upcoming">Sắp mở</option>
@@ -770,7 +769,7 @@ export default function ClassList() {
               <option value="Finished">Đã kết thúc</option>
             </select>
 
-            <button
+            <SecondaryButton
               type="button"
               onClick={() => {
                 setSearch('');
@@ -780,27 +779,27 @@ export default function ClassList() {
                 setCurrentPage(1);
               }}
               title="Đặt lại bộ lọc"
-              className="h-10 px-3 border border-slate-300 rounded-lg bg-white text-xs font-medium text-slate-600 hover:bg-slate-50 active:scale-95 transition-all"
+              className="px-4 py-2 text-xs shrink-0"
             >
               Đặt lại
-            </button>
+            </SecondaryButton>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Thông báo lỗi nếu có */}
       {error && (
-        <div className="rounded-lg bg-rose-50 border border-rose-200 p-4 text-xs md:text-sm text-rose-700 flex items-center gap-2">
+        <div className="rounded-xl bg-rose-50 border border-rose-200 p-4 text-xs md:text-sm text-rose-700 flex items-center gap-2">
           <span>⚠️</span>
           <span>{error}</span>
         </div>
       )}
 
       {/* 3. Bảng Danh Sách Lớp Học */}
-      <div className="w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xs">
+      <Card className="w-full overflow-hidden">
         <div className="overflow-x-auto min-w-full">
-          <table className="min-w-full divide-y divide-slate-200 text-left text-xs md:text-sm">
-            <thead className="bg-slate-50 text-[11px] uppercase font-semibold tracking-wider text-slate-500">
+          <table className="min-w-full divide-y divide-line text-left text-xs md:text-sm">
+            <thead className="bg-surface-subtle border-b border-line text-[11px] uppercase font-semibold tracking-wider text-ink-muted">
               <tr>
                 <th scope="col" className="px-4 py-3.5">Tên lớp</th>
                 <th scope="col" className="px-4 py-3.5">Khóa học</th>
@@ -813,12 +812,12 @@ export default function ClassList() {
                 <th scope="col" className="px-4 py-3.5 text-right">Thao tác</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 bg-white">
+            <tbody className="divide-y divide-line/60 bg-surface">
               {loading ? (
                 <tr>
-                  <td colSpan={9} className="px-6 py-12 text-center text-slate-400">
+                  <td colSpan={9} className="px-6 py-12 text-center text-ink-muted">
                     <div className="flex items-center justify-center gap-2">
-                      <svg className="h-5 w-5 animate-spin text-blue-600" fill="none" viewBox="0 0 24 24">
+                      <svg className="h-5 w-5 animate-spin text-teal" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                       </svg>
@@ -828,37 +827,37 @@ export default function ClassList() {
                 </tr>
               ) : paginatedClasses.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-6 py-12 text-center text-slate-400">
+                  <td colSpan={9} className="px-6 py-12 text-center text-ink-muted">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <span className="text-3xl">🏫</span>
-                      <p className="text-sm font-medium text-slate-600">Không tìm thấy lớp học nào</p>
-                      <p className="text-xs text-slate-400">Thử thay đổi bộ lọc tìm kiếm hoặc tạo lớp học mới</p>
+                      <p className="text-sm font-medium text-ink-secondary">Không tìm thấy lớp học nào</p>
+                      <p className="text-xs text-ink-muted">Thử thay đổi bộ lọc tìm kiếm hoặc tạo lớp học mới</p>
                     </div>
                   </td>
                 </tr>
               ) : (
                 paginatedClasses.map((cls) => (
-                  <tr key={cls.id} className="hover:bg-slate-50/80 transition-colors duration-100">
+                  <tr key={cls.id} className="hover:bg-mint-canvas/60 transition-colors duration-100">
                     {/* Cột 1: Tên lớp */}
                     <td className="px-4 py-3 whitespace-nowrap">
                       <div
                         onClick={() => handleOpenDetail(cls)}
-                        className="font-bold text-blue-700 hover:text-blue-900 hover:underline cursor-pointer transition-colors"
+                        className="font-bold text-teal hover:text-gold-active hover:underline cursor-pointer transition-colors"
                         title="Bấm để xem chi tiết & tiến độ bài học"
                       >
                         {cls.className}
                       </div>
-                      <div className="text-[11px] text-slate-400">#CLS-{cls.id}</div>
+                      <div className="text-[11px] text-ink-muted">#CLS-{cls.id}</div>
                     </td>
 
                     {/* Cột 2: Khóa học */}
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <span className="font-medium text-slate-800">{cls.courseName || '—'}</span>
+                      <span className="font-medium text-ink">{cls.courseName || '—'}</span>
                     </td>
 
                     {/* Cột 3: Giáo viên phụ trách */}
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="flex items-center gap-1.5 text-slate-800">
+                      <div className="flex items-center gap-1.5 text-ink">
                         <span>👩‍🏫</span>
                         <span className="font-medium">{cls.teacherName || 'Chưa phân công'}</span>
                       </div>
@@ -866,43 +865,43 @@ export default function ClassList() {
 
                     {/* Cột 4: Cơ sở */}
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <span className="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-xs text-slate-700 font-medium">
+                      <span className="inline-flex items-center rounded-full bg-surface-subtle border border-line px-2.5 py-0.5 text-xs text-ink-secondary font-medium">
                         {cls.branchName || `Cơ sở #${cls.branchId}`}
                       </span>
                     </td>
 
                     {/* Cột 5: Sĩ số hiện tại / tối đa */}
-                    <td className="px-4 py-3 whitespace-nowrap text-slate-700">
+                    <td className="px-4 py-3 whitespace-nowrap text-ink-secondary">
                       <div className="flex items-center gap-1.5">
                         <span
                           className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-mono font-semibold ${
                             cls.maxStudents && (cls.activeStudentsCount ?? 0) >= cls.maxStudents
                               ? 'bg-amber-50 text-amber-800 border-amber-200'
-                              : 'bg-slate-100 text-slate-700 border-slate-200'
+                              : 'bg-surface-subtle text-ink-secondary border-line'
                           }`}
                         >
                           {cls.activeStudentsCount ?? 0} / {cls.maxStudents ?? '—'} học viên
                         </span>
                         {cls.maxStudents && (cls.activeStudentsCount ?? 0) >= cls.maxStudents && (
-                          <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-800">
+                          <Badge variant="amber" className="normal-case tracking-normal text-[10px] px-2 py-0.5">
                             (Đầy)
-                          </span>
+                          </Badge>
                         )}
                       </div>
                     </td>
 
                     {/* Cột 6: Hình thức & Lịch */}
                     <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="font-medium text-slate-800">
+                      <div className="font-medium text-ink">
                         {cls.classType === 'OneToOne' ? 'Kèm 1-1' : 'Lớp nhóm'}
                       </div>
-                      <div className="text-[11px] text-slate-400">
+                      <div className="text-[11px] text-ink-muted">
                         {formatDate(cls.startDate)} → {formatDate(cls.endDate)}
                       </div>
                     </td>
 
                     {/* Cột 7: Học phí */}
-                    <td className="px-4 py-3 whitespace-nowrap font-medium text-slate-800">
+                    <td className="px-4 py-3 whitespace-nowrap font-medium text-ink">
                       {formatFee(cls.tuitionFee)}
                     </td>
 
@@ -917,7 +916,7 @@ export default function ClassList() {
                         <button
                           type="button"
                           onClick={() => handleOpenDetail(cls)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 active:scale-95 transition-all cursor-pointer"
+                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold text-teal bg-gold-soft/70 hover:bg-gold-soft border border-gold/30 active:scale-95 transition-all cursor-pointer"
                           title="Xem tiến độ bài học & chi tiết lớp"
                         >
                           <span>👁 Chi tiết</span>
@@ -928,7 +927,7 @@ export default function ClassList() {
                             <button
                               type="button"
                               onClick={() => handleOpenEditModal(cls)}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-lg text-slate-700 bg-slate-100 hover:bg-slate-200 active:scale-95 transition-all cursor-pointer"
+                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium text-teal hover:bg-mint-canvas border border-line active:scale-95 transition-all cursor-pointer"
                               title="Sửa thông tin lớp"
                             >
                               <span>Sửa</span>
@@ -937,7 +936,7 @@ export default function ClassList() {
                               <button
                                 type="button"
                                 onClick={() => handleCloseClass(cls)}
-                                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-lg text-rose-700 bg-rose-50 hover:bg-rose-100 active:scale-95 transition-all cursor-pointer"
+                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium text-rose-600 hover:bg-rose-50 active:scale-95 transition-all cursor-pointer"
                                 title="Đóng lớp học (Xóa mềm)"
                               >
                                 <span>Đóng lớp</span>
@@ -955,69 +954,69 @@ export default function ClassList() {
         </div>
 
         {/* 4. Thanh Phân Trang */}
-        <div className="flex flex-col sm:flex-row items-center justify-between border-t border-slate-200 bg-slate-50 px-4 py-3 gap-3 text-xs text-slate-600">
+        <div className="flex flex-col sm:flex-row items-center justify-between border-t border-line bg-surface-subtle px-4 py-3 gap-3 text-xs text-ink-secondary">
           <div>
             Hiển thị{' '}
-            <span className="font-semibold text-slate-800">
+            <span className="font-semibold text-ink">
               {filteredClasses.length === 0 ? 0 : (currentPage - 1) * pageSize + 1}
             </span>{' '}
             -{' '}
-            <span className="font-semibold text-slate-800">
+            <span className="font-semibold text-ink">
               {Math.min(currentPage * pageSize, filteredClasses.length)}
             </span>{' '}
-            trên tổng số <span className="font-semibold text-slate-800">{filteredClasses.length}</span> lớp học
+            trên tổng số <span className="font-semibold text-ink">{filteredClasses.length}</span> lớp học
           </div>
 
-          <div className="flex items-center gap-1">
-            <button
+          <div className="flex items-center gap-1.5">
+            <SecondaryButton
               type="button"
               disabled={currentPage <= 1}
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              className="inline-flex items-center justify-center px-3 py-1.5 rounded-lg border border-slate-300 bg-white font-medium text-slate-700 shadow-xs hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-all"
+              className="px-3.5 py-1.5 text-xs"
             >
               Trước
-            </button>
-            <span className="px-3 py-1.5 font-medium text-slate-800">
+            </SecondaryButton>
+            <span className="px-3 py-1.5 font-medium text-ink">
               Trang {currentPage} / {totalPages}
             </span>
-            <button
+            <SecondaryButton
               type="button"
               disabled={currentPage >= totalPages}
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              className="inline-flex items-center justify-center px-3 py-1.5 rounded-lg border border-slate-300 bg-white font-medium text-slate-700 shadow-xs hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-all"
+              className="px-3.5 py-1.5 text-xs"
             >
               Sau
-            </button>
+            </SecondaryButton>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* 5. Modal Tạo / Sửa Lớp Học Mới */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-[2px] transition-opacity"
+            className="fixed inset-0 bg-teal-deep/40 backdrop-blur-[2px] modal-backdrop"
             onClick={() => !submitting && setIsModalOpen(false)}
             aria-hidden="true"
           />
 
-          <div className="relative w-full max-w-xl rounded-2xl bg-white p-6 shadow-xl z-10 max-h-[92vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3.5 mb-4">
-              <h3 className="text-base md:text-lg font-bold text-slate-900">
+          <div className="relative w-full max-w-xl rounded-card-lg border border-line/60 bg-surface p-6 shadow-modal modal-panel z-10 max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-line pb-3.5 mb-4">
+              <h3 className="text-base md:text-lg font-bold text-ink">
                 {editingClass ? 'Cập nhật thông tin lớp học' : 'Tạo lớp học mới'}
               </h3>
               <button
                 type="button"
                 disabled={submitting}
                 onClick={() => setIsModalOpen(false)}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100"
+                className="rounded-full p-1.5 text-ink-muted hover:bg-surface-subtle hover:text-ink cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
             {submitError && (
-              <div className="mb-4 rounded-lg bg-rose-50 border border-rose-200 p-3 text-xs text-rose-700">
+              <div className="mb-4 rounded-xl bg-rose-50 border border-rose-200 p-3 text-xs text-rose-700">
                 {submitError}
               </div>
             )}
@@ -1025,7 +1024,7 @@ export default function ClassList() {
             <form onSubmit={handleSubmit} className="space-y-4 text-xs md:text-sm">
               {/* Tên lớp */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-ink-secondary mb-1">
                   Tên lớp học <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -1035,14 +1034,14 @@ export default function ClassList() {
                   placeholder="VD: Lớp Tiền tiểu học - Họa Mi 1, Lớp Luyện chữ đẹp Tối 2-4"
                   value={formData.className}
                   onChange={handleChange}
-                  className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-slate-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none"
+                  className="w-full rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink placeholder:text-ink-muted focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                 {/* Khóa học */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-ink-secondary mb-1">
                     Khóa học đào tạo <span className="text-rose-500">*</span>
                   </label>
                   <select
@@ -1050,7 +1049,7 @@ export default function ClassList() {
                     required
                     value={formData.courseId}
                     onChange={handleChange}
-                    className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-slate-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none"
+                    className="w-full rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
                   >
                     <option value="">-- Chọn khóa học --</option>
                     {courses
@@ -1065,7 +1064,7 @@ export default function ClassList() {
 
                 {/* Giáo viên phụ trách (BẮT BUỘC) */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-ink-secondary mb-1">
                     Giáo viên phụ trách <span className="text-rose-500">*</span>
                   </label>
                   <select
@@ -1073,7 +1072,7 @@ export default function ClassList() {
                     required
                     value={formData.teacherId}
                     onChange={handleChange}
-                    className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-slate-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none"
+                    className="w-full rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
                   >
                     <option value="">-- Chọn giáo viên phụ trách --</option>
                     {teachers
@@ -1093,7 +1092,7 @@ export default function ClassList() {
                   {editingClass != null &&
                     String(formData.teacherId) !== '' &&
                     String(formData.teacherId) !== String(editingClass.teacherId || '') && (
-                      <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-[11px] text-amber-900 leading-relaxed">
+                      <div className="mt-2 rounded-xl border border-amber-200 bg-amber-50 p-2.5 text-[11px] text-amber-900 leading-relaxed">
                         <span className="font-semibold">⚠️ Lưu ý đổi giáo viên:</span> Giáo viên mới sẽ xem được toàn bộ lịch sử lớp (kể cả bài đã chấm trước đó) để dạy tiếp; giáo viên cũ mất quyền truy cập lớp ngay khi lưu.
                       </div>
                     )}
@@ -1101,7 +1100,7 @@ export default function ClassList() {
 
                 {/* Cơ sở */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-ink-secondary mb-1">
                     Cơ sở tổ chức <span className="text-rose-500">*</span>
                   </label>
                   <select
@@ -1109,7 +1108,7 @@ export default function ClassList() {
                     required
                     value={formData.branchId}
                     onChange={handleChange}
-                    className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-slate-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none"
+                    className="w-full rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
                   >
                     <option value="">-- Chọn cơ sở --</option>
                     {branches
@@ -1124,7 +1123,7 @@ export default function ClassList() {
 
                 {/* Hình thức lớp học (Group / OneToOne) */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-ink-secondary mb-1">
                     Hình thức lớp học <span className="text-rose-500">*</span>
                   </label>
                   <select
@@ -1132,7 +1131,7 @@ export default function ClassList() {
                     required
                     value={formData.classType}
                     onChange={handleChange}
-                    className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-slate-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none"
+                    className="w-full rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
                   >
                     <option value="Group">Lớp nhóm (Group)</option>
                     <option value="OneToOne">Kèm 1-1 (OneToOne)</option>
@@ -1141,7 +1140,7 @@ export default function ClassList() {
 
                 {/* Sĩ số tối đa */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-ink-secondary mb-1">
                     Sĩ số tối đa (MaxStudents) <span className="text-rose-500">*</span>
                   </label>
                   <input
@@ -1152,16 +1151,16 @@ export default function ClassList() {
                     required
                     value={formData.maxStudents}
                     onChange={handleChange}
-                    className={`w-full h-10 rounded-lg border bg-white px-3 text-slate-800 focus:outline-none ${
+                    className={`w-full rounded-full border bg-surface px-4 py-2.5 text-sm text-ink focus:outline-none ${
                       editingClass && Number(formData.maxStudents) < (editingClass.activeStudentsCount ?? 0)
                         ? 'border-rose-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-100'
-                        : 'border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100'
+                        : 'border-line focus:border-gold focus:ring-2 focus:ring-gold/25'
                     }`}
                   />
                   {editingClass && (
-                    <p className="mt-1 text-[11px] text-slate-500">
+                    <p className="mt-1 text-[11px] text-ink-muted">
                       Sĩ số đang theo học hiện tại:{' '}
-                      <span className="font-mono font-semibold text-slate-700">
+                      <span className="font-mono font-semibold text-ink-secondary">
                         {editingClass.activeStudentsCount ?? 0}
                       </span>{' '}
                       học viên.
@@ -1176,7 +1175,7 @@ export default function ClassList() {
 
                 {/* Học phí */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-ink-secondary mb-1">
                     Học phí (VND)
                   </label>
                   <input
@@ -1187,10 +1186,10 @@ export default function ClassList() {
                     placeholder="Để trống nếu theo học phí khóa học"
                     value={formData.tuitionFee}
                     onChange={handleChange}
-                    className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-slate-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none"
+                    className="w-full rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink placeholder:text-ink-muted focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
                   />
                   {editingClass && (
-                    <p className="mt-1.5 text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1.5 leading-relaxed">
+                    <p className="mt-1.5 text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-2.5 py-1.5 leading-relaxed">
                       ℹ️ Lưu ý: Không thể thay đổi học phí của lớp nếu lớp đã có khoản thu học phí phát sinh.
                     </p>
                   )}
@@ -1198,7 +1197,7 @@ export default function ClassList() {
 
                 {/* Ngày khai giảng */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-ink-secondary mb-1">
                     Ngày khai giảng
                   </label>
                   <input
@@ -1206,13 +1205,13 @@ export default function ClassList() {
                     name="startDate"
                     value={formData.startDate}
                     onChange={handleChange}
-                    className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-slate-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none"
+                    className="w-full rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
                   />
                 </div>
 
                 {/* Ngày kết thúc */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-ink-secondary mb-1">
                     Ngày kết thúc
                   </label>
                   <input
@@ -1220,16 +1219,16 @@ export default function ClassList() {
                     name="endDate"
                     value={formData.endDate}
                     onChange={handleChange}
-                    className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-slate-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none"
+                    className="w-full rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
                   />
                 </div>
               </div>
 
               {/* Các trường mở rộng khi Chỉnh sửa lớp */}
               {editingClass && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 border-t border-slate-100 pt-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 border-t border-line pt-3">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    <label className="block text-xs font-semibold text-ink-secondary mb-1">
                       Trạng thái lớp học
                     </label>
                     <select
@@ -1237,14 +1236,14 @@ export default function ClassList() {
                       disabled={editingClass.status === 'Finished'}
                       value={formData.status}
                       onChange={handleChange}
-                      className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-slate-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"
+                      className="w-full rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
                     >
                       <option value="Upcoming">Sắp mở (Upcoming)</option>
                       <option value="Ongoing">Đang học (Ongoing)</option>
                       <option value="Finished">Đã kết thúc (Finished)</option>
                     </select>
                     {editingClass.status === 'Finished' && (
-                      <p className="mt-1 text-[11px] text-slate-500">
+                      <p className="mt-1 text-[11px] text-ink-muted">
                         🔒 Lớp học đã kết thúc (Finished), không thể chuyển trạng thái quay lại Đang học.
                       </p>
                     )}
@@ -1257,9 +1256,9 @@ export default function ClassList() {
                         name="isOpenForRegistration"
                         checked={formData.isOpenForRegistration}
                         onChange={handleChange}
-                        className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                        className="h-4 w-4 rounded accent-teal border-line focus:ring-gold/30"
                       />
-                      <span className="text-xs font-semibold text-slate-700">
+                      <span className="text-xs font-semibold text-ink-secondary">
                         Mở tiếp nhận đăng ký học viên mới
                       </span>
                     </label>
@@ -1269,7 +1268,7 @@ export default function ClassList() {
 
               {/* Ghi chú */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-ink-secondary mb-1">
                   Ghi chú lớp học (Phòng học, trang thiết bị...)
                 </label>
                 <textarea
@@ -1278,32 +1277,32 @@ export default function ClassList() {
                   placeholder="VD: Phòng học Họa Mi tầng 1, kèm giáo cụ luyện chữ chuyên biệt..."
                   value={formData.note}
                   onChange={handleChange}
-                  className="w-full rounded-lg border border-slate-300 bg-white p-3 text-xs md:text-sm text-slate-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none"
+                  className="w-full rounded-2xl border border-line bg-surface p-3 text-xs md:text-sm text-ink placeholder:text-ink-muted focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
                 />
               </div>
 
               {/* Buttons */}
-              <div className="mt-6 flex justify-end gap-2.5 border-t border-slate-100 pt-4">
-                <button
+              <div className="mt-6 flex justify-end gap-2.5 border-t border-line pt-4">
+                <SecondaryButton
                   type="button"
                   disabled={submitting}
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                  className="px-4 py-2 text-xs"
                 >
                   Hủy bỏ
-                </button>
-                <button
+                </SecondaryButton>
+                <PrimaryButton
                   type="submit"
                   disabled={
                     submitting ||
                     Boolean(editingClass && Number(formData.maxStudents) < (editingClass.activeStudentsCount ?? 0)) ||
                     Boolean(editingClass && teachers.find((t) => String(t.id) === String(formData.teacherId))?.isActive === false)
                   }
-                  className="inline-flex items-center justify-center gap-2 px-5 py-2 rounded-lg bg-blue-600 text-white text-xs font-semibold shadow-xs hover:bg-blue-700 active:scale-[0.98] transition-all disabled:opacity-60 disabled:pointer-events-none cursor-pointer"
+                  className="px-5 py-2 text-xs"
                 >
                   {submitting ? (
                     <>
-                      <svg className="h-4 w-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+                      <svg className="h-4 w-4 animate-spin text-teal" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                       </svg>
@@ -1312,7 +1311,7 @@ export default function ClassList() {
                   ) : (
                     'Lưu lớp học'
                   )}
-                </button>
+                </PrimaryButton>
               </div>
             </form>
           </div>
@@ -1324,26 +1323,26 @@ export default function ClassList() {
         <div className="fixed inset-0 z-50 flex justify-end">
           {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-[2px] transition-opacity"
+            className="fixed inset-0 bg-teal-deep/40 backdrop-blur-[2px] modal-backdrop"
             onClick={() => setSelectedDetailClass(null)}
             aria-hidden="true"
           />
 
           {/* Drawer Panel trượt từ cạnh phải */}
-          <div className="relative w-full max-w-2xl bg-white shadow-2xl flex flex-col z-10 h-full overflow-hidden">
+          <div className="relative w-full max-w-2xl bg-surface shadow-modal border-l border-line/60 flex flex-col z-10 h-full overflow-hidden">
             {/* Header Drawer */}
-            <div className="flex items-start justify-between border-b border-slate-200 px-6 py-4 bg-slate-50">
+            <div className="flex items-start justify-between border-b border-line px-6 py-4 bg-surface-subtle">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-xs font-bold text-slate-400">
+                  <span className="font-mono text-xs font-bold text-ink-muted">
                     #CLS-{selectedDetailClass.id}
                   </span>
-                  <h2 className="text-base md:text-lg font-bold text-slate-900">
+                  <h2 className="text-base md:text-lg font-bold text-ink">
                     {selectedDetailClass.className}
                   </h2>
                 </div>
-                <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 mt-1">
-                  <span className="font-semibold text-blue-700">{selectedDetailClass.courseName || 'Khóa học'}</span>
+                <div className="flex flex-wrap items-center gap-2 text-xs text-ink-secondary mt-1">
+                  <span className="font-semibold text-teal">{selectedDetailClass.courseName || 'Khóa học'}</span>
                   <span>•</span>
                   <span>{selectedDetailClass.branchName || `Cơ sở #${selectedDetailClass.branchId}`}</span>
                   <span>•</span>
@@ -1354,7 +1353,7 @@ export default function ClassList() {
               <button
                 type="button"
                 onClick={() => setSelectedDetailClass(null)}
-                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-200 hover:text-slate-700 cursor-pointer"
+                className="rounded-full p-1.5 text-ink-muted hover:bg-mint-canvas hover:text-ink cursor-pointer"
                 title="Đóng"
               >
                 ✕
@@ -1362,20 +1361,20 @@ export default function ClassList() {
             </div>
 
             {/* Tab Navigation */}
-            <div className="flex border-b border-slate-200 bg-white px-6 overflow-x-auto">
+            <div className="flex border-b border-line bg-surface px-6 overflow-x-auto">
               <button
                 type="button"
                 onClick={() => setDetailTab('students')}
                 className={`py-3 px-4 text-xs md:text-sm font-semibold border-b-2 transition-colors duration-150 cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
                   detailTab === 'students'
-                    ? 'border-blue-600 text-blue-700'
-                    : 'border-transparent text-slate-500 hover:text-slate-800'
+                    ? 'border-teal text-teal'
+                    : 'border-transparent text-ink-muted hover:text-ink'
                 }`}
               >
                 <span>🎓 Học viên trong lớp</span>
-                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] text-blue-700 font-bold border border-blue-200">
+                <Badge variant="gold" className="normal-case tracking-normal px-2 py-0.5 text-[11px]">
                   {classEnrollments.filter((sc) => sc.status === 'Active').length}
-                </span>
+                </Badge>
               </button>
 
               <button
@@ -1383,14 +1382,14 @@ export default function ClassList() {
                 onClick={() => setDetailTab('progress')}
                 className={`py-3 px-4 text-xs md:text-sm font-semibold border-b-2 transition-colors duration-150 cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
                   detailTab === 'progress'
-                    ? 'border-blue-600 text-blue-700'
-                    : 'border-transparent text-slate-500 hover:text-slate-800'
+                    ? 'border-teal text-teal'
+                    : 'border-transparent text-ink-muted hover:text-ink'
                 }`}
               >
                 <span>📖 Tiến độ bài học</span>
-                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[11px] text-blue-700 font-bold border border-blue-200">
+                <Badge variant="gold" className="normal-case tracking-normal px-2 py-0.5 text-[11px]">
                   {lessonProgresses.length}
-                </span>
+                </Badge>
               </button>
 
               <button
@@ -1398,8 +1397,8 @@ export default function ClassList() {
                 onClick={() => setDetailTab('info')}
                 className={`py-3 px-4 text-xs md:text-sm font-semibold border-b-2 transition-colors duration-150 cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
                   detailTab === 'info'
-                    ? 'border-blue-600 text-blue-700'
-                    : 'border-transparent text-slate-500 hover:text-slate-800'
+                    ? 'border-teal text-teal'
+                    : 'border-transparent text-ink-muted hover:text-ink'
                 }`}
               >
                 <span>ℹ️ Thông tin chung</span>
@@ -1407,19 +1406,19 @@ export default function ClassList() {
             </div>
 
             {/* Thân Drawer cuộn độc lập */}
-            <div className="flex-1 overflow-y-auto p-6 bg-slate-50/50">
+            <div className="flex-1 overflow-y-auto p-6 bg-mint-canvas/50">
               {detailTab === 'students' ? (
                 /* ========================================================
                    TAB 1: HỌC VIÊN TRONG LỚP (GHI DANH / DUYỆT GHI DANH)
                    ======================================================== */
                 <div className="space-y-4">
                   {/* Thanh tác vụ đầu tab */}
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
+                  <Card className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4">
                     <div>
-                      <h3 className="text-xs md:text-sm font-bold text-slate-900">
+                      <h3 className="text-xs md:text-sm font-bold text-ink">
                         Danh sách ghi danh lớp học
                       </h3>
-                      <p className="text-[11px] text-slate-500 mt-0.5">
+                      <p className="text-[11px] text-ink-secondary mt-0.5">
                         Tổng {classEnrollments.length} bản ghi danh (
                         {classEnrollments.filter((s) => s.status === 'Active').length} đang học,{' '}
                         {classEnrollments.filter((s) => s.status === 'Pending').length} chờ duyệt,{' '}
@@ -1428,21 +1427,21 @@ export default function ClassList() {
                     </div>
 
                     {canManageEnrollments(selectedDetailClass) && (
-                      <button
+                      <PrimaryButton
                         type="button"
                         onClick={() => {
                           setShowEnrollForm((v) => !v);
                           setEnrollSubmitError('');
                         }}
-                        className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-xs font-semibold rounded-lg shadow-xs hover:bg-blue-700 active:scale-[0.97] transition-transform duration-150 ease-out cursor-pointer self-start sm:self-auto"
+                        className="px-3.5 py-1.5 text-xs self-start sm:self-auto"
                       >
                         <span>{showEnrollForm ? 'Đóng form thêm' : '+ Thêm học viên vào lớp'}</span>
-                      </button>
+                      </PrimaryButton>
                     )}
-                  </div>
+                  </Card>
 
                   {/* Ghi chú nghiệp vụ Dropped -> Active */}
-                  <div className="rounded-xl border border-amber-200 bg-amber-50/90 px-4 py-3 text-xs text-amber-900 leading-relaxed">
+                  <div className="rounded-2xl border border-amber-200 bg-amber-50/90 px-4 py-3 text-xs text-amber-900 leading-relaxed">
                     <span className="font-bold">Lưu ý trạng thái ghi danh:</span> Khi đổi trạng thái học viên sang{' '}
                     <span className="font-semibold">Ngừng học (Dropped)</span>, mọi ghi danh lớp của học viên sẽ tự động chuyển thành{' '}
                     <span className="font-semibold">Dropped</span>. Khi đưa học viên về{' '}
@@ -1454,16 +1453,16 @@ export default function ClassList() {
                   {showEnrollForm && canManageEnrollments(selectedDetailClass) && (
                     <form
                       onSubmit={handleEnrollSubmit}
-                      className="rounded-xl border border-blue-200 bg-white p-4 space-y-3 shadow-xs"
+                      className="rounded-2xl border border-gold/40 bg-surface p-4 space-y-3 shadow-card"
                     >
                       <div className="flex items-center justify-between">
-                        <h4 className="text-xs font-bold text-slate-900">
+                        <h4 className="text-xs font-bold text-ink">
                           Ghi danh học viên đang học (Cơ sở: {selectedDetailClass.branchName || `#${selectedDetailClass.branchId}`})
                         </h4>
                       </div>
 
                       {enrollSubmitError && (
-                        <div className="rounded-lg bg-rose-50 border border-rose-200 px-3 py-2 text-xs text-rose-700">
+                        <div className="rounded-xl bg-rose-50 border border-rose-200 px-3 py-2 text-xs text-rose-700">
                           ⚠️ {enrollSubmitError}
                         </div>
                       )}
@@ -1479,7 +1478,7 @@ export default function ClassList() {
                           <>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                               <div>
-                                <label className="block font-semibold text-slate-700 mb-1">
+                                <label className="block font-semibold text-ink-secondary mb-1">
                                   Chọn học viên <span className="text-rose-500">*</span>
                                 </label>
                                 <select
@@ -1487,7 +1486,7 @@ export default function ClassList() {
                                   disabled={loadingBranchStudents}
                                   value={enrollStudentId}
                                   onChange={(e) => setEnrollStudentId(e.target.value)}
-                                  className="w-full h-9 rounded-lg border border-slate-300 bg-white px-2.5 text-slate-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none disabled:bg-slate-50"
+                                  className="w-full rounded-full border border-line bg-surface px-4 py-2 text-xs text-ink focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle"
                                 >
                                   <option value="">
                                     {loadingBranchStudents
@@ -1505,7 +1504,7 @@ export default function ClassList() {
                               </div>
 
                               <div>
-                                <label className="block font-semibold text-slate-700 mb-1">
+                                <label className="block font-semibold text-ink-secondary mb-1">
                                   Ghi chú ghi danh (tùy chọn)
                                 </label>
                                 <input
@@ -1514,32 +1513,32 @@ export default function ClassList() {
                                   placeholder="VD: Nhập học từ tháng 11..."
                                   value={enrollNote}
                                   onChange={(e) => setEnrollNote(e.target.value)}
-                                  className="w-full h-9 rounded-lg border border-slate-300 bg-white px-2.5 text-slate-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none"
+                                  className="w-full rounded-full border border-line bg-surface px-4 py-2 text-xs text-ink placeholder:text-ink-muted focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
                                 />
                               </div>
                             </div>
 
                             {droppedInClass.length > 0 && (
-                              <p className="text-[11px] text-slate-500">
-                                💡 Học viên đã có bản ghi danh ở trạng thái Dropped/Rejected ({droppedInClass.map((s) => s.fullName).join(', ')}) không thể thêm trùng — hãy bấm <span className="font-semibold text-blue-700">Duyệt lại</span> ở danh sách bên dưới.
+                              <p className="text-[11px] text-ink-secondary">
+                                💡 Học viên đã có bản ghi danh ở trạng thái Dropped/Rejected ({droppedInClass.map((s) => s.fullName).join(', ')}) không thể thêm trùng — hãy bấm <span className="font-semibold text-teal">Duyệt lại</span> ở danh sách bên dưới.
                               </p>
                             )}
 
                             <div className="flex justify-end gap-2 pt-1">
-                              <button
+                              <SecondaryButton
                                 type="button"
                                 onClick={() => setShowEnrollForm(false)}
-                                className="px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
+                                className="px-3.5 py-1.5 text-xs"
                               >
                                 Hủy
-                              </button>
-                              <button
+                              </SecondaryButton>
+                              <PrimaryButton
                                 type="submit"
                                 disabled={enrollSubmitting || !enrollStudentId}
-                                className="px-3.5 py-1.5 rounded-lg bg-blue-600 text-xs font-semibold text-white hover:bg-blue-700 active:scale-[0.97] transition-transform duration-150 disabled:opacity-50 cursor-pointer"
+                                className="px-3.5 py-1.5 text-xs"
                               >
                                 {enrollSubmitting ? 'Đang ghi danh...' : 'Xác nhận ghi danh'}
-                              </button>
+                              </PrimaryButton>
                             </div>
                           </>
                         );
@@ -1548,20 +1547,20 @@ export default function ClassList() {
                   )}
 
                   {enrollmentError && (
-                    <div className="rounded-lg bg-rose-50 border border-rose-200 p-3 text-xs text-rose-700">
+                    <div className="rounded-xl bg-rose-50 border border-rose-200 p-3 text-xs text-rose-700">
                       ⚠️ {enrollmentError}
                     </div>
                   )}
 
                   {loadingEnrollments ? (
-                    <div className="py-10 text-center text-xs text-slate-400">
+                    <div className="py-10 text-center text-xs text-ink-muted">
                       Đang tải danh sách học viên trong lớp...
                     </div>
                   ) : classEnrollments.length === 0 ? (
-                    <div className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center">
+                    <div className="rounded-2xl border border-dashed border-line-strong bg-surface p-8 text-center">
                       <div className="text-2xl mb-1.5">🎓</div>
-                      <p className="text-xs font-semibold text-slate-700">Chưa có học viên nào ghi danh lớp này</p>
-                      <p className="text-[11px] text-slate-400 mt-1">
+                      <p className="text-xs font-semibold text-ink-secondary">Chưa có học viên nào ghi danh lớp này</p>
+                      <p className="text-[11px] text-ink-muted mt-1">
                         {canManageEnrollments(selectedDetailClass)
                           ? 'Nhấn "+ Thêm học viên vào lớp" để ghi danh học viên đang học.'
                           : 'Danh sách học viên sẽ hiển thị khi quản lý ghi danh vào lớp.'}
@@ -1574,41 +1573,41 @@ export default function ClassList() {
                           Active: { label: 'Đang học (Active)', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
                           Pending: { label: 'Chờ duyệt (Pending)', cls: 'bg-amber-50 text-amber-700 border-amber-200' },
                           Dropped: { label: 'Ngừng học (Dropped)', cls: 'bg-rose-50 text-rose-700 border-rose-200' },
-                          Rejected: { label: 'Từ chối (Rejected)', cls: 'bg-slate-100 text-slate-600 border-slate-200' },
+                          Rejected: { label: 'Từ chối (Rejected)', cls: 'bg-surface-subtle text-ink-secondary border-line' },
                           Completed: { label: 'Hoàn thành', cls: 'bg-blue-50 text-blue-700 border-blue-200' },
                         };
                         const badge = statusMap[sc.status] || {
                           label: sc.status,
-                          cls: 'bg-slate-100 text-slate-600 border-slate-200',
+                          cls: 'bg-surface-subtle text-ink-secondary border-line',
                         };
 
                         return (
-                          <div
+                          <Card
                             key={sc.id}
-                            className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+                            className="p-3.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
                           >
                             <div className="space-y-1 min-w-0">
                               <div className="flex flex-wrap items-center gap-2">
-                                <span className="text-xs md:text-sm font-bold text-slate-900">
+                                <span className="text-xs md:text-sm font-bold text-ink">
                                   {sc.studentName || `Học viên #${sc.studentId}`}
                                 </span>
-                                <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${badge.cls}`}>
+                                <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${badge.cls}`}>
                                   {badge.label}
                                 </span>
                               </div>
 
-                              <div className="text-[11px] text-slate-500 flex flex-wrap gap-x-3 gap-y-0.5">
+                              <div className="text-[11px] text-ink-muted flex flex-wrap gap-x-3 gap-y-0.5">
                                 <span>Đăng ký: {formatDateTime(sc.registeredAt)}</span>
                                 {sc.approvedByName && (
                                   <span>
-                                    Duyệt bởi: <span className="font-medium text-slate-700">{sc.approvedByName}</span>
+                                    Duyệt bởi: <span className="font-medium text-ink-secondary">{sc.approvedByName}</span>
                                     {sc.approvedAt ? ` (${formatDateTime(sc.approvedAt)})` : ''}
                                   </span>
                                 )}
                               </div>
 
                               {sc.note && (
-                                <p className="text-[11px] text-slate-600 bg-slate-50 rounded-md px-2 py-1 border border-slate-100">
+                                <p className="text-[11px] text-ink-secondary bg-surface-subtle rounded-xl px-2.5 py-1.5 border border-line/60">
                                   Ghi chú: {sc.note}
                                 </p>
                               )}
@@ -1628,7 +1627,7 @@ export default function ClassList() {
                                         error: '',
                                       })
                                     }
-                                    className="px-2.5 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 active:scale-[0.97] transition-transform duration-150 cursor-pointer"
+                                    className="px-3 py-1.5 rounded-full bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 active:scale-[0.97] transition-transform duration-150 cursor-pointer"
                                   >
                                     {sc.status === 'Pending' ? 'Duyệt' : 'Duyệt lại'}
                                   </button>
@@ -1645,14 +1644,14 @@ export default function ClassList() {
                                         error: '',
                                       })
                                     }
-                                    className="px-2.5 py-1.5 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 text-xs font-semibold hover:bg-rose-100 active:scale-[0.97] transition-transform duration-150 cursor-pointer"
+                                    className="px-3 py-1.5 rounded-full bg-rose-50 text-rose-600 border border-rose-200 text-xs font-semibold hover:bg-rose-100 active:scale-[0.97] transition-transform duration-150 cursor-pointer"
                                   >
                                     {sc.status === 'Pending' ? 'Từ chối' : 'Ngừng ghi danh'}
                                   </button>
                                 )}
                               </div>
                             )}
-                          </div>
+                          </Card>
                         );
                       })}
                     </div>
@@ -1664,36 +1663,36 @@ export default function ClassList() {
                    ======================================================== */
                 <div className="space-y-6">
                   {/* Thanh tác vụ đầu tab */}
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
+                  <Card className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4">
                     <div>
-                      <h3 className="text-xs md:text-sm font-bold text-slate-900">
+                      <h3 className="text-xs md:text-sm font-bold text-ink">
                         Nhật ký tiến độ bài dạy theo buổi
                       </h3>
-                      <p className="text-[11px] text-slate-500 mt-0.5">
+                      <p className="text-[11px] text-ink-secondary mt-0.5">
                         Nội dung giảng dạy thực tế, mức độ tiếp thu và dặn dò sau từng buổi học
                       </p>
                     </div>
 
                     {canManageProgress(selectedDetailClass) && (
-                      <button
+                      <PrimaryButton
                         type="button"
                         onClick={handleOpenCreateProgress}
-                        className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-xs font-semibold rounded-lg shadow-xs hover:bg-blue-700 active:scale-95 transition-all cursor-pointer self-start sm:self-auto"
+                        className="px-3.5 py-1.5 text-xs self-start sm:self-auto"
                       >
                         <span>+ Ghi nhận tiến độ mới</span>
-                      </button>
+                      </PrimaryButton>
                     )}
-                  </div>
+                  </Card>
 
                   {progressError && (
-                    <div className="rounded-lg bg-rose-50 border border-rose-200 p-3 text-xs text-rose-700">
+                    <div className="rounded-xl bg-rose-50 border border-rose-200 p-3 text-xs text-rose-700">
                       ⚠️ {progressError}
                     </div>
                   )}
 
                   {loadingProgress ? (
-                    <div className="py-12 text-center text-slate-400">
-                      <svg className="h-6 w-6 animate-spin mx-auto text-blue-600 mb-2" fill="none" viewBox="0 0 24 24">
+                    <div className="py-12 text-center text-ink-muted">
+                      <svg className="h-6 w-6 animate-spin mx-auto text-teal mb-2" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                       </svg>
@@ -1701,56 +1700,56 @@ export default function ClassList() {
                     </div>
                   ) : lessonProgresses.length === 0 ? (
                     /* Emil Kowalski Tasteful Clean Empty State */
-                    <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center space-y-3">
-                      <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-blue-50 text-2xl text-blue-600 shadow-xs">
+                    <div className="rounded-2xl border border-dashed border-line-strong bg-surface p-8 text-center space-y-3">
+                      <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-gold-soft text-2xl text-teal shadow-xs">
                         📖
                       </div>
-                      <h4 className="text-sm font-bold text-slate-800">
+                      <h4 className="text-sm font-bold text-ink">
                         Chưa có ghi nhận tiến độ bài học nào
                       </h4>
-                      <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
+                      <p className="text-xs text-ink-secondary max-w-sm mx-auto leading-relaxed">
                         Giáo viên phụ trách lớp sẽ cập nhật nội dung giảng dạy thực tế, mức độ tiếp thu của các bé và dặn dò phụ huynh sau mỗi buổi học tại trung tâm.
                       </p>
                       {canManageProgress(selectedDetailClass) && (
                         <div className="pt-2">
-                          <button
+                          <PrimaryButton
                             type="button"
                             onClick={handleOpenCreateProgress}
-                            className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg shadow-xs hover:bg-blue-700 active:scale-95 transition-all cursor-pointer"
+                            className="px-4 py-2 text-xs"
                           >
                             <span>+ Ghi nhận tiến độ buổi đầu tiên</span>
-                          </button>
+                          </PrimaryButton>
                         </div>
                       )}
                     </div>
                   ) : (
                     /* Timeline Trục Dọc Dòng Thời Gian */
-                    <div className="border-l-2 border-slate-200 ml-3 md:ml-4 pl-4 md:pl-6 space-y-6 relative">
+                    <div className="border-l-2 border-line ml-3 md:ml-4 pl-4 md:pl-6 space-y-6 relative">
                       {lessonProgresses.map((lp) => (
                         <div key={lp.id} className="relative group">
                           {/* Dot chỉ thị nốt mốc */}
-                          <div className="absolute -left-[23px] md:-left-[31px] top-1.5 w-3.5 h-3.5 rounded-full bg-blue-600 border-2 border-white ring-2 ring-blue-100 shadow-xs" />
+                          <div className="absolute -left-[23px] md:-left-[31px] top-1.5 w-3.5 h-3.5 rounded-full bg-gold border-2 border-surface ring-2 ring-gold-soft shadow-xs" />
 
                           {/* Thẻ nội dung buổi học */}
-                          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-2xs hover:shadow-xs transition-shadow space-y-2.5">
-                            <div className="flex flex-wrap items-start justify-between gap-2 border-b border-slate-100 pb-2.5">
+                          <Card className="p-4 hover:shadow-card-hover transition-shadow space-y-2.5">
+                            <div className="flex flex-wrap items-start justify-between gap-2 border-b border-line/60 pb-2.5">
                               <div>
                                 <div className="flex items-center gap-2">
-                                  <span className="font-bold text-slate-900 text-xs md:text-sm">
+                                  <span className="font-bold text-ink text-xs md:text-sm">
                                     {formatDate(lp.lessonDate)}
                                   </span>
                                   {lp.scheduleId && (
-                                    <span className="rounded bg-blue-50 text-blue-700 text-[10px] font-semibold px-2 py-0.5 border border-blue-200">
+                                    <Badge variant="gold" className="normal-case tracking-normal text-[10px] px-2 py-0.5">
                                       Buổi học #{lp.scheduleId}
-                                    </span>
+                                    </Badge>
                                   )}
                                 </div>
                                 {lp.title && (
-                                  <h4 className="text-xs font-bold text-blue-900 mt-1">
+                                  <h4 className="text-xs font-bold text-teal mt-1">
                                     {lp.title}
                                   </h4>
                                 )}
-                                <div className="text-[11px] text-slate-400 mt-0.5">
+                                <div className="text-[11px] text-ink-muted mt-0.5">
                                   Ghi nhận bởi: <strong>{lp.createdByName || 'Giáo viên'}</strong>
                                   {lp.updatedAt && ` • Đã sửa ${formatDateTime(lp.updatedAt)}`}
                                 </div>
@@ -1762,7 +1761,7 @@ export default function ClassList() {
                                   <button
                                     type="button"
                                     onClick={() => handleOpenEditProgress(lp)}
-                                    className="p-1 rounded text-slate-500 hover:text-blue-600 hover:bg-slate-100 text-xs"
+                                    className="p-1.5 rounded-full text-ink-muted hover:text-teal hover:bg-gold-soft text-xs cursor-pointer"
                                     title="Sửa nội dung"
                                   >
                                     ✏️
@@ -1770,7 +1769,7 @@ export default function ClassList() {
                                   <button
                                     type="button"
                                     onClick={() => handleDeleteProgress(lp)}
-                                    className="p-1 rounded text-slate-500 hover:text-rose-600 hover:bg-rose-50 text-xs"
+                                    className="p-1.5 rounded-full text-ink-muted hover:text-rose-600 hover:bg-rose-50 text-xs cursor-pointer"
                                     title="Xóa ghi nhận này"
                                   >
                                     🗑️
@@ -1780,10 +1779,10 @@ export default function ClassList() {
                             </div>
 
                             {/* Nội dung chi tiết */}
-                            <div className="text-xs md:text-sm text-slate-700 whitespace-pre-line leading-relaxed">
+                            <div className="text-xs md:text-sm text-ink-secondary whitespace-pre-line leading-relaxed">
                               {lp.content}
                             </div>
-                          </div>
+                          </Card>
                         </div>
                       ))}
                     </div>
@@ -1794,84 +1793,84 @@ export default function ClassList() {
                    TAB 2: THÔNG TIN CHUNG CỦA LỚP HỌC
                    ======================================================== */
                 <div className="space-y-4">
-                  <div className="rounded-xl border border-slate-200 bg-white p-5 space-y-4 shadow-2xs">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2">
+                  <Card className="p-5 space-y-4">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-ink-muted border-b border-line pb-2">
                       Thông tin cơ bản lớp học
                     </h3>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs md:text-sm">
                       <div>
-                        <span className="text-slate-500 block text-xs">Tên lớp học:</span>
-                        <span className="font-bold text-slate-900">{selectedDetailClass.className}</span>
+                        <span className="text-ink-muted block text-xs">Tên lớp học:</span>
+                        <span className="font-bold text-ink">{selectedDetailClass.className}</span>
                       </div>
 
                       <div>
-                        <span className="text-slate-500 block text-xs">Khóa học đào tạo:</span>
-                        <span className="font-semibold text-slate-800">{selectedDetailClass.courseName || '—'}</span>
+                        <span className="text-ink-muted block text-xs">Khóa học đào tạo:</span>
+                        <span className="font-semibold text-ink">{selectedDetailClass.courseName || '—'}</span>
                       </div>
 
                       <div>
-                        <span className="text-slate-500 block text-xs">Giáo viên phụ trách:</span>
-                        <span className="font-semibold text-slate-800">👩‍🏫 {selectedDetailClass.teacherName || 'Chưa phân công'}</span>
+                        <span className="text-ink-muted block text-xs">Giáo viên phụ trách:</span>
+                        <span className="font-semibold text-ink">👩‍🏫 {selectedDetailClass.teacherName || 'Chưa phân công'}</span>
                       </div>
 
                       <div>
-                        <span className="text-slate-500 block text-xs">Cơ sở tổ chức:</span>
-                        <span className="font-semibold text-slate-800">{selectedDetailClass.branchName || `Cơ sở #${selectedDetailClass.branchId}`}</span>
+                        <span className="text-ink-muted block text-xs">Cơ sở tổ chức:</span>
+                        <span className="font-semibold text-ink">{selectedDetailClass.branchName || `Cơ sở #${selectedDetailClass.branchId}`}</span>
                       </div>
 
                       <div>
-                        <span className="text-slate-500 block text-xs">Hình thức lớp:</span>
-                        <span className="font-semibold text-slate-800">
+                        <span className="text-ink-muted block text-xs">Hình thức lớp:</span>
+                        <span className="font-semibold text-ink">
                           {selectedDetailClass.classType === 'OneToOne' ? 'Kèm 1-1 (OneToOne)' : 'Lớp nhóm (Group)'}
                         </span>
                       </div>
 
                       <div>
-                        <span className="text-slate-500 block text-xs">Sĩ số hiện tại / tối đa:</span>
+                        <span className="text-ink-muted block text-xs">Sĩ số hiện tại / tối đa:</span>
                         <div className="mt-0.5 flex items-center gap-1.5">
-                          <span className="font-mono font-semibold text-slate-800">
+                          <span className="font-mono font-semibold text-ink">
                             {selectedDetailClass.activeStudentsCount ?? 0} / {selectedDetailClass.maxStudents ?? '—'} học viên
                           </span>
                           {selectedDetailClass.maxStudents &&
                             (selectedDetailClass.activeStudentsCount ?? 0) >= selectedDetailClass.maxStudents && (
-                              <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-800">
+                              <Badge variant="amber" className="normal-case tracking-normal text-[10px] px-2 py-0.5">
                                 (Đầy)
-                              </span>
+                              </Badge>
                             )}
                         </div>
                       </div>
 
                       <div>
-                        <span className="text-slate-500 block text-xs">Ngày khai giảng:</span>
-                        <span className="font-semibold text-slate-800">{formatDate(selectedDetailClass.startDate)}</span>
+                        <span className="text-ink-muted block text-xs">Ngày khai giảng:</span>
+                        <span className="font-semibold text-ink">{formatDate(selectedDetailClass.startDate)}</span>
                       </div>
 
                       <div>
-                        <span className="text-slate-500 block text-xs">Ngày bế giảng dự kiến:</span>
-                        <span className="font-semibold text-slate-800">{formatDate(selectedDetailClass.endDate)}</span>
+                        <span className="text-ink-muted block text-xs">Ngày bế giảng dự kiến:</span>
+                        <span className="font-semibold text-ink">{formatDate(selectedDetailClass.endDate)}</span>
                       </div>
 
                       <div>
-                        <span className="text-slate-500 block text-xs">Học phí lớp:</span>
-                        <span className="font-bold text-blue-700">{formatFee(selectedDetailClass.tuitionFee)}</span>
+                        <span className="text-ink-muted block text-xs">Học phí lớp:</span>
+                        <span className="font-bold text-teal">{formatFee(selectedDetailClass.tuitionFee)}</span>
                       </div>
 
                       <div>
-                        <span className="text-slate-500 block text-xs">Trạng thái hiện tại:</span>
+                        <span className="text-ink-muted block text-xs">Trạng thái hiện tại:</span>
                         <span className="mt-0.5 inline-block">{renderStatusBadge(selectedDetailClass.status)}</span>
                       </div>
                     </div>
 
                     {selectedDetailClass.note && (
-                      <div className="border-t border-slate-100 pt-3">
-                        <span className="text-slate-500 block text-xs mb-1">Ghi chú phòng học / thiết bị:</span>
-                        <div className="rounded-lg bg-slate-50 p-3 text-xs text-slate-700">
+                      <div className="border-t border-line pt-3">
+                        <span className="text-ink-muted block text-xs mb-1">Ghi chú phòng học / thiết bị:</span>
+                        <div className="rounded-xl bg-surface-subtle p-3 text-xs text-ink-secondary">
                           {selectedDetailClass.note}
                         </div>
                       </div>
                     )}
-                  </div>
+                  </Card>
                 </div>
               )}
             </div>
@@ -1883,18 +1882,18 @@ export default function ClassList() {
       {isProgressModalOpen && (
         <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
           <div
-            className="fixed inset-0 bg-slate-900/50 backdrop-blur-[2px] transition-opacity"
+            className="fixed inset-0 bg-teal-deep/40 backdrop-blur-[2px] modal-backdrop"
             onClick={() => !progressSubmitting && setIsProgressModalOpen(false)}
             aria-hidden="true"
           />
 
-          <div className="relative w-full max-w-lg rounded-2xl bg-white p-6 shadow-2xl z-10 max-h-[92vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+          <div className="relative w-full max-w-lg rounded-card-lg border border-line/60 bg-surface p-6 shadow-modal modal-panel z-10 max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-line pb-3 mb-4">
               <div>
-                <h3 className="text-base font-bold text-slate-900">
+                <h3 className="text-base font-bold text-ink">
                   {editingProgress ? '✏️ Cập nhật tiến độ bài học' : '📖 Ghi nhận tiến độ bài học mới'}
                 </h3>
-                <p className="text-xs text-blue-700 font-semibold mt-0.5">
+                <p className="text-xs text-teal font-semibold mt-0.5">
                   Lớp: {selectedDetailClass?.className}
                 </p>
               </div>
@@ -1902,14 +1901,14 @@ export default function ClassList() {
                 type="button"
                 disabled={progressSubmitting}
                 onClick={() => setIsProgressModalOpen(false)}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 cursor-pointer"
+                className="rounded-full p-1.5 text-ink-muted hover:bg-surface-subtle hover:text-ink cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
             {progressFormError && (
-              <div className="mb-4 rounded-lg bg-rose-50 border border-rose-200 p-3 text-xs text-rose-700">
+              <div className="mb-4 rounded-xl bg-rose-50 border border-rose-200 p-3 text-xs text-rose-700">
                 {progressFormError}
               </div>
             )}
@@ -1917,7 +1916,7 @@ export default function ClassList() {
             <form onSubmit={handleProgressSubmit} className="space-y-4 text-xs md:text-sm">
               {/* Ngày diễn ra buổi học */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-ink-secondary mb-1">
                   Ngày diễn ra buổi học <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -1925,19 +1924,19 @@ export default function ClassList() {
                   required
                   value={progressFormData.lessonDate}
                   onChange={(e) => setProgressFormData((prev) => ({ ...prev, lessonDate: e.target.value }))}
-                  className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-slate-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none"
+                  className="w-full rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
                 />
               </div>
 
               {/* Buổi học trong lịch */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Buổi học trong lịch <span className="text-slate-400 font-normal">(Khuyên dùng)</span>
+                <label className="block text-xs font-semibold text-ink-secondary mb-1">
+                  Buổi học trong lịch <span className="text-ink-muted font-normal">(Khuyên dùng)</span>
                 </label>
                 <select
                   value={progressFormData.scheduleId}
                   onChange={(e) => setProgressFormData((prev) => ({ ...prev, scheduleId: e.target.value }))}
-                  className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-slate-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none"
+                  className="w-full rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
                 >
                   <option value="">-- Chọn buổi học tương ứng (Nếu có) --</option>
                   {classSchedules.map((s) => (
@@ -1946,15 +1945,15 @@ export default function ClassList() {
                     </option>
                   ))}
                 </select>
-                <p className="text-[11px] text-slate-400 mt-1">
+                <p className="text-[11px] text-ink-muted mt-1">
                   ℹ️ Chọn buổi học tương ứng để hệ thống đồng bộ với lịch học và bảng điểm danh.
                 </p>
               </div>
 
               {/* Tiêu đề tóm tắt */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Tiêu đề tóm tắt buổi dạy <span className="text-slate-400 font-normal">(Tùy chọn)</span>
+                <label className="block text-xs font-semibold text-ink-secondary mb-1">
+                  Tiêu đề tóm tắt buổi dạy <span className="text-ink-muted font-normal">(Tùy chọn)</span>
                 </label>
                 <input
                   type="text"
@@ -1962,13 +1961,13 @@ export default function ClassList() {
                   placeholder="VD: Luyện viết nhóm nét khuyết trên & dưới; Ôn tập bảng cộng trừ..."
                   value={progressFormData.title}
                   onChange={(e) => setProgressFormData((prev) => ({ ...prev, title: e.target.value }))}
-                  className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-slate-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none"
+                  className="w-full rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink placeholder:text-ink-muted focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
                 />
               </div>
 
               {/* Nội dung bài dạy & Tình hình học tập */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-ink-secondary mb-1">
                   Nội dung bài dạy &amp; Tình hình học tập <span className="text-rose-500">*</span>
                 </label>
                 <textarea
@@ -1977,27 +1976,27 @@ export default function ClassList() {
                   placeholder="- Nội dung đã dạy: ...&#10;- Đánh giá tiếp thu của học sinh trong lớp: ...&#10;- Bài tập / Nhiệm vụ dặn dò về nhà: ..."
                   value={progressFormData.content}
                   onChange={(e) => setProgressFormData((prev) => ({ ...prev, content: e.target.value }))}
-                  className="w-full rounded-lg border border-slate-300 bg-white p-3 text-slate-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none"
+                  className="w-full rounded-2xl border border-line bg-surface p-3 text-sm text-ink placeholder:text-ink-muted focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
                 />
-                <p className="text-[11px] text-slate-400 mt-1">
+                <p className="text-[11px] text-ink-muted mt-1">
                   Hỗ trợ xuống dòng và các gạch đầu dòng để nội dung dễ đọc cho ban quản lý và phụ huynh.
                 </p>
               </div>
 
               {/* Buttons */}
-              <div className="mt-6 flex justify-end gap-2.5 border-t border-slate-100 pt-4">
-                <button
+              <div className="mt-6 flex justify-end gap-2.5 border-t border-line pt-4">
+                <SecondaryButton
                   type="button"
                   disabled={progressSubmitting}
                   onClick={() => setIsProgressModalOpen(false)}
-                  className="px-4 py-2 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                  className="px-4 py-2 text-xs"
                 >
                   Hủy bỏ
-                </button>
-                <button
+                </SecondaryButton>
+                <PrimaryButton
                   type="submit"
                   disabled={progressSubmitting}
-                  className="inline-flex items-center justify-center gap-2 px-5 py-2 rounded-lg bg-blue-600 text-white text-xs font-semibold shadow-xs hover:bg-blue-700 active:scale-[0.98] transition-all disabled:opacity-60 cursor-pointer"
+                  className="px-5 py-2 text-xs"
                 >
                   {progressSubmitting ? (
                     'Đang lưu...'
@@ -2006,7 +2005,7 @@ export default function ClassList() {
                   ) : (
                     '✓ Lưu tiến độ'
                   )}
-                </button>
+                </PrimaryButton>
               </div>
             </form>
           </div>
@@ -2017,19 +2016,19 @@ export default function ClassList() {
       {statusActionModal && (
         <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
           <div
-            className="fixed inset-0 bg-slate-900/50 backdrop-blur-[2px]"
+            className="fixed inset-0 bg-teal-deep/40 backdrop-blur-[2px] modal-backdrop"
             onClick={() => !statusActionModal.submitting && setStatusActionModal(null)}
             aria-hidden="true"
           />
-          <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl z-10">
-            <div className="flex items-start justify-between border-b border-slate-100 pb-3">
+          <div className="relative w-full max-w-md rounded-card-lg border border-line/60 bg-surface p-6 shadow-modal modal-panel z-10">
+            <div className="flex items-start justify-between border-b border-line pb-3">
               <div>
-                <h3 className="text-base font-bold text-slate-900">
+                <h3 className="text-base font-bold text-ink">
                   {statusActionModal.targetStatus === 'Active'
                     ? 'Duyệt ghi danh học viên'
                     : 'Ngừng ghi danh học viên'}
                 </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-ink-secondary mt-0.5">
                   {statusActionModal.sc.studentName} — Lớp {selectedDetailClass?.className}
                 </p>
               </div>
@@ -2037,7 +2036,7 @@ export default function ClassList() {
                 type="button"
                 disabled={statusActionModal.submitting}
                 onClick={() => setStatusActionModal(null)}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 cursor-pointer"
+                className="rounded-full p-1.5 text-ink-muted hover:bg-surface-subtle hover:text-ink cursor-pointer"
               >
                 ✕
               </button>
@@ -2045,12 +2044,12 @@ export default function ClassList() {
 
             <form onSubmit={handleEnrollmentStatusSubmit} className="mt-4 space-y-3 text-xs">
               {statusActionModal.error && (
-                <div className="rounded-lg bg-rose-50 border border-rose-200 px-3 py-2 text-rose-700">
+                <div className="rounded-xl bg-rose-50 border border-rose-200 px-3 py-2 text-rose-700">
                   ⚠️ {statusActionModal.error}
                 </div>
               )}
 
-              <div className="rounded-lg bg-slate-50 border border-slate-200 px-3 py-2.5 text-slate-700">
+              <div className="rounded-2xl bg-surface-subtle border border-line px-3.5 py-2.5 text-ink-secondary">
                 Trạng thái mới:{' '}
                 <span
                   className={`font-bold ${
@@ -2062,7 +2061,7 @@ export default function ClassList() {
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
+                <label className="block font-semibold text-ink-secondary mb-1">
                   Ghi chú (tùy chọn)
                 </label>
                 <textarea
@@ -2077,23 +2076,23 @@ export default function ClassList() {
                   onChange={(e) =>
                     setStatusActionModal((prev) => ({ ...prev, note: e.target.value }))
                   }
-                  className="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-slate-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none"
+                  className="w-full rounded-2xl border border-line bg-surface p-3 text-sm text-ink placeholder:text-ink-muted focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
-                <button
+              <div className="flex justify-end gap-2 pt-2 border-t border-line">
+                <SecondaryButton
                   type="button"
                   disabled={statusActionModal.submitting}
                   onClick={() => setStatusActionModal(null)}
-                  className="px-4 py-2 rounded-lg border border-slate-300 bg-white font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
+                  className="px-4 py-2 text-xs"
                 >
                   Hủy
-                </button>
+                </SecondaryButton>
                 <button
                   type="submit"
                   disabled={statusActionModal.submitting}
-                  className={`px-4 py-2 rounded-lg font-semibold text-white active:scale-[0.97] transition-transform duration-150 disabled:opacity-50 cursor-pointer ${
+                  className={`px-4 py-2 rounded-full font-semibold text-white active:scale-[0.97] transition-transform duration-150 disabled:opacity-50 cursor-pointer ${
                     statusActionModal.targetStatus === 'Active'
                       ? 'bg-emerald-600 hover:bg-emerald-700'
                       : 'bg-rose-600 hover:bg-rose-700'
@@ -2115,11 +2114,11 @@ export default function ClassList() {
       {closeClassModal && (
         <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
           <div
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-[2px] transition-opacity"
+            className="fixed inset-0 bg-teal-deep/40 backdrop-blur-[2px] modal-backdrop"
             onClick={() => !closeClassModal.submitting && setCloseClassModal(null)}
             aria-hidden="true"
           />
-          <div className="relative max-w-md w-full bg-white rounded-2xl shadow-xl border border-slate-200 p-6 z-10 modal-content">
+          <div className="relative max-w-md w-full bg-surface rounded-card-lg shadow-modal border border-line/60 modal-panel p-6 z-10">
             <div className="flex items-start gap-3.5">
               <div
                 className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-lg ${
@@ -2131,21 +2130,21 @@ export default function ClassList() {
                 {closeClassModal.errorMessage ? '🚫' : '⚠️'}
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="text-base font-bold text-slate-900">
+                <h3 className="text-base font-bold text-ink">
                   {closeClassModal.errorMessage
                     ? 'Không thể đóng / xóa lớp học này'
                     : 'Xác nhận đóng lớp học'}
                 </h3>
-                <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                <p className="text-xs text-ink-secondary mt-1 leading-relaxed">
                   {closeClassModal.errorMessage ? (
                     <>
-                      Lớp <strong className="text-slate-900">{closeClassModal.cls.className}</strong> hiện đang có các ràng buộc nghiệp vụ chưa hoàn tất:
+                      Lớp <strong className="text-ink">{closeClassModal.cls.className}</strong> hiện đang có các ràng buộc nghiệp vụ chưa hoàn tất:
                     </>
                   ) : (
                     <>
                       Bạn có chắc chắn muốn đóng lớp{' '}
-                      <strong className="text-slate-900">&ldquo;{closeClassModal.cls.className}&rdquo;</strong>? Lớp học sẽ được chuyển trạng thái{' '}
-                      <strong className="text-slate-800">Đã kết thúc (Finished)</strong> và đóng cổng đăng ký.
+                      <strong className="text-ink">&ldquo;{closeClassModal.cls.className}&rdquo;</strong>? Lớp học sẽ được chuyển trạng thái{' '}
+                      <strong className="text-ink">Đã kết thúc (Finished)</strong> và đóng cổng đăng ký.
                     </>
                   )}
                 </p>
@@ -2153,7 +2152,7 @@ export default function ClassList() {
             </div>
 
             {closeClassModal.errorMessage && (
-              <div className="mt-4 bg-rose-50/80 border border-rose-200 rounded-xl p-4 space-y-2">
+              <div className="mt-4 bg-rose-50/80 border border-rose-200 rounded-2xl p-4 space-y-2">
                 {closeClassModal.reasons && closeClassModal.reasons.length > 0 ? (
                   <ul className="list-disc pl-5 space-y-1.5 text-xs text-rose-900 font-medium">
                     {closeClassModal.reasons.map((reason, idx) => (
@@ -2171,30 +2170,30 @@ export default function ClassList() {
               </div>
             )}
 
-            <div className="mt-6 flex items-center justify-end gap-2.5 border-t border-slate-100 pt-4">
+            <div className="mt-6 flex items-center justify-end gap-2.5 border-t border-line pt-4">
               {closeClassModal.errorMessage ? (
-                <button
+                <PrimaryButton
                   type="button"
                   onClick={() => setCloseClassModal(null)}
-                  className="bg-slate-900 text-white hover:bg-slate-800 active:scale-[0.98] px-4 py-2 rounded-lg text-xs font-semibold w-full sm:w-auto transition-all cursor-pointer"
+                  className="px-4 py-2 text-xs w-full sm:w-auto"
                 >
                   Đã hiểu
-                </button>
+                </PrimaryButton>
               ) : (
                 <>
-                  <button
+                  <SecondaryButton
                     type="button"
                     disabled={closeClassModal.submitting}
                     onClick={() => setCloseClassModal(null)}
-                    className="px-4 py-2 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
+                    className="px-4 py-2 text-xs"
                   >
                     Hủy bỏ
-                  </button>
+                  </SecondaryButton>
                   <button
                     type="button"
                     disabled={closeClassModal.submitting}
                     onClick={handleConfirmCloseClass}
-                    className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-rose-600 text-white text-xs font-semibold hover:bg-rose-700 active:scale-[0.98] transition-all disabled:opacity-60 cursor-pointer"
+                    className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-full bg-rose-600 text-white text-xs font-semibold hover:bg-rose-700 active:scale-[0.98] transition-all disabled:opacity-60 cursor-pointer"
                   >
                     {closeClassModal.submitting ? 'Đang kiểm tra & đóng lớp...' : 'Xác nhận đóng lớp'}
                   </button>

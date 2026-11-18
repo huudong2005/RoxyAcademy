@@ -1022,3 +1022,27 @@ Toàn bộ **8/8 hạng mục** của **Giai đoạn 1N-2 (8 bẫy đồng bộ)
 ## 3. Kiểm tra trình duyệt ở `1440px` & `1280px` & Kết luận
 - **Giới hạn môi trường sandbox:** Không mở được trình duyệt/API local trong sandbox để kiểm tra trực quan `Dashboard` và `Login` ở `1440px` và `1280px`.
 - **Trạng thái hiện tại:** **ĐẠT `npm run lint` + `npm run build` & đối chiếu design system 100%**; **CHỜ XEM TRỰC QUAN TRÊN TRÌNH DUYỆT (`1440px` & `1280px`)** trước khi commit `"Trùng tu giao diện R1: design tokens + shell"`.
+
+
+---
+
+# BÁO CÁO QA — ĐỢT TRÙNG TU GIAO DIỆN R2a: `Students.jsx` + `ClassList.jsx`
+**Ngày kiểm tra:** 18/11/2026  
+**Người thực hiện:** QA Agent & Commander  
+**Commit gốc:** `b54198d` (sau Đợt trùng tu R1)  
+**Phạm vi:** Chỉ `roxy-admin/src/pages/Students.jsx` và `roxy-admin/src/pages/ClassList.jsx`; không sửa `Dashboard.jsx`, `Login.jsx`, `AdminLayout.jsx`, `index.css`, `ui.jsx` hay trang khác; không đổi API/DB/logic/phân quyền.
+
+## 1. Kết quả Lint & Build (`roxy-admin/`)
+- `npm --prefix roxy-admin run lint` (`eslint .`): **PASS** (0 error, 0 warning).
+- `npm --prefix roxy-admin run build` (`vite build`): **PASS** (`✓ 113 modules transformed`, `✓ built in 393ms`).
+
+## 2. Kết quả đối chiếu thiết kế & mã nguồn R2a
+| Hạng mục kiểm tra | Kết quả | Chi tiết đối chiếu |
+| :--- | :---: | :--- |
+| Phạm vi R2a (`git status -s`) | **PASS** | - Trong `roxy-admin/` chỉ sửa đúng 2 file `Students.jsx` và `ClassList.jsx`; không lan sang file khác. |
+| Màu sắc, tương phản & component R1 | **PASS** | - Dùng đồng bộ `PageHeader`, `PrimaryButton`, `SecondaryButton`, `InputPill`, `Badge`, `Card` từ `components/ui.jsx`.<br>- 0 nút chính `bg-blue-600`, `bg-blue-700`, `bg-indigo-*`; mọi `PrimaryButton`/`bg-gold-soft` đều dùng chữ `text-teal` (không có `text-white` trên `bg-gold`).<br>- Giữ nguyên màu ngữ nghĩa ở badge trạng thái (`emerald`, `amber`, `rose`, `blue`/`purple`, `neutral`), chip giới tính, hộp ghi chú nội bộ `amber`, cảnh báo xóa/đóng `rose` và huy hiệu phân biệt vai trò. |
+| Logic, API, phân quyền & dữ liệu test | **PASS** | - Giữ nguyên toàn bộ API (`/Students`, `/Classes`, `/StudentClasses`, `/LessonProgresses`, `/Schedules`, `/Branches`, `/Courses`, `/Users`), phân quyền vai trò (`canViewInternalNote` ẩn/hiện `Note`), route và dữ liệu test (`TEST #CLS-7`). |
+
+## 3. Kiểm tra trình duyệt ở `1440px` & `1280px` & Kết luận
+- **Giới hạn môi trường sandbox:** Cổng `5123` (API) và `5173` (Web) không chạy trong sandbox, nên chưa mở được trình duyệt kiểm tra trực quan `Students` + `ClassList` ở `1440px` & `1280px` (và đối chiếu số liệu tải từ API `localhost:5123`).
+- **Trạng thái hiện tại:** **ĐẠT `npm run lint` + `npm run build` & đối chiếu design system 100%**; **CHỜ KIỂM TRA TRỰC QUAN TRÊN TRÌNH DUYỆT (`1440px` & `1280px`, API `localhost:5123` đang chạy)** trước khi commit `"Trùng tu giao diện R2a: Students + Classes"`.
