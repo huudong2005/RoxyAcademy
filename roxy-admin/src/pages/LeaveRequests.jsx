@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
 import { formatDate, formatDateTime } from '../utils/formatters';
@@ -256,6 +256,31 @@ export default function LeaveRequests() {
     toDate,
     isSuperAdmin,
   ]);
+
+  const lastFocusRefreshRef = useRef(0);
+
+  // Tự động làm mới danh sách khi người dùng quay lại tab / focus cửa sổ
+  useEffect(() => {
+    const triggerRefresh = () => {
+      const now = Date.now();
+      if (now - lastFocusRefreshRef.current < 2000) return;
+      lastFocusRefreshRef.current = now;
+      setReloadKey((k) => k + 1);
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        triggerRefresh();
+      }
+    };
+
+    window.addEventListener('focus', triggerRefresh);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      window.removeEventListener('focus', triggerRefresh);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
   // Lọc dữ liệu client-side theo từ khóa search debounced
   const filteredRequests = useMemo(() => {
@@ -1100,7 +1125,7 @@ export default function LeaveRequests() {
                           <div>
                             <div className="font-medium text-slate-900">
                               {req.className || (
-                                <span className="text-slate-400 italic">Nghỉ cả ngày (không theo lớp)</span>
+                                <span className="text-slate-400 italic">Nghỉ cả ngày — tất cả các lớp đang học</span>
                               )}
                             </div>
                             <div className="text-xs font-semibold text-blue-700 mt-0.5">
@@ -1155,9 +1180,11 @@ export default function LeaveRequests() {
                               <div className="font-medium text-slate-800">
                                 {req.reviewedByName}
                               </div>
-                              <div className="text-[11px] text-slate-400">
-                                {formatDateTime(req.reviewedAt)}
-                              </div>
+                              {req.reviewedAt && (
+                                <div className="text-[11px] text-slate-400">
+                                  {formatDateTime(req.reviewedAt)}
+                                </div>
+                              )}
                               {req.reviewNote && (
                                 <div
                                   className="text-[11px] text-slate-600 italic line-clamp-1 mt-0.5"
@@ -1167,10 +1194,29 @@ export default function LeaveRequests() {
                                 </div>
                               )}
                             </div>
-                          ) : (
+                          ) : req.status === 'Pending' ? (
                             <span className="text-xs text-slate-400 italic">
                               — (Đang chờ xét duyệt)
                             </span>
+                          ) : (
+                            <div className="text-xs">
+                              <div className="font-medium text-slate-600">
+                                Đã xử lý
+                              </div>
+                              {req.reviewedAt && (
+                                <div className="text-[11px] text-slate-400">
+                                  {formatDateTime(req.reviewedAt)}
+                                </div>
+                              )}
+                              {req.reviewNote && (
+                                <div
+                                  className="text-[11px] text-slate-600 italic line-clamp-1 mt-0.5"
+                                  title={req.reviewNote}
+                                >
+                                  Note: {req.reviewNote}
+                                </div>
+                              )}
+                            </div>
                           )}
                         </td>
 
@@ -1287,7 +1333,7 @@ export default function LeaveRequests() {
                         📅 {formatDateWithWeekday(req.leaveDate)}
                       </div>
                       <div className="text-slate-700">
-                        🏫 {req.className || 'Nghỉ cả ngày (không theo lớp)'}
+                        🏫 {req.className || 'Nghỉ cả ngày — tất cả các lớp đang học'}
                         {req.scheduleId && ` • Buổi #${req.scheduleId}`}
                       </div>
                       <div className="text-slate-600 italic line-clamp-2">
@@ -1811,7 +1857,7 @@ export default function LeaveRequests() {
                   <div>
                     <span className="text-slate-500">Lớp học:</span>{' '}
                     <span className="font-medium text-slate-800">
-                      {selectedRequest.className || '— (Nghỉ cả ngày)'}
+                      {selectedRequest.className || 'Nghỉ cả ngày — tất cả các lớp đang học'}
                     </span>
                   </div>
                   <div>

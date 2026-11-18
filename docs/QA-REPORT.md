@@ -972,3 +972,28 @@ Toàn bộ **8/8 hạng mục** của **Giai đoạn 1N-2 (8 bẫy đồng bộ)
 ## 3. Kiểm thử runtime E2E trên `http://localhost:5173` & Kết luận
 - **Giới hạn môi trường sandbox:** Cổng `5173` (Vite) và `5123` (API) không chạy trong sandbox, nên chưa test thực tế trên trình duyệt 4 kịch bản (Phụ huynh nộp thanh toán upload `.jpg` thật, SuperAdmin đăng bảng tin upload ảnh thật, thử file `.txt` & file `>5MB`).
 - **Trạng thái hiện tại:** **ĐẠT `npm run lint` + `npm run build` & đối chiếu mã nguồn 100%**; **CHỜ TEST UPLOAD THẬT TRÊN `http://localhost:5173` + `http://localhost:5123`** trước khi commit `"Upload ảnh (2D-2): chọn file + xem trước ở form thanh toán và bảng tin"`.
+
+
+---
+
+# BÁO CÁO QA — FIX ĐỢT 2E: GIỜ THÔNG BÁO, NGƯỜI DUYỆT, LỚP/CHI NHÁNH ĐƠN NGHỈ
+**Ngày kiểm tra:** 18/11/2026  
+**Người thực hiện:** QA Agent & Commander  
+**Commit gốc:** `38c9172` (sau Upload ảnh 2D-2)  
+**Phạm vi:** Backend (`NotificationsController.cs`, `LeaveRequestsController.cs`) + Frontend (`NotificationBell.jsx`, `LeaveRequests.jsx`); không đổi DB/migration, không đổi dữ liệu test, không đổi luồng duyệt đơn.
+
+## 1. Kết quả Build & Lint
+- `dotnet build RoxyAppBE/RoxyAcademy.Api --no-restore`: **PASS** (**0 Warning(s), 0 Error(s)**).
+- `npm --prefix roxy-admin run lint` (`eslint .`): **PASS** (0 error, 0 warning).
+- `npm --prefix roxy-admin run build` (`vite build`): **PASS** (`✓ 112 modules transformed`, `✓ built in 406ms`).
+
+## 2. Kết quả đối chiếu mã nguồn (3/3 lỗi)
+| Lỗi | Hạng mục kiểm tra | Kết quả | Chi tiết đối chiếu |
+| :--- | :--- | :---: | :--- |
+| **Lỗi 1** | Giờ thông báo (`NotificationsController.cs` + `NotificationBell.jsx`) | **PASS** | - `NotificationsController.cs` (L27–41): ép `DateTime.SpecifyKind(..., DateTimeKind.Utc)` cho `CreatedAt` và `ReadAt` trong `GET /api/Notifications` để JSON serialize có hậu tố `Z`.<br>- `NotificationBell.jsx` (L5–27): `formatRelativeTime` tự thêm `'Z'` khi chuỗi ISO có `'T'` nhưng chưa có thông tin múi giờ, tránh lệch 7 giờ. |
+| **Lỗi 2** | Cột Người duyệt ở Phụ huynh (`LeaveRequestsController.cs` + `LeaveRequests.jsx`) | **PASS** | - `LeaveRequestsController.cs` (L150–151, L229–230): `Include(lr => lr.ReviewedByNavigation)` và trả `ReviewedBy`, `ReviewedByName` cho mọi vai trò (kể cả `Parent`).<br>- `LeaveRequests.jsx` (L260–283, L1177–1220): bổ sung listener `focus` / `visibilitychange` (throttle 2000ms) tự làm mới danh sách khi quay lại tab; chỉ hiện `"— (Đang chờ xét duyệt)"` khi `status === 'Pending'`, trạng thái đã xử lý thiếu tên hiện `"Đã xử lý"`. |
+| **Lỗi 3** | Lớp & chi nhánh đơn xin nghỉ (`LeaveRequestsController.cs` + `LeaveRequests.jsx`) | **PASS** | - `LeaveRequestsController.cs` (L360–390): trong `CreateLeaveRequest`, khi đơn học viên không có `ScheduleId`/`ClassId`, tự suy ra lớp nếu có đúng 1 lớp `Active` (`Status != "Finished"`); nếu >1 lớp `Active`, chọn lớp duy nhất có lịch học ngày `LeaveDate` (`Status != "Cancelled"`); ngược lại giữ `null`. Giữ nguyên logic duyệt đơn & đồng bộ điểm danh.<br>- `LeaveRequests.jsx` (L1127–1129, L1336, L1854, L1860): hiển thị `"Nghỉ cả ngày — tất cả các lớp đang học"` khi `!className` và `branchName || 'Trung tâm'` ở modal chi tiết. |
+
+## 3. Kiểm thử runtime trên `localhost:5123` + `localhost:5173` & Kết luận
+- **Giới hạn môi trường sandbox:** Cổng `5123` (API) và `5173` (Web) không chạy trong sandbox, nên chưa tái hiện/test trực tiếp trên trình duyệt 3 kịch bản runtime (tạo thông báo mới kiểm tra chuông, tạo→duyệt→xem lại bằng Phụ huynh, tạo đơn cho học viên 1 lớp vs đơn cũ không có lớp).
+- **Trạng thái hiện tại:** **ĐẠT `dotnet build` + `npm run lint` + `npm run build` & đối chiếu mã nguồn 100%**; **CHỜ TEST RUNTIME CẢ 3 LỖI TRÊN LOCALHOST (`5123` + `5173`)** trước khi commit `"Fix đợt 2E: giờ thông báo, người duyệt, lớp/chi nhánh đơn nghỉ"`.

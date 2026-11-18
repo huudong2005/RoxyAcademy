@@ -357,6 +357,38 @@ public class LeaveRequestsController(RoxyDbContext db) : ControllerBase
             leaveDate = req.LeaveDate.Value;
         }
 
+        // Tự suy ra ClassId cho đơn học viên khi không truyền ScheduleId và ClassId
+        if (studentId.HasValue && !req.ScheduleId.HasValue && !classId.HasValue)
+        {
+            var activeClassIds = await db.StudentClasses
+                .Where(sc => sc.StudentId == studentId.Value
+                             && sc.Status == "Active"
+                             && sc.Class.Status != "Finished")
+                .Select(sc => sc.ClassId)
+                .Distinct()
+                .ToListAsync();
+
+            if (activeClassIds.Count == 1)
+            {
+                classId = activeClassIds[0];
+            }
+            else if (activeClassIds.Count > 1)
+            {
+                var matchedClassIds = await db.Schedules
+                    .Where(s => activeClassIds.Contains(s.ClassId)
+                                && s.StudyDate == leaveDate
+                                && s.Status != "Cancelled")
+                    .Select(s => s.ClassId)
+                    .Distinct()
+                    .ToListAsync();
+
+                if (matchedClassIds.Count == 1)
+                {
+                    classId = matchedClassIds[0];
+                }
+            }
+        }
+
         // 4. Kiểm tra hợp lệ lớp học và phân công/ghi danh
         if (classId.HasValue)
         {

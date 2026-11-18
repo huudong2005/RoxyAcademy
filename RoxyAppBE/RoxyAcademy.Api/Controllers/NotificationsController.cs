@@ -24,10 +24,21 @@ public class NotificationsController(RoxyDbContext db) : ControllerBase
         if (unreadOnly == true)
             q = q.Where(n => !n.IsRead);
 
-        var list = await q.OrderByDescending(n => n.CreatedAt)
-            .Select(n => new NotificationDto(
-                n.Id, n.UserId, n.Title, n.Body, n.Type, n.RefId, n.IsRead, n.ReadAt, n.CreatedAt
-            )).ToListAsync();
+        var rawList = await q.OrderByDescending(n => n.CreatedAt)
+            .AsNoTracking()
+            .ToListAsync();
+
+        var list = rawList.Select(n => new NotificationDto(
+            n.Id,
+            n.UserId,
+            n.Title,
+            n.Body,
+            n.Type,
+            n.RefId,
+            n.IsRead,
+            n.ReadAt.HasValue ? DateTime.SpecifyKind(n.ReadAt.Value, DateTimeKind.Utc) : null,
+            DateTime.SpecifyKind(n.CreatedAt, DateTimeKind.Utc)
+        )).ToList();
 
         return Ok(list);
     }

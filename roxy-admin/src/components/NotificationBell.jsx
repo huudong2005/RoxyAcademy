@@ -5,8 +5,15 @@ import axiosClient from '../api/axiosClient';
 function formatRelativeTime(dateString) {
   if (!dateString) return '';
   try {
+    let normalized = dateString;
+    if (typeof dateString === 'string') {
+      const trimmed = dateString.trim();
+      const hasTimezone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(trimmed);
+      normalized = trimmed.includes('T') && !hasTimezone ? `${trimmed}Z` : trimmed;
+    }
     const now = new Date();
-    const past = new Date(dateString);
+    const past = new Date(normalized);
+    if (Number.isNaN(past.getTime())) return '';
     const diffMs = now.getTime() - past.getTime();
     if (diffMs < 0) return 'Vừa xong';
     const diffSec = Math.floor(diffMs / 1000);
