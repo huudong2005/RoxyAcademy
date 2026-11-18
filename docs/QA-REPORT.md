@@ -817,3 +817,27 @@ Toàn bộ **8/8 hạng mục** của **Giai đoạn 1N-2 (8 bẫy đồng bộ)
 ## 3. Kiểm tra tay 3 cỡ màn hình (`1280px`, `1440px`, `1920px`) & Kết luận
 - **Giới hạn môi trường sandbox:** Không thể chạy trình duyệt + API (`5123`) + MSSQL thực tế trong sandbox để mở trang Thanh toán (giao dịch `TEST17112026` 51.000đ) và trang Học phí ở `1280px`, `1440px`, `1920px`.
 - **Trạng thái hiện tại:** **ĐẠT kiểm tra mã nguồn + `npm run lint` + `npm run build`**; **CHỜ XÁC NHẬN TEST TAY TRÊN TRÌNH DUYỆT (3 cỡ màn hình `1280px`, `1440px`, `1920px`, không bấm Duyệt thật)** trước khi thực hiện commit `"Fix đợt 2B-2: thu hẹp bảng thanh toán"`.
+
+
+---
+
+# BÁO CÁO QA — FIX ĐỢT 2B-3: GIÃN CỘT SỐ TIỀN – PHƯƠNG THỨC (`Payments.jsx`)
+**Ngày kiểm tra:** 18/11/2026  
+**Người thực hiện:** QA Agent & Commander  
+**Commit gốc:** `e561f5e` (sau Fix đợt 2B-2)  
+**Phạm vi:** Chỉ sửa 2 cột `Số tiền` và `Phương thức` trong `roxy-admin/src/pages/Payments.jsx`; không sửa `Tuitions.jsx`, backend hay DB.
+
+## 1. Kết quả Lint & Build (`roxy-admin/`)
+- `npm --prefix roxy-admin run lint` (`eslint .`): **PASS** (0 error, 0 warning).
+- `npm --prefix roxy-admin run build` (`vite build`): **PASS** (`✓ 111 modules transformed`, `✓ built in 379ms`).
+
+## 2. Kết quả kiểm tra mã nguồn & bề rộng ở 2 cỡ màn hình (`1280px`, `1440px`)
+| Hạng mục kiểm tra | Kết quả | Chi tiết đối chiếu |
+| :--- | :---: | :--- |
+| Phạm vi sửa đúng 2 cột `Số tiền` & `Phương thức` | **PASS** | - `<th>` `Số tiền` (L449) & `<td>` `Số tiền` (L486): `px-1.5` → `pl-1.5 pr-3.5` (`pr-3.5` = 14px)<br>- `<th>` `Phương thức` (L450) & `<td>` `Phương thức` (L493): `px-1.5` → `pl-3.5 pr-1.5` (`pl-3.5` = 14px)<br>- Khe hở giữa số tiền canh phải và badge phương thức tăng từ `12px` lên **28px** (`+16px` tổng bề rộng); `Tuitions.jsx` giữ nguyên không sửa. |
+| Không làm tràn bảng ở `1280px` & `1440px` | **PASS (Static)** | - Tổng bề rộng bảng ước tính sau `+16px`: **~874–950px** (8 cột), nằm gọn trong vùng khả dụng `1280px` (~960px) và dư rộng ở `1440px` (~1120px). |
+| Giữ nguyên `sticky right-0`, badge 1 dòng, nút `Duyệt` & `ConfirmModal` | **PASS** | - `sticky right-0` (L454, L550), badge `"Chờ xác nhận"` `whitespace-nowrap` (L1406), nút `Duyệt` (L568–576) và `ConfirmModal` Đợt 1 (L907–918) giữ nguyên. |
+
+## 3. Kiểm tra tay 2 cỡ màn hình (`1280px`, `1440px`) & Kết luận
+- **Giới hạn môi trường sandbox:** Không thể mở trình duyệt/API (`5123`) để kiểm tra trực quan giao dịch `TEST17112026` (`51.000đ`) trên viewport `1280px` và `1440px`.
+- **Trạng thái hiện tại:** **ĐẠT kiểm tra tĩnh + `npm run lint` + `npm run build`**; **CHỜ XÁC NHẬN MẮT THƯỜNG TRÊN TRÌNH DUYỆT (1280px & 1440px, không bấm Duyệt thật)** trước khi commit `"Fix đợt 2B-3: giãn cột số tiền - phương thức"`.

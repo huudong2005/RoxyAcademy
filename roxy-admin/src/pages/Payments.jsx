@@ -446,8 +446,8 @@ export default function Payments() {
                   <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
                     <th className="px-1.5 py-2.5 whitespace-nowrap">Mã GD &amp; Ngày</th>
                     <th className="px-1.5 py-2.5 min-w-[115px] max-w-[140px]">Học viên &amp; Khoản thu</th>
-                    <th className="px-1.5 py-2.5 text-right whitespace-nowrap">Số tiền</th>
-                    <th className="px-1.5 py-2.5 whitespace-nowrap">Phương thức</th>
+                    <th className="pl-1.5 pr-3.5 py-2.5 text-right whitespace-nowrap">Số tiền</th>
+                    <th className="pl-3.5 pr-1.5 py-2.5 whitespace-nowrap">Phương thức</th>
                     <th className="px-1.5 py-2.5 whitespace-nowrap">Chứng từ</th>
                     <th className="px-1.5 py-2.5 text-center whitespace-nowrap min-w-[110px] max-w-[135px]">Trạng thái</th>
                     <th className="px-1.5 py-2.5 whitespace-nowrap max-w-[105px]">Người xác nhận</th>
@@ -483,14 +483,14 @@ export default function Payments() {
                         </td>
 
                         {/* Số tiền */}
-                        <td className="px-1.5 py-2.5 text-right font-mono tabular-nums whitespace-nowrap">
+                        <td className="pl-1.5 pr-3.5 py-2.5 text-right font-mono tabular-nums whitespace-nowrap">
                           <div className="font-bold text-slate-900 text-xs">
                             {formatCurrency(p.amount)}
                           </div>
                         </td>
 
                         {/* Phương thức */}
-                        <td className="px-1.5 py-2.5 whitespace-nowrap">
+                        <td className="pl-3.5 pr-1.5 py-2.5 whitespace-nowrap">
                           {renderPaymentMethodBadge(p.paymentMethod)}
                         </td>
 
