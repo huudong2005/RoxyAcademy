@@ -1,20 +1,21 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
+import { PrimaryButton, SecondaryButton, InputPill } from './ui';
 
 /**
  * Khối cảnh báo lỗi 400/409 khi không thể ngừng hoạt động chi nhánh.
  */
 function DeactivationBlockedAlert({ branchId, message, reasons = [], onNavigate }) {
   return (
-    <div className="bg-rose-50 border-2 border-rose-300 rounded-xl p-4 text-rose-900 space-y-3">
+    <div className="bg-rose-50 border-2 border-rose-300 rounded-card p-4 text-rose-900 space-y-3">
       <div className="flex items-start gap-2.5">
         <span className="text-lg shrink-0">❌</span>
         <div className="space-y-1.5 text-sm min-w-0 flex-1">
           <p className="font-bold text-rose-900">Không thể ngừng hoạt động chi nhánh này!</p>
           <p className="text-rose-800 leading-relaxed">{message}</p>
           {Array.isArray(reasons) && reasons.length > 0 && (
-            <ul className="mt-2 list-disc list-inside space-y-1 text-xs text-rose-800 bg-white/70 border border-rose-200 rounded-lg p-3">
+            <ul className="mt-2 list-disc list-inside space-y-1 text-xs text-rose-800 bg-white/70 border border-rose-200 rounded-card p-3">
               {reasons.map((reason, idx) => (
                 <li key={idx} className="leading-relaxed">
                   {reason}
@@ -28,22 +29,24 @@ function DeactivationBlockedAlert({ branchId, message, reasons = [], onNavigate 
       <div className="pt-2 border-t border-rose-200 space-y-2">
         <p className="text-xs font-semibold text-rose-800">Hành động khắc phục nhanh:</p>
         <div className="flex flex-wrap gap-2">
-          <Link
+          <SecondaryButton
+            as={Link}
             to={`/classes?branchId=${branchId}`}
             onClick={onNavigate}
-            className="min-h-[40px] inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-blue-700 border border-blue-300 hover:bg-blue-50 text-xs font-semibold rounded-lg transition-colors"
+            className="px-3.5 py-2 text-xs"
           >
             <span>🏫</span>
             <span>Mở danh sách Lớp học</span>
-          </Link>
-          <Link
+          </SecondaryButton>
+          <SecondaryButton
+            as={Link}
             to={`/students?branchId=${branchId}`}
             onClick={onNavigate}
-            className="min-h-[40px] inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-emerald-700 border border-emerald-300 hover:bg-emerald-50 text-xs font-semibold rounded-lg transition-colors"
+            className="px-3.5 py-2 text-xs"
           >
             <span>🎓</span>
             <span>Mở danh sách Học viên</span>
-          </Link>
+          </SecondaryButton>
         </div>
       </div>
     </div>
@@ -163,7 +166,7 @@ export function CreateEditBranchModal({ branch, onClose, onSuccess }) {
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-900/50 backdrop-blur-[1px]"
+        className="fixed inset-0 bg-teal-deep/40 backdrop-blur-[2px] modal-backdrop"
         onClick={() => !isSubmitting && onClose()}
         aria-hidden="true"
       />
@@ -173,24 +176,24 @@ export function CreateEditBranchModal({ branch, onClose, onSuccess }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="branch-modal-title"
-        className="relative z-10 w-full sm:max-w-lg bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto pb-[env(safe-area-inset-bottom,16px)] sm:pb-0 transition-transform duration-200"
+        className="relative z-10 w-full sm:max-w-lg bg-surface rounded-t-card-lg sm:rounded-card-lg border border-line/60 shadow-modal modal-panel max-h-[90vh] overflow-y-auto pb-[env(safe-area-inset-bottom,16px)] sm:pb-0"
       >
         {/* Drag handle trên Mobile */}
         <div className="sm:hidden pt-2.5 pb-1">
-          <div className="w-12 h-1.5 bg-slate-300 rounded-full mx-auto" />
+          <div className="w-12 h-1.5 bg-line-strong rounded-full mx-auto" />
         </div>
 
         {/* Header */}
-        <div className="flex items-start justify-between gap-3 px-5 py-4 border-b border-slate-100">
+        <div className="flex items-start justify-between gap-3 px-5 py-4 border-b border-line/60">
           <div>
             <h3
               id="branch-modal-title"
-              className="text-base md:text-lg font-bold text-slate-900 flex items-center gap-2"
+              className="text-base md:text-lg font-bold text-ink flex items-center gap-2"
             >
               <span>🏢</span>
               <span>{isEdit ? 'Chỉnh sửa thông tin chi nhánh' : 'Thêm chi nhánh cơ sở mới'}</span>
             </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-ink-secondary mt-0.5">
               {isEdit
                 ? 'Cập nhật tên cơ sở, địa chỉ liên hệ hoặc trạng thái hoạt động.'
                 : 'Điền đầy đủ thông tin địa điểm đào tạo của Roxy Academy.'}
@@ -201,7 +204,7 @@ export function CreateEditBranchModal({ branch, onClose, onSuccess }) {
             disabled={isSubmitting}
             onClick={onClose}
             aria-label="Đóng hộp thoại"
-            className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 cursor-pointer disabled:opacity-50"
+            className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-full text-ink-muted hover:bg-surface-subtle hover:text-ink cursor-pointer disabled:opacity-50"
           >
             ✕
           </button>
@@ -218,7 +221,7 @@ export function CreateEditBranchModal({ branch, onClose, onSuccess }) {
                 onNavigate={onClose}
               />
             ) : (
-              <div className="bg-rose-50 border border-rose-200 text-rose-800 text-sm rounded-lg p-3 flex items-start gap-2">
+              <div className="bg-rose-50 border border-rose-200 text-rose-800 text-sm rounded-card p-3 flex items-start gap-2">
                 <span className="shrink-0">⚠️</span>
                 <span>{submitError}</span>
               </div>
@@ -226,10 +229,10 @@ export function CreateEditBranchModal({ branch, onClose, onSuccess }) {
 
           {/* Tên chi nhánh */}
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+            <label className="block text-xs font-semibold text-ink mb-1.5">
               Tên chi nhánh cơ sở <span className="text-rose-500">*</span>
             </label>
-            <input
+            <InputPill
               type="text"
               maxLength={150}
               value={branchName}
@@ -240,11 +243,11 @@ export function CreateEditBranchModal({ branch, onClose, onSuccess }) {
                 }
               }}
               placeholder="VD: Cơ sở 1 - Bình Trưng Đông"
-              className={`w-full min-h-[44px] px-3.5 py-2 text-sm rounded-lg border focus:outline-none focus:ring-2 transition-all ${
+              className={
                 fieldErrors.branchName
-                  ? 'border-rose-400 bg-rose-50/40 focus:ring-rose-500/20'
-                  : 'border-slate-300 bg-white focus:border-blue-500 focus:ring-blue-500/20'
-              }`}
+                  ? '!border-rose-400 bg-rose-50/40 focus:!border-rose-500 focus:!ring-rose-500/20'
+                  : ''
+              }
             />
             {fieldErrors.branchName && (
               <p className="mt-1 text-xs text-rose-600">{fieldErrors.branchName}</p>
@@ -253,7 +256,7 @@ export function CreateEditBranchModal({ branch, onClose, onSuccess }) {
 
           {/* Địa chỉ */}
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+            <label className="block text-xs font-semibold text-ink mb-1.5">
               Địa chỉ chi nhánh <span className="text-rose-500">*</span>
             </label>
             <textarea
@@ -267,10 +270,10 @@ export function CreateEditBranchModal({ branch, onClose, onSuccess }) {
                 }
               }}
               placeholder="VD: 123 Nguyễn Duy Trinh, P. Bình Trưng, TP.HCM"
-              className={`w-full px-3.5 py-2.5 text-sm rounded-lg border focus:outline-none focus:ring-2 transition-all ${
+              className={`w-full px-4 py-2.5 text-sm rounded-2xl border text-ink placeholder:text-ink-muted transition-[border-color,box-shadow] duration-150 focus:outline-none focus:ring-2 ${
                 fieldErrors.address
-                  ? 'border-rose-400 bg-rose-50/40 focus:ring-rose-500/20'
-                  : 'border-slate-300 bg-white focus:border-blue-500 focus:ring-blue-500/20'
+                  ? 'border-rose-400 bg-rose-50/40 focus:border-rose-500 focus:ring-rose-500/20'
+                  : 'border-line bg-surface focus:border-gold focus:ring-gold/25'
               }`}
             />
             {fieldErrors.address && (
@@ -280,10 +283,10 @@ export function CreateEditBranchModal({ branch, onClose, onSuccess }) {
 
           {/* Số điện thoại */}
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-              Số điện thoại hotline <span className="text-slate-400 font-normal">(Tùy chọn)</span>
+            <label className="block text-xs font-semibold text-ink mb-1.5">
+              Số điện thoại hotline <span className="text-ink-muted font-normal">(Tùy chọn)</span>
             </label>
-            <input
+            <InputPill
               type="tel"
               maxLength={20}
               value={phone}
@@ -294,11 +297,11 @@ export function CreateEditBranchModal({ branch, onClose, onSuccess }) {
                 }
               }}
               placeholder="VD: 0326 538 824"
-              className={`w-full min-h-[44px] px-3.5 py-2 text-sm rounded-lg border focus:outline-none focus:ring-2 transition-all ${
+              className={
                 fieldErrors.phone
-                  ? 'border-rose-400 bg-rose-50/40 focus:ring-rose-500/20'
-                  : 'border-slate-300 bg-white focus:border-blue-500 focus:ring-blue-500/20'
-              }`}
+                  ? '!border-rose-400 bg-rose-50/40 focus:!border-rose-500 focus:!ring-rose-500/20'
+                  : ''
+              }
             />
             {fieldErrors.phone && (
               <p className="mt-1 text-xs text-rose-600">{fieldErrors.phone}</p>
@@ -308,11 +311,11 @@ export function CreateEditBranchModal({ branch, onClose, onSuccess }) {
           {/* Trạng thái hoạt động (CHỈ HIỂN THỊ KHI SỬA) */}
           {isEdit && (
             <div className="pt-1">
-              <label className="block text-xs font-semibold text-slate-700 mb-2">
+              <label className="block text-xs font-semibold text-ink mb-2">
                 Trạng thái hoạt động
               </label>
-              <label className="flex items-center justify-between gap-3 p-3 rounded-lg border border-slate-200 bg-slate-50 cursor-pointer">
-                <span className="text-sm text-slate-700">
+              <label className="flex items-center justify-between gap-3 p-3 rounded-card border border-line bg-surface-subtle cursor-pointer">
+                <span className="text-sm text-ink-secondary">
                   {isActive
                     ? 'Đang hoạt động (Tiếp nhận lớp học & học viên mới)'
                     : 'Ngừng hoạt động (Ẩn khỏi danh mục mở lớp mới)'}
@@ -326,30 +329,28 @@ export function CreateEditBranchModal({ branch, onClose, onSuccess }) {
                     setBlockedReasons([]);
                     setSubmitError('');
                   }}
-                  className="h-5 w-5 accent-blue-600 rounded cursor-pointer shrink-0"
+                  className="h-5 w-5 accent-teal rounded cursor-pointer shrink-0"
                 />
               </label>
             </div>
           )}
 
           {/* Footer Buttons */}
-          <div className="pt-3 border-t border-slate-100 flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
-            <button
+          <div className="pt-3 border-t border-line/60 flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
+            <SecondaryButton
               type="button"
               disabled={isSubmitting}
               onClick={onClose}
-              className="min-h-[44px] px-4 py-2 text-sm font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
             >
               Hủy bỏ
-            </button>
-            <button
+            </SecondaryButton>
+            <PrimaryButton
               type="submit"
               disabled={isSubmitting}
-              className="min-h-[44px] inline-flex items-center justify-center gap-2 px-5 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs active:scale-[0.98] transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <>
-                  <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  <span className="w-4 h-4 border-2 border-teal/30 border-t-teal rounded-full animate-spin" />
                   <span>Đang lưu dữ liệu...</span>
                 </>
               ) : (
@@ -358,7 +359,7 @@ export function CreateEditBranchModal({ branch, onClose, onSuccess }) {
                   <span>{isEdit ? 'Lưu thay đổi' : 'Lưu chi nhánh'}</span>
                 </>
               )}
-            </button>
+            </PrimaryButton>
           </div>
         </form>
       </div>
@@ -419,7 +420,7 @@ export function DeactivateBranchModal({ branch, onClose, onSuccess }) {
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <div
-        className="fixed inset-0 bg-slate-900/50 backdrop-blur-[1px]"
+        className="fixed inset-0 bg-teal-deep/40 backdrop-blur-[2px] modal-backdrop"
         onClick={() => !isSubmitting && onClose()}
         aria-hidden="true"
       />
@@ -428,12 +429,12 @@ export function DeactivateBranchModal({ branch, onClose, onSuccess }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="deactivate-modal-title"
-        className="relative z-10 w-full sm:max-w-lg bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto pb-[env(safe-area-inset-bottom,16px)] sm:pb-0"
+        className="relative z-10 w-full sm:max-w-lg bg-surface rounded-t-card-lg sm:rounded-card-lg border border-line/60 shadow-modal modal-panel max-h-[90vh] overflow-y-auto pb-[env(safe-area-inset-bottom,16px)] sm:pb-0"
       >
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-line/60">
           <h3
             id="deactivate-modal-title"
-            className="text-base font-bold text-slate-900 flex items-center gap-2"
+            className="text-base font-bold text-ink flex items-center gap-2"
           >
             <span>⚠️</span>
             <span>Xác nhận ngừng hoạt động chi nhánh</span>
@@ -443,20 +444,20 @@ export function DeactivateBranchModal({ branch, onClose, onSuccess }) {
             disabled={isSubmitting}
             onClick={onClose}
             aria-label="Đóng hộp thoại"
-            className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 cursor-pointer disabled:opacity-50"
+            className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-full text-ink-muted hover:bg-surface-subtle hover:text-ink cursor-pointer disabled:opacity-50"
           >
             ✕
           </button>
         </div>
 
         <div className="p-5 space-y-4">
-          <p className="text-sm text-slate-700">
+          <p className="text-sm text-ink-secondary">
             Bạn có chắc chắn muốn ngừng hoạt động chi nhánh{' '}
-            <strong className="text-slate-900">{branch.branchName}</strong>{' '}
-            <span className="font-mono text-xs text-slate-500">(#BR-{branch.id})</span>?
+            <strong className="text-ink">{branch.branchName}</strong>{' '}
+            <span className="font-mono text-xs text-ink-muted">(#BR-{branch.id})</span>?
           </p>
 
-          <ul className="text-xs text-slate-600 space-y-1.5 bg-slate-50 border border-slate-200 rounded-lg p-3 list-disc list-inside">
+          <ul className="text-xs text-ink-secondary space-y-1.5 bg-surface-subtle border border-line rounded-card p-3 list-disc list-inside">
             <li>Chi nhánh sẽ bị ẩn khỏi danh mục chọn cơ sở khi tạo Lớp học mới và ghi danh.</li>
             <li>Dữ liệu lịch sử, học phí và điểm danh trước đây vẫn được bảo toàn nguyên vẹn.</li>
           </ul>
@@ -471,25 +472,24 @@ export function DeactivateBranchModal({ branch, onClose, onSuccess }) {
           )}
 
           {otherError && (
-            <div className="bg-rose-50 border border-rose-200 text-rose-800 text-sm rounded-lg p-3">
+            <div className="bg-rose-50 border border-rose-200 text-rose-800 text-sm rounded-card p-3">
               {otherError}
             </div>
           )}
 
-          <div className="pt-2 border-t border-slate-100 flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
-            <button
+          <div className="pt-2 border-t border-line/60 flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
+            <SecondaryButton
               type="button"
               disabled={isSubmitting}
               onClick={onClose}
-              className="min-h-[44px] px-4 py-2 text-sm font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
             >
               Đóng
-            </button>
+            </SecondaryButton>
             <button
               type="button"
               disabled={isSubmitting || Boolean(error400)}
               onClick={handleConfirm}
-              className="min-h-[44px] inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-lg shadow-xs active:scale-95 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="min-h-[44px] inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-full shadow-xs active:scale-95 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <>
@@ -553,7 +553,7 @@ export function ReactivateBranchModal({ branch, onClose, onSuccess }) {
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <div
-        className="fixed inset-0 bg-slate-900/50 backdrop-blur-[1px]"
+        className="fixed inset-0 bg-teal-deep/40 backdrop-blur-[2px] modal-backdrop"
         onClick={() => !isSubmitting && onClose()}
         aria-hidden="true"
       />
@@ -562,12 +562,12 @@ export function ReactivateBranchModal({ branch, onClose, onSuccess }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="reactivate-modal-title"
-        className="relative z-10 w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl overflow-hidden pb-[env(safe-area-inset-bottom,16px)] sm:pb-0"
+        className="relative z-10 w-full sm:max-w-md bg-surface rounded-t-card-lg sm:rounded-card-lg border border-line/60 shadow-modal modal-panel overflow-hidden pb-[env(safe-area-inset-bottom,16px)] sm:pb-0"
       >
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-line/60">
           <h3
             id="reactivate-modal-title"
-            className="text-base font-bold text-slate-900 flex items-center gap-2"
+            className="text-base font-bold text-ink flex items-center gap-2"
           >
             <span>✓</span>
             <span>Kích hoạt lại chi nhánh</span>
@@ -577,43 +577,41 @@ export function ReactivateBranchModal({ branch, onClose, onSuccess }) {
             disabled={isSubmitting}
             onClick={onClose}
             aria-label="Đóng hộp thoại"
-            className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 cursor-pointer disabled:opacity-50"
+            className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-full text-ink-muted hover:bg-surface-subtle hover:text-ink cursor-pointer disabled:opacity-50"
           >
             ✕
           </button>
         </div>
 
         <div className="p-5 space-y-4">
-          <p className="text-sm text-slate-700 leading-relaxed">
+          <p className="text-sm text-ink-secondary leading-relaxed">
             Bạn có muốn kích hoạt lại cơ sở{' '}
-            <strong className="text-slate-900">{branch.branchName}</strong>? Cơ sở này sẽ xuất hiện
+            <strong className="text-ink">{branch.branchName}</strong>? Cơ sở này sẽ xuất hiện
             trở lại trong danh sách tuyển sinh và mở lớp mới.
           </p>
 
           {errorMsg && (
-            <div className="bg-rose-50 border border-rose-200 text-rose-800 text-sm rounded-lg p-3">
+            <div className="bg-rose-50 border border-rose-200 text-rose-800 text-sm rounded-card p-3">
               {errorMsg}
             </div>
           )}
 
-          <div className="pt-2 border-t border-slate-100 flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
-            <button
+          <div className="pt-2 border-t border-line/60 flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
+            <SecondaryButton
               type="button"
               disabled={isSubmitting}
               onClick={onClose}
-              className="min-h-[44px] px-4 py-2 text-sm font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
             >
               Hủy
-            </button>
-            <button
+            </SecondaryButton>
+            <PrimaryButton
               type="button"
               disabled={isSubmitting}
               onClick={handleConfirm}
-              className="min-h-[44px] inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-xs active:scale-95 transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <>
-                  <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  <span className="w-4 h-4 border-2 border-teal/30 border-t-teal rounded-full animate-spin" />
                   <span>Đang kích hoạt...</span>
                 </>
               ) : (
@@ -622,7 +620,7 @@ export function ReactivateBranchModal({ branch, onClose, onSuccess }) {
                   <span>Xác nhận kích hoạt</span>
                 </>
               )}
-            </button>
+            </PrimaryButton>
           </div>
         </div>
       </div>

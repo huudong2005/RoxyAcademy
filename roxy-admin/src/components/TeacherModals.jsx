@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axiosClient from '../api/axiosClient';
 import { formatDate, formatDateTime } from '../utils/formatters';
+import { PrimaryButton, SecondaryButton, InputPill, Badge } from './ui';
 
 /**
  * Helper trích xuất thông báo lỗi dễ hiểu từ response của ASP.NET Core API.
@@ -160,7 +161,7 @@ export function CreateEditTeacherModal({
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <div
-        className="fixed inset-0 bg-slate-900/50 backdrop-blur-[1px]"
+        className="fixed inset-0 bg-teal-deep/40 backdrop-blur-[2px] modal-backdrop"
         onClick={() => !isSubmitting && onClose()}
         aria-hidden="true"
       />
@@ -169,14 +170,14 @@ export function CreateEditTeacherModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="teacher-modal-title"
-        className="relative z-10 w-full sm:max-w-lg bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto pb-[env(safe-area-inset-bottom,16px)] sm:pb-0 transition-transform duration-200 ease-out"
+        className="relative z-10 w-full sm:max-w-lg bg-surface rounded-t-card-lg sm:rounded-card-lg border border-line/60 shadow-modal modal-panel max-h-[90vh] overflow-y-auto pb-[env(safe-area-inset-bottom,16px)] sm:pb-0"
       >
         <div className="sm:hidden pt-2.5 pb-1">
-          <div className="w-10 h-1 bg-slate-300 rounded-full mx-auto" />
+          <div className="w-10 h-1 bg-line-strong rounded-full mx-auto" />
         </div>
 
-        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-slate-100 sticky top-0 bg-white z-10">
-          <h2 id="teacher-modal-title" className="text-lg font-bold text-slate-900">
+        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-line/60 sticky top-0 bg-surface z-10">
+          <h2 id="teacher-modal-title" className="text-lg font-bold text-ink">
             {isEdit ? 'Chỉnh sửa thông tin giáo viên' : 'Thêm giáo viên mới'}
           </h2>
           <button
@@ -184,7 +185,7 @@ export function CreateEditTeacherModal({
             onClick={() => !isSubmitting && onClose()}
             disabled={isSubmitting}
             aria-label="Đóng hộp thoại"
-            className="w-9 h-9 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 active:scale-[0.97] transition-all cursor-pointer disabled:opacity-50"
+            className="w-9 h-9 rounded-full flex items-center justify-center text-ink-muted hover:text-ink hover:bg-surface-subtle active:scale-[0.97] transition-all cursor-pointer disabled:opacity-50"
           >
             ✕
           </button>
@@ -192,7 +193,7 @@ export function CreateEditTeacherModal({
 
         <form onSubmit={handleSubmit} className="p-5 sm:p-6 space-y-4">
           {submitError && (
-            <div className="bg-rose-50 border border-rose-200 text-rose-800 rounded-xl p-3.5 text-sm flex items-start gap-2.5">
+            <div className="bg-rose-50 border border-rose-200 text-rose-800 rounded-card p-3.5 text-sm flex items-start gap-2.5">
               <span className="shrink-0">⚠️</span>
               <span className="leading-relaxed">{submitError}</span>
             </div>
@@ -202,11 +203,11 @@ export function CreateEditTeacherModal({
           <div>
             <label
               htmlFor="teacher-fullname"
-              className="block text-sm font-semibold text-slate-700 mb-1.5"
+              className="block text-sm font-semibold text-ink mb-1.5"
             >
               Họ và tên <span className="text-rose-600">*</span>
             </label>
-            <input
+            <InputPill
               id="teacher-fullname"
               type="text"
               value={fullName}
@@ -217,11 +218,11 @@ export function CreateEditTeacherModal({
               placeholder="VD: Nguyễn Thị Minh Anh"
               maxLength={150}
               disabled={isSubmitting}
-              className={`w-full min-h-[44px] px-3.5 py-2 text-sm bg-white border rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 transition-colors ${
+              className={
                 fieldErrors.fullName
-                  ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/20'
-                  : 'border-slate-300 focus:border-blue-500 focus:ring-blue-500/20'
-              }`}
+                  ? '!border-rose-400 focus:!border-rose-500 focus:!ring-rose-500/20'
+                  : ''
+              }
             />
             {fieldErrors.fullName && (
               <p className="mt-1 text-xs text-rose-600">{fieldErrors.fullName}</p>
@@ -233,11 +234,11 @@ export function CreateEditTeacherModal({
             <div>
               <label
                 htmlFor="teacher-phone"
-                className="block text-sm font-semibold text-slate-700 mb-1.5"
+                className="block text-sm font-semibold text-ink mb-1.5"
               >
                 Số điện thoại <span className="text-rose-600">*</span>
               </label>
-              <input
+              <InputPill
                 id="teacher-phone"
                 type="tel"
                 inputMode="numeric"
@@ -250,10 +251,10 @@ export function CreateEditTeacherModal({
                 placeholder="0901234567"
                 maxLength={10}
                 disabled={isSubmitting}
-                className={`w-full min-h-[44px] px-3.5 py-2 text-sm font-mono tabular-nums bg-white border rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 transition-colors ${
+                className={`font-mono tabular-nums ${
                   fieldErrors.phoneNumber
-                    ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/20'
-                    : 'border-slate-300 focus:border-blue-500 focus:ring-blue-500/20'
+                    ? '!border-rose-400 focus:!border-rose-500 focus:!ring-rose-500/20'
+                    : ''
                 }`}
               />
               {fieldErrors.phoneNumber && (
@@ -264,11 +265,11 @@ export function CreateEditTeacherModal({
             <div>
               <label
                 htmlFor="teacher-email"
-                className="block text-sm font-semibold text-slate-700 mb-1.5"
+                className="block text-sm font-semibold text-ink mb-1.5"
               >
-                Email <span className="text-xs font-normal text-slate-400">(tùy chọn)</span>
+                Email <span className="text-xs font-normal text-ink-muted">(tùy chọn)</span>
               </label>
-              <input
+              <InputPill
                 id="teacher-email"
                 type="email"
                 value={email}
@@ -279,11 +280,11 @@ export function CreateEditTeacherModal({
                 placeholder="giaovien@roxy.edu.vn"
                 maxLength={150}
                 disabled={isSubmitting}
-                className={`w-full min-h-[44px] px-3.5 py-2 text-sm bg-white border rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 transition-colors ${
+                className={
                   fieldErrors.email
-                    ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/20'
-                    : 'border-slate-300 focus:border-blue-500 focus:ring-blue-500/20'
-                }`}
+                    ? '!border-rose-400 focus:!border-rose-500 focus:!ring-rose-500/20'
+                    : ''
+                }
               />
               {fieldErrors.email && (
                 <p className="mt-1 text-xs text-rose-600">{fieldErrors.email}</p>
@@ -296,7 +297,7 @@ export function CreateEditTeacherModal({
             <div>
               <label
                 htmlFor="teacher-branch"
-                className="block text-sm font-semibold text-slate-700 mb-1.5"
+                className="block text-sm font-semibold text-ink mb-1.5"
               >
                 Chi nhánh <span className="text-rose-600">*</span>
               </label>
@@ -308,12 +309,12 @@ export function CreateEditTeacherModal({
                   if (fieldErrors.branchId) setFieldErrors((p) => ({ ...p, branchId: '' }));
                 }}
                 disabled={!isSuperAdmin || isSubmitting}
-                className={`w-full min-h-[44px] px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
+                className={`w-full rounded-full border px-4 py-2.5 text-sm transition-[border-color,box-shadow] duration-150 focus:outline-none ${
                   !isSuperAdmin
-                    ? 'bg-slate-100 text-slate-600 border-slate-200 cursor-not-allowed'
+                    ? 'bg-surface-subtle text-ink-muted border-line cursor-not-allowed'
                     : fieldErrors.branchId
-                      ? 'bg-white text-slate-900 border-rose-400 focus:border-rose-500 focus:ring-rose-500/20'
-                      : 'bg-white text-slate-900 border-slate-300 focus:border-blue-500 focus:ring-blue-500/20'
+                      ? 'bg-surface text-ink border-rose-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
+                      : 'bg-surface text-ink border-line focus:border-gold focus:ring-2 focus:ring-gold/25'
                 }`}
               >
                 <option value="">-- Chọn chi nhánh --</option>
@@ -324,7 +325,7 @@ export function CreateEditTeacherModal({
                 ))}
               </select>
               {!isSuperAdmin && (
-                <p className="mt-1 text-[11px] text-slate-500">
+                <p className="mt-1 text-[11px] text-ink-muted">
                   Cố định theo chi nhánh bạn đang quản lý.
                 </p>
               )}
@@ -336,7 +337,7 @@ export function CreateEditTeacherModal({
             <div>
               <label
                 htmlFor="teacher-lang"
-                className="block text-sm font-semibold text-slate-700 mb-1.5"
+                className="block text-sm font-semibold text-ink mb-1.5"
               >
                 Ngôn ngữ giao diện
               </label>
@@ -345,7 +346,7 @@ export function CreateEditTeacherModal({
                 value={preferredLanguage}
                 onChange={(e) => setPreferredLanguage(e.target.value)}
                 disabled={isSubmitting}
-                className="w-full min-h-[44px] px-3 py-2 text-sm bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-colors"
+                className="w-full rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
               >
                 <option value="vi">Tiếng Việt (vi)</option>
                 <option value="en">English (en)</option>
@@ -358,15 +359,15 @@ export function CreateEditTeacherModal({
             <div>
               <label
                 htmlFor="teacher-password"
-                className="block text-sm font-semibold text-slate-700 mb-1.5"
+                className="block text-sm font-semibold text-ink mb-1.5"
               >
                 Mật khẩu khởi tạo{' '}
-                <span className="text-xs font-normal text-slate-400">
+                <span className="text-xs font-normal text-ink-muted">
                   (tùy chọn, tối thiểu 8 ký tự)
                 </span>
               </label>
               <div className="relative">
-                <input
+                <InputPill
                   id="teacher-password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
@@ -378,16 +379,16 @@ export function CreateEditTeacherModal({
                   placeholder="Để trống nếu cấp mật khẩu sau"
                   disabled={isSubmitting}
                   autoComplete="new-password"
-                  className={`w-full min-h-[44px] pl-3.5 pr-16 py-2 text-sm bg-white border rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 transition-colors ${
+                  className={`pr-16 ${
                     fieldErrors.password
-                      ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/20'
-                      : 'border-slate-300 focus:border-blue-500 focus:ring-blue-500/20'
+                      ? '!border-rose-400 focus:!border-rose-500 focus:!ring-rose-500/20'
+                      : ''
                   }`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  className="absolute inset-y-0 right-2.5 px-2 text-xs font-semibold text-slate-500 hover:text-slate-800 cursor-pointer"
+                  className="absolute inset-y-0 right-3 px-2 text-xs font-semibold text-ink-muted hover:text-teal cursor-pointer"
                 >
                   {showPassword ? 'Ẩn' : 'Hiện'}
                 </button>
@@ -401,12 +402,12 @@ export function CreateEditTeacherModal({
           {/* Trạng thái hoạt động khi chỉnh sửa */}
           {isEdit && (
             <div className="pt-1">
-              <label className="flex items-center justify-between gap-3 p-3.5 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer">
+              <label className="flex items-center justify-between gap-3 p-3.5 rounded-card border border-line bg-surface-subtle cursor-pointer">
                 <div>
-                  <p className="text-sm font-semibold text-slate-800">
+                  <p className="text-sm font-semibold text-ink">
                     Trạng thái tài khoản
                   </p>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-ink-secondary">
                     {isActive
                       ? 'Giáo viên đang hoạt động và có thể đăng nhập hệ thống.'
                       : 'Tài khoản đang bị khóa, không thể đăng nhập.'}
@@ -417,36 +418,34 @@ export function CreateEditTeacherModal({
                   checked={isActive}
                   onChange={(e) => setIsActive(e.target.checked)}
                   disabled={isSubmitting}
-                  className="h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                  className="h-5 w-5 accent-teal rounded cursor-pointer"
                 />
               </label>
             </div>
           )}
 
           {/* Footer Buttons */}
-          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 pt-3 border-t border-slate-100">
-            <button
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 pt-3 border-t border-line/60">
+            <SecondaryButton
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="min-h-[44px] px-4 py-2 text-sm font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
             >
               Hủy
-            </button>
-            <button
+            </SecondaryButton>
+            <PrimaryButton
               type="submit"
               disabled={isSubmitting}
-              className="min-h-[44px] px-5 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs active:scale-[0.98] transition-all cursor-pointer disabled:opacity-60 inline-flex items-center justify-center gap-2"
             >
               {isSubmitting ? (
                 <>
-                  <span className="h-4 w-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  <span className="h-4 w-4 border-2 border-teal/30 border-t-teal rounded-full animate-spin" />
                   <span>Đang lưu...</span>
                 </>
               ) : (
                 <span>{isEdit ? 'Lưu thay đổi' : 'Tạo tài khoản giáo viên'}</span>
               )}
-            </button>
+            </PrimaryButton>
           </div>
         </form>
       </div>
@@ -509,7 +508,7 @@ export function ResetTeacherPasswordModal({ teacher, onClose, onSuccess }) {
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <div
-        className="fixed inset-0 bg-slate-900/50 backdrop-blur-[1px]"
+        className="fixed inset-0 bg-teal-deep/40 backdrop-blur-[2px] modal-backdrop"
         onClick={() => !isSubmitting && onClose()}
         aria-hidden="true"
       />
@@ -518,10 +517,10 @@ export function ResetTeacherPasswordModal({ teacher, onClose, onSuccess }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="reset-pwd-title"
-        className="relative z-10 w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl p-5 sm:p-6 pb-[env(safe-area-inset-bottom,16px)] sm:pb-6 space-y-4"
+        className="relative z-10 w-full sm:max-w-md bg-surface rounded-t-card-lg sm:rounded-card-lg border border-line/60 shadow-modal modal-panel p-5 sm:p-6 pb-[env(safe-area-inset-bottom,16px)] sm:pb-6 space-y-4"
       >
         <div className="flex items-center justify-between">
-          <h2 id="reset-pwd-title" className="text-lg font-bold text-slate-900">
+          <h2 id="reset-pwd-title" className="text-lg font-bold text-ink">
             Đặt lại mật khẩu
           </h2>
           <button
@@ -529,20 +528,20 @@ export function ResetTeacherPasswordModal({ teacher, onClose, onSuccess }) {
             onClick={() => !isSubmitting && onClose()}
             disabled={isSubmitting}
             aria-label="Đóng hộp thoại"
-            className="w-9 h-9 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
+            className="w-9 h-9 rounded-full flex items-center justify-center text-ink-muted hover:text-ink hover:bg-surface-subtle cursor-pointer"
           >
             ✕
           </button>
         </div>
 
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-ink-secondary">
           Cấp mật khẩu đăng nhập mới cho giáo viên{' '}
-          <span className="font-semibold text-slate-900">{teacher.fullName}</span> (
-          <span className="font-mono text-slate-700">{teacher.phoneNumber}</span>).
+          <span className="font-semibold text-ink">{teacher.fullName}</span> (
+          <span className="font-mono text-ink">{teacher.phoneNumber}</span>).
         </p>
 
         {error && (
-          <div className="bg-rose-50 border border-rose-200 text-rose-800 rounded-xl p-3 text-sm flex items-start gap-2">
+          <div className="bg-rose-50 border border-rose-200 text-rose-800 rounded-card p-3 text-sm flex items-start gap-2">
             <span>⚠️</span>
             <span>{error}</span>
           </div>
@@ -552,12 +551,12 @@ export function ResetTeacherPasswordModal({ teacher, onClose, onSuccess }) {
           <div>
             <label
               htmlFor="reset-new-pwd"
-              className="block text-sm font-semibold text-slate-700 mb-1.5"
+              className="block text-sm font-semibold text-ink mb-1.5"
             >
               Mật khẩu mới <span className="text-rose-600">*</span>
             </label>
             <div className="relative">
-              <input
+              <InputPill
                 id="reset-new-pwd"
                 type={showPassword ? 'text' : 'password'}
                 value={newPassword}
@@ -565,12 +564,12 @@ export function ResetTeacherPasswordModal({ teacher, onClose, onSuccess }) {
                 placeholder="Tối thiểu 8 ký tự"
                 autoComplete="new-password"
                 disabled={isSubmitting}
-                className="w-full min-h-[44px] pl-3.5 pr-16 py-2 text-sm bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                className="pr-16"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="absolute inset-y-0 right-2.5 px-2 text-xs font-semibold text-slate-500 hover:text-slate-800 cursor-pointer"
+                className="absolute inset-y-0 right-3 px-2 text-xs font-semibold text-ink-muted hover:text-teal cursor-pointer"
               >
                 {showPassword ? 'Ẩn' : 'Hiện'}
               </button>
@@ -580,11 +579,11 @@ export function ResetTeacherPasswordModal({ teacher, onClose, onSuccess }) {
           <div>
             <label
               htmlFor="reset-confirm-pwd"
-              className="block text-sm font-semibold text-slate-700 mb-1.5"
+              className="block text-sm font-semibold text-ink mb-1.5"
             >
               Xác nhận mật khẩu mới <span className="text-rose-600">*</span>
             </label>
-            <input
+            <InputPill
               id="reset-confirm-pwd"
               type={showPassword ? 'text' : 'password'}
               value={confirmPassword}
@@ -592,26 +591,23 @@ export function ResetTeacherPasswordModal({ teacher, onClose, onSuccess }) {
               placeholder="Nhập lại mật khẩu mới"
               autoComplete="new-password"
               disabled={isSubmitting}
-              className="w-full min-h-[44px] px-3.5 py-2 text-sm bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
             />
           </div>
 
           <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 pt-2">
-            <button
+            <SecondaryButton
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="min-h-[44px] px-4 py-2 text-sm font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 active:scale-[0.98] transition-all cursor-pointer"
             >
               Hủy
-            </button>
-            <button
+            </SecondaryButton>
+            <PrimaryButton
               type="submit"
               disabled={isSubmitting}
-              className="min-h-[44px] px-5 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-xs active:scale-[0.98] transition-all cursor-pointer disabled:opacity-60 inline-flex items-center justify-center gap-2"
             >
               {isSubmitting ? 'Đang cập nhật...' : 'Xác nhận đặt lại'}
-            </button>
+            </PrimaryButton>
           </div>
         </form>
       </div>
@@ -675,7 +671,7 @@ export function ToggleTeacherStatusModal({ teacher, onClose, onSuccess }) {
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <div
-        className="fixed inset-0 bg-slate-900/50 backdrop-blur-[1px]"
+        className="fixed inset-0 bg-teal-deep/40 backdrop-blur-[2px] modal-backdrop"
         onClick={() => !isSubmitting && onClose()}
         aria-hidden="true"
       />
@@ -683,7 +679,7 @@ export function ToggleTeacherStatusModal({ teacher, onClose, onSuccess }) {
       <div
         role="dialog"
         aria-modal="true"
-        className="relative z-10 w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl p-5 sm:p-6 pb-[env(safe-area-inset-bottom,16px)] sm:pb-6 space-y-4"
+        className="relative z-10 w-full sm:max-w-md bg-surface rounded-t-card-lg sm:rounded-card-lg border border-line/60 shadow-modal modal-panel p-5 sm:p-6 pb-[env(safe-area-inset-bottom,16px)] sm:pb-6 space-y-4"
       >
         <div className="flex items-start gap-3">
           <div
@@ -694,22 +690,22 @@ export function ToggleTeacherStatusModal({ teacher, onClose, onSuccess }) {
             {isLocking ? '🔒' : '🔓'}
           </div>
           <div className="flex-1">
-            <h3 className="text-base font-bold text-slate-900">
+            <h3 className="text-base font-bold text-ink">
               {isLocking
                 ? 'Khóa tài khoản giáo viên?'
                 : 'Mở khóa tài khoản giáo viên?'}
             </h3>
-            <p className="mt-1 text-sm text-slate-600 leading-relaxed">
+            <p className="mt-1 text-sm text-ink-secondary leading-relaxed">
               {isLocking ? (
                 <>
                   Giáo viên{' '}
-                  <span className="font-semibold text-slate-900">{teacher.fullName}</span>{' '}
+                  <span className="font-semibold text-ink">{teacher.fullName}</span>{' '}
                   sẽ không thể đăng nhập vào hệ thống sau khi bị khóa.
                 </>
               ) : (
                 <>
                   Khôi phục quyền đăng nhập và hoạt động cho giáo viên{' '}
-                  <span className="font-semibold text-slate-900">{teacher.fullName}</span>.
+                  <span className="font-semibold text-ink">{teacher.fullName}</span>.
                 </>
               )}
             </p>
@@ -717,37 +713,38 @@ export function ToggleTeacherStatusModal({ teacher, onClose, onSuccess }) {
         </div>
 
         {error && (
-          <div className="bg-rose-50 border border-rose-200 text-rose-800 rounded-xl p-3.5 text-sm flex items-start gap-2">
+          <div className="bg-rose-50 border border-rose-200 text-rose-800 rounded-card p-3.5 text-sm flex items-start gap-2">
             <span className="shrink-0">❌</span>
             <span className="leading-relaxed">{error}</span>
           </div>
         )}
 
         <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 pt-2">
-          <button
+          <SecondaryButton
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="min-h-[44px] px-4 py-2 text-sm font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 active:scale-[0.98] transition-all cursor-pointer"
           >
             Hủy
-          </button>
-          <button
-            type="button"
-            onClick={handleConfirm}
-            disabled={isSubmitting}
-            className={`min-h-[44px] px-5 py-2 text-sm font-semibold text-white rounded-lg shadow-xs active:scale-[0.98] transition-all cursor-pointer disabled:opacity-60 ${
-              isLocking
-                ? 'bg-rose-600 hover:bg-rose-700'
-                : 'bg-emerald-600 hover:bg-emerald-700'
-            }`}
-          >
-            {isSubmitting
-              ? 'Đang xử lý...'
-              : isLocking
-                ? 'Xác nhận khóa'
-                : 'Xác nhận mở khóa'}
-          </button>
+          </SecondaryButton>
+          {isLocking ? (
+            <button
+              type="button"
+              onClick={handleConfirm}
+              disabled={isSubmitting}
+              className="min-h-[44px] px-5 py-2.5 text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-full shadow-xs active:scale-[0.98] transition-all cursor-pointer disabled:opacity-60"
+            >
+              {isSubmitting ? 'Đang xử lý...' : 'Xác nhận khóa'}
+            </button>
+          ) : (
+            <PrimaryButton
+              type="button"
+              onClick={handleConfirm}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Đang xử lý...' : 'Xác nhận mở khóa'}
+            </PrimaryButton>
+          )}
         </div>
       </div>
     </div>
@@ -844,52 +841,24 @@ export function TeacherDetailDrawer({
   const classStatusBadge = (status) => {
     switch (status) {
       case 'Ongoing':
-        return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-            Đang học
-          </span>
-        );
+        return <Badge variant="emerald">Đang học</Badge>;
       case 'Upcoming':
-        return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
-            Sắp khai giảng
-          </span>
-        );
+        return <Badge variant="blue">Sắp khai giảng</Badge>;
       case 'Finished':
-        return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
-            Đã kết thúc
-          </span>
-        );
+        return <Badge variant="neutral">Đã kết thúc</Badge>;
       default:
-        return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
-            {status}
-          </span>
-        );
+        return <Badge variant="neutral">{status}</Badge>;
     }
   };
 
   const scheduleStatusBadge = (status) => {
     switch (status) {
       case 'Completed':
-        return (
-          <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-            Đã dạy
-          </span>
-        );
+        return <Badge variant="emerald">Đã dạy</Badge>;
       case 'Cancelled':
-        return (
-          <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
-            Đã hủy
-          </span>
-        );
+        return <Badge variant="rose">Đã hủy</Badge>;
       default:
-        return (
-          <span className="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
-            Sắp tới
-          </span>
-        );
+        return <Badge variant="blue">Sắp tới</Badge>;
     }
   };
 
@@ -901,7 +870,7 @@ export function TeacherDetailDrawer({
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
       <div
-        className="fixed inset-0 bg-slate-900/45 backdrop-blur-[1px]"
+        className="fixed inset-0 bg-teal-deep/40 backdrop-blur-[2px] modal-backdrop"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -910,18 +879,18 @@ export function TeacherDetailDrawer({
         role="dialog"
         aria-modal="true"
         aria-labelledby="teacher-detail-title"
-        className="relative z-10 w-full max-w-xl bg-white h-full shadow-2xl flex flex-col overflow-hidden"
+        className="relative z-10 w-full max-w-xl bg-surface border-l border-line/60 h-full shadow-modal flex flex-col overflow-hidden"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-slate-200 bg-white shrink-0">
+        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-line/60 bg-surface shrink-0">
           <div className="min-w-0">
             <h2
               id="teacher-detail-title"
-              className="text-lg font-bold text-slate-900 truncate"
+              className="text-lg font-bold text-ink truncate"
             >
               {detail.fullName}
             </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-ink-secondary mt-0.5">
               Hồ sơ giáo viên • {detail.branchName || 'Chưa gán chi nhánh'}
             </p>
           </div>
@@ -929,7 +898,7 @@ export function TeacherDetailDrawer({
             type="button"
             onClick={onClose}
             aria-label="Đóng chi tiết"
-            className="w-9 h-9 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer shrink-0"
+            className="w-9 h-9 rounded-full flex items-center justify-center text-ink-muted hover:text-ink hover:bg-surface-subtle cursor-pointer shrink-0"
           >
             ✕
           </button>
@@ -938,79 +907,67 @@ export function TeacherDetailDrawer({
         {/* Body */}
         <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
           {error && (
-            <div className="bg-rose-50 border border-rose-200 text-rose-800 rounded-xl p-3.5 text-sm">
+            <div className="bg-rose-50 border border-rose-200 text-rose-800 rounded-card p-3.5 text-sm">
               {error}
             </div>
           )}
 
           {/* Thông tin cá nhân */}
-          <section className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+          <section className="bg-surface-subtle border border-line/80 rounded-card p-4 space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <span className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
                 Thông tin tài khoản
               </span>
               <div className="flex items-center gap-2">
                 {detail.isActive ? (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-800">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                    Đang hoạt động
-                  </span>
+                  <Badge variant="emerald">Đang hoạt động</Badge>
                 ) : (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-0.5 text-xs font-semibold text-rose-800">
-                    <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
-                    Đã khóa
-                  </span>
+                  <Badge variant="rose">Đã khóa</Badge>
                 )}
               </div>
             </div>
 
             <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
               <div>
-                <dt className="text-xs text-slate-500">Số điện thoại</dt>
-                <dd className="font-mono font-semibold text-slate-900 tabular-nums mt-0.5">
+                <dt className="text-xs text-ink-muted">Số điện thoại</dt>
+                <dd className="font-mono font-semibold text-ink tabular-nums mt-0.5">
                   {detail.phoneNumber}
                 </dd>
               </div>
               <div>
-                <dt className="text-xs text-slate-500">Email</dt>
-                <dd className="text-slate-800 mt-0.5 break-all">
+                <dt className="text-xs text-ink-muted">Email</dt>
+                <dd className="text-ink mt-0.5 break-all">
                   {detail.email || '—'}
                 </dd>
               </div>
               <div>
-                <dt className="text-xs text-slate-500">Chi nhánh</dt>
-                <dd className="font-medium text-slate-800 mt-0.5">
+                <dt className="text-xs text-ink-muted">Chi nhánh</dt>
+                <dd className="font-medium text-ink mt-0.5">
                   {detail.branchName || '—'}
                 </dd>
               </div>
               <div>
-                <dt className="text-xs text-slate-500">Mật khẩu &amp; Zalo</dt>
+                <dt className="text-xs text-ink-muted">Mật khẩu &amp; Zalo</dt>
                 <dd className="mt-0.5 flex flex-wrap gap-1.5">
-                  <span
-                    className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
-                      detail.hasPassword
-                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                        : 'bg-amber-50 text-amber-800 border border-amber-200'
-                    }`}
-                  >
-                    {detail.hasPassword ? 'Đã đặt mật khẩu' : 'Chưa có mật khẩu'}
-                  </span>
+                  {detail.hasPassword ? (
+                    <Badge variant="blue">Đã đặt mật khẩu</Badge>
+                  ) : (
+                    <Badge variant="amber">Chưa có mật khẩu</Badge>
+                  )}
                   {detail.hasZalo && (
-                    <span className="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-sky-50 text-sky-700 border border-sky-200">
-                      Đã liên kết Zalo
-                    </span>
+                    <Badge variant="gold">Đã liên kết Zalo</Badge>
                   )}
                 </dd>
               </div>
               <div>
-                <dt className="text-xs text-slate-500">Ngày tạo</dt>
-                <dd className="text-slate-700 mt-0.5 tabular-nums">
+                <dt className="text-xs text-ink-muted">Ngày tạo</dt>
+                <dd className="text-ink-secondary mt-0.5 tabular-nums">
                   {formatDate(detail.createdAt)}
                 </dd>
               </div>
               <div>
-                <dt className="text-xs text-slate-500">Đăng nhập gần nhất</dt>
-                <dd className="text-slate-700 mt-0.5 tabular-nums">
+                <dt className="text-xs text-ink-muted">Đăng nhập gần nhất</dt>
+                <dd className="text-ink-secondary mt-0.5 tabular-nums">
                   {detail.lastLoginAt ? formatDateTime(detail.lastLoginAt) : 'Chưa đăng nhập'}
                 </dd>
               </div>
@@ -1020,18 +977,18 @@ export function TeacherDetailDrawer({
           {/* Lớp đang dạy */}
           <section className="space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-slate-900">
+              <h3 className="text-sm font-bold text-ink">
                 Lớp phụ trách ({classes.length})
               </h3>
             </div>
 
             {loading ? (
               <div className="space-y-2 animate-pulse">
-                <div className="h-14 bg-slate-100 rounded-xl" />
-                <div className="h-14 bg-slate-100 rounded-xl" />
+                <div className="h-14 bg-surface-subtle rounded-card" />
+                <div className="h-14 bg-surface-subtle rounded-card" />
               </div>
             ) : classes.length === 0 ? (
-              <div className="text-sm text-slate-500 bg-slate-50 border border-dashed border-slate-200 rounded-xl p-4 text-center">
+              <div className="text-sm text-ink-secondary bg-surface-subtle border border-dashed border-line rounded-card p-4 text-center">
                 Giáo viên chưa được phân công phụ trách lớp nào.
               </div>
             ) : (
@@ -1039,21 +996,21 @@ export function TeacherDetailDrawer({
                 {classes.map((cls) => (
                   <div
                     key={cls.id}
-                    className="border border-slate-200 rounded-xl p-3.5 bg-white flex flex-col gap-1.5"
+                    className="border border-line/80 rounded-card p-3.5 bg-surface flex flex-col gap-1.5"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold text-slate-900 truncate">
+                        <p className="text-sm font-semibold text-ink truncate">
                           {cls.className}
                         </p>
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-ink-secondary">
                           {cls.courseName || 'Khóa học'} • {cls.classType || 'Offline'}
                         </p>
                       </div>
                       {classStatusBadge(cls.status)}
                     </div>
                     {(cls.startDate || cls.endDate) && (
-                      <p className="text-xs text-slate-500 tabular-nums">
+                      <p className="text-xs text-ink-muted tabular-nums">
                         Thời gian: {formatDate(cls.startDate)} → {formatDate(cls.endDate)}
                       </p>
                     )}
@@ -1066,18 +1023,18 @@ export function TeacherDetailDrawer({
           {/* Lịch dạy */}
           <section className="space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-slate-900">
+              <h3 className="text-sm font-bold text-ink">
                 Lịch dạy ({schedules.length})
               </h3>
             </div>
 
             {loading ? (
               <div className="space-y-2 animate-pulse">
-                <div className="h-14 bg-slate-100 rounded-xl" />
-                <div className="h-14 bg-slate-100 rounded-xl" />
+                <div className="h-14 bg-surface-subtle rounded-card" />
+                <div className="h-14 bg-surface-subtle rounded-card" />
               </div>
             ) : schedules.length === 0 ? (
-              <div className="text-sm text-slate-500 bg-slate-50 border border-dashed border-slate-200 rounded-xl p-4 text-center">
+              <div className="text-sm text-ink-secondary bg-surface-subtle border border-dashed border-line rounded-card p-4 text-center">
                 Chưa có buổi dạy nào được lên lịch.
               </div>
             ) : (
@@ -1087,26 +1044,24 @@ export function TeacherDetailDrawer({
                   return (
                     <div
                       key={sch.id}
-                      className="border border-slate-200 rounded-xl p-3 bg-white flex items-start justify-between gap-3"
+                      className="border border-line/80 rounded-card p-3 bg-surface flex items-start justify-between gap-3"
                     >
                       <div className="min-w-0 space-y-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-xs font-bold font-mono text-slate-800 tabular-nums">
+                          <span className="text-xs font-bold font-mono text-ink tabular-nums">
                             {formatDate(sch.studyDate)}
                           </span>
-                          <span className="text-xs font-mono text-blue-700 bg-blue-50 px-2 py-0.5 rounded tabular-nums">
+                          <span className="text-xs font-mono font-semibold text-teal bg-gold-soft px-2 py-0.5 rounded-full tabular-nums">
                             {formatTimeShort(sch.startTime)} – {formatTimeShort(sch.endTime)}
                           </span>
                           {isSub && (
-                            <span className="text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200 px-1.5 py-0.5 rounded">
-                              Dạy thay
-                            </span>
+                            <Badge variant="amber">Dạy thay</Badge>
                           )}
                         </div>
-                        <p className="text-sm font-semibold text-slate-900 truncate">
+                        <p className="text-sm font-semibold text-ink truncate">
                           {sch.className || `Lớp #${sch.classId}`}
                         </p>
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-ink-secondary">
                           {sch.room ? `Phòng: ${sch.room}` : 'Chưa xếp phòng'}
                           {sch.note ? ` • ${sch.note}` : ''}
                         </p>
@@ -1121,27 +1076,27 @@ export function TeacherDetailDrawer({
         </div>
 
         {/* Footer Actions */}
-        <div className="border-t border-slate-200 px-5 sm:px-6 py-3.5 bg-slate-50 flex flex-wrap items-center justify-end gap-2 shrink-0 pb-[calc(14px+env(safe-area-inset-bottom,0px))]">
-          <button
+        <div className="border-t border-line/60 px-5 sm:px-6 py-3.5 bg-surface-subtle flex flex-wrap items-center justify-end gap-2 shrink-0 pb-[calc(14px+env(safe-area-inset-bottom,0px))]">
+          <SecondaryButton
             type="button"
             onClick={() => onEdit(detail)}
-            className="min-h-[40px] px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-100 active:scale-[0.98] transition-all cursor-pointer"
+            className="px-4 py-2 text-xs"
           >
             Sửa thông tin
-          </button>
-          <button
+          </SecondaryButton>
+          <PrimaryButton
             type="button"
             onClick={() => onResetPassword(detail)}
-            className="min-h-[40px] px-3.5 py-2 text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 active:scale-[0.98] transition-all cursor-pointer"
+            className="px-4 py-2 text-xs"
           >
             Đặt lại mật khẩu
-          </button>
+          </PrimaryButton>
           <button
             type="button"
             onClick={() => onToggleStatus(detail)}
-            className={`min-h-[40px] px-3.5 py-2 text-xs font-semibold rounded-lg border active:scale-[0.98] transition-all cursor-pointer ${
+            className={`min-h-[40px] px-4 py-2 text-xs font-semibold rounded-full border active:scale-[0.98] transition-all cursor-pointer ${
               detail.isActive
-                ? 'text-rose-700 bg-rose-50 border-rose-200 hover:bg-rose-100'
+                ? 'text-white bg-rose-600 border-rose-600 hover:bg-rose-700'
                 : 'text-emerald-700 bg-emerald-50 border-emerald-200 hover:bg-emerald-100'
             }`}
           >

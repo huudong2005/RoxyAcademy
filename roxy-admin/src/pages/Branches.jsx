@@ -3,6 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
 import { formatDate } from '../utils/formatters';
 import {
+  PageHeader,
+  Card,
+  Badge,
+  PrimaryButton,
+  SecondaryButton,
+  IconButton,
+  InputPill,
+} from '../components/ui';
+import {
   CreateEditBranchModal,
   DeactivateBranchModal,
   ReactivateBranchModal,
@@ -118,33 +127,27 @@ export default function Branches() {
   // ==================== MÀN HÌNH CHẶN 403 (KHÔNG PHẢI SUPERADMIN) ====================
   if (!isSuperAdmin) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
-        <div className="w-16 h-16 rounded-full bg-rose-100 flex items-center justify-center text-3xl mb-4 text-rose-600 shadow-xs">
-          🚫
-        </div>
-        <h2 className="text-xl font-bold text-slate-800 mb-2">
-          Bạn không có quyền truy cập phân hệ Quản lý Chi nhánh
-        </h2>
-        <p className="text-sm text-slate-600 max-w-md mb-6 leading-relaxed">
-          Phân hệ Cấu hình Chi nhánh &amp; Cơ sở trung tâm chỉ dành riêng cho Ban Giám Đốc
-          (SuperAdmin). Quản lý cơ sở và Giáo viên không được phép can thiệp danh mục cơ sở.
-        </p>
-        <div className="flex flex-wrap justify-center gap-3">
-          <button
-            type="button"
-            onClick={() => navigate('/')}
-            className="min-h-[44px] px-4 py-2 text-sm font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 active:scale-95 transition-all cursor-pointer"
-          >
-            Quay lại Tổng quan
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate('/classes')}
-            className="min-h-[44px] px-4 py-2 text-sm font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 active:scale-95 transition-all cursor-pointer"
-          >
-            Xem Lớp học
-          </button>
-        </div>
+      <div className="flex items-center justify-center min-h-[60vh] px-4">
+        <Card large className="max-w-md w-full p-8 text-center">
+          <div className="w-16 h-16 rounded-full bg-rose-50 border border-rose-200 flex items-center justify-center text-3xl mb-4 text-rose-600 mx-auto">
+            🚫
+          </div>
+          <h2 className="text-xl font-bold text-ink mb-2">
+            Bạn không có quyền truy cập phân hệ Quản lý Chi nhánh
+          </h2>
+          <p className="text-sm text-ink-secondary mb-6 leading-relaxed">
+            Phân hệ Cấu hình Chi nhánh &amp; Cơ sở trung tâm chỉ dành riêng cho Ban Giám Đốc
+            (SuperAdmin). Quản lý cơ sở và Giáo viên không được phép can thiệp danh mục cơ sở.
+          </p>
+          <div className="flex flex-wrap justify-center gap-3">
+            <PrimaryButton type="button" onClick={() => navigate('/')}>
+              Quay lại Tổng quan
+            </PrimaryButton>
+            <SecondaryButton type="button" onClick={() => navigate('/classes')}>
+              Xem Lớp học
+            </SecondaryButton>
+          </div>
+        </Card>
       </div>
     );
   }
@@ -156,10 +159,10 @@ export default function Branches() {
       {toastMessage && (
         <div
           role="status"
-          className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg text-sm font-medium transition-all ${
+          className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-full shadow-modal text-sm font-medium transition-all ${
             toastMessage.type === 'error'
               ? 'bg-rose-600 text-white'
-              : 'bg-emerald-600 text-white'
+              : 'bg-teal text-white'
           }`}
         >
           <span>{toastMessage.type === 'error' ? '❌' : '✓'}</span>
@@ -168,201 +171,206 @@ export default function Branches() {
       )}
 
       {/* Header & Nút CTA chính */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
-            <span>🏢</span>
+      <PageHeader
+        eyebrow="Hệ thống cơ sở"
+        title={
+          <span className="inline-flex items-center gap-2.5 flex-wrap">
             <span>Quản lý Chi nhánh Cơ sở</span>
-          </h1>
-          <p className="mt-1 text-sm text-slate-600">
-            Danh sách cơ sở đào tạo, thông tin liên hệ và giám sát hoạt động giảng dạy toàn hệ
-            thống Roxy Academy.
-          </p>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => {
-            setEditingBranch(null);
-            setFormModalOpen(true);
-          }}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-lg shadow-xs active:scale-[0.98] transition-all duration-150 cursor-pointer min-h-[44px] shrink-0"
-        >
-          <span>+</span>
-          <span>Thêm chi nhánh mới</span>
-        </button>
-      </div>
+            <Badge variant="gold">{summaryStats.activeCount}/{summaryStats.total} hoạt động</Badge>
+          </span>
+        }
+        description="Danh sách cơ sở đào tạo, thông tin liên hệ và giám sát hoạt động giảng dạy toàn hệ thống Roxy Academy."
+        actions={
+          <PrimaryButton
+            type="button"
+            onClick={() => {
+              setEditingBranch(null);
+              setFormModalOpen(true);
+            }}
+          >
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M12 4v16m8-8H4" />
+            </svg>
+            <span>Thêm chi nhánh mới</span>
+          </PrimaryButton>
+        }
+      />
 
       {/* Thanh tóm tắt nhanh (Summary Strip) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-2xs flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center text-lg shrink-0">
+        <Card className="p-3.5 sm:p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-gold-soft text-teal flex items-center justify-center text-lg shrink-0">
             🏛️
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-medium text-slate-500 truncate">Chi nhánh hoạt động</p>
-            <p className="text-lg font-bold font-mono text-slate-900 tabular-nums">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted truncate">
+              Chi nhánh hoạt động
+            </p>
+            <p className="text-lg font-bold text-teal tabular-nums">
               {summaryStats.activeCount}
-              <span className="text-xs font-sans font-normal text-slate-400 ml-1">
+              <span className="text-xs font-normal text-ink-muted ml-1">
                 / {summaryStats.total}
               </span>
             </p>
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-2xs flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-700 flex items-center justify-center text-lg shrink-0">
+        <Card className="p-3.5 sm:p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-gold-soft text-teal flex items-center justify-center text-lg shrink-0">
             🏫
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-medium text-slate-500 truncate">Lớp đang mở</p>
-            <p className="text-lg font-bold font-mono text-slate-900 tabular-nums">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted truncate">
+              Lớp đang mở
+            </p>
+            <p className="text-lg font-bold text-teal tabular-nums">
               {summaryStats.totalClasses}
             </p>
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-2xs flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center text-lg shrink-0">
+        <Card className="p-3.5 sm:p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-700 flex items-center justify-center text-lg shrink-0">
             🎓
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-medium text-slate-500 truncate">Học viên đang học</p>
-            <p className="text-lg font-bold font-mono text-slate-900 tabular-nums">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted truncate">
+              Học viên đang học
+            </p>
+            <p className="text-lg font-bold text-emerald-700 tabular-nums">
               {summaryStats.totalStudents}
             </p>
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-2xs flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center text-lg shrink-0">
+        <Card className="p-3.5 sm:p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-amber-50 text-amber-700 flex items-center justify-center text-lg shrink-0">
             👩‍🏫
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-medium text-slate-500 truncate">Giáo viên cơ sở</p>
-            <p className="text-lg font-bold font-mono text-slate-900 tabular-nums">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted truncate">
+              Giáo viên cơ sở
+            </p>
+            <p className="text-lg font-bold text-amber-700 tabular-nums">
               {summaryStats.totalTeachers}
             </p>
           </div>
-        </div>
+        </Card>
       </div>
 
       {/* Thanh tìm kiếm & lọc trạng thái */}
-      <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-2xs flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="relative flex-1 max-w-md">
-          <span className="absolute inset-y-0 left-3 flex items-center text-slate-400 pointer-events-none">
-            🔍
-          </span>
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Tìm tên cơ sở, địa chỉ, số điện thoại..."
-            className="w-full min-h-[42px] pl-9 pr-9 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
-          />
-          {searchTerm && (
-            <button
-              type="button"
-              onClick={() => setSearchTerm('')}
-              aria-label="Xóa từ khóa tìm kiếm"
-              className="absolute inset-y-0 right-2.5 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer"
-            >
-              ✕
-            </button>
-          )}
-        </div>
-
-        <div className="flex flex-wrap items-center gap-1.5">
-          {[
-            { key: 'all', label: `Tất cả (${summaryStats.total})` },
-            { key: 'active', label: `Đang hoạt động (${summaryStats.activeCount})` },
-            { key: 'inactive', label: `Ngừng hoạt động (${summaryStats.inactiveCount})` },
-          ].map((tab) => {
-            const active = statusFilter === tab.key;
-            return (
+      <Card className="p-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative flex-1 min-w-[220px] max-w-md">
+            <span className="absolute inset-y-0 left-3.5 flex items-center text-ink-muted pointer-events-none">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z" />
+              </svg>
+            </span>
+            <InputPill
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Tìm tên cơ sở, địa chỉ, số điện thoại..."
+              className="pl-10 pr-9"
+            />
+            {searchTerm && (
               <button
-                key={tab.key}
                 type="button"
-                onClick={() => setStatusFilter(tab.key)}
-                className={`min-h-[38px] px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                  active
-                    ? 'bg-blue-600 text-white shadow-2xs'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800'
-                }`}
+                onClick={() => setSearchTerm('')}
+                aria-label="Xóa từ khóa tìm kiếm"
+                className="absolute inset-y-0 right-3 flex items-center text-ink-muted hover:text-ink cursor-pointer"
               >
-                {tab.label}
+                ✕
               </button>
-            );
-          })}
+            )}
+          </div>
+
+          <select
+            aria-label="Lọc theo trạng thái chi nhánh"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="min-w-[175px] rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
+          >
+            <option value="all">Tất cả ({summaryStats.total})</option>
+            <option value="active">Đang hoạt động ({summaryStats.activeCount})</option>
+            <option value="inactive">Ngừng hoạt động ({summaryStats.inactiveCount})</option>
+          </select>
+
+          <SecondaryButton
+            type="button"
+            onClick={() => {
+              setSearchTerm('');
+              setStatusFilter('all');
+            }}
+          >
+            Đặt lại
+          </SecondaryButton>
         </div>
-      </div>
+      </Card>
 
       {/* Trạng thái Loading / Error / Empty / Danh sách */}
       {loading ? (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
           {[1, 2].map((n) => (
-            <div
-              key={n}
-              className="bg-white rounded-xl border border-slate-200 p-5 md:p-6 shadow-xs animate-pulse space-y-4"
-            >
+            <Card key={n} className="p-5 md:p-6 animate-pulse space-y-4">
               <div className="flex justify-between items-start">
-                <div className="h-6 w-48 bg-slate-200 rounded" />
-                <div className="h-6 w-28 bg-slate-200 rounded-full" />
+                <div className="h-6 w-48 bg-surface-subtle rounded-lg" />
+                <div className="h-6 w-28 bg-surface-subtle rounded-full" />
               </div>
               <div className="space-y-2">
-                <div className="h-4 w-3/4 bg-slate-100 rounded" />
-                <div className="h-4 w-1/2 bg-slate-100 rounded" />
+                <div className="h-4 w-3/4 bg-surface-subtle rounded-lg" />
+                <div className="h-4 w-1/2 bg-surface-subtle rounded-lg" />
               </div>
               <div className="grid grid-cols-3 gap-2.5">
-                <div className="h-16 bg-slate-100 rounded-lg" />
-                <div className="h-16 bg-slate-100 rounded-lg" />
-                <div className="h-16 bg-slate-100 rounded-lg" />
+                <div className="h-16 bg-surface-subtle rounded-card" />
+                <div className="h-16 bg-surface-subtle rounded-card" />
+                <div className="h-16 bg-surface-subtle rounded-card" />
               </div>
               <div className="flex justify-between pt-2">
-                <div className="h-10 w-32 bg-slate-200 rounded-lg" />
-                <div className="h-10 w-36 bg-slate-200 rounded-lg" />
+                <div className="h-10 w-32 bg-surface-subtle rounded-full" />
+                <div className="h-10 w-36 bg-surface-subtle rounded-full" />
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       ) : error ? (
-        <div className="bg-rose-50 border border-rose-200 rounded-xl p-6 text-center space-y-3">
+        <Card className="bg-rose-50/70 border-rose-200 p-6 text-center space-y-3">
           <div className="text-2xl">⚠️</div>
           <p className="text-sm font-medium text-rose-800">{error}</p>
           <button
             type="button"
             onClick={refreshBranches}
-            className="min-h-[44px] px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold rounded-lg active:scale-95 transition-all cursor-pointer"
+            className="min-h-[44px] px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold rounded-full active:scale-95 transition-all cursor-pointer"
           >
             Thử tải lại
           </button>
-        </div>
+        </Card>
       ) : filteredBranches.length === 0 ? (
-        <div className="bg-white border border-slate-200 rounded-xl p-10 text-center space-y-3">
+        <Card className="p-10 text-center space-y-3">
           <div className="text-3xl">🏢</div>
-          <h3 className="text-base font-bold text-slate-800">
+          <h3 className="text-base font-bold text-ink">
             {branches.length === 0
               ? 'Chưa có chi nhánh nào trong hệ thống'
               : 'Không tìm thấy chi nhánh phù hợp'}
           </h3>
-          <p className="text-sm text-slate-500 max-w-md mx-auto">
+          <p className="text-sm text-ink-secondary max-w-md mx-auto">
             {branches.length === 0
               ? 'Hãy bấm nút "Thêm chi nhánh mới" để khởi tạo cơ sở đầu tiên cho Roxy Academy.'
               : 'Thử thay đổi từ khóa tìm kiếm hoặc bộ lọc trạng thái để xem các cơ sở khác.'}
           </p>
           {(searchTerm || statusFilter !== 'all') && (
-            <button
+            <SecondaryButton
               type="button"
               onClick={() => {
                 setSearchTerm('');
                 setStatusFilter('all');
               }}
-              className="min-h-[40px] px-4 py-2 text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 cursor-pointer"
             >
-              Xóa bộ lọc
-            </button>
+              Đặt lại bộ lọc
+            </SecondaryButton>
           )}
-        </div>
+        </Card>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5 md:gap-6">
           {filteredBranches.map((branch) => (
@@ -435,12 +443,12 @@ function BranchCard({ branch, onViewDetail, onEdit, onDeactivate, onReactivate }
   const telHref = branch.phone ? `tel:${branch.phone.replace(/\s+/g, '')}` : null;
 
   return (
-    <article
+    <Card
+      as="article"
+      interactive
       onClick={onViewDetail}
-      className={`rounded-xl border p-5 md:p-6 transition-all duration-200 flex flex-col justify-between relative cursor-pointer ${
-        isActive
-          ? 'bg-white border-slate-200 shadow-xs hover:border-blue-300 hover:shadow-sm'
-          : 'bg-slate-50/70 border-dashed border-slate-300 opacity-90 hover:border-blue-300 hover:shadow-sm'
+      className={`p-5 md:p-6 flex flex-col justify-between relative cursor-pointer ${
+        !isActive ? 'bg-surface-subtle/80 border-dashed opacity-90' : ''
       }`}
     >
       <div>
@@ -448,31 +456,31 @@ function BranchCard({ branch, onViewDetail, onEdit, onDeactivate, onReactivate }
         <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <h2 className="font-bold text-lg md:text-xl text-slate-900 tracking-tight">
+              <h2 className="font-bold text-lg md:text-xl text-ink tracking-tight">
                 {branch.branchName}
               </h2>
-              <span className="text-xs font-mono font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+              <span className="text-xs font-mono font-semibold text-ink-secondary bg-surface-subtle border border-line px-2 py-0.5 rounded-full">
                 #BR-{branch.id}
               </span>
             </div>
           </div>
 
           {isActive ? (
-            <span className="bg-emerald-50 text-emerald-800 border border-emerald-300 font-semibold px-2.5 py-1 rounded-full text-xs inline-flex items-center gap-1.5 shrink-0">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <Badge variant="emerald" className="shrink-0">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               Đang hoạt động
-            </span>
+            </Badge>
           ) : (
-            <span className="bg-slate-100 text-slate-600 border border-slate-300 font-medium px-2.5 py-1 rounded-full text-xs inline-flex items-center gap-1.5 shrink-0">
-              <span className="w-2 h-2 rounded-full bg-slate-400" />
+            <Badge variant="neutral" className="shrink-0">
+              <span className="w-1.5 h-1.5 rounded-full bg-ink-muted" />
               Ngừng hoạt động
-            </span>
+            </Badge>
           )}
         </div>
 
         {/* Thông tin địa chỉ, hotline, ngày tạo */}
         <div className="space-y-1.5 text-sm">
-          <p className="text-slate-700 leading-relaxed flex items-start gap-2">
+          <p className="text-ink-secondary leading-relaxed flex items-start gap-2">
             <span className="shrink-0 mt-0.5">📍</span>
             <span>{branch.address}</span>
           </p>
@@ -483,19 +491,19 @@ function BranchCard({ branch, onViewDetail, onEdit, onDeactivate, onReactivate }
               <a
                 href={telHref}
                 onClick={(e) => e.stopPropagation()}
-                className="text-blue-600 font-mono font-medium hover:underline inline-flex items-center gap-1.5 min-h-[32px]"
+                className="text-teal hover:text-gold-active font-mono font-semibold hover:underline inline-flex items-center gap-1.5 min-h-[32px] transition-colors"
               >
                 <span>{branch.phone}</span>
-                <span className="text-[11px] font-sans bg-blue-50 text-blue-700 border border-blue-200 px-1.5 py-0.5 rounded">
+                <span className="text-[11px] font-sans bg-gold-soft text-teal border border-gold/40 px-2 py-0.5 rounded-full">
                   Gọi ngay
                 </span>
               </a>
             ) : (
-              <span className="text-slate-400 italic text-xs">— (Chưa cập nhật số hotline)</span>
+              <span className="text-ink-muted italic text-xs">— (Chưa cập nhật số hotline)</span>
             )}
           </div>
 
-          <p className="text-xs text-slate-400 flex items-center gap-2 pt-0.5">
+          <p className="text-xs text-ink-muted flex items-center gap-2 pt-0.5">
             <span>📅</span>
             <span>Ngày tạo: {formatDate(branch.createdAt)}</span>
           </p>
@@ -503,29 +511,29 @@ function BranchCard({ branch, onViewDetail, onEdit, onDeactivate, onReactivate }
 
         {/* Cụm 3 thẻ chỉ số KPI thời gian thực */}
         <div className="grid grid-cols-3 gap-2.5 my-4">
-          <div className="bg-blue-50/70 border border-blue-200/80 rounded-lg p-2.5 text-center">
-            <p className="font-bold font-mono text-lg text-blue-700 tabular-nums">
+          <div className="bg-surface-subtle border border-line/80 rounded-card p-2.5 text-center">
+            <p className="font-bold font-mono text-lg text-teal tabular-nums">
               {branch.classCount ?? 0}
             </p>
-            <p className="text-[11px] font-medium text-blue-800 uppercase tracking-tight">
+            <p className="text-[11px] font-semibold text-ink-muted uppercase tracking-tight">
               🏫 Lớp đang mở
             </p>
           </div>
 
-          <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-lg p-2.5 text-center">
+          <div className="bg-surface-subtle border border-line/80 rounded-card p-2.5 text-center">
             <p className="font-bold font-mono text-lg text-emerald-700 tabular-nums">
               {branch.studentCount ?? 0}
             </p>
-            <p className="text-[11px] font-medium text-emerald-800 uppercase tracking-tight">
+            <p className="text-[11px] font-semibold text-ink-muted uppercase tracking-tight">
               🎓 Học viên
             </p>
           </div>
 
-          <div className="bg-indigo-50/70 border border-indigo-200/80 rounded-lg p-2.5 text-center">
-            <p className="font-bold font-mono text-lg text-indigo-700 tabular-nums">
+          <div className="bg-surface-subtle border border-line/80 rounded-card p-2.5 text-center">
+            <p className="font-bold font-mono text-lg text-teal tabular-nums">
               {branch.teacherCount ?? 0}
             </p>
-            <p className="text-[11px] font-medium text-indigo-800 uppercase tracking-tight">
+            <p className="text-[11px] font-semibold text-ink-muted uppercase tracking-tight">
               👩‍🏫 Giáo viên
             </p>
           </div>
@@ -533,59 +541,55 @@ function BranchCard({ branch, onViewDetail, onEdit, onDeactivate, onReactivate }
       </div>
 
       {/* Thanh thao tác chân thẻ */}
-      <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
-        <button
+      <div
+        className="pt-3 border-t border-line/60 flex flex-wrap items-center justify-between gap-2"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <SecondaryButton
           type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onViewDetail();
-          }}
-          className="min-h-[44px] flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 hover:border-blue-300 text-xs font-semibold rounded-lg active:scale-95 transition-all duration-100 cursor-pointer"
+          onClick={onViewDetail}
+          className="px-4 py-2 text-xs"
         >
-          <span>👁️</span>
           <span>Xem chi tiết</span>
-        </button>
+        </SecondaryButton>
 
-        <div className="flex flex-wrap items-center gap-2 flex-1 sm:flex-initial justify-end">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onEdit();
-            }}
-            className="min-h-[44px] flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 hover:text-slate-900 text-xs font-semibold rounded-lg shadow-2xs active:scale-95 transition-all duration-100 cursor-pointer"
+        <div className="flex items-center gap-2">
+          <IconButton
+            variant="neutral"
+            onClick={onEdit}
+            title="Chỉnh sửa chi nhánh"
+            aria-label="Chỉnh sửa chi nhánh"
           >
-            <span>✏️</span>
-            <span>Sửa chi nhánh</span>
-          </button>
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+          </IconButton>
 
           {isActive ? (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDeactivate();
-              }}
-              className="min-h-[44px] flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 hover:border-rose-300 text-xs font-semibold rounded-lg active:scale-95 transition-all duration-100 cursor-pointer"
+            <IconButton
+              variant="danger"
+              onClick={onDeactivate}
+              title="Ngừng hoạt động chi nhánh"
+              aria-label="Ngừng hoạt động chi nhánh"
             >
-              <span>🚫</span>
-              <span>Ngừng hoạt động</span>
-            </button>
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </IconButton>
           ) : (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onReactivate();
-              }}
-              className="min-h-[44px] flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300 text-xs font-semibold rounded-lg active:scale-95 transition-all duration-100 cursor-pointer"
+            <IconButton
+              variant="neutral"
+              onClick={onReactivate}
+              title="Kích hoạt lại chi nhánh"
+              aria-label="Kích hoạt lại chi nhánh"
             >
-              <span>✓</span>
-              <span>Kích hoạt lại</span>
-            </button>
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+              </svg>
+            </IconButton>
           )}
         </div>
       </div>
-    </article>
+    </Card>
   );
 }

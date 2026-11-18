@@ -1094,3 +1094,27 @@ Toàn bộ **8/8 hạng mục** của **Giai đoạn 1N-2 (8 bẫy đồng bộ)
 ## 3. Kiểm tra trình duyệt ở `1440px` & `1280px` & Kết luận
 - **Giới hạn môi trường sandbox:** Không mở được trình duyệt trong sandbox để kiểm tra tooltip hover và đo DOM thực tế ở `1440px` & `1280px`.
 - **Trạng thái hiện tại:** **ĐẠT `npm run lint` + `npm run build` & đối chiếu mã nguồn**; **CHỜ XEM TRỰC QUAN TRÊN TRÌNH DUYỆT (`1440px` & `1280px`)** trước khi commit `"Trùng tu giao diện R2a-fix2: nút thao tác dạng icon"`.
+
+
+---
+
+# BÁO CÁO QA — ĐỢT TRÙNG TU GIAO DIỆN R2b: TEACHERS + BRANCHES + COURSES
+**Ngày kiểm tra:** 18/11/2026  
+**Người thực hiện:** QA Agent & Commander  
+**Commit gốc:** `e64c62b` (sau Đợt trùng tu R2a-fix2)  
+**Phạm vi:** 6 file R2b (`Teachers.jsx`, `TeacherModals.jsx`, `Branches.jsx`, `BranchDetail.jsx`, `BranchModals.jsx`, `Courses.jsx`); không đổi R1/R2a hay trang khác; không đổi API/DB/logic/phân quyền.
+
+## 1. Kết quả Lint & Build (`roxy-admin/`)
+- `npm --prefix roxy-admin run lint` (`eslint .`): **PASS** (0 error, 0 warning).
+- `npm --prefix roxy-admin run build` (`vite build`): **PASS** (`✓ 113 modules transformed`, `✓ built in 390ms`).
+
+## 2. Kết quả đối chiếu thiết kế, tương phản & bề rộng tại `1440px` / `1280px`
+| Hạng mục kiểm tra | Kết quả | Chi tiết đối chiếu |
+| :--- | :---: | :--- |
+| Phạm vi R2b (`git status -s`) | **PASS** | - Trong `roxy-admin/` chỉ sửa đúng 6 file R2b; không lan sang R1/R2a hay trang khác. |
+| Màu sắc, tương phản & component R1/R2a-fix2 | **PASS** | - 0 nút chính `bg-blue-600`, `bg-blue-700`, `bg-indigo-*`; mọi `PrimaryButton`/`bg-gold` dùng chữ `text-teal`; nút CTA thêm mới không lặp dấu `+`.<br>- Cột `Thao tác` trong bảng (`Teachers.jsx`, `Courses.jsx`) và chân card (`Branches.jsx`) dùng `<IconButton>` + SVG inline (`h-4 w-4`) kèm `title` + `aria-label`, không dùng nút chữ hay emoji.<br>- Giữ nguyên huy hiệu phân biệt vai trò, màu ngữ nghĩa badge trạng thái, toàn bộ logic, API, phân quyền (kể cả màn hình 403), dữ liệu test và route. |
+| Bề rộng bảng tại `1440px` (~1120px) & `1280px` (~960px) | **PASS (Static)** | - `Teachers.jsx` (~860–940px), `BranchDetail.jsx` (~720–880px), `Courses.jsx` (~800–920px) dùng `px-2.5 py-2.5` → đều nằm gọn trong khung `1440px` và `1280px` không cuộn ngang. |
+
+## 3. Kiểm tra trình duyệt ở `1440px` & `1280px` & Kết luận
+- **Giới hạn môi trường sandbox:** Không mở được trình duyệt trong sandbox để kiểm tra trực quan `Teachers`, `Branches` (+ chi tiết 1 chi nhánh), `Courses` ở `1440px` & `1280px`.
+- **Trạng thái hiện tại:** **ĐẠT `npm run lint` + `npm run build` & đối chiếu mã nguồn 100%**; **CHỜ XEM TRỰC QUAN TRÊN TRÌNH DUYỆT (`1440px` & `1280px`)** trước khi commit `"Trùng tu giao diện R2b: Teachers + Branches + Courses"`.

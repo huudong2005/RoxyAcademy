@@ -3,6 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
 import { formatDate, formatDateTime } from '../utils/formatters';
 import {
+  PageHeader,
+  Card,
+  Badge,
+  PrimaryButton,
+  SecondaryButton,
+  IconButton,
+  InputPill,
+} from '../components/ui';
+import {
   CreateEditTeacherModal,
   ResetTeacherPasswordModal,
   ToggleTeacherStatusModal,
@@ -203,33 +212,27 @@ export default function Teachers() {
   // ==================== MÀN HÌNH CHẶN 403 ====================
   if (!canAccess) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
-        <div className="w-16 h-16 rounded-full bg-rose-100 flex items-center justify-center text-3xl mb-4 text-rose-600 shadow-xs">
-          🚫
-        </div>
-        <h2 className="text-xl font-bold text-slate-800 mb-2">
-          403 — Bạn không có quyền truy cập phân hệ Quản lý Giáo viên
-        </h2>
-        <p className="text-sm text-slate-600 max-w-md mb-6 leading-relaxed">
-          Phân hệ Quản lý Giáo viên chỉ dành cho Ban Giám Đốc (SuperAdmin) và Quản lý
-          cơ sở (BranchManager).
-        </p>
-        <div className="flex flex-wrap justify-center gap-3">
-          <button
-            type="button"
-            onClick={() => navigate('/')}
-            className="min-h-[44px] px-4 py-2 text-sm font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 active:scale-[0.98] transition-all cursor-pointer"
-          >
-            Quay lại Tổng quan
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate('/classes')}
-            className="min-h-[44px] px-4 py-2 text-sm font-semibold text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 active:scale-[0.98] transition-all cursor-pointer"
-          >
-            Xem Lớp học
-          </button>
-        </div>
+      <div className="flex items-center justify-center min-h-[60vh] px-4">
+        <Card large className="max-w-md w-full p-8 text-center">
+          <div className="w-16 h-16 rounded-full bg-rose-50 border border-rose-200 flex items-center justify-center text-3xl mb-4 text-rose-600 mx-auto">
+            🚫
+          </div>
+          <h2 className="text-xl font-bold text-ink mb-2">
+            403 — Không có quyền truy cập
+          </h2>
+          <p className="text-sm text-ink-secondary mb-6 leading-relaxed">
+            Phân hệ Quản lý Giáo viên chỉ dành cho Ban Giám Đốc (SuperAdmin) và Quản lý
+            cơ sở (BranchManager).
+          </p>
+          <div className="flex flex-wrap justify-center gap-3">
+            <PrimaryButton type="button" onClick={() => navigate('/')}>
+              Quay lại Tổng quan
+            </PrimaryButton>
+            <SecondaryButton type="button" onClick={() => navigate('/classes')}>
+              Xem Lớp học
+            </SecondaryButton>
+          </div>
+        </Card>
       </div>
     );
   }
@@ -241,10 +244,10 @@ export default function Teachers() {
       {toastMessage && (
         <div
           role="status"
-          className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg text-sm font-medium ${
+          className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-full shadow-modal text-sm font-medium ${
             toastMessage.type === 'error'
               ? 'bg-rose-600 text-white'
-              : 'bg-emerald-600 text-white'
+              : 'bg-teal text-white'
           }`}
         >
           <span>{toastMessage.type === 'error' ? '❌' : '✓'}</span>
@@ -253,85 +256,96 @@ export default function Teachers() {
       )}
 
       {/* Header & Nút CTA chính */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
-            <span>👩‍🏫</span>
+      <PageHeader
+        eyebrow="Nhân sự giảng dạy"
+        title={
+          <span className="inline-flex items-center gap-2.5 flex-wrap">
             <span>Quản lý Giáo viên</span>
-          </h1>
-          <p className="mt-1 text-sm text-slate-600">
-            {isSuperAdmin
-              ? 'Danh sách tài khoản giáo viên, phân công chi nhánh, lịch dạy và cấp lại mật khẩu.'
-              : `Danh sách giáo viên thuộc ${currentManagerBranchName}.`}
-          </p>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => {
-            setEditingTeacher(null);
-            setFormModalOpen(true);
-          }}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-lg shadow-xs active:scale-[0.98] transition-all duration-150 cursor-pointer min-h-[44px] shrink-0"
-        >
-          <span>+</span>
-          <span>Thêm giáo viên</span>
-        </button>
-      </div>
+            <Badge variant="gold">{kpiStats.total} giáo viên</Badge>
+          </span>
+        }
+        description={
+          isSuperAdmin
+            ? 'Danh sách tài khoản giáo viên, phân công chi nhánh, lịch dạy và cấp lại mật khẩu.'
+            : `Danh sách giáo viên thuộc ${currentManagerBranchName}.`
+        }
+        actions={
+          <PrimaryButton
+            type="button"
+            onClick={() => {
+              setEditingTeacher(null);
+              setFormModalOpen(true);
+            }}
+          >
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M12 4v16m8-8H4" />
+            </svg>
+            <span>Thêm giáo viên</span>
+          </PrimaryButton>
+        }
+      />
 
       {/* KPI Cards nhỏ gọn */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-2xs flex items-center gap-3">
-          <div className="hidden sm:flex w-10 h-10 rounded-lg bg-blue-50 text-blue-700 items-center justify-center text-lg shrink-0">
+        <Card className="p-3.5 sm:p-4 flex items-center gap-3">
+          <div className="hidden sm:flex w-10 h-10 rounded-full bg-gold-soft text-teal items-center justify-center text-lg shrink-0">
             👩‍🏫
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-medium text-slate-500 truncate">Tổng giáo viên</p>
-            <p className="text-lg font-bold font-mono text-slate-900 tabular-nums">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted truncate">
+              Tổng giáo viên
+            </p>
+            <p className="text-lg sm:text-xl font-bold text-teal tabular-nums">
               {kpiStats.total}
             </p>
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-2xs flex items-center gap-3">
-          <div className="hidden sm:flex w-10 h-10 rounded-lg bg-emerald-50 text-emerald-700 items-center justify-center text-lg shrink-0">
+        <Card className="p-3.5 sm:p-4 flex items-center gap-3">
+          <div className="hidden sm:flex w-10 h-10 rounded-full bg-emerald-50 text-emerald-700 items-center justify-center text-lg shrink-0">
             ✓
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-medium text-slate-500 truncate">Đang hoạt động</p>
-            <p className="text-lg font-bold font-mono text-emerald-700 tabular-nums">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted truncate">
+              Đang hoạt động
+            </p>
+            <p className="text-lg sm:text-xl font-bold text-emerald-700 tabular-nums">
               {kpiStats.active}
             </p>
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-2xs flex items-center gap-3">
-          <div className="hidden sm:flex w-10 h-10 rounded-lg bg-rose-50 text-rose-700 items-center justify-center text-lg shrink-0">
+        <Card className="p-3.5 sm:p-4 flex items-center gap-3">
+          <div className="hidden sm:flex w-10 h-10 rounded-full bg-rose-50 text-rose-700 items-center justify-center text-lg shrink-0">
             🔒
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-medium text-slate-500 truncate">Đã khóa</p>
-            <p className="text-lg font-bold font-mono text-rose-700 tabular-nums">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted truncate">
+              Đã khóa
+            </p>
+            <p className="text-lg sm:text-xl font-bold text-rose-700 tabular-nums">
               {kpiStats.inactive}
             </p>
           </div>
-        </div>
+        </Card>
       </div>
 
       {/* Thanh tìm kiếm & lọc */}
-      <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-2xs flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-col sm:flex-row gap-2.5 flex-1">
+      <Card className="p-4">
+        <div className="flex flex-wrap items-center gap-3">
           {/* Search */}
-          <div className="relative flex-1 max-w-md">
-            <span className="absolute inset-y-0 left-3 flex items-center text-slate-400 pointer-events-none">
-              🔍
+          <div className="relative flex-1 min-w-[220px] max-w-md">
+            <span className="absolute inset-y-0 left-3.5 flex items-center text-ink-muted pointer-events-none">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z" />
+              </svg>
             </span>
-            <input
+            <InputPill
               type="text"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder="Tìm họ tên hoặc số điện thoại..."
-              className="w-full min-h-[42px] pl-9 pr-9 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-colors"
+              className="pl-10 pr-9"
             />
             {searchInput && (
               <button
@@ -342,7 +356,7 @@ export default function Teachers() {
                   setPage(1);
                 }}
                 aria-label="Xóa từ khóa tìm kiếm"
-                className="absolute inset-y-0 right-2.5 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer"
+                className="absolute inset-y-0 right-3 flex items-center text-ink-muted hover:text-ink cursor-pointer"
               >
                 ✕
               </button>
@@ -350,100 +364,98 @@ export default function Teachers() {
           </div>
 
           {/* Lọc chi nhánh */}
-          <div className="sm:w-56">
-            <select
-              aria-label="Lọc theo chi nhánh"
-              value={branchFilter}
-              disabled={!isSuperAdmin}
-              onChange={(e) => {
-                setBranchFilter(e.target.value);
-                setPage(1);
-              }}
-              className={`w-full min-h-[42px] px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
-                !isSuperAdmin
-                  ? 'bg-slate-100 text-slate-600 border-slate-200 cursor-not-allowed'
-                  : 'bg-slate-50 text-slate-900 border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-blue-500/20'
-              }`}
-            >
-              {isSuperAdmin ? (
-                <>
-                  <option value="">Tất cả chi nhánh</option>
-                  {branches.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.branchName}
-                    </option>
-                  ))}
-                </>
-              ) : (
-                <option value={managerBranchId || ''}>
-                  {currentManagerBranchName}
-                </option>
-              )}
-            </select>
-          </div>
-        </div>
+          <select
+            aria-label="Lọc theo chi nhánh"
+            value={branchFilter}
+            disabled={!isSuperAdmin}
+            onChange={(e) => {
+              setBranchFilter(e.target.value);
+              setPage(1);
+            }}
+            className={`min-w-[175px] rounded-full border border-line px-4 py-2.5 text-sm transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none ${
+              !isSuperAdmin
+                ? 'bg-surface-subtle text-ink-muted cursor-not-allowed'
+                : 'bg-surface text-ink'
+            }`}
+          >
+            {isSuperAdmin ? (
+              <>
+                <option value="">Tất cả chi nhánh</option>
+                {branches.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.branchName}
+                  </option>
+                ))}
+              </>
+            ) : (
+              <option value={managerBranchId || ''}>
+                {currentManagerBranchName}
+              </option>
+            )}
+          </select>
 
-        {/* Tab trạng thái */}
-        <div className="flex flex-wrap items-center gap-1.5">
-          {[
-            { key: 'all', label: `Tất cả (${kpiStats.total})` },
-            { key: 'active', label: `Đang hoạt động (${kpiStats.active})` },
-            { key: 'inactive', label: `Đã khóa (${kpiStats.inactive})` },
-          ].map((tab) => {
-            const active = statusFilter === tab.key;
-            return (
-              <button
-                key={tab.key}
-                type="button"
-                onClick={() => {
-                  setStatusFilter(tab.key);
-                  setPage(1);
-                }}
-                className={`min-h-[38px] px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-                  active
-                    ? 'bg-blue-600 text-white shadow-2xs'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800'
-                }`}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
+          {/* Lọc trạng thái */}
+          <select
+            aria-label="Lọc theo trạng thái"
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setPage(1);
+            }}
+            className="min-w-[175px] rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
+          >
+            <option value="all">Tất cả ({kpiStats.total})</option>
+            <option value="active">Đang hoạt động ({kpiStats.active})</option>
+            <option value="inactive">Đã khóa ({kpiStats.inactive})</option>
+          </select>
+
+          <SecondaryButton
+            type="button"
+            onClick={() => {
+              setSearchInput('');
+              setDebouncedSearch('');
+              setStatusFilter('all');
+              if (isSuperAdmin) setBranchFilter('');
+              setPage(1);
+            }}
+          >
+            Đặt lại
+          </SecondaryButton>
         </div>
-      </div>
+      </Card>
 
       {/* Danh sách / Loading / Error / Empty */}
       {loading ? (
-        <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-3 animate-pulse">
+        <Card className="p-4 space-y-3 animate-pulse">
           {[1, 2, 3, 4, 5].map((n) => (
-            <div key={n} className="h-12 bg-slate-100 rounded-lg" />
+            <div key={n} className="h-12 bg-surface-subtle rounded-xl" />
           ))}
-        </div>
+        </Card>
       ) : error ? (
-        <div className="bg-rose-50 border border-rose-200 rounded-xl p-6 text-center space-y-3">
+        <Card className="bg-rose-50/70 border-rose-200 p-6 text-center space-y-3">
           <div className="text-2xl">⚠️</div>
           <p className="text-sm font-medium text-rose-800">{error}</p>
           <button
             type="button"
             onClick={refreshTeachers}
-            className="min-h-[44px] px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold rounded-lg active:scale-[0.98] transition-all cursor-pointer"
+            className="min-h-[44px] px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold rounded-full active:scale-[0.98] transition-all cursor-pointer"
           >
             Thử tải lại
           </button>
-        </div>
+        </Card>
       ) : teachers.length === 0 ? (
-        <div className="bg-white border border-slate-200 rounded-xl p-10 text-center space-y-3">
+        <Card className="p-10 text-center space-y-3">
           <div className="text-3xl">👩‍🏫</div>
-          <h3 className="text-base font-bold text-slate-800">
+          <h3 className="text-base font-bold text-ink">
             Không tìm thấy giáo viên phù hợp
           </h3>
-          <p className="text-sm text-slate-500 max-w-md mx-auto">
+          <p className="text-sm text-ink-secondary max-w-md mx-auto">
             {debouncedSearch || statusFilter !== 'all' || (isSuperAdmin && branchFilter)
               ? 'Thử thay đổi từ khóa tìm kiếm hoặc bộ lọc để xem các giáo viên khác.'
               : 'Hãy bấm nút "Thêm giáo viên" để tạo tài khoản giáo viên đầu tiên.'}
           </p>
           {(debouncedSearch || statusFilter !== 'all' || (isSuperAdmin && branchFilter)) && (
-            <button
+            <SecondaryButton
               type="button"
               onClick={() => {
                 setSearchInput('');
@@ -452,73 +464,69 @@ export default function Teachers() {
                 if (isSuperAdmin) setBranchFilter('');
                 setPage(1);
               }}
-              className="min-h-[40px] px-4 py-2 text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 cursor-pointer"
             >
-              Xóa bộ lọc
-            </button>
+              Đặt lại bộ lọc
+            </SecondaryButton>
           )}
-        </div>
+        </Card>
       ) : (
         <>
           {/* MOBILE VIEW: Cards (< 768px) */}
           <div className="md:hidden space-y-3">
             {teachers.map((t) => (
-              <div
+              <Card
                 key={t.id}
+                interactive
                 onClick={() => setDetailTarget(t)}
-                className={`rounded-xl border p-4 space-y-3 cursor-pointer transition-colors ${
-                  t.isActive
-                    ? 'bg-white border-slate-200 shadow-2xs'
-                    : 'bg-slate-50/80 border-dashed border-slate-300'
+                className={`p-4 space-y-3 cursor-pointer ${
+                  !t.isActive ? 'bg-surface-subtle/80 border-dashed' : ''
                 }`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-700 font-bold text-xs flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-gold-soft text-teal font-bold text-xs flex items-center justify-center shrink-0">
                       {getInitials(t.fullName)}
                     </div>
                     <div className="min-w-0">
-                      <p className="font-bold text-slate-900 truncate">{t.fullName}</p>
-                      <p className="text-xs font-mono text-slate-600 tabular-nums">
+                      <p className="font-bold text-ink truncate">{t.fullName}</p>
+                      <p className="text-xs font-mono text-ink-secondary tabular-nums">
                         {t.phoneNumber}
                       </p>
                     </div>
                   </div>
                   {t.isActive ? (
-                    <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-800 shrink-0">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    <Badge variant="emerald" className="shrink-0">
                       Hoạt động
-                    </span>
+                    </Badge>
                   ) : (
-                    <span className="inline-flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 px-2 py-0.5 text-[11px] font-semibold text-rose-800 shrink-0">
-                      <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+                    <Badge variant="rose" className="shrink-0">
                       Đã khóa
-                    </span>
+                    </Badge>
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 pt-1 border-t border-slate-100">
+                <div className="grid grid-cols-2 gap-2 text-xs text-ink-secondary pt-2 border-t border-line/60">
                   <div>
-                    <span className="text-slate-400 block">Chi nhánh</span>
-                    <span className="font-medium text-slate-800">
+                    <span className="text-ink-muted block">Chi nhánh</span>
+                    <span className="font-medium text-ink">
                       {t.branchName || '—'}
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block">Mật khẩu</span>
-                    <span
-                      className={`font-medium ${
-                        t.hasPassword ? 'text-blue-700' : 'text-amber-700'
-                      }`}
-                    >
-                      {t.hasPassword ? 'Đã đặt mật khẩu' : 'Chưa có mật khẩu'}
+                    <span className="text-ink-muted block">Mật khẩu</span>
+                    <span className="mt-0.5 inline-block">
+                      {t.hasPassword ? (
+                        <Badge variant="blue">Đã đặt MK</Badge>
+                      ) : (
+                        <Badge variant="amber">Chưa có MK</Badge>
+                      )}
                     </span>
                   </div>
                   <div className="col-span-2">
-                    <span className="text-slate-400">Email: </span>
-                    <span className="text-slate-700">{t.email || '—'}</span>
+                    <span className="text-ink-muted">Email: </span>
+                    <span className="text-ink">{t.email || '—'}</span>
                   </div>
-                  <div className="col-span-2 flex items-center justify-between text-[11px] text-slate-500 tabular-nums">
+                  <div className="col-span-2 flex items-center justify-between text-[11px] text-ink-muted tabular-nums">
                     <span>Tạo: {formatDate(t.createdAt)}</span>
                     <span>
                       Đăng nhập:{' '}
@@ -528,131 +536,121 @@ export default function Teachers() {
                 </div>
 
                 <div
-                  className="flex flex-wrap gap-2 pt-2 border-t border-slate-100"
+                  className="flex flex-wrap gap-2 pt-2 border-t border-line/60"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <button
+                  <SecondaryButton
                     type="button"
                     onClick={() => setDetailTarget(t)}
-                    className="min-h-[40px] flex-1 px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg cursor-pointer"
+                    className="flex-1 px-3 py-2 text-xs"
                   >
                     Chi tiết
-                  </button>
-                  <button
+                  </SecondaryButton>
+                  <SecondaryButton
                     type="button"
                     onClick={() => {
                       setEditingTeacher(t);
                       setFormModalOpen(true);
                     }}
-                    className="min-h-[40px] flex-1 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg cursor-pointer"
+                    className="flex-1 px-3 py-2 text-xs"
                   >
                     Sửa
-                  </button>
-                  <button
+                  </SecondaryButton>
+                  <SecondaryButton
                     type="button"
                     onClick={() => setResetPwdTarget(t)}
-                    className="min-h-[40px] px-3 py-1.5 text-xs font-semibold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg cursor-pointer"
+                    className="px-3 py-2 text-xs"
                   >
                     Đặt MK
-                  </button>
+                  </SecondaryButton>
                   <button
                     type="button"
                     onClick={() => setToggleStatusTarget(t)}
-                    className={`min-h-[40px] px-3 py-1.5 text-xs font-semibold rounded-lg cursor-pointer ${
+                    className={`min-h-[40px] px-3.5 py-2 text-xs font-semibold rounded-full border cursor-pointer transition-colors ${
                       t.isActive
-                        ? 'text-rose-700 bg-rose-50 hover:bg-rose-100'
-                        : 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100'
+                        ? 'text-rose-700 bg-rose-50 border-rose-200 hover:bg-rose-100'
+                        : 'text-emerald-700 bg-emerald-50 border-emerald-200 hover:bg-emerald-100'
                     }`}
                   >
                     {t.isActive ? 'Khóa' : 'Mở khóa'}
                   </button>
                 </div>
-              </div>
+              </Card>
             ))}
           </div>
 
           {/* DESKTOP VIEW: Table (>= 768px) */}
-          <div className="hidden md:block bg-white border border-slate-200 rounded-xl shadow-2xs overflow-hidden">
+          <Card className="hidden md:block overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50/80 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-                    <th className="py-3 px-4">Giáo viên</th>
-                    <th className="py-3 px-4">Liên hệ</th>
-                    <th className="py-3 px-4">Chi nhánh</th>
-                    <th className="py-3 px-4">Trạng thái</th>
-                    <th className="py-3 px-4">Mật khẩu</th>
-                    <th className="py-3 px-4">Tạo / Đăng nhập</th>
-                    <th className="py-3 px-4 text-right">Thao tác</th>
+                  <tr className="border-b border-line bg-surface-subtle text-[11px] font-semibold uppercase tracking-wider text-ink-muted">
+                    <th className="px-2.5 py-2.5">Giáo viên</th>
+                    <th className="px-2.5 py-2.5">Liên hệ</th>
+                    <th className="px-2.5 py-2.5">Chi nhánh</th>
+                    <th className="px-2.5 py-2.5">Trạng thái</th>
+                    <th className="px-2.5 py-2.5">Mật khẩu</th>
+                    <th className="px-2.5 py-2.5">Tạo / Đăng nhập</th>
+                    <th className="px-2.5 py-2.5 text-right">Thao tác</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 text-sm">
+                <tbody className="divide-y divide-line/60 text-sm">
                   {teachers.map((t) => (
                     <tr
                       key={t.id}
                       onClick={() => setDetailTarget(t)}
-                      className={`hover:bg-blue-50/40 cursor-pointer transition-colors ${
-                        !t.isActive ? 'bg-slate-50/60' : ''
+                      className={`hover:bg-mint-canvas/60 cursor-pointer transition-colors ${
+                        !t.isActive ? 'bg-surface-subtle/60' : ''
                       }`}
                     >
-                      <td className="py-3.5 px-4">
+                      <td className="px-2.5 py-2.5">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-700 font-bold text-xs flex items-center justify-center shrink-0">
+                          <div className="w-9 h-9 rounded-full bg-gold-soft text-teal font-bold text-xs flex items-center justify-center shrink-0">
                             {getInitials(t.fullName)}
                           </div>
                           <div className="min-w-0">
-                            <p className="font-semibold text-slate-900 truncate max-w-[200px]">
+                            <p className="font-semibold text-ink truncate max-w-[200px]">
                               {t.fullName}
                             </p>
-                            <p className="text-xs text-slate-400">
+                            <p className="text-xs text-ink-muted">
                               ID #{t.id} • {t.preferredLanguage === 'en' ? 'EN' : 'VI'}
                             </p>
                           </div>
                         </div>
                       </td>
 
-                      <td className="py-3.5 px-4">
-                        <p className="font-mono font-medium text-slate-800 tabular-nums">
+                      <td className="px-2.5 py-2.5">
+                        <p className="font-mono font-medium text-ink tabular-nums">
                           {t.phoneNumber}
                         </p>
-                        <p className="text-xs text-slate-500 truncate max-w-[180px]">
+                        <p className="text-xs text-ink-secondary truncate max-w-[180px]">
                           {t.email || '—'}
                         </p>
                       </td>
 
-                      <td className="py-3.5 px-4 text-slate-700 font-medium">
+                      <td className="px-2.5 py-2.5 text-ink font-medium">
                         {t.branchName || '—'}
                       </td>
 
-                      <td className="py-3.5 px-4">
+                      <td className="px-2.5 py-2.5">
                         {t.isActive ? (
-                          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-800">
-                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                            Đang hoạt động
-                          </span>
+                          <Badge variant="emerald">Đang hoạt động</Badge>
                         ) : (
-                          <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-0.5 text-xs font-semibold text-rose-800">
-                            <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
-                            Đã khóa
-                          </span>
+                          <Badge variant="rose">Đã khóa</Badge>
                         )}
                       </td>
 
-                      <td className="py-3.5 px-4">
+                      <td className="px-2.5 py-2.5">
                         {t.hasPassword ? (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
-                            Đã đặt mật khẩu
-                          </span>
+                          <Badge variant="blue">Đã đặt mật khẩu</Badge>
                         ) : (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-50 text-amber-800 border border-amber-200">
-                            Chưa có mật khẩu
-                          </span>
+                          <Badge variant="amber">Chưa có mật khẩu</Badge>
                         )}
                       </td>
 
-                      <td className="py-3.5 px-4 text-xs text-slate-600 tabular-nums">
+                      <td className="px-2.5 py-2.5 text-xs text-ink-secondary tabular-nums">
                         <p>Tạo: {formatDate(t.createdAt)}</p>
-                        <p className="text-slate-400 mt-0.5">
+                        <p className="text-ink-muted mt-0.5">
                           {t.lastLoginAt
                             ? `Login: ${formatDateTime(t.lastLoginAt)}`
                             : 'Chưa đăng nhập'}
@@ -660,45 +658,63 @@ export default function Teachers() {
                       </td>
 
                       <td
-                        className="py-3.5 px-4 text-right"
+                        className="px-2.5 py-2.5 text-right"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <div className="inline-flex items-center justify-end gap-1.5">
-                          <button
-                            type="button"
+                          <IconButton
+                            variant="neutral"
                             onClick={() => setDetailTarget(t)}
-                            className="px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg cursor-pointer transition-colors"
+                            title="Xem chi tiết giáo viên"
+                            aria-label="Xem chi tiết giáo viên"
                           >
-                            Chi tiết
-                          </button>
-                          <button
-                            type="button"
+                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                          </IconButton>
+
+                          <IconButton
+                            variant="neutral"
                             onClick={() => {
                               setEditingTeacher(t);
                               setFormModalOpen(true);
                             }}
-                            className="px-2.5 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg cursor-pointer transition-colors"
+                            title="Chỉnh sửa giáo viên"
+                            aria-label="Chỉnh sửa giáo viên"
                           >
-                            Sửa
-                          </button>
-                          <button
-                            type="button"
+                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                          </IconButton>
+
+                          <IconButton
+                            variant="neutral"
                             onClick={() => setResetPwdTarget(t)}
-                            className="px-2.5 py-1.5 text-xs font-semibold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg cursor-pointer transition-colors"
+                            title="Đặt lại mật khẩu"
+                            aria-label="Đặt lại mật khẩu"
                           >
-                            Đặt MK
-                          </button>
-                          <button
-                            type="button"
+                            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                            </svg>
+                          </IconButton>
+
+                          <IconButton
+                            variant={t.isActive ? 'danger' : 'neutral'}
                             onClick={() => setToggleStatusTarget(t)}
-                            className={`px-2.5 py-1.5 text-xs font-semibold rounded-lg cursor-pointer transition-colors ${
-                              t.isActive
-                                ? 'text-rose-700 bg-rose-50 hover:bg-rose-100'
-                                : 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100'
-                            }`}
+                            title={t.isActive ? 'Khóa tài khoản' : 'Mở khóa tài khoản'}
+                            aria-label={t.isActive ? 'Khóa tài khoản' : 'Mở khóa tài khoản'}
                           >
-                            {t.isActive ? 'Khóa' : 'Mở khóa'}
-                          </button>
+                            {t.isActive ? (
+                              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                              </svg>
+                            ) : (
+                              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                              </svg>
+                            )}
+                          </IconButton>
                         </div>
                       </td>
                     </tr>
@@ -706,40 +722,40 @@ export default function Teachers() {
                 </tbody>
               </table>
             </div>
-          </div>
+          </Card>
 
           {/* Phân trang */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-600">
+          <Card className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 text-xs text-ink-secondary">
             <span className="tabular-nums">
               Hiển thị{' '}
-              <strong className="text-slate-900">
+              <strong className="text-ink">
                 {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)}
               </strong>{' '}
-              trong tổng số <strong className="text-slate-900">{total}</strong> giáo viên
+              trong tổng số <strong className="text-ink">{total}</strong> giáo viên
             </span>
 
             <div className="flex items-center gap-2">
-              <button
+              <SecondaryButton
                 type="button"
                 disabled={page <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
-                className="min-h-[36px] px-3 py-1.5 rounded-lg border border-slate-300 bg-white font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                className="px-3.5 py-1.5 text-xs"
               >
                 ← Trước
-              </button>
-              <span className="font-mono font-semibold text-slate-800 px-2 tabular-nums">
+              </SecondaryButton>
+              <span className="font-mono font-semibold text-teal px-2 tabular-nums">
                 {page} / {totalPages}
               </span>
-              <button
+              <SecondaryButton
                 type="button"
                 disabled={page >= totalPages}
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                className="min-h-[36px] px-3 py-1.5 rounded-lg border border-slate-300 bg-white font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                className="px-3.5 py-1.5 text-xs"
               >
                 Sau →
-              </button>
+              </SecondaryButton>
             </div>
-          </div>
+          </Card>
         </>
       )}
 
