@@ -1388,5 +1388,72 @@ Ngoài endpoint `POST /api/Seed/catalog`, có thể chạy trực tiếp script 
      - Được tính tách riêng trên **tất cả các tháng** với điều kiện `!IsCancelled && DueDate < today && PaidAmount < NetAmount` (với `today` theo UTC+7).
      - Khoản nợ quá hạn từ các tháng trước sẽ hiển thị ở card **"Học phí quá hạn (tất cả các tháng)"** ngay bên dưới card học phí tháng trên Dashboard, khớp với danh sách lọc `Overdue` tại trang Học phí (`/tuitions?status=Overdue`).
 
+---
+
+## 15. PHÂN HỆ TẠO KHOẢN THU TỰ ĐỘNG (BILLING API)
+
+### 15.1. Tạo khoản thu học phí hàng tháng (thủ công) — `POST /api/Billing/generate-monthly`
+Quét các ghi danh đang hoạt động (`StudentClass.Status == "Active"`) ở lớp chưa kết thúc (`Class.Status != "Finished"`) và tự động tạo khoản thu học phí cho tháng/năm chỉ định (hoặc tháng/năm hiện tại theo giờ Việt Nam UTC+7), kèm thông báo đến phụ huynh (nếu có tài khoản).
+
+- **Quyền truy cập:** `SuperAdmin`, `BranchManager`.
+  - `SuperAdmin`: Chạy cho tất cả chi nhánh.
+  - `BranchManager`: Tự động giới hạn theo chi nhánh của quản lý (`Class.BranchId == BranchId`); trả `403 Forbidden` nếu tài khoản chưa được gán chi nhánh.
+- **Request Body (tùy chọn — có thể gửi `{}` hoặc không gửi body):**
+  ```json
+  {
+    "month": 11,
+    "year": 2026
+  }
+  ```
+  - `month` (int?, optional): Tháng tính học phí (`1`–`12`). Mặc định là tháng hiện tại theo UTC+7.
+  - `year` (int?, optional): Năm tính học phí (`2000`–`2100`). Mặc định là năm hiện tại theo UTC+7.
+- **Quy tắc tính phí:**
+  - **Hạn nộp (`DueDate`):** Ngày cuối cùng của tháng (`31`, hoặc `28/29/30` với các tháng ít hơn 31 ngày).
+  - **Số tiền (`Amount`):** Lấy `Class.TuitionFee`; nếu `null` thì lấy `Course.DefaultFee`. Nếu cả hai đều `null` hoặc `< 0` thì không tạo và đưa vào `uncreatedItems`.
+  - **Giảm giá (`Discount`):** `0` (không tính theo tỷ lệ cho học viên mới).
+  - **Tiêu đề & Ghi chú:** `Title = "Học phí tháng MM/YYYY – {ClassName}"`, `Note = "Tự động tạo bởi hệ thống ngày dd/MM/yyyy"`.
+  - **Chống tạo trùng:** Nếu cặp `(StudentId, ClassId)` đã có khoản thu bất kỳ (kể cả `IsCancelled == true`) có `DueDate` trong cùng `month/year` thì bỏ qua (`skippedDuplicateCount`).
+  - **Thông báo phụ huynh:** Khi tạo khoản thu thành công và `Student.ParentId > 0`, tạo `Notification` (`Type = "Tuition"`, `RefId = Tuition.Id`). Lỗi thông báo không làm hỏng khoản thu đã tạo.
+- **Response:**
+  - `200 OK` (`MonthlyBillingSummaryDto`):
+    ```json
+    {
+      "month": 11,
+      "year": 2026,
+      "dueDate": "2026-11-30",
+      "executedAtVn": "2026-11-18T11:45:00",
+      "createdCount": 12,
+      "totalCreatedAmount": 18000000,
+      "createdItems": [
+        {
+          "tuitionId": 205,
+          "studentId": 10,
+          "studentName": "Nguyễn Văn A",
+          "classId": 5,
+          "className": "Luyện chữ đẹp K01",
+          "branchId": 1,
+          "title": "Học phí tháng 11/2026 – Luyện chữ đẹp K01",
+          "amount": 1500000,
+          "dueDate": "2026-11-30"
+        }
+      ],
+      "skippedDuplicateCount": 3,
+      "uncreatedCount": 1,
+      "uncreatedItems": [
+        {
+          "studentId": 14,
+          "studentName": "Trần Thị B",
+          "classId": 8,
+          "className": "Lớp vẽ cơ bản",
+          "reason": "Lớp và khóa học chưa thiết lập học phí."
+        }
+      ]
+    }
+    ```
+  - `400 Bad Request`: `month`/`year` ngoài phạm vi hợp lệ hoặc JSON không hợp lệ.
+  - `401 Unauthorized`: Chưa đăng nhập.
+  - `403 Forbidden`: Không thuộc vai trò `SuperAdmin`/`BranchManager` hoặc `BranchManager` chưa được gán chi nhánh.
+
+
 
 

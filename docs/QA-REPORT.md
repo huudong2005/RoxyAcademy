@@ -871,3 +871,30 @@ Toàn bộ **8/8 hạng mục** của **Giai đoạn 1N-2 (8 bẫy đồng bộ)
   - Sửa ví dụ JSON (`totalExpected: 100000`, `totalPaid: 0`, `totalRemaining: 100000`, `overdueTuitionCount: 2`, giữ `overdueTuitionAmount: 1350000`).
   - Sửa câu giải thích khớp với dữ liệu thực tế hiện tại và ghi chú thẻ học phí tháng chỉ hiện `0đ / 0đ / 0đ` khi không có khoản nào có hạn nộp trong tháng đó.
 - **Kết luận cuối cùng (Đợt 2C & 2C-2):** **PASS 100%** — Sẵn sàng commit `"Fix đợt 2C-2: sửa số liệu ví dụ dashboard"`.
+
+
+---
+
+# BÁO CÁO QA — GIAI ĐOẠN 3A: TỰ ĐỘNG TẠO KHOẢN THU THÁNG (`MonthlyBillingService` + `POST /api/Billing/generate-monthly`)
+**Ngày kiểm tra:** 18/11/2026  
+**Người thực hiện:** QA Agent & Commander  
+**Commit gốc:** `4dd5e80` (sau Fix đợt 2C-2)  
+**Phạm vi:** Chỉ Backend (`RoxyAppBE/`) + `docs/API.md` §15.1; không sửa DB/migration, không sửa frontend (`roxy-admin/`).
+
+## 1. Kết quả Build (`RoxyAppBE/RoxyAcademy.Api`)
+- `dotnet build RoxyAppBE/RoxyAcademy.Api --no-restore`: **PASS** (**0 Warning(s), 0 Error(s)**, `RoxyAcademy.Api.dll` biên dịch thành công).
+
+## 2. Kết quả đối chiếu mã nguồn (7/7 quy tắc & 4/4 yêu cầu)
+| Hạng mục kiểm tra | Kết quả | Chi tiết đối chiếu |
+| :--- | :---: | :--- |
+| Quy tắc 1 & 2 (Tháng UTC+7, validate `month`/`year`, `DueDate` cuối tháng) | **PASS** | - `MonthlyBillingService.cs`: dùng `DateTime.UtcNow.AddHours(7)`, validate `month` `[1..12]`, `year` `[2000..2100]`; `DueDate = new DateOnly(targetYear, targetMonth, DateTime.DaysInMonth(targetYear, targetMonth))`. |
+| Quy tắc 3 & 4 (Phạm vi `Active`/`!= Finished`, `TuitionFee ?? DefaultFee`, `UncreatedItems`) | **PASS** | - Lọc `sc.Status == "Active" && sc.Class.Status != "Finished"` (+ `BranchId` nếu `BranchManager`).<br>- `Class.TuitionFee ?? Course.DefaultFee`; nếu `null` hoặc `< 0` thì bỏ tạo và ghi vào `UncreatedItems`. |
+| Quy tắc 5 & 6 (`Discount = 0`, tiêu đề, ghi chú, chi nhánh) | **PASS** | - `Discount = 0m` (không tỷ lệ), `Title = "Học phí tháng {MM/yyyy} – {ClassName}"`, `Note = "Tự động tạo bởi hệ thống ngày {dd/MM/yyyy}"`, `BranchId = sc.Class.BranchId`. |
+| Quy tắc 7 (Chống trùng `(StudentId, ClassId)` mọi trạng thái) | **PASS** | - Kiểm tra tồn tại trên `db.Tuitions` (kể cả `IsCancelled == true`) theo `(StudentId, ClassId)` với `DueDate.Year == targetYear && DueDate.Month == targetMonth`. |
+| Dùng lại logic `ITuitionService` & Endpoint `POST /api/Billing/generate-monthly` | **PASS** | - `TuitionsController.CreateTuition` và `MonthlyBillingService` cùng gọi `ITuitionService.CreateTuitionAsync` (`TuitionService.cs`).<br>- `BillingController.cs`: `[Authorize(Roles = "SuperAdmin,BranchManager")]`, hỗ trợ body rỗng/`{}`, giới hạn chi nhánh cho `BranchManager`, đã đăng ký DI trong `Program.cs`. |
+| Thông báo phụ huynh & Logging | **PASS** | - Chỉ tạo `Notification` (`UserId = Student.ParentId`, `Type = "Tuition"`, `RefId = tuition.Id`) khi tạo khoản thu thành công và `ParentId > 0`, bọc `try/catch`; ghi log `ILogger` mỗi lần chạy. |
+| Tài liệu `docs/API.md` (§15.1) | **PASS** | - Đầy đủ mô tả quyền, request/response và quy tắc cho `POST /api/Billing/generate-monthly`. |
+
+## 3. Kiểm thử thủ công trên `http://localhost:5123` & Kết luận
+- **Giới hạn môi trường sandbox:** Không thể kết nối `http://localhost:5123` / MSSQL local từ trong sandbox (`Unable to connect to the remote server`), nên chưa thực thi trực tiếp 5 kịch bản HTTP thủ công (tạo lần 1, gọi lần 2 chống trùng, lớp `Finished`/ghi danh không `Active`, lớp chưa đặt học phí, kiểm tra thông báo bằng tài khoản Phụ huynh).
+- **Trạng thái hiện tại:** **ĐẠT `dotnet build` (0 warning, 0 error) & đối chiếu mã nguồn 100%**; **CHỜ TEST THỦ CÔNG ENDPOINT TRÊN `http://localhost:5123`** trước khi commit `"Tính năng tự động tạo khoản thu (3A): logic + endpoint thủ công"`.

@@ -5,13 +5,14 @@ using RoxyAcademy.Api.Data;
 using RoxyAcademy.Api.Dtos;
 using RoxyAcademy.Api.Extensions;
 using RoxyAcademy.Api.Models;
+using RoxyAcademy.Api.Services;
 
 namespace RoxyAcademy.Api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
 [Authorize]
-public class TuitionsController(RoxyDbContext db) : ControllerBase
+public class TuitionsController(RoxyDbContext db, ITuitionService tuitionService) : ControllerBase
 {
     private string Role => User.GetRole();
     private int UserId => User.GetUserId();
@@ -250,58 +251,15 @@ public class TuitionsController(RoxyDbContext db) : ControllerBase
     [Authorize(Roles = "SuperAdmin,BranchManager")]
     public async Task<ActionResult> CreateTuition(CreateTuitionRequest req)
     {
-        if (req.Amount < 0 || req.Discount < 0)
-            return BadRequest(new { message = "Số tiền học phí và số tiền giảm giá phải lớn hơn hoặc bằng 0." });
-
-        if (req.Discount > req.Amount)
-            return BadRequest(new { message = "Số tiền giảm giá không được lớn hơn tổng số tiền học phí." });
-
-        var student = await db.Students.FindAsync(req.StudentId);
-        if (student == null)
-            return BadRequest(new { message = "Học viên không tồn tại." });
-
-        var managerBranchId = User.GetBranchId() ?? -1;
-        if (Role == "BranchManager")
+        var result = await tuitionService.CreateTuitionAsync(req, Role, User.GetBranchId());
+        if (!result.Success)
         {
-            if (req.BranchId != managerBranchId || student.BranchId != managerBranchId)
-                return StatusCode(StatusCodes.Status403Forbidden, new { message = "Không thể tạo khoản thu cho học viên hoặc cơ sở khác." });
+            return result.StatusCode == StatusCodes.Status403Forbidden
+                ? StatusCode(StatusCodes.Status403Forbidden, new { message = result.ErrorMessage })
+                : BadRequest(new { message = result.ErrorMessage });
         }
 
-        var branchExists = await db.Branches.AnyAsync(b => b.Id == req.BranchId && b.IsActive);
-        if (!branchExists)
-            return BadRequest(new { message = "Chi nhánh không tồn tại hoặc đã ngừng hoạt động." });
-
-        // Bắt lỗi ràng buộc FK_Tuitions_Enrolled nếu có gắn ClassId
-        if (req.ClassId.HasValue)
-        {
-            var enrollment = await db.StudentClasses.Include(sc => sc.Class)
-                .FirstOrDefaultAsync(sc => sc.StudentId == req.StudentId && sc.ClassId == req.ClassId);
-
-            if (enrollment == null)
-                return BadRequest(new { message = "Học viên chưa ghi danh vào lớp này, không thể tạo hóa đơn học phí gắn với lớp." });
-
-            if (Role == "BranchManager" && enrollment.Class.BranchId != managerBranchId)
-                return StatusCode(StatusCodes.Status403Forbidden, new { message = "Lớp học không thuộc cơ sở đang quản lý." });
-        }
-
-        var tuition = new Tuition
-        {
-            StudentId = req.StudentId,
-            ClassId = req.ClassId,
-            BranchId = req.BranchId,
-            Title = req.Title.Trim(),
-            Amount = req.Amount,
-            Discount = req.Discount,
-            DueDate = req.DueDate,
-            IsCancelled = false,
-            Note = req.Note?.Trim(),
-            CreatedAt = DateTime.UtcNow
-        };
-
-        db.Tuitions.Add(tuition);
-        await db.SaveChangesAsync();
-
-        return CreatedAtAction(nameof(GetTuition), new { id = tuition.Id }, new { id = tuition.Id, message = "Tạo khoản thu học phí thành công!" });
+        return CreatedAtAction(nameof(GetTuition), new { id = result.Tuition!.Id }, new { id = result.Tuition.Id, message = "Tạo khoản thu học phí thành công!" });
     }
 
     [HttpPut("{id}")]

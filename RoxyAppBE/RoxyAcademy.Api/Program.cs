@@ -53,6 +53,8 @@ builder.Services.AddDbContext<RoxyDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
 
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<ITuitionService, TuitionService>();
+builder.Services.AddScoped<IMonthlyBillingService, MonthlyBillingService>();
 builder.Services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
 
 // 2. Thiết lập JWT Authentication
