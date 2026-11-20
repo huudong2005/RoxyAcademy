@@ -572,7 +572,7 @@ export default function Grades() {
       {toast && (
         <div
           role="status"
-          className={`fixed top-5 right-5 z-[60] max-w-sm rounded-xl border px-4 py-3 text-sm font-medium shadow-lg transition-all ${
+          className={`toast-panel fixed top-5 right-5 z-[60] max-w-sm rounded-xl border px-4 py-3 text-sm font-medium shadow-lg ${
             toast.type === 'success'
               ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
               : 'border-rose-200 bg-rose-50 text-rose-800'

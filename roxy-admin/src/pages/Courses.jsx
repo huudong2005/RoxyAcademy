@@ -159,7 +159,7 @@ export default function Courses() {
       {toastMessage && (
         <div
           role="status"
-          className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-full shadow-modal text-sm font-medium transition-all ${
+          className={`toast-panel fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-full shadow-modal text-sm font-medium ${
             toastMessage.type === 'error'
               ? 'bg-rose-600 text-white'
               : 'bg-teal text-white'
@@ -438,7 +438,7 @@ export default function Courses() {
                     <button
                       type="button"
                       onClick={() => handleOpenDelete(c)}
-                      className="min-h-[38px] px-3.5 py-1.5 text-xs font-semibold text-rose-700 bg-rose-50 border border-rose-200 rounded-full hover:bg-rose-100 active:scale-95 transition-all cursor-pointer"
+                      className="min-h-[38px] px-3.5 py-1.5 text-xs font-semibold text-rose-700 bg-rose-50 border border-rose-200 rounded-full hover:bg-rose-100 active:scale-95 transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer"
                     >
                       Xóa
                     </button>
@@ -507,7 +507,7 @@ export default function Courses() {
                 type="button"
                 onClick={handleConfirmDelete}
                 disabled={deleteSubmitting}
-                className="min-h-[44px] px-5 py-2.5 text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 active:scale-95 rounded-full shadow-xs transition-all cursor-pointer disabled:opacity-50"
+                className="min-h-[44px] px-5 py-2.5 text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 active:scale-95 rounded-full shadow-xs transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer disabled:opacity-50"
               >
                 {deleteSubmitting ? 'Đang xóa...' : 'Xác nhận xóa'}
               </button>

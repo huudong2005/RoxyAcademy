@@ -920,7 +920,7 @@ export default function Homeworks() {
                   const submittedPct = total > 0 ? (submitted / total) * 100 : 0;
 
                   return (
-                    <tr key={hw.id} className="hover:bg-mint-canvas/60 transition-colors duration-100">
+                    <tr key={hw.id} className="hover:bg-mint-canvas/60 transition-colors duration-150 ease-out">
                       {/* Cột 1: Bài tập & Người giao */}
                       <td className="px-4 py-3">
                         <div
@@ -1198,7 +1198,7 @@ export default function Homeworks() {
                       <button
                         type="button"
                         onClick={() => handleDeleteHomework(hw)}
-                        className="min-h-[44px] px-3 rounded-full border border-rose-200 bg-rose-50 text-rose-700 text-xs font-semibold hover:bg-rose-100 active:scale-95 transition-all inline-flex items-center justify-center cursor-pointer"
+                        className="min-h-[44px] px-3 rounded-full border border-rose-200 bg-rose-50 text-rose-700 text-xs font-semibold hover:bg-rose-100 active:scale-95 transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out inline-flex items-center justify-center cursor-pointer"
                         title="Xóa"
                       >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -1492,28 +1492,28 @@ export default function Homeworks() {
                   <button
                     type="button"
                     onClick={() => setSubmissionTab('all')}
-                    className={`px-3 py-1 rounded-full transition-all cursor-pointer ${submissionTab === 'all' ? 'bg-gold-soft text-teal shadow-xs font-semibold' : 'hover:text-ink'}`}
+                    className={`px-3 py-1 rounded-full transition-[background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer ${submissionTab === 'all' ? 'bg-gold-soft text-teal shadow-xs font-semibold' : 'hover:text-ink'}`}
                   >
                     Tất cả ({submissionCounts.total})
                   </button>
                   <button
                     type="button"
                     onClick={() => setSubmissionTab('Submitted')}
-                    className={`px-3 py-1 rounded-full transition-all cursor-pointer ${submissionTab === 'Submitted' ? 'bg-gold-soft text-teal shadow-xs font-semibold' : 'hover:text-ink'}`}
+                    className={`px-3 py-1 rounded-full transition-[background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer ${submissionTab === 'Submitted' ? 'bg-gold-soft text-teal shadow-xs font-semibold' : 'hover:text-ink'}`}
                   >
                     Chờ chấm ({submissionCounts.submitted})
                   </button>
                   <button
                     type="button"
                     onClick={() => setSubmissionTab('Reviewed')}
-                    className={`px-3 py-1 rounded-full transition-all cursor-pointer ${submissionTab === 'Reviewed' ? 'bg-emerald-50 text-emerald-700 shadow-xs font-semibold' : 'hover:text-ink'}`}
+                    className={`px-3 py-1 rounded-full transition-[background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer ${submissionTab === 'Reviewed' ? 'bg-emerald-50 text-emerald-700 shadow-xs font-semibold' : 'hover:text-ink'}`}
                   >
                     Đã chấm ({submissionCounts.reviewed})
                   </button>
                   <button
                     type="button"
                     onClick={() => setSubmissionTab('Pending')}
-                    className={`px-3 py-1 rounded-full transition-all cursor-pointer ${submissionTab === 'Pending' ? 'bg-surface-subtle text-ink shadow-xs font-semibold' : 'hover:text-ink'}`}
+                    className={`px-3 py-1 rounded-full transition-[background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer ${submissionTab === 'Pending' ? 'bg-surface-subtle text-ink shadow-xs font-semibold' : 'hover:text-ink'}`}
                   >
                     Chưa nộp ({submissionCounts.pending})
                   </button>
@@ -1601,7 +1601,7 @@ export default function Homeworks() {
                             <div
                               key={sub.id}
                               onClick={() => handleSelectSubmission(sub)}
-                              className={`p-3.5 cursor-pointer transition-all flex items-start justify-between gap-2 ${
+                              className={`p-3.5 cursor-pointer transition-[transform,box-shadow,border-color,background-color] duration-150 ease-out flex items-start justify-between gap-2 ${
                                 isActive
                                   ? 'bg-mint-canvas/80 border-l-4 border-teal pl-2.5 shadow-2xs'
                                   : 'hover:bg-mint-canvas/40 bg-surface'
@@ -1925,7 +1925,7 @@ export default function Homeworks() {
                               type="button"
                               disabled={gradingSubmitting || selectedSubmission.status !== 'Submitted'}
                               onClick={() => handleReviewSubmission('Pending', false)}
-                              className="px-4 py-2 rounded-full border border-rose-200 bg-rose-50 text-rose-700 text-xs font-semibold hover:bg-rose-100 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                              className="px-4 py-2 rounded-full border border-rose-200 bg-rose-50 text-rose-700 text-xs font-semibold hover:bg-rose-100 active:scale-95 transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                             >
                               Yêu cầu nộp lại bài
                             </button>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axiosClient from '../api/axiosClient';
 import ImageUpload from './ImageUpload';
+import { PrimaryButton, SecondaryButton } from './ui';
 import { updateStoredUser } from '../utils/authStorage';
 
 function getInitials(name) {
@@ -222,7 +223,7 @@ export default function ProfileModal({ isOpen, onClose, currentUser, onUserUpdat
                   className="h-16 w-16 shrink-0 rounded-full border border-slate-200 object-cover bg-white shadow-xs"
                 />
               ) : (
-                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-blue-100 text-lg font-bold text-blue-700 shadow-xs">
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-gold-soft text-lg font-bold text-teal border border-gold/40 shadow-xs">
                   {getInitials(profileMeta.fullName)}
                 </div>
               )}
@@ -266,7 +267,7 @@ export default function ProfileModal({ isOpen, onClose, currentUser, onUserUpdat
                     if (error) setError('');
                     if (successMsg) setSuccessMsg('');
                   }}
-                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none"
+                  className="w-full rounded-lg border border-line bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none transition-[border-color,box-shadow] duration-150 ease-out"
                 />
                 <p className="mt-1 text-[11px] text-slate-500">
                   Định dạng gồm 10 chữ số, bắt đầu bằng số 0.
@@ -286,7 +287,7 @@ export default function ProfileModal({ isOpen, onClose, currentUser, onUserUpdat
                     if (error) setError('');
                     if (successMsg) setSuccessMsg('');
                   }}
-                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none"
+                  className="w-full rounded-lg border border-line bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none transition-[border-color,box-shadow] duration-150 ease-out"
                 />
               </div>
 
@@ -313,22 +314,20 @@ export default function ProfileModal({ isOpen, onClose, currentUser, onUserUpdat
               </div>
 
               <div className="flex justify-end gap-2.5 border-t border-slate-100 pt-4">
-                <button
+                <SecondaryButton
                   type="button"
                   disabled={submitting}
                   onClick={onClose}
-                  className="min-h-[40px] rounded-lg border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 active:scale-[0.98] transition-transform duration-150 ease-out disabled:opacity-50 cursor-pointer"
                 >
                   Đóng
-                </button>
-                <button
+                </SecondaryButton>
+                <PrimaryButton
                   type="submit"
                   disabled={submitting}
-                  className="inline-flex min-h-[40px] items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-blue-700 active:scale-[0.98] transition-transform duration-150 ease-out disabled:opacity-60 disabled:pointer-events-none cursor-pointer"
                 >
                   {submitting ? (
                     <>
-                      <svg className="h-4 w-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
+                      <svg className="h-4 w-4 animate-spin text-teal" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                       </svg>
@@ -337,7 +336,7 @@ export default function ProfileModal({ isOpen, onClose, currentUser, onUserUpdat
                   ) : (
                     'Lưu thay đổi'
                   )}
-                </button>
+                </PrimaryButton>
               </div>
             </form>
           </div>

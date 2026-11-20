@@ -834,7 +834,7 @@ export default function ClassList() {
                 </tr>
               ) : (
                 paginatedClasses.map((cls) => (
-                  <tr key={cls.id} className="hover:bg-mint-canvas/60 transition-colors duration-100">
+                  <tr key={cls.id} className="hover:bg-mint-canvas/60 transition-colors duration-150 ease-out">
                     {/* Cột 1: Tên lớp */}
                     <td className="px-2 py-2.5 max-w-[160px]">
                       <div
@@ -2179,7 +2179,7 @@ export default function ClassList() {
                     type="button"
                     disabled={closeClassModal.submitting}
                     onClick={handleConfirmCloseClass}
-                    className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-full bg-rose-600 text-white text-xs font-semibold hover:bg-rose-700 active:scale-[0.98] transition-all disabled:opacity-60 cursor-pointer"
+                    className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-full bg-rose-600 text-white text-xs font-semibold hover:bg-rose-700 active:scale-[0.98] transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out disabled:opacity-60 cursor-pointer"
                   >
                     {closeClassModal.submitting ? 'Đang kiểm tra & đóng lớp...' : 'Xác nhận đóng lớp'}
                   </button>

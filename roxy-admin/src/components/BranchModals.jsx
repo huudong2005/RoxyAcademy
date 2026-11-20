@@ -771,7 +771,7 @@ export function DeactivateBranchModal({ branch, onClose, onSuccess }) {
               type="button"
               disabled={isSubmitting || Boolean(error400)}
               onClick={handleConfirm}
-              className="min-h-[44px] inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-full shadow-xs active:scale-95 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="min-h-[44px] inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-full shadow-xs active:scale-95 transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <>

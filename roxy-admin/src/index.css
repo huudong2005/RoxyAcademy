@@ -84,11 +84,11 @@
   }
 }
 
-/* Hiệu ứng chuyển tab mượt mà theo docs/DESIGN.md Mục 13.7 */
+/* Hiệu ứng chuyển tab và chuyển trang mượt mà theo docs/DESIGN.md Mục 13.7 */
 @keyframes tabEnter {
   from {
     opacity: 0;
-    transform: translateY(4px);
+    transform: translateY(3px);
   }
   to {
     opacity: 1;
@@ -96,8 +96,39 @@
   }
 }
 
-.tab-content {
-  animation: tabEnter 150ms cubic-bezier(0.23, 1, 0.32, 1);
+.tab-content,
+.page-enter {
+  animation: tabEnter 250ms ease-out 1;
+}
+
+@keyframes popoverEnter {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toastEnter {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.popover-panel {
+  animation: popoverEnter 180ms cubic-bezier(0.23, 1, 0.32, 1) 1;
+}
+
+.toast-panel {
+  animation: toastEnter 180ms cubic-bezier(0.23, 1, 0.32, 1) 1;
 }
 
 /* Modal entry theo docs/DESIGN.md & emil-design-eng: scale(0.96) -> 1 */

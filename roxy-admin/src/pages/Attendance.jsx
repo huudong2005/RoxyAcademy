@@ -576,7 +576,7 @@ export default function Attendance() {
           <button
             type="button"
             onClick={handleMarkAllPresent}
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-50 text-emerald-700 border border-emerald-300 hover:bg-emerald-100 font-medium text-xs md:text-sm rounded-full active:scale-[0.98] transition-transform duration-100 cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-50 text-emerald-700 border border-emerald-300 hover:bg-emerald-100 font-medium text-xs md:text-sm rounded-full active:scale-[0.98] transition-transform duration-150 ease-out cursor-pointer"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -675,7 +675,7 @@ export default function Attendance() {
                             <button
                               type="button"
                               onClick={() => handleSetStatus(student.studentId, 'Present')}
-                              className={`px-3 py-1.5 text-xs rounded-full transition-all duration-100 active:scale-95 cursor-pointer ${
+                              className={`px-3 py-1.5 text-xs rounded-full transition-[transform,background-color,border-color,color] duration-150 ease-out active:scale-95 cursor-pointer ${
                                 student.status === 'Present'
                                   ? 'bg-emerald-600 text-white font-semibold shadow-xs'
                                   : 'text-ink-secondary hover:text-ink hover:bg-surface'
@@ -688,7 +688,7 @@ export default function Attendance() {
                             <button
                               type="button"
                               onClick={() => handleSetStatus(student.studentId, 'Late')}
-                              className={`px-3 py-1.5 text-xs rounded-full transition-all duration-100 active:scale-95 cursor-pointer ${
+                              className={`px-3 py-1.5 text-xs rounded-full transition-[transform,background-color,border-color,color] duration-150 ease-out active:scale-95 cursor-pointer ${
                                 student.status === 'Late'
                                   ? 'bg-amber-500 text-white font-semibold shadow-xs'
                                   : 'text-ink-secondary hover:text-ink hover:bg-surface'
@@ -701,7 +701,7 @@ export default function Attendance() {
                             <button
                               type="button"
                               onClick={() => handleSetStatus(student.studentId, 'ExcusedAbsent')}
-                              className={`px-3 py-1.5 text-xs rounded-full transition-all duration-100 active:scale-95 cursor-pointer ${
+                              className={`px-3 py-1.5 text-xs rounded-full transition-[transform,background-color,border-color,color] duration-150 ease-out active:scale-95 cursor-pointer ${
                                 student.status === 'ExcusedAbsent'
                                   ? 'bg-teal text-white font-semibold shadow-xs'
                                   : 'text-ink-secondary hover:text-ink hover:bg-surface'
@@ -714,7 +714,7 @@ export default function Attendance() {
                             <button
                               type="button"
                               onClick={() => handleSetStatus(student.studentId, 'UnexcusedAbsent')}
-                              className={`px-3 py-1.5 text-xs rounded-full transition-all duration-100 active:scale-95 cursor-pointer ${
+                              className={`px-3 py-1.5 text-xs rounded-full transition-[transform,background-color,border-color,color] duration-150 ease-out active:scale-95 cursor-pointer ${
                                 student.status === 'UnexcusedAbsent'
                                   ? 'bg-rose-600 text-white font-semibold shadow-xs'
                                   : 'text-ink-secondary hover:text-ink hover:bg-surface'
@@ -802,7 +802,7 @@ export default function Attendance() {
                     <button
                       type="button"
                       onClick={() => handleSetStatus(student.studentId, 'Present')}
-                      className={`min-h-[44px] px-2 text-xs font-medium rounded-full transition-all duration-100 active:scale-95 flex items-center justify-center ${
+                      className={`min-h-[44px] px-2 text-xs font-medium rounded-full transition-[transform,background-color,border-color,color] duration-150 ease-out active:scale-95 flex items-center justify-center ${
                         student.status === 'Present'
                           ? 'bg-emerald-600 text-white font-semibold shadow-xs'
                           : 'bg-surface text-ink-secondary'
@@ -813,7 +813,7 @@ export default function Attendance() {
                     <button
                       type="button"
                       onClick={() => handleSetStatus(student.studentId, 'Late')}
-                      className={`min-h-[44px] px-2 text-xs font-medium rounded-full transition-all duration-100 active:scale-95 flex items-center justify-center ${
+                      className={`min-h-[44px] px-2 text-xs font-medium rounded-full transition-[transform,background-color,border-color,color] duration-150 ease-out active:scale-95 flex items-center justify-center ${
                         student.status === 'Late'
                           ? 'bg-amber-500 text-white font-semibold shadow-xs'
                           : 'bg-surface text-ink-secondary'
@@ -824,7 +824,7 @@ export default function Attendance() {
                     <button
                       type="button"
                       onClick={() => handleSetStatus(student.studentId, 'ExcusedAbsent')}
-                      className={`min-h-[44px] px-2 text-xs font-medium rounded-full transition-all duration-100 active:scale-95 flex items-center justify-center ${
+                      className={`min-h-[44px] px-2 text-xs font-medium rounded-full transition-[transform,background-color,border-color,color] duration-150 ease-out active:scale-95 flex items-center justify-center ${
                         student.status === 'ExcusedAbsent'
                           ? 'bg-teal text-white font-semibold shadow-xs'
                           : 'bg-surface text-ink-secondary'
@@ -835,7 +835,7 @@ export default function Attendance() {
                     <button
                       type="button"
                       onClick={() => handleSetStatus(student.studentId, 'UnexcusedAbsent')}
-                      className={`min-h-[44px] px-2 text-xs font-medium rounded-full transition-all duration-100 active:scale-95 flex items-center justify-center ${
+                      className={`min-h-[44px] px-2 text-xs font-medium rounded-full transition-[transform,background-color,border-color,color] duration-150 ease-out active:scale-95 flex items-center justify-center ${
                         student.status === 'UnexcusedAbsent'
                           ? 'bg-rose-600 text-white font-semibold shadow-xs'
                           : 'bg-surface text-ink-secondary'
@@ -900,7 +900,7 @@ export default function Attendance() {
               <button
                 type="button"
                 onClick={handleMarkAllPresent}
-                className="flex-1 min-h-[44px] px-3 bg-emerald-50 text-emerald-700 border border-emerald-300 font-semibold text-xs rounded-full active:scale-95 transition-all flex items-center justify-center gap-1.5 text-center"
+                className="flex-1 min-h-[44px] px-3 bg-emerald-50 text-emerald-700 border border-emerald-300 font-semibold text-xs rounded-full active:scale-95 transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out flex items-center justify-center gap-1.5 text-center"
               >
                 <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />

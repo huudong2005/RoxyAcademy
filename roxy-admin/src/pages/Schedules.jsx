@@ -449,7 +449,7 @@ export default function Schedules() {
       key={item.id}
       onClick={() => setDetailSchedule(item)}
       title="Nhấn để xem chi tiết buổi học"
-      className="bg-surface rounded-card p-3 border border-line/80 shadow-card hover:border-teal/40 hover:shadow-card-hover transition-all duration-150 flex flex-col gap-1.5 text-left cursor-pointer"
+      className="bg-surface rounded-card p-3 border border-line/80 shadow-card hover:border-teal/40 hover:shadow-card-hover transition-[transform,box-shadow,border-color,background-color] duration-150 ease-out flex flex-col gap-1.5 text-left cursor-pointer"
     >
       {/* Hàng 1: Giờ học + Badge trạng thái */}
       <div className="flex items-center justify-between gap-1 flex-wrap">
@@ -580,7 +580,7 @@ export default function Schedules() {
             <button
               type="button"
               onClick={handlePrevWeek}
-              className="px-3 py-1.5 rounded-full border border-line bg-surface hover:bg-mint-canvas text-teal text-xs font-medium active:scale-95 transition-all cursor-pointer"
+              className="px-3 py-1.5 rounded-full border border-line bg-surface hover:bg-mint-canvas text-teal text-xs font-medium active:scale-95 transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer"
               title="Tuần trước"
             >
               ← Tuần trước
@@ -588,7 +588,7 @@ export default function Schedules() {
             <button
               type="button"
               onClick={handleTodayWeek}
-              className="px-3.5 py-1.5 rounded-full bg-gold-soft border border-gold/40 text-teal hover:bg-gold-soft/80 text-xs font-semibold active:scale-95 transition-all cursor-pointer"
+              className="px-3.5 py-1.5 rounded-full bg-gold-soft border border-gold/40 text-teal hover:bg-gold-soft/80 text-xs font-semibold active:scale-95 transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer"
               title="Về tuần hôm nay"
             >
               Hôm nay
@@ -596,7 +596,7 @@ export default function Schedules() {
             <button
               type="button"
               onClick={handleNextWeek}
-              className="px-3 py-1.5 rounded-full border border-line bg-surface hover:bg-mint-canvas text-teal text-xs font-medium active:scale-95 transition-all cursor-pointer"
+              className="px-3 py-1.5 rounded-full border border-line bg-surface hover:bg-mint-canvas text-teal text-xs font-medium active:scale-95 transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer"
               title="Tuần sau"
             >
               Tuần sau →
@@ -761,7 +761,7 @@ export default function Schedules() {
                     key={dateKey}
                     type="button"
                     onClick={() => setSelectedMobileDate(dateKey)}
-                    className={`flex-1 min-w-[52px] py-2 px-1 rounded-xl text-center active:scale-95 transition-all flex flex-col items-center justify-center cursor-pointer ${
+                    className={`flex-1 min-w-[52px] py-2 px-1 rounded-xl text-center active:scale-95 transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out flex flex-col items-center justify-center cursor-pointer ${
                       isSelected
                         ? 'bg-teal text-gold font-semibold shadow-card'
                         : isToday

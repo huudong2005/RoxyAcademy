@@ -155,7 +155,7 @@ export default function Branches() {
       {toastMessage && (
         <div
           role="status"
-          className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-full shadow-modal text-sm font-medium transition-all ${
+          className={`toast-panel fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-full shadow-modal text-sm font-medium ${
             toastMessage.type === 'error'
               ? 'bg-rose-600 text-white'
               : 'bg-teal text-white'
@@ -338,7 +338,7 @@ export default function Branches() {
           <button
             type="button"
             onClick={refreshBranches}
-            className="min-h-[44px] px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold rounded-full active:scale-95 transition-all cursor-pointer"
+            className="min-h-[44px] px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold rounded-full active:scale-95 transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer"
           >
             Thử tải lại
           </button>

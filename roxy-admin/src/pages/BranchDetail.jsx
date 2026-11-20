@@ -273,7 +273,7 @@ export default function BranchDetail() {
           <button
             type="button"
             onClick={refreshData}
-            className="min-h-[44px] px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold rounded-full active:scale-95 transition-all cursor-pointer"
+            className="min-h-[44px] px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold rounded-full active:scale-95 transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer"
           >
             Thử tải lại
           </button>
@@ -291,7 +291,7 @@ export default function BranchDetail() {
       {toastMessage && (
         <div
           role="status"
-          className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-full shadow-modal text-sm font-medium transition-all ${
+          className={`toast-panel fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-full shadow-modal text-sm font-medium ${
             toastMessage.type === 'error'
               ? 'bg-rose-600 text-white'
               : 'bg-teal text-white'
@@ -304,7 +304,7 @@ export default function BranchDetail() {
 
       {/* Breadcrumb chuẩn Wayfinding */}
       <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 text-sm">
-        <SecondaryButton as={Link} to="/branches" className="px-4 py-2 text-xs">
+        <SecondaryButton as={Link} to="/branches" className="px-4 py-2 text-xs underline-offset-4 hover:underline transition-colors duration-150 ease-out">
           <span>←</span>
           <span>Quay lại Quản lý chi nhánh</span>
         </SecondaryButton>
@@ -363,7 +363,7 @@ export default function BranchDetail() {
             {branch.phone ? (
               <a
                 href={telHref}
-                className="text-teal hover:text-gold-active font-mono font-semibold hover:underline inline-flex items-center gap-2 min-h-[36px] transition-colors"
+                className="text-teal hover:text-gold-active font-mono font-semibold underline-offset-4 hover:underline inline-flex items-center gap-2 min-h-[36px] transition-colors duration-150 ease-out"
               >
                 <span>{branch.phone}</span>
                 <span className="text-[11px] font-sans bg-gold-soft text-teal border border-gold/40 px-2.5 py-0.5 rounded-full">
@@ -390,7 +390,7 @@ export default function BranchDetail() {
             <button
               type="button"
               onClick={() => setDeactivateModalOpen(true)}
-              className="min-h-[44px] inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 hover:border-rose-300 text-sm font-semibold rounded-full active:scale-[0.98] transition-all cursor-pointer"
+              className="min-h-[44px] inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 hover:border-rose-300 text-sm font-semibold rounded-full active:scale-[0.98] transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer"
             >
               <span>🚫</span>
               <span>Ngừng hoạt động cơ sở</span>
@@ -412,7 +412,7 @@ export default function BranchDetail() {
         <button
           type="button"
           onClick={() => setActiveTab('classes')}
-          className={`text-left p-4 md:p-5 rounded-card border transition-all duration-150 cursor-pointer active:scale-[0.98] ${
+          className={`text-left p-4 md:p-5 rounded-card border transition-[transform,box-shadow,border-color,background-color] duration-150 ease-out cursor-pointer active:scale-[0.98] ${
             activeTab === 'classes'
               ? 'bg-gold-soft/50 border-teal ring-2 ring-teal/20 shadow-card'
               : 'bg-surface border-line/80 hover:border-line-strong hover:bg-mint-canvas/50 shadow-card'
@@ -433,7 +433,7 @@ export default function BranchDetail() {
         <button
           type="button"
           onClick={() => setActiveTab('students')}
-          className={`text-left p-4 md:p-5 rounded-card border transition-all duration-150 cursor-pointer active:scale-[0.98] ${
+          className={`text-left p-4 md:p-5 rounded-card border transition-[transform,box-shadow,border-color,background-color] duration-150 ease-out cursor-pointer active:scale-[0.98] ${
             activeTab === 'students'
               ? 'bg-gold-soft/50 border-teal ring-2 ring-teal/20 shadow-card'
               : 'bg-surface border-line/80 hover:border-line-strong hover:bg-mint-canvas/50 shadow-card'
@@ -454,7 +454,7 @@ export default function BranchDetail() {
         <button
           type="button"
           onClick={() => setActiveTab('teachers')}
-          className={`text-left p-4 md:p-5 rounded-card border transition-all duration-150 cursor-pointer active:scale-[0.98] ${
+          className={`text-left p-4 md:p-5 rounded-card border transition-[transform,box-shadow,border-color,background-color] duration-150 ease-out cursor-pointer active:scale-[0.98] ${
             activeTab === 'teachers'
               ? 'bg-gold-soft/50 border-teal ring-2 ring-teal/20 shadow-card'
               : 'bg-surface border-line/80 hover:border-line-strong hover:bg-mint-canvas/50 shadow-card'
@@ -494,7 +494,7 @@ export default function BranchDetail() {
                 role="tab"
                 aria-selected={active}
                 onClick={() => setActiveTab(tab.key)}
-                className={`min-h-[48px] py-3 px-3 text-sm inline-flex items-center gap-2 whitespace-nowrap border-b-2 transition-all duration-150 cursor-pointer active:scale-[0.98] ${
+                className={`min-h-[48px] py-3 px-3 text-sm inline-flex items-center gap-2 whitespace-nowrap border-b-2 transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer active:scale-[0.98] ${
                   active
                     ? 'border-teal text-teal font-bold'
                     : 'border-transparent text-ink-secondary hover:text-ink font-medium'
@@ -726,7 +726,7 @@ function ClassesTabContent({
               <div
                 key={cls.id}
                 onClick={onNavigateToClasses}
-                className="border border-line rounded-card p-4 space-y-2 hover:border-line-strong active:scale-[0.99] transition-all cursor-pointer bg-surface"
+                className="border border-line rounded-card p-4 space-y-2 hover:border-line-strong active:scale-[0.99] transition-[transform,box-shadow,border-color,background-color] duration-150 ease-out cursor-pointer bg-surface"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div>
@@ -818,7 +818,7 @@ function TeachersTabContent({ branchName, teachers, totalCount, search, onSearch
                       {t.phone ? (
                         <a
                           href={`tel:${t.phone.replace(/\s+/g, '')}`}
-                          className="text-teal hover:text-gold-active font-mono font-semibold hover:underline inline-flex items-center gap-1.5"
+                          className="text-teal hover:text-gold-active font-mono font-semibold underline-offset-4 hover:underline transition-colors duration-150 ease-out inline-flex items-center gap-1.5"
                         >
                           <span>📞 {t.phone}</span>
                         </a>
@@ -830,7 +830,7 @@ function TeachersTabContent({ branchName, teachers, totalCount, search, onSearch
                       {t.email ? (
                         <a
                           href={`mailto:${t.email}`}
-                          className="text-ink-secondary hover:text-teal hover:underline"
+                          className="text-ink-secondary hover:text-teal underline-offset-4 hover:underline transition-colors duration-150 ease-out"
                         >
                           {t.email}
                         </a>
@@ -874,7 +874,7 @@ function TeachersTabContent({ branchName, teachers, totalCount, search, onSearch
                 {t.email && (
                   <p className="text-xs text-ink-secondary truncate">
                     ✉️{' '}
-                    <a href={`mailto:${t.email}`} className="hover:underline">
+                    <a href={`mailto:${t.email}`} className="underline-offset-4 hover:underline transition-colors duration-150 ease-out">
                       {t.email}
                     </a>
                   </p>
@@ -1031,7 +1031,7 @@ function StudentsTabContent({
                           <a
                             href={`tel:${stu.parentPhone.replace(/\s+/g, '')}`}
                             onClick={(e) => e.stopPropagation()}
-                            className="text-xs font-mono text-teal hover:text-gold-active hover:underline"
+                            className="text-xs font-mono text-teal hover:text-gold-active underline-offset-4 hover:underline transition-colors duration-150 ease-out"
                           >
                             📞 {stu.parentPhone}
                           </a>

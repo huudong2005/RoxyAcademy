@@ -1139,7 +1139,7 @@ export default function Students() {
                 </tr>
               ) : (
                 students.map((stu) => (
-                  <tr key={stu.id} className="hover:bg-mint-canvas/60 transition-colors duration-100">
+                  <tr key={stu.id} className="hover:bg-mint-canvas/60 transition-colors duration-150 ease-out">
                     {/* Cột 1: Học viên */}
                     <td className="px-2 py-2.5 max-w-[170px]">
                       <div className="flex items-center gap-2.5">
@@ -1406,7 +1406,7 @@ export default function Students() {
               {/* Mobile card list (< md) */}
               <div className="divide-y divide-line/60 md:hidden">
                 {registrations.map((reg) => (
-                  <div key={reg.id} className="p-4 space-y-2 text-xs hover:bg-mint-canvas/60 transition-colors duration-100">
+                  <div key={reg.id} className="p-4 space-y-2 text-xs hover:bg-mint-canvas/60 transition-colors duration-150 ease-out">
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <div className="font-semibold text-ink">{reg.className}</div>
@@ -1448,7 +1448,7 @@ export default function Students() {
                   </thead>
                   <tbody className="divide-y divide-line/60 bg-surface">
                     {registrations.map((reg) => (
-                      <tr key={reg.id} className="hover:bg-mint-canvas/60 transition-colors duration-100">
+                      <tr key={reg.id} className="hover:bg-mint-canvas/60 transition-colors duration-150 ease-out">
                         <td className="px-4 py-3 font-semibold text-ink whitespace-nowrap">
                           {reg.studentName}
                         </td>
@@ -2485,7 +2485,7 @@ export default function Students() {
                 type="button"
                 disabled={deleteConfirmModal.submitting}
                 onClick={handleConfirmDeleteStudent}
-                className="inline-flex items-center gap-1.5 rounded-full bg-rose-600 px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-rose-700 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-70"
+                className="inline-flex items-center gap-1.5 rounded-full bg-rose-600 px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-rose-700 active:scale-[0.98] transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer disabled:opacity-70"
               >
                 {deleteConfirmModal.submitting ? (
                   <>

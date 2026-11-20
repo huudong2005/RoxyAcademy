@@ -121,10 +121,10 @@ export default function AdminLayout() {
   };
 
   const navItemClass = ({ isActive }) =>
-    `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm transition-[background-color,color,transform] duration-150 active:scale-[0.98] ${
+    `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm transition-[background-color,color,opacity,transform] duration-150 ease-out active:scale-[0.98] ${
       isActive
         ? 'bg-white/[0.14] text-gold font-semibold'
-        : 'text-white/80 font-medium hover:bg-white/[0.08] hover:text-white'
+        : 'text-white/65 font-medium hover:bg-white/[0.08] hover:text-white'
     }`;
 
   const isStaff = user.role === 'SuperAdmin' || user.role === 'BranchManager';
@@ -273,7 +273,7 @@ export default function AdminLayout() {
             type="button"
             onClick={() => setProfileModalOpen(true)}
             title="Hồ sơ cá nhân"
-            className="flex w-full items-center gap-3 rounded-xl p-1.5 text-left hover:bg-white/[0.08] active:scale-[0.98] transition-all cursor-pointer"
+            className="flex w-full items-center gap-3 rounded-xl p-1.5 text-left text-white/65 hover:bg-white/[0.08] hover:text-white active:scale-[0.98] transition-[background-color,color,transform] duration-150 ease-out cursor-pointer"
           >
             {renderUserAvatar('h-9 w-9', 'text-xs')}
             <div className="flex-1 overflow-hidden">
@@ -286,7 +286,7 @@ export default function AdminLayout() {
           <button
             type="button"
             onClick={() => setChangePasswordModalOpen(true)}
-            className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-white/15 bg-white/[0.08] px-3 py-1.5 text-xs font-medium text-white/90 hover:bg-white/[0.14] active:scale-[0.98] transition-all cursor-pointer"
+            className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-white/15 bg-white/[0.08] px-3 py-1.5 text-xs font-medium text-white/65 hover:bg-white/[0.08] hover:text-white active:scale-[0.98] transition-[background-color,color,transform] duration-150 ease-out cursor-pointer"
           >
             <span>🔑</span>
             <span>Đổi mật khẩu</span>
@@ -337,7 +337,7 @@ export default function AdminLayout() {
                   setProfileModalOpen(true);
                 }}
                 title="Hồ sơ cá nhân"
-                className="flex w-full items-center gap-3 rounded-xl p-1.5 text-left hover:bg-white/[0.08] active:scale-[0.98] transition-all cursor-pointer"
+                className="flex w-full items-center gap-3 rounded-xl p-1.5 text-left text-white/65 hover:bg-white/[0.08] hover:text-white active:scale-[0.98] transition-[background-color,color,transform] duration-150 ease-out cursor-pointer"
               >
                 {renderUserAvatar('h-8 w-8', 'text-xs')}
                 <div className="overflow-hidden">
@@ -435,7 +435,7 @@ export default function AdminLayout() {
                 aria-expanded={userMenuOpen}
                 aria-haspopup="menu"
                 title="Tài khoản người dùng"
-                className="flex items-center gap-2 rounded-full px-2 py-1 hover:bg-mint-canvas active:scale-[0.98] transition-all cursor-pointer"
+                className="flex items-center gap-2 rounded-full px-2 py-1 hover:bg-mint-canvas active:scale-[0.98] transition-[background-color,border-color,color,transform] duration-150 ease-out cursor-pointer"
               >
                 {renderUserAvatar('h-8 w-8', 'text-xs')}
                 <span className="hidden lg:inline text-xs font-semibold text-ink-secondary max-w-[140px] truncate">
@@ -456,7 +456,7 @@ export default function AdminLayout() {
               {userMenuOpen && (
                 <div
                   role="menu"
-                  className="absolute right-0 mt-2 w-60 rounded-card border border-line bg-surface py-2 shadow-modal z-40"
+                  className="popover-panel origin-top-right absolute right-0 mt-2 w-60 rounded-card border border-line bg-surface py-2 shadow-modal z-40"
                 >
                   <div className="border-b border-line/70 px-4 py-2.5">
                     <p className="truncate text-xs font-bold text-ink">
@@ -514,7 +514,9 @@ export default function AdminLayout() {
 
         {/* Content Page (Scrollable area) */}
         <main className="flex-1 overflow-y-auto bg-mint-canvas p-4 md:p-6 lg:p-8">
-          <Outlet />
+          <div key={location.pathname} className="page-enter">
+            <Outlet />
+          </div>
         </main>
       </div>
 

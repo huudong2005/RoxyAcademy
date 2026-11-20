@@ -1411,3 +1411,33 @@ Toàn bộ **8/8 hạng mục** của **Giai đoạn 1N-2 (8 bẫy đồng bộ)
 
 ## 3. Kết luận
 - **Trạng thái nghiệm thu cuối cùng:** **PASS 100%** — đủ điều kiện commit.
+
+
+---
+
+# BÁO CÁO QA — ĐỢT TRÙNG TU GIAO DIỆN R5: RÀ SOÁT CUỐI + CHUYỂN ĐỘNG
+**Ngày kiểm tra:** 20/11/2026  
+**Người thực hiện:** QA / Commander (Chrome headless + Playwright, API `http://localhost:5123`)  
+**Phạm vi:** Toàn bộ 16 màn hình (`Login`, `Dashboard`, `Students`, `Classes`, `Teachers`, `Branches`, `Courses`, `Schedules`, `Attendance`, `Homeworks`, `Grades`, `LeaveRequests`, `Tuitions`, `Payments`, `Messages`, `Newsfeed`), các modal (`ChangePasswordModal`, `ProfileModal`, `ProtectedRoute`, `NotificationBell`, `BranchModals`, `TeacherModals`, `MessageModals`, `NewsfeedModals`), `ui.jsx`, `index.css` và xóa `App.css`.
+
+## 1. Kết quả Build, Lint & Đối chiếu tĩnh (`roxy-admin/`)
+- `npm run lint` (`eslint .`): **PASS** (0 error, 0 warning).
+- `npm run build` (`vite build`): **PASS** (`✓ 114 modules transformed`, `✓ built in 352ms`).
+- **Đối chiếu tĩnh toàn `roxy-admin/src/`:**
+  - `roxy-admin/src/App.css`: đã xóa (`Test-Path = False`).
+  - `transition-all`: **0** vị trí (toàn bộ 72 vị trí cũ đã chuyển sang transition cụ thể theo thuộc tính).
+  - `duration-100` (và mọi duration ngoài `150`/`200`/`300`): **0** vị trí (14 vị trí cũ đã đồng bộ về `duration-150 ease-out`).
+  - Nút chính `bg-blue-*` / `bg-indigo-*`: **0** vị trí (3 nút còn sót tại `ChangePasswordModal.jsx`, `ProfileModal.jsx`, `ProtectedRoute.jsx` đã chuyển sang `PrimaryButton`/`SecondaryButton`; giữ nguyên chấm tròn xanh chỉ báo chưa đọc `bg-blue-600` tại `NotificationBell.jsx` L337).
+  - Ô nhập URL ảnh `placeholder="https://..."`: **0** vị trí.
+
+## 2. Kết quả đo DOM thực tế trên trình duyệt thật (`1920px`, `1440px` & `1280px`)
+| Hạng mục / Màn hình | `1920px` | `1440px` | `1280px` | Số liệu đo DOM thực tế |
+| :--- | :---: | :---: | :---: | :--- |
+| **16 màn hình (`/login`, `/dashboard`, `/students`, `/classes`, `/teachers`, `/branches`, `/courses`, `/schedules`, `/attendance`, `/homeworks`, `/grades`, `/leave-requests`, `/tuitions`, `/payments`, `/messages`, `/newsfeed`) — Tràn ngang trang** | **PASS** | **PASS** | **PASS** | - `docOverflowPx = 0px` và `blueBtns = 0` trên toàn bộ 16 màn hình ở cả 3 độ phân giải `1920px`, `1440px`, `1280px`. |
+| **Cuộn ngang nội bộ bảng dữ liệu (`/students`, `/classes`, `/teachers`, `/courses`, `/homeworks`, `/grades`, `/leave-requests`, `/tuitions`, `/payments`)** | **PASS** | **PASS** | **PASS** | - `1920px`: `overflowPx = 0px` (`1598/1598px` hoặc `1278/1278px`).<br>- `1440px`: `overflowPx = 0px` (`1118/1118px`).<br>- `1280px`: `overflowPx = 0px` (`958/958px`).<br>- `/schedules` (lưới 7 cột `min-w-[1320px]`): vừa khít `0px` ở `1920px` (`1600/1600px`), giữ cuộn ngang lưới ở `1440px` (`1120 -> 1322px`) và `1280px` (`960 -> 1322px`). |
+| **Căn giữa cột `THAO TÁC` (`deltaPx`)** | **PASS** | **PASS** | **PASS** | - Tâm tiêu đề `<th>` trùng tâm cụm icon `<td>` (`actionColDeltaPx = 0px`) trên tất cả các bảng (đã đồng bộ padding đối xứng `px-1.5` cho cột `Thao tác` ở `Teachers.jsx`). |
+| **Menu người dùng trên `/grades` (kiểm tra lại R2b-fix3 + `.popover-panel`)** | **PASS** | **PASS** | **PASS** | - `<header>` giữ nguyên `relative z-40`; `div[role="menu"]` có `hasPopoverPanelClass = true`, `logoutTopmost = true` ở cả `1920px`, `1440px`, `1280px`. |
+| **Giả lập `prefers-reduced-motion: reduce`** | **PASS** | **PASS** | **PASS** | - `window.matchMedia('(prefers-reduced-motion: reduce)').matches = true`.<br>- `getComputedStyle(.page-enter).animationDuration = "1e-05s"` (`0.01ms`) và `getComputedStyle(aside a).transitionDuration = "1e-05s"` (`0.01ms`) — toàn bộ hiệu ứng trang trí tắt hoàn toàn. |
+
+## 3. Kết luận R5
+- **Trạng thái nghiệm thu cuối cùng:** **PASS 100%** ở cả `1920px`, `1440px` và `1280px` — đủ điều kiện commit.

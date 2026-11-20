@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import axiosClient from '../api/axiosClient';
+import { PrimaryButton, SecondaryButton } from './ui';
 
 function EyeIcon({ visible }) {
   if (visible) {
@@ -177,7 +178,7 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
                 className={`w-full h-10 rounded-lg border bg-white pl-3 pr-10 text-slate-800 focus:outline-none ${
                   fieldErrors.currentPassword
                     ? 'border-rose-400 focus:border-rose-500'
-                    : 'border-slate-300 focus:border-blue-600'
+                    : 'border-line focus:border-gold focus:ring-2 focus:ring-gold/25 transition-[border-color,box-shadow] duration-150 ease-out'
                 }`}
               />
               <button
@@ -215,7 +216,7 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
                 className={`w-full h-10 rounded-lg border bg-white pl-3 pr-10 text-slate-800 focus:outline-none ${
                   fieldErrors.newPassword
                     ? 'border-rose-400 focus:border-rose-500'
-                    : 'border-slate-300 focus:border-blue-600'
+                    : 'border-line focus:border-gold focus:ring-2 focus:ring-gold/25 transition-[border-color,box-shadow] duration-150 ease-out'
                 }`}
               />
               <button
@@ -253,7 +254,7 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
                 className={`w-full h-10 rounded-lg border bg-white pl-3 pr-10 text-slate-800 focus:outline-none ${
                   fieldErrors.confirmPassword
                     ? 'border-rose-400 focus:border-rose-500'
-                    : 'border-slate-300 focus:border-blue-600'
+                    : 'border-line focus:border-gold focus:ring-2 focus:ring-gold/25 transition-[border-color,box-shadow] duration-150 ease-out'
                 }`}
               />
               <button
@@ -271,28 +272,26 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
           </div>
 
           <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
-            <button
+            <SecondaryButton
               type="button"
               disabled={submitting}
               onClick={onClose}
-              className="h-9 px-4 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 active:scale-[0.98] transition-all cursor-pointer disabled:opacity-50"
             >
               {successMsg ? 'Đóng' : 'Hủy'}
-            </button>
-            <button
+            </SecondaryButton>
+            <PrimaryButton
               type="submit"
               disabled={submitting}
-              className="h-9 px-5 rounded-lg bg-blue-600 text-xs font-semibold text-white hover:bg-blue-700 active:scale-[0.98] transition-all inline-flex items-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-70"
             >
               {submitting ? (
                 <>
-                  <span className="h-3.5 w-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span className="h-3.5 w-3.5 border-2 border-teal border-t-transparent rounded-full animate-spin" />
                   <span>Đang lưu...</span>
                 </>
               ) : (
                 <span>Cập nhật mật khẩu</span>
               )}
-            </button>
+            </PrimaryButton>
           </div>
         </form>
       </div>

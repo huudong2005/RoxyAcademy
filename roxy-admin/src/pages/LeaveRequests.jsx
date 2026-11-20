@@ -744,7 +744,7 @@ export default function LeaveRequests() {
       {/* TOAST THÔNG BÁO NỔI */}
       {toast && (
         <div
-          className={`fixed top-5 right-5 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-xl text-sm font-medium transition-all duration-200 border ${
+          className={`toast-panel fixed top-5 right-5 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-xl text-sm font-medium border ${
             toast.type === 'success'
               ? 'bg-emerald-50 text-emerald-900 border-emerald-300'
               : 'bg-rose-50 text-rose-900 border-rose-300'
@@ -941,7 +941,7 @@ export default function LeaveRequests() {
                     setStatusFilter(tab.key);
                     setCurrentPage(1);
                   }}
-                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 whitespace-nowrap active:scale-95 cursor-pointer ${
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out whitespace-nowrap active:scale-95 cursor-pointer ${
                     active
                       ? tab.key === 'Pending'
                         ? 'bg-amber-500 text-white shadow-xs'
@@ -1087,7 +1087,7 @@ export default function LeaveRequests() {
                       <tr
                         key={req.id}
                         onClick={() => handleOpenDetail(req)}
-                        className="hover:bg-mint-canvas/60 cursor-pointer transition-colors duration-100"
+                        className="hover:bg-mint-canvas/60 cursor-pointer transition-colors duration-150 ease-out"
                       >
                         {/* Cột 1: Người xin nghỉ & Vai trò */}
                         <td className="px-4 py-3.5">
@@ -1413,7 +1413,7 @@ export default function LeaveRequests() {
                         <button
                           type="button"
                           onClick={(e) => handleCancelRequest(req, e)}
-                          className="min-h-[44px] px-3.5 flex items-center justify-center gap-1 text-xs font-medium text-rose-700 bg-rose-50 border border-rose-200 hover:bg-rose-100 rounded-full active:scale-95 transition-all cursor-pointer"
+                          className="min-h-[44px] px-3.5 flex items-center justify-center gap-1 text-xs font-medium text-rose-700 bg-rose-50 border border-rose-200 hover:bg-rose-100 rounded-full active:scale-95 transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer"
                         >
                           <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -1522,7 +1522,7 @@ export default function LeaveRequests() {
                           teacherId: '',
                         }))
                       }
-                      className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-full border text-xs font-semibold transition-all cursor-pointer ${
+                      className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-full border text-xs font-semibold transition-[background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer ${
                         createFormData.requesterType === 'Student'
                           ? 'border-teal bg-gold-soft text-teal shadow-xs'
                           : 'border-line bg-surface text-ink-secondary hover:bg-mint-canvas'
@@ -1539,7 +1539,7 @@ export default function LeaveRequests() {
                           studentId: '',
                         }))
                       }
-                      className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-full border text-xs font-semibold transition-all cursor-pointer ${
+                      className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-full border text-xs font-semibold transition-[background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer ${
                         createFormData.requesterType === 'Teacher'
                           ? 'border-teal bg-gold-soft text-teal shadow-xs'
                           : 'border-line bg-surface text-ink-secondary hover:bg-mint-canvas'
@@ -2030,7 +2030,7 @@ export default function LeaveRequests() {
                   <button
                     type="button"
                     onClick={() => handleCancelRequest(selectedRequest)}
-                    className="px-3 py-1.5 bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 active:scale-[0.98] rounded-full text-xs font-medium transition-all cursor-pointer"
+                    className="px-3 py-1.5 bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 active:scale-[0.98] rounded-full text-xs font-medium transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer"
                   >
                     Hủy đơn đã duyệt
                   </button>
@@ -2052,7 +2052,7 @@ export default function LeaveRequests() {
                       type="button"
                       disabled={reviewSubmitting}
                       onClick={() => handleReview('Rejected')}
-                      className="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 font-semibold text-xs rounded-full active:scale-[0.98] transition-all inline-flex items-center gap-1.5 cursor-pointer"
+                      className="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 font-semibold text-xs rounded-full active:scale-[0.98] transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out inline-flex items-center gap-1.5 cursor-pointer"
                     >
                       <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -2173,7 +2173,7 @@ export default function LeaveRequests() {
                 <button
                   type="submit"
                   disabled={cancelApprovedModal.submitting || !cancelApprovedModal.reason.trim()}
-                  className="px-4 py-2 rounded-full bg-rose-600 hover:bg-rose-700 text-white font-semibold shadow-xs active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  className="px-4 py-2 rounded-full bg-rose-600 hover:bg-rose-700 text-white font-semibold shadow-xs active:scale-[0.98] transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {cancelApprovedModal.submitting ? 'Đang xử lý...' : 'Xác nhận hủy đơn'}
                 </button>

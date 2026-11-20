@@ -200,7 +200,7 @@ export function ComposeMessageModal({
                 <button
                   type="button"
                   onClick={() => handleModeChange('user')}
-                  className={`min-h-[38px] inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-150 ease-out cursor-pointer active:scale-[0.98] ${
+                  className={`min-h-[38px] inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer active:scale-[0.98] ${
                     mode === 'user'
                       ? 'bg-teal text-gold shadow-xs'
                       : 'text-ink-secondary hover:text-ink'
@@ -214,7 +214,7 @@ export function ComposeMessageModal({
                 <button
                   type="button"
                   onClick={() => handleModeChange('class')}
-                  className={`min-h-[38px] inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all duration-150 ease-out cursor-pointer active:scale-[0.98] ${
+                  className={`min-h-[38px] inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer active:scale-[0.98] ${
                     mode === 'class'
                       ? 'bg-teal text-gold shadow-xs'
                       : 'text-ink-secondary hover:text-ink'

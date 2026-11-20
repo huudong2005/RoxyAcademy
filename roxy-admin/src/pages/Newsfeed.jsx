@@ -174,7 +174,7 @@ export default function Newsfeed() {
       {/* Toast */}
       {toastMessage && (
         <div
-          className={`fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium shadow-modal transition-all duration-150 ease-out ${
+          className={`toast-panel fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium shadow-modal ${
             toastMessage.type === 'error'
               ? 'bg-rose-600 text-white'
               : 'bg-teal text-white'

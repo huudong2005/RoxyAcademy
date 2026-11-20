@@ -104,7 +104,7 @@ export default function ImageUpload({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isDisabled}
-            className={`inline-flex min-h-[42px] items-center justify-center gap-2 rounded-xl border px-3.5 py-2 text-xs font-semibold transition-all ${
+            className={`inline-flex min-h-[42px] items-center justify-center gap-2 rounded-xl border px-3.5 py-2 text-xs font-semibold transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out ${
               isDisabled
                 ? 'cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400'
                 : 'cursor-pointer border-slate-300 bg-white text-slate-700 hover:bg-slate-50 active:scale-[0.98]'
@@ -112,7 +112,7 @@ export default function ImageUpload({
           >
             {uploading ? (
               <>
-                <span className="h-3.5 w-3.5 rounded-full border-2 border-blue-600 border-t-transparent animate-spin" />
+                <span className="h-3.5 w-3.5 rounded-full border-2 border-teal border-t-transparent animate-spin" />
                 <span>Đang tải lên...</span>
               </>
             ) : (
@@ -167,7 +167,7 @@ export default function ImageUpload({
               onClick={handleRemove}
               disabled={isDisabled}
               aria-label="Xóa ảnh"
-              className={`inline-flex shrink-0 items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-all ${
+              className={`inline-flex shrink-0 items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out ${
                 isDisabled
                   ? 'cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400'
                   : 'cursor-pointer border-rose-200 bg-white text-rose-600 hover:bg-rose-50 active:scale-95'

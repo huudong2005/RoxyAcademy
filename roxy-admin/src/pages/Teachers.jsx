@@ -240,7 +240,7 @@ export default function Teachers() {
       {toastMessage && (
         <div
           role="status"
-          className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-full shadow-modal text-sm font-medium ${
+          className={`toast-panel fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-full shadow-modal text-sm font-medium ${
             toastMessage.type === 'error'
               ? 'bg-rose-600 text-white'
               : 'bg-teal text-white'
@@ -424,7 +424,7 @@ export default function Teachers() {
           <button
             type="button"
             onClick={refreshTeachers}
-            className="min-h-[44px] px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold rounded-full active:scale-[0.98] transition-all cursor-pointer"
+            className="min-h-[44px] px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold rounded-full active:scale-[0.98] transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer"
           >
             Thử tải lại
           </button>
@@ -475,9 +475,13 @@ export default function Teachers() {
                     </div>
                     <div className="min-w-0">
                       <p className="font-bold text-ink truncate">{t.fullName}</p>
-                      <p className="text-xs font-mono text-ink-secondary tabular-nums">
+                      <a
+                        href={`tel:${String(t.phoneNumber || '').replace(/\s+/g, '')}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-xs font-mono text-ink-secondary hover:text-teal underline-offset-4 hover:underline transition-colors duration-150 ease-out tabular-nums"
+                      >
                         {t.phoneNumber}
-                      </p>
+                      </a>
                     </div>
                   </div>
                   {t.isActive ? (
@@ -510,7 +514,17 @@ export default function Teachers() {
                   </div>
                   <div className="col-span-2">
                     <span className="text-ink-muted">Email: </span>
-                    <span className="text-ink">{t.email || '—'}</span>
+                    {t.email ? (
+                      <a
+                        href={`mailto:${t.email}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-ink hover:text-teal underline-offset-4 hover:underline transition-colors duration-150 ease-out"
+                      >
+                        {t.email}
+                      </a>
+                    ) : (
+                      <span className="text-ink">—</span>
+                    )}
                   </div>
                   <div className="col-span-2 flex items-center justify-between text-[11px] text-ink-muted tabular-nums">
                     <span>Tạo: {formatDate(t.createdAt)}</span>
@@ -577,7 +591,7 @@ export default function Teachers() {
                     <th className="px-1.5 py-2.5">Trạng thái</th>
                     <th className="px-1.5 py-2.5">Mật khẩu</th>
                     <th className="px-1.5 py-2.5 whitespace-nowrap">Tạo / Đăng nhập</th>
-                    <th scope="col" className="pl-1.5 pr-2 py-2.5 text-center whitespace-nowrap sticky right-0 z-20 bg-surface-subtle shadow-[-4px_0_8px_-4px_rgba(30,46,43,0.08)]">Thao tác</th>
+                    <th scope="col" className="px-1.5 py-2.5 text-center whitespace-nowrap sticky right-0 z-20 bg-surface-subtle shadow-[-4px_0_8px_-4px_rgba(30,46,43,0.08)]">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line/60 text-sm">
@@ -606,12 +620,25 @@ export default function Teachers() {
                       </td>
 
                       <td className="px-1.5 py-2.5">
-                        <p className="font-mono font-medium text-ink tabular-nums whitespace-nowrap">
+                        <a
+                          href={`tel:${String(t.phoneNumber || '').replace(/\s+/g, '')}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="block font-mono font-medium text-ink hover:text-teal underline-offset-4 hover:underline transition-colors duration-150 ease-out tabular-nums whitespace-nowrap"
+                        >
                           {t.phoneNumber}
-                        </p>
-                        <p className="text-xs text-ink-secondary truncate max-w-[135px]" title={t.email || undefined}>
-                          {t.email || '—'}
-                        </p>
+                        </a>
+                        {t.email ? (
+                          <a
+                            href={`mailto:${t.email}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="block text-xs text-ink-secondary hover:text-teal underline-offset-4 hover:underline transition-colors duration-150 ease-out truncate max-w-[135px]"
+                            title={t.email}
+                          >
+                            {t.email}
+                          </a>
+                        ) : (
+                          <p className="text-xs text-ink-secondary truncate max-w-[135px]">—</p>
+                        )}
                       </td>
 
                       <td className="px-1.5 py-2.5 text-ink font-medium">
@@ -646,7 +673,7 @@ export default function Teachers() {
                       </td>
 
                       <td
-                        className="pl-1.5 pr-2 py-2.5 whitespace-nowrap text-center sticky right-0 z-10 bg-surface shadow-[-4px_0_8px_-4px_rgba(30,46,43,0.08)]"
+                        className="px-1.5 py-2.5 whitespace-nowrap text-center sticky right-0 z-10 bg-surface shadow-[-4px_0_8px_-4px_rgba(30,46,43,0.08)]"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <div className="inline-flex items-center justify-center gap-0.5">

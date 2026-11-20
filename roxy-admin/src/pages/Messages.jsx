@@ -247,7 +247,7 @@ export default function Messages() {
       {/* Toast */}
       {toastMessage && (
         <div
-          className={`fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium shadow-modal transition-all duration-150 ease-out ${
+          className={`toast-panel fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium shadow-modal ${
             toastMessage.type === 'error'
               ? 'bg-rose-600 text-white'
               : 'bg-teal text-white'
@@ -296,7 +296,7 @@ export default function Messages() {
                     setActiveTab(tab.key);
                     setOnlyUnread(false);
                   }}
-                  className={`min-h-[36px] inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs sm:text-sm font-semibold whitespace-nowrap transition-all duration-150 ease-out cursor-pointer active:scale-[0.98] ${
+                  className={`min-h-[36px] inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs sm:text-sm font-semibold whitespace-nowrap transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer active:scale-[0.98] ${
                     isActive
                       ? 'bg-teal text-gold shadow-xs'
                       : 'text-ink-secondary hover:text-ink'
@@ -342,7 +342,7 @@ export default function Messages() {
               <button
                 type="button"
                 onClick={() => setOnlyUnread((v) => !v)}
-                className={`min-h-[40px] rounded-full border px-3.5 py-2 text-xs font-semibold whitespace-nowrap transition-all duration-150 ease-out cursor-pointer active:scale-[0.98] ${
+                className={`min-h-[40px] rounded-full border px-3.5 py-2 text-xs font-semibold whitespace-nowrap transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer active:scale-[0.98] ${
                   onlyUnread
                     ? 'border-gold bg-gold-soft text-teal'
                     : 'border-line bg-surface text-ink-secondary hover:bg-mint-canvas'

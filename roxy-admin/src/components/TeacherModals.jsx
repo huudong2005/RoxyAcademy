@@ -185,7 +185,7 @@ export function CreateEditTeacherModal({
             onClick={() => !isSubmitting && onClose()}
             disabled={isSubmitting}
             aria-label="Đóng hộp thoại"
-            className="w-9 h-9 rounded-full flex items-center justify-center text-ink-muted hover:text-ink hover:bg-surface-subtle active:scale-[0.97] transition-all cursor-pointer disabled:opacity-50"
+            className="w-9 h-9 rounded-full flex items-center justify-center text-ink-muted hover:text-ink hover:bg-surface-subtle active:scale-[0.97] transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer disabled:opacity-50"
           >
             ✕
           </button>
@@ -727,7 +727,7 @@ export function ToggleTeacherStatusModal({ teacher, onClose, onSuccess }) {
               type="button"
               onClick={handleConfirm}
               disabled={isSubmitting}
-              className="min-h-[44px] px-5 py-2.5 text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-full shadow-xs active:scale-[0.98] transition-all cursor-pointer disabled:opacity-60"
+              className="min-h-[44px] px-5 py-2.5 text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-full shadow-xs active:scale-[0.98] transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer disabled:opacity-60"
             >
               {isSubmitting ? 'Đang xử lý...' : 'Xác nhận khóa'}
             </button>
@@ -926,13 +926,31 @@ export function TeacherDetailDrawer({
               <div>
                 <dt className="text-xs text-ink-muted">Số điện thoại</dt>
                 <dd className="font-mono font-semibold text-ink tabular-nums mt-0.5">
-                  {detail.phoneNumber}
+                  {detail.phoneNumber ? (
+                    <a
+                      href={`tel:${String(detail.phoneNumber).replace(/\s+/g, '')}`}
+                      className="text-teal hover:text-gold-active underline-offset-4 hover:underline transition-colors duration-150 ease-out"
+                    >
+                      {detail.phoneNumber}
+                    </a>
+                  ) : (
+                    '—'
+                  )}
                 </dd>
               </div>
               <div>
                 <dt className="text-xs text-ink-muted">Email</dt>
                 <dd className="text-ink mt-0.5 break-all">
-                  {detail.email || '—'}
+                  {detail.email ? (
+                    <a
+                      href={`mailto:${detail.email}`}
+                      className="text-teal hover:text-gold-active underline-offset-4 hover:underline transition-colors duration-150 ease-out"
+                    >
+                      {detail.email}
+                    </a>
+                  ) : (
+                    '—'
+                  )}
                 </dd>
               </div>
               <div>
@@ -1089,7 +1107,7 @@ export function TeacherDetailDrawer({
           <button
             type="button"
             onClick={() => onToggleStatus(detail)}
-            className={`min-h-[40px] px-4 py-2 text-xs font-semibold rounded-full border active:scale-[0.98] transition-all cursor-pointer ${
+            className={`min-h-[40px] px-4 py-2 text-xs font-semibold rounded-full border active:scale-[0.98] transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer ${
               detail.isActive
                 ? 'text-white bg-rose-600 border-rose-600 hover:bg-rose-700'
                 : 'text-emerald-700 bg-emerald-50 border-emerald-200 hover:bg-emerald-100'

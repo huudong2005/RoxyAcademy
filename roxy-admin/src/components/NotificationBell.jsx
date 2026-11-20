@@ -226,7 +226,7 @@ export default function NotificationBell() {
         onClick={handleToggle}
         aria-label="Thông báo hệ thống"
         title="Thông báo"
-        className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-100 hover:text-slate-900 active:scale-95 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+        className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-100 hover:text-slate-900 active:scale-95 transition-[transform,background-color,border-color,color] duration-150 ease-out cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/20"
       >
         <svg
           className="h-5 w-5"
@@ -253,7 +253,7 @@ export default function NotificationBell() {
       {/* Popover Dropdown */}
       {isOpen && (
         <div
-          className="absolute right-0 mt-2 w-[360px] sm:w-[380px] max-w-[calc(100vw-24px)] rounded-2xl bg-white shadow-xl border border-slate-200 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-150"
+          className="popover-panel absolute right-0 mt-2 w-[360px] sm:w-[380px] max-w-[calc(100vw-24px)] rounded-2xl bg-white shadow-xl border border-slate-200 overflow-hidden z-50"
           role="dialog"
           aria-label="Danh sách thông báo"
         >

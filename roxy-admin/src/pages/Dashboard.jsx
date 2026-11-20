@@ -505,7 +505,7 @@ export default function Dashboard() {
               </div>
               <Link
                 to="/schedules"
-                className="text-xs font-semibold text-teal hover:text-gold-active transition-colors"
+                className="text-xs font-semibold text-teal hover:text-gold-active underline-offset-4 hover:underline transition-colors duration-150 ease-out"
               >
                 Xem tất cả lịch →
               </Link>

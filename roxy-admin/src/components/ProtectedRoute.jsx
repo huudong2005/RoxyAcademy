@@ -3,6 +3,7 @@ import { Navigate, Outlet, useNavigate } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
 import { useAuth } from '../context/authContext';
 import { clearAuthSession, getStoredToken, updateStoredUser } from '../utils/authStorage';
+import { PrimaryButton } from './ui';
 
 export default function ProtectedRoute({ allowedRoles }) {
   const navigate = useNavigate();
@@ -54,10 +55,10 @@ export default function ProtectedRoute({ allowedRoles }) {
 
   if (verifying || !verifiedUser) {
     return (
-      <div className="flex min-h-screen w-full items-center justify-center bg-slate-50 p-4">
+      <div className="flex min-h-screen w-full items-center justify-center bg-mint-canvas p-4">
         <div className="flex flex-col items-center gap-3 text-center">
-          <div className="h-9 w-9 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
-          <p className="text-sm font-medium text-slate-600">Đang xác thực phiên đăng nhập...</p>
+          <div className="h-9 w-9 animate-spin rounded-full border-4 border-teal border-t-transparent" />
+          <p className="text-sm font-medium text-ink-secondary">Đang xác thực phiên đăng nhập...</p>
         </div>
       </div>
     );
@@ -65,23 +66,24 @@ export default function ProtectedRoute({ allowedRoles }) {
 
   if (allowedRoles && !allowedRoles.includes(verifiedUser.role)) {
     return (
-      <div className="flex min-h-[65vh] flex-col items-center justify-center px-4 text-center">
-        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-rose-100 text-3xl text-rose-600 shadow-xs">
-          🚫
+      <div className="flex min-h-[65vh] flex-col items-center justify-center bg-mint-canvas px-4 text-center">
+        <div className="flex max-w-md flex-col items-center rounded-card-lg border border-line bg-surface p-6 md:p-8 shadow-card">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-rose-100 text-3xl text-rose-600 shadow-xs">
+            🚫
+          </div>
+          <h1 className="mb-2 text-xl font-bold text-ink">
+            403 — Không có quyền truy cập
+          </h1>
+          <p className="mb-6 text-sm leading-relaxed text-ink-secondary">
+            Tài khoản của bạn không có quyền truy cập trang này. Vui lòng quay về Tổng quan hoặc liên hệ quản trị viên nếu cần hỗ trợ.
+          </p>
+          <PrimaryButton
+            type="button"
+            onClick={() => navigate('/dashboard', { replace: true })}
+          >
+            Quay về Tổng quan
+          </PrimaryButton>
         </div>
-        <h1 className="mb-2 text-xl font-bold text-slate-900">
-          403 — Không có quyền truy cập
-        </h1>
-        <p className="mb-6 max-w-md text-sm leading-relaxed text-slate-600">
-          Tài khoản của bạn không có quyền truy cập trang này. Vui lòng quay về Tổng quan hoặc liên hệ quản trị viên nếu cần hỗ trợ.
-        </p>
-        <button
-          type="button"
-          onClick={() => navigate('/dashboard', { replace: true })}
-          className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-xs transition-all hover:bg-blue-700 active:scale-[0.98]"
-        >
-          Quay về Tổng quan
-        </button>
       </div>
     );
   }

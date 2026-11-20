@@ -291,7 +291,7 @@ export default function Tuitions() {
       {/* TOAST THÔNG BÁO TỨC THÌ */}
       {toastMessage && (
         <div
-          className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-2.5 rounded-full shadow-modal text-sm font-medium transition-all duration-150 ease-out ${
+          className={`toast-panel fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-2.5 rounded-full shadow-modal text-sm font-medium ${
             toastMessage.type === 'error'
               ? 'bg-rose-600 text-white'
               : 'bg-teal text-white'
@@ -446,7 +446,7 @@ export default function Tuitions() {
               </div>
               <div className="w-full h-1.5 bg-emerald-100 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-emerald-600 rounded-full transition-all duration-300"
+                  className="h-full bg-emerald-600 rounded-full transition-[width] duration-300 ease-out"
                   style={{ width: `${stats.progressPercent}%` }}
                 />
               </div>
@@ -573,7 +573,7 @@ export default function Tuitions() {
                 key={tab.id}
                 type="button"
                 onClick={() => setStatusFilter(tab.id)}
-                className={`px-3.5 py-1.5 rounded-full text-xs whitespace-nowrap active:scale-95 transition-all duration-150 ease-out cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-full text-xs whitespace-nowrap active:scale-95 transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer ${
                   active
                     ? 'bg-teal text-gold shadow-xs font-semibold'
                     : 'bg-surface-subtle text-ink-secondary font-medium hover:bg-mint-canvas hover:text-ink'
@@ -886,7 +886,7 @@ export default function Tuitions() {
                       <button
                         type="button"
                         onClick={() => handleOpenDetail(t)}
-                        className="flex-1 min-h-[44px] flex items-center justify-center gap-1.5 text-xs font-semibold text-teal bg-surface border border-line hover:bg-mint-canvas rounded-full active:scale-95 transition-all duration-150 cursor-pointer"
+                        className="flex-1 min-h-[44px] flex items-center justify-center gap-1.5 text-xs font-semibold text-teal bg-surface border border-line hover:bg-mint-canvas rounded-full active:scale-95 transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer"
                       >
                         <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
@@ -899,7 +899,7 @@ export default function Tuitions() {
                         <button
                           type="button"
                           onClick={() => handleOpenEdit(t)}
-                          className="px-4 min-h-[44px] flex items-center justify-center gap-1.5 text-xs font-medium text-teal bg-surface-subtle border border-line hover:bg-mint-canvas rounded-full active:scale-95 transition-all duration-150 cursor-pointer"
+                          className="px-4 min-h-[44px] flex items-center justify-center gap-1.5 text-xs font-medium text-teal bg-surface-subtle border border-line hover:bg-mint-canvas rounded-full active:scale-95 transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer"
                         >
                           <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
@@ -921,7 +921,7 @@ export default function Tuitions() {
                                 : 'Xóa khoản thu'
                             }
                             aria-label="Xóa khoản thu"
-                            className={`px-3.5 min-h-[44px] flex items-center justify-center text-xs font-medium rounded-full border transition-all duration-150 ${
+                            className={`px-3.5 min-h-[44px] flex items-center justify-center text-xs font-medium rounded-full border transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out ${
                               hasPayments
                                 ? 'text-ink-muted bg-surface-subtle border-line opacity-50 cursor-not-allowed'
                                 : 'text-rose-600 bg-rose-50 border-rose-200 hover:bg-rose-100 active:scale-95 cursor-pointer'
@@ -938,7 +938,7 @@ export default function Tuitions() {
                         <button
                           type="button"
                           onClick={() => handleOpenParentPayment(t)}
-                          className="flex-1 min-h-[44px] flex items-center justify-center gap-1.5 text-xs font-semibold text-teal bg-gold hover:bg-gold-hover rounded-full shadow-xs active:scale-95 transition-all duration-150 cursor-pointer"
+                          className="flex-1 min-h-[44px] flex items-center justify-center gap-1.5 text-xs font-semibold text-teal bg-gold hover:bg-gold-hover rounded-full shadow-xs active:scale-95 transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer"
                         >
                           <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
@@ -951,7 +951,7 @@ export default function Tuitions() {
                         <button
                           type="button"
                           onClick={() => handleOpenQuickPay(t)}
-                          className="flex-1 min-h-[44px] flex items-center justify-center gap-1.5 text-xs font-semibold text-teal bg-gold hover:bg-gold-hover rounded-full shadow-xs active:scale-95 transition-all duration-150 cursor-pointer"
+                          className="flex-1 min-h-[44px] flex items-center justify-center gap-1.5 text-xs font-semibold text-teal bg-gold hover:bg-gold-hover rounded-full shadow-xs active:scale-95 transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer"
                         >
                           <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -2391,7 +2391,7 @@ function QuickPayModal({ tuition, onClose, onSuccess }) {
                     <button
                       type="button"
                       onClick={() => setAmount(String(payableAmount))}
-                      className="px-2.5 py-1 text-[11px] font-semibold bg-gold-soft text-teal hover:bg-gold/30 rounded-full active:scale-95 transition-all duration-150 cursor-pointer"
+                      className="px-2.5 py-1 text-[11px] font-semibold bg-gold-soft text-teal hover:bg-gold/30 rounded-full active:scale-95 transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer"
                     >
                       Điền đủ
                     </button>
@@ -2414,7 +2414,7 @@ function QuickPayModal({ tuition, onClose, onSuccess }) {
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 required
-                className={`w-full h-11 px-4 font-mono text-base font-bold rounded-full border focus:outline-none transition-all disabled:bg-surface-subtle disabled:text-ink-muted ${
+                className={`w-full h-11 px-4 font-mono text-base font-bold rounded-full border focus:outline-none transition-[border-color,box-shadow,background-color] duration-150 ease-out disabled:bg-surface-subtle disabled:text-ink-muted ${
                   isOverpay
                     ? 'border-rose-500 ring-2 ring-rose-200 bg-rose-50/30 text-rose-700'
                     : 'border-line focus:border-gold focus:ring-2 focus:ring-gold/25 text-ink bg-surface'
@@ -2452,7 +2452,7 @@ function QuickPayModal({ tuition, onClose, onSuccess }) {
                     key={m.id}
                     type="button"
                     onClick={() => setPaymentMethod(m.id)}
-                    className={`py-2 px-3 rounded-full border text-xs font-semibold flex items-center justify-center gap-1.5 active:scale-95 transition-all duration-150 cursor-pointer ${
+                    className={`py-2 px-3 rounded-full border text-xs font-semibold flex items-center justify-center gap-1.5 active:scale-95 transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer ${
                       paymentMethod === m.id
                         ? 'border-gold bg-gold-soft text-teal shadow-2xs'
                         : 'border-line bg-surface text-ink-secondary hover:bg-mint-canvas'
@@ -2680,7 +2680,7 @@ function ParentPaymentModal({ tuition, onClose, onSuccess }) {
                     <button
                       type="button"
                       onClick={() => handleCopy(bankAccount.accountNumber, 'stk')}
-                      className="px-2.5 py-0.5 text-[11px] font-semibold bg-surface text-teal hover:bg-gold-soft border border-gold/40 rounded-full active:scale-95 transition-all duration-150 cursor-pointer"
+                      className="px-2.5 py-0.5 text-[11px] font-semibold bg-surface text-teal hover:bg-gold-soft border border-gold/40 rounded-full active:scale-95 transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer"
                     >
                       {copiedStk ? 'Đã chép' : 'Sao chép'}
                     </button>
@@ -2696,7 +2696,7 @@ function ParentPaymentModal({ tuition, onClose, onSuccess }) {
                     <button
                       type="button"
                       onClick={() => handleCopy(bankAccount.transferSyntax, 'syntax')}
-                      className="px-2.5 py-0.5 text-[11px] font-semibold bg-surface text-teal hover:bg-gold-soft border border-gold/40 rounded-full active:scale-95 transition-all duration-150 cursor-pointer shrink-0"
+                      className="px-2.5 py-0.5 text-[11px] font-semibold bg-surface text-teal hover:bg-gold-soft border border-gold/40 rounded-full active:scale-95 transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer shrink-0"
                     >
                       {copiedSyntax ? 'Đã chép' : 'Sao chép'}
                     </button>

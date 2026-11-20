@@ -282,7 +282,7 @@ export default function Payments() {
       {/* TOAST THÔNG BÁO TỨC THÌ */}
       {toastMessage && (
         <div
-          className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-2.5 rounded-full shadow-modal text-sm font-medium transition-all duration-150 ease-out ${
+          className={`toast-panel fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-2.5 rounded-full shadow-modal text-sm font-medium ${
             toastMessage.type === 'error'
               ? 'bg-rose-600 text-white'
               : 'bg-teal text-white'
@@ -414,7 +414,7 @@ export default function Payments() {
                 key={tab.id}
                 type="button"
                 onClick={() => setStatusFilter(tab.id)}
-                className={`px-3.5 py-1.5 rounded-full text-xs whitespace-nowrap active:scale-95 transition-all duration-150 ease-out cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-full text-xs whitespace-nowrap active:scale-95 transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer ${
                   active
                     ? 'bg-teal text-gold shadow-xs font-semibold'
                     : 'bg-surface-subtle text-ink-secondary font-medium hover:bg-mint-canvas hover:text-ink'
@@ -521,7 +521,7 @@ export default function Payments() {
                                 src={p.proofImageUrl}
                                 alt="Biên lai"
                                 onClick={() => setLightboxImageUrl(p.proofImageUrl)}
-                                className="w-7 h-7 rounded-md border border-line object-cover cursor-pointer hover:ring-2 hover:ring-gold transition-all shadow-2xs shrink-0"
+                                className="w-7 h-7 rounded-md border border-line object-cover cursor-pointer hover:ring-2 hover:ring-gold transition-[transform,box-shadow,border-color,background-color] duration-150 ease-out shadow-2xs shrink-0"
                               />
                               <button
                                 type="button"
@@ -685,7 +685,7 @@ export default function Payments() {
                           setSelectedPayment(p);
                           setDetailModalOpen(true);
                         }}
-                        className="flex-1 min-h-[44px] flex items-center justify-center gap-1.5 text-xs font-semibold text-teal bg-surface border border-line hover:bg-mint-canvas rounded-full active:scale-95 transition-all duration-150 cursor-pointer"
+                        className="flex-1 min-h-[44px] flex items-center justify-center gap-1.5 text-xs font-semibold text-teal bg-surface border border-line hover:bg-mint-canvas rounded-full active:scale-95 transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer"
                       >
                         <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
@@ -699,7 +699,7 @@ export default function Payments() {
                           <button
                             type="button"
                             onClick={() => handleConfirmPayment(p)}
-                            className="flex-1 min-h-[44px] flex items-center justify-center gap-1 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-full shadow-xs active:scale-95 transition-all duration-150 cursor-pointer"
+                            className="flex-1 min-h-[44px] flex items-center justify-center gap-1 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-full shadow-xs active:scale-95 transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer"
                           >
                             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
@@ -709,7 +709,7 @@ export default function Payments() {
                           <button
                             type="button"
                             onClick={() => handleOpenReject(p)}
-                            className="flex-1 min-h-[44px] flex items-center justify-center gap-1 text-xs font-semibold text-rose-700 bg-rose-50 border border-rose-200 hover:bg-rose-100 rounded-full active:scale-95 transition-all duration-150 cursor-pointer"
+                            className="flex-1 min-h-[44px] flex items-center justify-center gap-1 text-xs font-semibold text-rose-700 bg-rose-50 border border-rose-200 hover:bg-rose-100 rounded-full active:scale-95 transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer"
                           >
                             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -719,7 +719,7 @@ export default function Payments() {
                           <button
                             type="button"
                             onClick={() => handleOpenVoid(p)}
-                            className="flex-1 min-h-[44px] flex items-center justify-center gap-1 text-xs font-semibold text-ink-secondary bg-surface-subtle border border-line hover:bg-rose-50 hover:text-rose-700 rounded-full active:scale-95 transition-all duration-150 cursor-pointer"
+                            className="flex-1 min-h-[44px] flex items-center justify-center gap-1 text-xs font-semibold text-ink-secondary bg-surface-subtle border border-line hover:bg-rose-50 hover:text-rose-700 rounded-full active:scale-95 transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer"
                           >
                             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
@@ -1167,7 +1167,7 @@ function RecordPaymentModal({ tuitions, onClose, onSuccess }) {
                         <button
                           type="button"
                           onClick={() => setAmount(String(payableAmount))}
-                          className="px-2.5 py-1 text-[11px] font-sans font-semibold bg-gold-soft text-teal hover:bg-gold/30 rounded-full active:scale-95 transition-all duration-150 cursor-pointer"
+                          className="px-2.5 py-1 text-[11px] font-sans font-semibold bg-gold-soft text-teal hover:bg-gold/30 rounded-full active:scale-95 transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer"
                         >
                           Điền nhanh
                         </button>
@@ -1193,7 +1193,7 @@ function RecordPaymentModal({ tuitions, onClose, onSuccess }) {
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 required
-                className={`w-full h-11 px-4 font-mono text-base font-bold rounded-full border focus:outline-none transition-all disabled:bg-surface-subtle disabled:text-ink-muted ${
+                className={`w-full h-11 px-4 font-mono text-base font-bold rounded-full border focus:outline-none transition-[border-color,box-shadow,background-color] duration-150 ease-out disabled:bg-surface-subtle disabled:text-ink-muted ${
                   isOverpay
                     ? 'border-rose-500 ring-2 ring-rose-200 bg-rose-50/30 text-rose-700'
                     : 'border-line focus:border-gold focus:ring-2 focus:ring-gold/25 text-ink bg-surface'
@@ -1231,7 +1231,7 @@ function RecordPaymentModal({ tuitions, onClose, onSuccess }) {
                     key={m.id}
                     type="button"
                     onClick={() => setPaymentMethod(m.id)}
-                    className={`py-2 px-3 rounded-full border text-xs font-semibold flex items-center justify-center gap-1.5 active:scale-95 transition-all duration-150 cursor-pointer ${
+                    className={`py-2 px-3 rounded-full border text-xs font-semibold flex items-center justify-center gap-1.5 active:scale-95 transition-[transform,background-color,border-color,color,box-shadow] duration-150 ease-out cursor-pointer ${
                       paymentMethod === m.id
                         ? 'border-gold bg-gold-soft text-teal shadow-2xs'
                         : 'border-line bg-surface text-ink-secondary hover:bg-mint-canvas'

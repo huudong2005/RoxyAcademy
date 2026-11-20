@@ -304,7 +304,7 @@ export function CustomSelect({
             zIndex: 60,
             ...(menuStyle.top !== undefined ? { top: menuStyle.top } : { bottom: menuStyle.bottom }),
           }}
-          className="z-[60] max-h-60 overflow-y-auto rounded-card border border-line bg-surface py-1 shadow-modal"
+          className="popover-panel z-[60] max-h-60 overflow-y-auto rounded-card border border-line bg-surface py-1 shadow-modal"
         >
           {options.map((opt, idx) => {
             const isSelected = String(opt.value) === normalizedValue;
@@ -324,7 +324,7 @@ export function CustomSelect({
                   if (!isDisabled) setHighlightedIndex(idx);
                 }}
                 onClick={() => handleSelect(opt)}
-                className={`px-4 py-2.5 text-sm flex items-center justify-between gap-2 transition-colors duration-100 ${
+                className={`px-4 py-2.5 text-sm flex items-center justify-between gap-2 transition-colors duration-150 ease-out ${
                   isDisabled
                     ? 'opacity-50 cursor-not-allowed text-ink-muted'
                     : isSelected
@@ -410,11 +410,11 @@ export function StatCard({
   const content = (
     <>
       <div className="flex items-center justify-between gap-2">
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted">
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted opacity-75 group-hover:opacity-100 transition-[color,opacity] duration-150 ease-out">
           {title}
         </span>
         {icon && (
-          <span className="text-lg leading-none" aria-hidden="true">
+          <span className="text-lg leading-none opacity-75 group-hover:opacity-100 transition-[color,opacity] duration-150 ease-out" aria-hidden="true">
             {icon}
           </span>
         )}
@@ -425,7 +425,7 @@ export function StatCard({
         </span>
       </div>
       <div className="mt-1.5 flex items-center justify-between gap-2">
-        <p className="text-xs text-ink-secondary">{note}</p>
+        <p className="text-xs text-ink-secondary opacity-75 group-hover:opacity-100 transition-[color,opacity] duration-150 ease-out">{note}</p>
         {to && (
           <span className="text-[11px] font-semibold text-teal group-hover:text-gold-active group-hover:translate-x-0.5 transition-[transform,color] duration-150 ease-out shrink-0">
             {ctaLabel}
@@ -438,7 +438,7 @@ export function StatCard({
   if (!to) {
     return (
       <div
-        className={`rounded-card border border-line/80 bg-surface p-5 shadow-card ${accentClass} ${className}`}
+        className={`group rounded-card border border-line/80 bg-surface p-5 shadow-card ${accentClass} hover:bg-mint-canvas/45 transition-[background-color,border-color,box-shadow] duration-150 ease-out ${className}`}
       >
         {content}
       </div>
@@ -448,7 +448,7 @@ export function StatCard({
   return (
     <Link
       to={to}
-      className={`group block rounded-card border border-line/80 bg-surface p-5 shadow-card ${accentClass} hover:border-line-strong hover:shadow-card-hover active:scale-[0.99] transition-[transform,box-shadow,border-color] duration-150 ease-out ${className}`}
+      className={`group block rounded-card border border-line/80 bg-surface p-5 shadow-card ${accentClass} hover:bg-mint-canvas/45 hover:border-line-strong hover:shadow-card-hover active:scale-[0.99] transition-[transform,box-shadow,border-color,background-color] duration-150 ease-out ${className}`}
     >
       {content}
     </Link>
