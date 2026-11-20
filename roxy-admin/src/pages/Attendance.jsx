@@ -8,6 +8,7 @@ import {
   Card,
   PrimaryButton,
   SecondaryButton,
+  SelectPill,
   Badge,
 } from '../components/ui';
 
@@ -435,11 +436,10 @@ export default function Attendance() {
             <label className="block text-[11px] font-semibold uppercase tracking-wider text-ink-muted">
               Buổi học trong ngày:
             </label>
-            <select
+            <SelectPill
               value={selectedScheduleId}
               onChange={handleSelectSchedule}
               disabled={loadingSchedules || daySchedules.length === 0}
-              className="w-full h-10 rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
             >
               {daySchedules.length === 0 ? (
                 <option value="">
@@ -456,7 +456,7 @@ export default function Attendance() {
                   </option>
                 ))
               )}
-            </select>
+            </SelectPill>
           </div>
         </div>
 

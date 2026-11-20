@@ -12,6 +12,7 @@ import {
   SecondaryButton,
   IconButton,
   InputPill,
+  SelectPill,
   Badge,
 } from '../components/ui';
 
@@ -350,10 +351,10 @@ export default function Payments() {
 
           {/* Lọc theo Khoản thu */}
           <div>
-            <select
+            <SelectPill
               value={tuitionFilter}
               onChange={(e) => setTuitionFilter(e.target.value)}
-              className="w-full h-10 px-3.5 text-xs md:text-sm bg-surface border border-line rounded-full focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/25 text-ink truncate transition-[border-color,box-shadow] duration-150"
+              className="text-xs md:text-sm truncate"
             >
               <option value="">Tất cả khoản thu</option>
               {tuitions.map((t) => (
@@ -361,36 +362,36 @@ export default function Payments() {
                   {t.studentName} — {t.title}
                 </option>
               ))}
-            </select>
+            </SelectPill>
           </div>
 
           {/* Lọc theo Phương thức */}
           <div>
-            <select
+            <SelectPill
               value={methodFilter}
               onChange={(e) => setMethodFilter(e.target.value)}
-              className="w-full h-10 px-3.5 text-xs md:text-sm bg-surface border border-line rounded-full focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/25 text-ink transition-[border-color,box-shadow] duration-150"
+              className="text-xs md:text-sm"
             >
               <option value="">Tất cả phương thức</option>
               <option value="BankTransfer">Chuyển khoản ngân hàng</option>
               <option value="Cash">Tiền mặt tại quầy</option>
               <option value="ZaloPay">Ví ZaloPay</option>
               <option value="Other">Phương thức khác</option>
-            </select>
+            </SelectPill>
           </div>
 
           {/* Lọc theo Trạng thái duyệt */}
           <div>
-            <select
+            <SelectPill
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full h-10 px-3.5 text-xs md:text-sm bg-surface border border-line rounded-full focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/25 text-ink transition-[border-color,box-shadow] duration-150"
+              className="text-xs md:text-sm"
             >
               <option value="">Tất cả trạng thái</option>
               <option value="PendingConfirm">Chờ xác nhận (Pending)</option>
               <option value="Confirmed">Đã xác nhận (Confirmed)</option>
               <option value="Rejected">Đã từ chối (Rejected)</option>
-            </select>
+            </SelectPill>
           </div>
         </div>
 
@@ -1107,18 +1108,17 @@ function RecordPaymentModal({ tuitions, onClose, onSuccess }) {
                   Không có khoản thu nào còn nợ. Tất cả các khoản học phí đều đã tất toán!
                 </div>
               ) : (
-                <select
+                <SelectPill
                   value={tuitionId}
                   onChange={(e) => handleSelectTuition(e.target.value)}
                   required
-                  className="w-full h-10 px-3.5 bg-surface border border-line rounded-full focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/25 text-ink"
                 >
                   {activeUnpaidTuitions.map((t) => (
                     <option key={t.id} value={t.id}>
                       {t.studentName} — {t.title} (Còn nợ: {formatCurrency(t.remainingAmount)})
                     </option>
                   ))}
-                </select>
+                </SelectPill>
               )}
             </div>
 

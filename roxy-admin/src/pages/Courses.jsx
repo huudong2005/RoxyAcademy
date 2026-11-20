@@ -11,6 +11,7 @@ import {
   SecondaryButton,
   IconButton,
   InputPill,
+  SelectPill,
 } from '../components/ui';
 
 export default function Courses() {
@@ -252,16 +253,16 @@ export default function Courses() {
           </div>
 
           {/* Select lọc trạng thái */}
-          <select
+          <SelectPill
             aria-label="Lọc trạng thái khóa học"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="min-w-[175px] rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
+            wrapperClassName="w-full md:w-auto md:min-w-[175px]"
           >
             <option value="ALL">Tất cả ({stats.total})</option>
             <option value="ACTIVE">Đang kích hoạt ({stats.active})</option>
             <option value="INACTIVE">Tạm ngưng ({stats.inactive})</option>
-          </select>
+          </SelectPill>
 
           <SecondaryButton
             type="button"

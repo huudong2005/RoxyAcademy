@@ -10,6 +10,7 @@ import {
   SecondaryButton,
   IconButton,
   InputPill,
+  SelectPill,
   Badge,
 } from '../components/ui';
 
@@ -611,7 +612,7 @@ export default function Grades() {
             <label htmlFor="filter-class" className="block text-[11px] font-semibold uppercase tracking-wider text-ink-muted mb-1">
               Lớp học
             </label>
-            <select
+            <SelectPill
               id="filter-class"
               value={classFilter}
               onChange={(e) => {
@@ -619,7 +620,7 @@ export default function Grades() {
                 setStudentFilter('');
                 setCurrentPage(1);
               }}
-              className="w-full min-h-[44px] rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
+              className="min-h-[44px]"
             >
               <option value="">Tất cả lớp học</option>
               {classes.map((c) => (
@@ -627,7 +628,7 @@ export default function Grades() {
                   {c.className}
                 </option>
               ))}
-            </select>
+            </SelectPill>
           </div>
 
           {/* Lọc theo Học viên (Cascading) */}
@@ -635,7 +636,7 @@ export default function Grades() {
             <label htmlFor="filter-student" className="block text-[11px] font-semibold uppercase tracking-wider text-ink-muted mb-1">
               Học viên {loadingFilterStudents && <span className="text-teal font-normal normal-case">(Đang tải...)</span>}
             </label>
-            <select
+            <SelectPill
               id="filter-student"
               value={studentFilter}
               onChange={(e) => {
@@ -643,7 +644,7 @@ export default function Grades() {
                 setCurrentPage(1);
               }}
               disabled={loadingFilterStudents}
-              className="w-full min-h-[44px] rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
+              className="min-h-[44px]"
             >
               <option value="">
                 {loadingFilterStudents ? 'Đang tải danh sách học viên...' : 'Tất cả học viên'}
@@ -653,7 +654,7 @@ export default function Grades() {
                   {s.fullName} (#STU-{s.id})
                 </option>
               ))}
-            </select>
+            </SelectPill>
           </div>
 
           {/* Lọc theo Loại bài */}
@@ -661,14 +662,14 @@ export default function Grades() {
             <label htmlFor="filter-exam-type" className="block text-[11px] font-semibold uppercase tracking-wider text-ink-muted mb-1">
               Loại bài
             </label>
-            <select
+            <SelectPill
               id="filter-exam-type"
               value={examTypeFilter}
               onChange={(e) => {
                 setExamTypeFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full min-h-[44px] rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
+              className="min-h-[44px]"
             >
               <option value="">Tất cả loại bài</option>
               {EXAM_TYPES.map((t) => (
@@ -676,7 +677,7 @@ export default function Grades() {
                   {t.icon} {t.label}
                 </option>
               ))}
-            </select>
+            </SelectPill>
           </div>
 
           {/* Lọc theo Ngày thi */}
@@ -1243,12 +1244,12 @@ export default function Grades() {
                   <label htmlFor="modal-class" className="block text-xs font-semibold text-ink mb-1.5">
                     Lớp học <span className="text-rose-500">*</span>
                   </label>
-                  <select
+                  <SelectPill
                     id="modal-class"
                     value={formData.classId}
                     disabled={Boolean(editingGrade)}
                     onChange={(e) => handleModalClassChange(e.target.value)}
-                    className="w-full min-h-[44px] rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
+                    className="min-h-[44px]"
                   >
                     <option value="">-- Chọn lớp học --</option>
                     {classes.map((c) => (
@@ -1257,7 +1258,7 @@ export default function Grades() {
                         {c.branchName ? ` - ${c.branchName}` : ''}
                       </option>
                     ))}
-                  </select>
+                  </SelectPill>
                   {fieldErrors.classId && (
                     <p className="mt-1 text-xs text-rose-600">{fieldErrors.classId}</p>
                   )}
@@ -1277,7 +1278,7 @@ export default function Grades() {
                     />
                   ) : (
                     <>
-                      <select
+                      <SelectPill
                         id="modal-student"
                         value={formData.studentId}
                         disabled={!formData.classId || loadingModalStudents}
@@ -1285,7 +1286,7 @@ export default function Grades() {
                           setFormData((prev) => ({ ...prev, studentId: e.target.value }));
                           setFieldErrors((prev) => ({ ...prev, studentId: '' }));
                         }}
-                        className="w-full min-h-[44px] rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
+                        className="min-h-[44px]"
                       >
                         <option value="">
                           {!formData.classId
@@ -1301,7 +1302,7 @@ export default function Grades() {
                             {s.fullName} (#STU-{s.id})
                           </option>
                         ))}
-                      </select>
+                      </SelectPill>
                       {modalStudentsError && (
                         <p className="mt-1 text-xs text-rose-600">{modalStudentsError}</p>
                       )}
@@ -1340,20 +1341,20 @@ export default function Grades() {
                   <label htmlFor="modal-exam-type" className="block text-xs font-semibold text-ink mb-1.5">
                     Loại bài thi
                   </label>
-                  <select
+                  <SelectPill
                     id="modal-exam-type"
                     value={formData.examType}
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, examType: e.target.value }))
                     }
-                    className="w-full min-h-[44px] rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
+                    className="min-h-[44px]"
                   >
                     {EXAM_TYPES.map((t) => (
                       <option key={t.value} value={t.value}>
                         {t.icon} {t.label} ({t.value})
                       </option>
                     ))}
-                  </select>
+                  </SelectPill>
                 </div>
               </div>
 

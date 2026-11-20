@@ -8,6 +8,7 @@ import {
   SecondaryButton,
   IconButton,
   InputPill,
+  SelectPill,
   Badge,
   Card,
   PageHeader,
@@ -1016,14 +1017,14 @@ export default function Students() {
           </div>
 
           {/* Lọc theo Chi nhánh */}
-          <select
+          <SelectPill
             value={branchFilter}
             onChange={(e) => {
               setBranchFilter(e.target.value);
               setPage(1);
             }}
             disabled={isBranchManager} // BranchManager bị khóa theo chi nhánh mình
-            className="w-full sm:w-auto min-w-[165px] rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink transition focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted"
+            wrapperClassName="w-full sm:w-auto sm:min-w-[165px]"
           >
             {!isBranchManager && <option value="">Tất cả cơ sở</option>}
             {branches.map((b) => (
@@ -1031,16 +1032,16 @@ export default function Students() {
                 {b.branchName}
               </option>
             ))}
-          </select>
+          </SelectPill>
 
           {/* Lọc theo Lớp học */}
-          <select
+          <SelectPill
             value={classFilter}
             onChange={(e) => {
               setClassFilter(e.target.value);
               setPage(1);
             }}
-            className="w-full sm:w-auto min-w-[165px] rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink transition focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted"
+            wrapperClassName="w-full sm:w-auto sm:min-w-[165px]"
           >
             <option value="">Tất cả lớp học</option>
             {classes.map((cls) => (
@@ -1048,23 +1049,23 @@ export default function Students() {
                 {cls.className}
               </option>
             ))}
-          </select>
+          </SelectPill>
 
           {/* Lọc theo Trạng thái */}
-          <select
+          <SelectPill
             value={statusFilter}
             onChange={(e) => {
               setStatusFilter(e.target.value);
               setPage(1);
             }}
-            className="w-full sm:w-auto min-w-[175px] rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink transition focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted"
+            wrapperClassName="w-full sm:w-auto sm:min-w-[175px]"
           >
             <option value="">Tất cả trạng thái</option>
             <option value="Active">Đang học</option>
             <option value="Paused">Tạm dừng</option>
             <option value="Graduated">Tốt nghiệp</option>
             <option value="Dropped">Thôi học</option>
-          </select>
+          </SelectPill>
 
           <SecondaryButton
             type="button"
@@ -1353,11 +1354,12 @@ export default function Students() {
 
             <div className="flex flex-wrap items-center gap-2">
               {parentChildren.length > 1 && (
-                <select
+                <SelectPill
                   value={registrationStudentFilter}
                   onChange={(e) => setRegistrationStudentFilter(e.target.value)}
                   aria-label="Lọc đơn đăng ký theo con"
-                  className="rounded-full border border-line bg-surface px-4 py-2 text-xs text-ink focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
+                  wrapperClassName="w-auto"
+                  className="text-xs"
                 >
                   <option value="">Tất cả các con</option>
                   {parentChildren.map((child) => (
@@ -1365,7 +1367,7 @@ export default function Students() {
                       {child.fullName}
                     </option>
                   ))}
-                </select>
+                </SelectPill>
               )}
 
               <PrimaryButton
@@ -1700,15 +1702,14 @@ export default function Students() {
                   <label className="block text-xs font-semibold text-ink-secondary mb-1">
                     Giới tính
                   </label>
-                  <select
+                  <SelectPill
                     value={formData.gender}
                     onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                    className="w-full rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
                   >
                     <option value="Male">Nam</option>
                     <option value="Female">Nữ</option>
                     <option value="Other">Khác</option>
-                  </select>
+                  </SelectPill>
                 </div>
 
                 {/* Phụ huynh (Chỉ chọn khi tạo mới; hỗ trợ tạo nhanh tài khoản Phụ huynh tại chỗ) */}
@@ -1739,11 +1740,10 @@ export default function Students() {
                       className="w-full rounded-full border border-line bg-surface-subtle px-4 py-2.5 text-sm text-ink-muted cursor-not-allowed"
                     />
                   ) : (
-                    <select
+                    <SelectPill
                       required
                       value={formData.parentId}
                       onChange={(e) => setFormData({ ...formData, parentId: e.target.value })}
-                      className="w-full rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
                     >
                       <option value="">-- Chọn phụ huynh --</option>
                       {parents.map((p) => (
@@ -1751,7 +1751,7 @@ export default function Students() {
                           {p.fullName} ({p.phoneNumber})
                         </option>
                       ))}
-                    </select>
+                    </SelectPill>
                   )}
 
                   {inlineParentSuccess && (
@@ -1844,11 +1844,10 @@ export default function Students() {
                   <label className="block text-xs font-semibold text-ink-secondary mb-1">
                     Cơ sở trung tâm {!editingStudent && <span className="text-rose-500">*</span>}
                   </label>
-                  <select
+                  <SelectPill
                     disabled={isBranchManager || (editingStudent && !isSuperAdmin)}
                     value={formData.branchId}
                     onChange={(e) => setFormData({ ...formData, branchId: e.target.value })}
-                    className="w-full rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted"
                   >
                     {isSuperAdmin && <option value="">-- Chọn cơ sở --</option>}
                     {branches.map((b) => (
@@ -1856,7 +1855,7 @@ export default function Students() {
                         {b.branchName}
                       </option>
                     ))}
-                  </select>
+                  </SelectPill>
                   {isBranchManager && (
                     <p className="mt-1 text-[11px] text-ink-muted">
                       Tự động gắn vào chi nhánh bạn đang quản lý
@@ -1898,16 +1897,15 @@ export default function Students() {
                     <label className="block text-xs font-semibold text-ink-secondary mb-1">
                       Trạng thái hồ sơ
                     </label>
-                    <select
+                    <SelectPill
                       value={formData.status}
                       onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                      className="w-full rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
                     >
                       <option value="Active">Đang học (Active)</option>
                       <option value="Paused">Tạm dừng (Paused)</option>
                       <option value="Graduated">Tốt nghiệp (Graduated)</option>
                       <option value="Dropped">Thôi học (Dropped)</option>
-                    </select>
+                    </SelectPill>
                   </div>
                 )}
 
@@ -2128,7 +2126,7 @@ export default function Students() {
                   <label className="block text-xs font-semibold text-ink-secondary mb-1.5">
                     Chọn học viên <span className="text-rose-500">*</span>
                   </label>
-                  <select
+                  <SelectPill
                     required
                     value={registerForm.studentId}
                     onChange={(e) => {
@@ -2139,7 +2137,6 @@ export default function Students() {
                         classId: '',
                       }));
                     }}
-                    className="w-full rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
                   >
                     {eligibleChildren.length > 1 && <option value="">-- Chọn con để đăng ký --</option>}
                     {eligibleChildren.map((child) => (
@@ -2147,7 +2144,7 @@ export default function Students() {
                         {child.fullName} — {child.branchName || `Cơ sở #${child.branchId}`}
                       </option>
                     ))}
-                  </select>
+                  </SelectPill>
                 </div>
 
                 {/* Danh sách lớp đang mở đăng ký đúng chi nhánh */}

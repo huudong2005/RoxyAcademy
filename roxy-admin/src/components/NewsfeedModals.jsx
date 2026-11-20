@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import axiosClient from '../api/axiosClient';
 import { formatDateTime, NEWSFEED_AUDIENCE_META } from '../utils/formatters';
 import ImageUpload from './ImageUpload';
-import { PrimaryButton, SecondaryButton, InputPill, Badge } from './ui';
+import { PrimaryButton, SecondaryButton, InputPill, SelectPill, Badge } from './ui';
 
 /**
  * Modal xem chi tiết bài đăng Bảng tin.
@@ -373,15 +373,14 @@ export function CreateEditNewsfeedModal({
               <label className="block text-xs font-semibold text-ink-secondary mb-1.5">
                 Đối tượng nhận tin <span className="text-rose-500">*</span>
               </label>
-              <select
+              <SelectPill
                 value={targetAudience}
                 onChange={(e) => setTargetAudience(e.target.value)}
-                className="w-full h-10 rounded-full border border-line bg-surface px-3.5 py-2 text-sm text-ink focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
               >
                 <option value="All">Tất cả (Phụ huynh &amp; Giáo viên)</option>
                 <option value="Parents">Chỉ Phụ huynh</option>
                 <option value="Teachers">Chỉ Giáo viên</option>
-              </select>
+              </SelectPill>
             </div>
 
             <div>
@@ -393,10 +392,9 @@ export function CreateEditNewsfeedModal({
                   {managerBranchName}
                 </div>
               ) : (
-                <select
+                <SelectPill
                   value={branchId}
                   onChange={(e) => setBranchId(e.target.value)}
-                  className="w-full h-10 rounded-full border border-line bg-surface px-3.5 py-2 text-sm text-ink focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
                 >
                   <option value="">Toàn hệ thống</option>
                   {branches.map((b) => (
@@ -404,7 +402,7 @@ export function CreateEditNewsfeedModal({
                       {b.branchName}
                     </option>
                   ))}
-                </select>
+                </SelectPill>
               )}
               {fieldErrors.branchId && (
                 <p className="mt-1 text-xs font-medium text-rose-600">{fieldErrors.branchId}</p>

@@ -1345,3 +1345,25 @@ Toàn bộ **8/8 hạng mục** của **Giai đoạn 1N-2 (8 bẫy đồng bộ)
 
 ## 3. Kết luận
 - **Trạng thái nghiệm thu cuối cùng:** **PASS 100%** — đủ điều kiện commit.
+
+
+---
+
+# BÁO CÁO QA — ĐỒNG BỘ DROPDOWN (`SelectPill`) + THANH CUỘN
+**Ngày kiểm tra:** 20/11/2026  
+**Người thực hiện:** QA / Commander (Chrome headless + Playwright, API `http://localhost:5123`)  
+**Phạm vi:** `roxy-admin/src/components/ui.jsx`, `roxy-admin/src/index.css`, và 17 file chứa `<select>` trong `roxy-admin/src/`.
+
+## 1. Kết quả Build, Lint & Đối chiếu tĩnh (`roxy-admin/`)
+- `npm run lint` (`eslint .`): **PASS** (0 error, 0 warning).
+- `npm run build` (`vite build`): **PASS** (`✓ 114 modules transformed`, `✓ built in 316ms`).
+- **Đối chiếu tĩnh:** toàn bộ **72 thẻ `<select>`** trên **17 file** đã chuyển sang `<SelectPill>`; chỉ còn duy nhất 1 thẻ `<select>` bên trong `SelectPill` tại `ui.jsx`.
+
+## 2. Kết quả đo DOM thực tế trên trình duyệt thật (`1440px` & `1280px`)
+| Hạng mục kiểm tra | Kết quả | Số liệu đo DOM thực tế |
+| :--- | :---: | :--- |
+| **Đồng bộ `<SelectPill>` trên `/students`, `/classes`, `/schedules`, `/tuitions`, `/payments`, `/leave-requests`, `/grades`** | **PASS** | - Mọi `<select>` trên `/students`, `/classes`, `/schedules`, `/tuitions`, `/payments`, `/leave-requests` đạt chuẩn đồng bộ: `height = 40px`, `paddingLeft = 16px`, `paddingRight = 40px`, `fontSize = 14px`, `appearance = none`, `borderRadius = 9999px` (pill), `hasChevronSvg = true` (riêng `/grades` giữ `min-h-[44px]` để bằng chiều cao nút `Đặt lại` cùng hàng).<br>- Không phát sinh tràn ngang ở `1440px` và `1280px` (`docOverflow = 0px`; bảng `/tuitions`, `/payments`, `/students`, `/classes`, `/grades`, `/leave-requests` đều `overflowPx = 0px`; `/schedules` giữ cuộn ngang lưới 7 cột `1120 -> 1322px`). |
+| **Thanh cuộn đồng bộ (`index.css`)** | **PASS** | - `html` và mọi vùng `.overflow-x-auto`: `scrollbarWidth = "thin"`, `scrollbarColor = "rgba(47, 79, 74, 0.32) rgba(0, 0, 0, 0)"` (Firefox).<br>- `::-webkit-scrollbar` (`10px`, thumb bo tròn màu teal nhạt `rgba(47, 79, 74, 0.28)` / hover `0.48`) đã biên dịch vào bundle CSS (`index-BWd--s6F.css`). |
+
+## 3. Kết luận
+- **Trạng thái nghiệm thu cuối cùng:** **PASS 100%** — đủ điều kiện commit.

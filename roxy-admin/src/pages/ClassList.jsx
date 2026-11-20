@@ -9,6 +9,7 @@ import {
   SecondaryButton,
   IconButton,
   InputPill,
+  SelectPill,
   Badge,
   Card,
   PageHeader,
@@ -717,14 +718,14 @@ export default function ClassList() {
           </div>
 
           {/* Lọc theo Cơ sở */}
-          <select
+          <SelectPill
             value={branchFilter}
             onChange={(e) => {
               setBranchFilter(e.target.value);
               setCurrentPage(1);
             }}
             disabled={isBranchManager}
-            className="w-full sm:w-auto min-w-[165px] rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink transition focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
+            wrapperClassName="w-full sm:w-auto sm:min-w-[165px]"
           >
             {!isBranchManager && <option value="">Tất cả cơ sở</option>}
             {branches.map((b) => (
@@ -732,16 +733,16 @@ export default function ClassList() {
                 {b.branchName}
               </option>
             ))}
-          </select>
+          </SelectPill>
 
           {/* Lọc theo Khóa học */}
-          <select
+          <SelectPill
             value={courseFilter}
             onChange={(e) => {
               setCourseFilter(e.target.value);
               setCurrentPage(1);
             }}
-            className="w-full sm:w-auto min-w-[165px] rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink transition focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
+            wrapperClassName="w-full sm:w-auto sm:min-w-[165px]"
           >
             <option value="">Tất cả khóa học</option>
             {courses.map((c) => (
@@ -749,22 +750,22 @@ export default function ClassList() {
                 {c.courseName}
               </option>
             ))}
-          </select>
+          </SelectPill>
 
           {/* Lọc theo Trạng thái */}
-          <select
+          <SelectPill
             value={statusFilter}
             onChange={(e) => {
               setStatusFilter(e.target.value);
               setCurrentPage(1);
             }}
-            className="w-full sm:w-auto min-w-[175px] rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink transition focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
+            wrapperClassName="w-full sm:w-auto sm:min-w-[175px]"
           >
             <option value="">Tất cả trạng thái</option>
             <option value="Upcoming">Sắp mở</option>
             <option value="Ongoing">Đang học</option>
             <option value="Finished">Đã kết thúc</option>
-          </select>
+          </SelectPill>
 
           <SecondaryButton
             type="button"
@@ -1048,12 +1049,11 @@ export default function ClassList() {
                   <label className="block text-xs font-semibold text-ink-secondary mb-1">
                     Khóa học đào tạo <span className="text-rose-500">*</span>
                   </label>
-                  <select
+                  <SelectPill
                     name="courseId"
                     required
                     value={formData.courseId}
                     onChange={handleChange}
-                    className="w-full rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
                   >
                     <option value="">-- Chọn khóa học --</option>
                     {courses
@@ -1063,7 +1063,7 @@ export default function ClassList() {
                           {c.courseName} {c.isActive === false ? '(Đã ngừng hoạt động)' : ''}
                         </option>
                       ))}
-                  </select>
+                  </SelectPill>
                 </div>
 
                 {/* Giáo viên phụ trách (BẮT BUỘC) */}
@@ -1071,12 +1071,11 @@ export default function ClassList() {
                   <label className="block text-xs font-semibold text-ink-secondary mb-1">
                     Giáo viên phụ trách <span className="text-rose-500">*</span>
                   </label>
-                  <select
+                  <SelectPill
                     name="teacherId"
                     required
                     value={formData.teacherId}
                     onChange={handleChange}
-                    className="w-full rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
                   >
                     <option value="">-- Chọn giáo viên phụ trách --</option>
                     {teachers
@@ -1086,7 +1085,7 @@ export default function ClassList() {
                           👩‍🏫 {t.fullName} ({t.phoneNumber}) {t.isActive === false ? '(Đã khóa tài khoản)' : ''}
                         </option>
                       ))}
-                  </select>
+                  </SelectPill>
                   {editingClass &&
                     teachers.find((t) => String(t.id) === String(formData.teacherId))?.isActive === false && (
                       <p className="mt-1 text-[11px] text-rose-600 font-medium">
@@ -1107,12 +1106,11 @@ export default function ClassList() {
                   <label className="block text-xs font-semibold text-ink-secondary mb-1">
                     Cơ sở tổ chức <span className="text-rose-500">*</span>
                   </label>
-                  <select
+                  <SelectPill
                     name="branchId"
                     required
                     value={formData.branchId}
                     onChange={handleChange}
-                    className="w-full rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
                   >
                     <option value="">-- Chọn cơ sở --</option>
                     {branches
@@ -1122,7 +1120,7 @@ export default function ClassList() {
                           {b.branchName} {b.isActive === false ? '(Đã ngừng hoạt động)' : ''}
                         </option>
                       ))}
-                  </select>
+                  </SelectPill>
                 </div>
 
                 {/* Hình thức lớp học (Group / OneToOne) */}
@@ -1130,16 +1128,15 @@ export default function ClassList() {
                   <label className="block text-xs font-semibold text-ink-secondary mb-1">
                     Hình thức lớp học <span className="text-rose-500">*</span>
                   </label>
-                  <select
+                  <SelectPill
                     name="classType"
                     required
                     value={formData.classType}
                     onChange={handleChange}
-                    className="w-full rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
                   >
                     <option value="Group">Lớp nhóm (Group)</option>
                     <option value="OneToOne">Kèm 1-1 (OneToOne)</option>
-                  </select>
+                  </SelectPill>
                 </div>
 
                 {/* Sĩ số tối đa */}
@@ -1234,17 +1231,16 @@ export default function ClassList() {
                     <label className="block text-xs font-semibold text-ink-secondary mb-1">
                       Trạng thái lớp học
                     </label>
-                    <select
+                    <SelectPill
                       name="status"
                       disabled={editingClass.status === 'Finished'}
                       value={formData.status}
                       onChange={handleChange}
-                      className="w-full rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
                     >
                       <option value="Upcoming">Sắp mở (Upcoming)</option>
                       <option value="Ongoing">Đang học (Ongoing)</option>
                       <option value="Finished">Đã kết thúc (Finished)</option>
-                    </select>
+                    </SelectPill>
                     {editingClass.status === 'Finished' && (
                       <p className="mt-1 text-[11px] text-ink-muted">
                         🔒 Lớp học đã kết thúc (Finished), không thể chuyển trạng thái quay lại Đang học.
@@ -1481,12 +1477,12 @@ export default function ClassList() {
                                 <label className="block font-semibold text-ink-secondary mb-1">
                                   Chọn học viên <span className="text-rose-500">*</span>
                                 </label>
-                                <select
+                                <SelectPill
                                   required
                                   disabled={loadingBranchStudents}
                                   value={enrollStudentId}
                                   onChange={(e) => setEnrollStudentId(e.target.value)}
-                                  className="w-full rounded-full border border-line bg-surface px-4 py-2 text-xs text-ink focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle"
+                                  className="text-xs"
                                 >
                                   <option value="">
                                     {loadingBranchStudents
@@ -1500,7 +1496,7 @@ export default function ClassList() {
                                       {stu.fullName} {stu.parentPhone ? `(${stu.parentPhone})` : ''}
                                     </option>
                                   ))}
-                                </select>
+                                </SelectPill>
                               </div>
 
                               <div>
@@ -1933,10 +1929,9 @@ export default function ClassList() {
                 <label className="block text-xs font-semibold text-ink-secondary mb-1">
                   Buổi học trong lịch <span className="text-ink-muted font-normal">(Khuyên dùng)</span>
                 </label>
-                <select
+                <SelectPill
                   value={progressFormData.scheduleId}
                   onChange={(e) => setProgressFormData((prev) => ({ ...prev, scheduleId: e.target.value }))}
-                  className="w-full rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
                 >
                   <option value="">-- Chọn buổi học tương ứng (Nếu có) --</option>
                   {classSchedules.map((s) => (
@@ -1944,7 +1939,7 @@ export default function ClassList() {
                       Buổi ngày {formatDate(s.studyDate)} ({s.startTime?.slice(0, 5)} - {s.endTime?.slice(0, 5)})
                     </option>
                   ))}
-                </select>
+                </SelectPill>
                 <p className="text-[11px] text-ink-muted mt-1">
                   ℹ️ Chọn buổi học tương ứng để hệ thống đồng bộ với lịch học và bảng điểm danh.
                 </p>

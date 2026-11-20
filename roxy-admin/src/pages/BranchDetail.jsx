@@ -9,6 +9,7 @@ import {
   PrimaryButton,
   SecondaryButton,
   InputPill,
+  SelectPill,
 } from '../components/ui';
 import {
   CreateEditBranchModal,
@@ -646,17 +647,17 @@ function ClassesTabContent({
           />
         </div>
 
-        <select
+        <SelectPill
           aria-label="Lọc trạng thái lớp học"
           value={statusFilter}
           onChange={(e) => onStatusFilterChange(e.target.value)}
-          className="min-w-[165px] rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
+          wrapperClassName="w-full sm:w-auto sm:min-w-[165px]"
         >
           <option value="all">Tất cả trạng thái</option>
           <option value="Ongoing">Đang học</option>
           <option value="Upcoming">Sắp mở</option>
           <option value="Finished">Đã kết thúc</option>
-        </select>
+        </SelectPill>
       </div>
 
       {classes.length === 0 ? (
@@ -962,18 +963,18 @@ function StudentsTabContent({
           />
         </div>
 
-        <select
+        <SelectPill
           aria-label="Lọc trạng thái học viên"
           value={statusFilter}
           onChange={(e) => onStatusFilterChange(e.target.value)}
-          className="min-w-[165px] rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
+          wrapperClassName="w-full sm:w-auto sm:min-w-[165px]"
         >
           <option value="all">Tất cả trạng thái</option>
           <option value="Active">Đang học</option>
           <option value="Paused">Tạm dừng</option>
           <option value="Graduated">Tốt nghiệp</option>
           <option value="Dropped">Thôi học</option>
-        </select>
+        </SelectPill>
       </div>
 
       {students.length === 0 ? (

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import axiosClient from '../api/axiosClient';
 import { formatDate, formatDateTime } from '../utils/formatters';
-import { PrimaryButton, SecondaryButton, InputPill, Badge } from './ui';
+import { PrimaryButton, SecondaryButton, InputPill, SelectPill, Badge } from './ui';
 
 /**
  * Helper trích xuất thông báo lỗi dễ hiểu từ response của ASP.NET Core API.
@@ -301,7 +301,7 @@ export function CreateEditTeacherModal({
               >
                 Chi nhánh <span className="text-rose-600">*</span>
               </label>
-              <select
+              <SelectPill
                 id="teacher-branch"
                 value={branchId}
                 onChange={(e) => {
@@ -309,13 +309,11 @@ export function CreateEditTeacherModal({
                   if (fieldErrors.branchId) setFieldErrors((p) => ({ ...p, branchId: '' }));
                 }}
                 disabled={!isSuperAdmin || isSubmitting}
-                className={`w-full rounded-full border px-4 py-2.5 text-sm transition-[border-color,box-shadow] duration-150 focus:outline-none ${
-                  !isSuperAdmin
-                    ? 'bg-surface-subtle text-ink-muted border-line cursor-not-allowed'
-                    : fieldErrors.branchId
-                      ? 'bg-surface text-ink border-rose-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20'
-                      : 'bg-surface text-ink border-line focus:border-gold focus:ring-2 focus:ring-gold/25'
-                }`}
+                className={
+                  isSuperAdmin && fieldErrors.branchId
+                    ? '!border-rose-400 focus:!border-rose-500 focus:!ring-rose-500/20'
+                    : ''
+                }
               >
                 <option value="">-- Chọn chi nhánh --</option>
                 {activeBranches.map((b) => (
@@ -323,7 +321,7 @@ export function CreateEditTeacherModal({
                     {b.branchName}
                   </option>
                 ))}
-              </select>
+              </SelectPill>
               {!isSuperAdmin && (
                 <p className="mt-1 text-[11px] text-ink-muted">
                   Cố định theo chi nhánh bạn đang quản lý.
@@ -341,16 +339,15 @@ export function CreateEditTeacherModal({
               >
                 Ngôn ngữ giao diện
               </label>
-              <select
+              <SelectPill
                 id="teacher-lang"
                 value={preferredLanguage}
                 onChange={(e) => setPreferredLanguage(e.target.value)}
                 disabled={isSubmitting}
-                className="w-full rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
               >
                 <option value="vi">Tiếng Việt (vi)</option>
                 <option value="en">English (en)</option>
-              </select>
+              </SelectPill>
             </div>
           </div>
 

@@ -96,6 +96,33 @@ export function InputPill({ className = '', ...props }) {
   );
 }
 
+/** Ô chọn dạng pill đồng bộ với InputPill. */
+export function SelectPill({
+  className = '',
+  wrapperClassName = 'w-full',
+  children,
+  ...props
+}) {
+  return (
+    <div className={`relative ${wrapperClassName}`}>
+      <select
+        className={`w-full h-10 appearance-none rounded-full border border-line bg-surface pl-4 pr-10 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed ${className}`}
+        {...props}
+      >
+        {children}
+      </select>
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-y-0 right-3.5 flex items-center text-ink-muted"
+      >
+        <svg className="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.75">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M6 8l4 4 4-4" />
+        </svg>
+      </span>
+    </div>
+  );
+}
+
 /** Nhãn trạng thái dạng pill. */
 export function Badge({ variant = 'neutral', className = '', children, ...props }) {
   const variantClass = BADGE_VARIANTS[variant] || BADGE_VARIANTS.neutral;

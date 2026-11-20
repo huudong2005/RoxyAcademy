@@ -11,6 +11,7 @@ import {
   SecondaryButton,
   IconButton,
   InputPill,
+  SelectPill,
 } from '../components/ui';
 import {
   CreateEditTeacherModal,
@@ -359,7 +360,7 @@ export default function Teachers() {
           </div>
 
           {/* Lọc chi nhánh */}
-          <select
+          <SelectPill
             aria-label="Lọc theo chi nhánh"
             value={branchFilter}
             disabled={!isSuperAdmin}
@@ -367,11 +368,7 @@ export default function Teachers() {
               setBranchFilter(e.target.value);
               setPage(1);
             }}
-            className={`min-w-[175px] rounded-full border border-line px-4 py-2.5 text-sm transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none ${
-              !isSuperAdmin
-                ? 'bg-surface-subtle text-ink-muted cursor-not-allowed'
-                : 'bg-surface text-ink'
-            }`}
+            wrapperClassName="w-full md:w-auto md:min-w-[175px]"
           >
             {isSuperAdmin ? (
               <>
@@ -387,22 +384,22 @@ export default function Teachers() {
                 {currentManagerBranchName}
               </option>
             )}
-          </select>
+          </SelectPill>
 
           {/* Lọc trạng thái */}
-          <select
+          <SelectPill
             aria-label="Lọc theo trạng thái"
             value={statusFilter}
             onChange={(e) => {
               setStatusFilter(e.target.value);
               setPage(1);
             }}
-            className="min-w-[175px] rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
+            wrapperClassName="w-full md:w-auto md:min-w-[175px]"
           >
             <option value="all">Tất cả ({kpiStats.total})</option>
             <option value="active">Đang hoạt động ({kpiStats.active})</option>
             <option value="inactive">Đã khóa ({kpiStats.inactive})</option>
-          </select>
+          </SelectPill>
 
           <SecondaryButton
             type="button"

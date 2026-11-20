@@ -9,6 +9,7 @@ import {
   PrimaryButton,
   SecondaryButton,
   IconButton,
+  SelectPill,
   Badge,
 } from '../components/ui';
 
@@ -618,11 +619,10 @@ export default function Schedules() {
             <label className="block text-[11px] font-semibold uppercase tracking-wider text-ink-muted mb-1">
               Chi nhánh:
             </label>
-            <select
+            <SelectPill
               disabled={isBranchManager}
               value={branchFilter}
               onChange={(e) => setBranchFilter(e.target.value)}
-              className="w-full h-10 rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
             >
               {isSuperAdmin && <option value="">-- Tất cả chi nhánh --</option>}
               {branches.map((b) => (
@@ -630,7 +630,7 @@ export default function Schedules() {
                   {b.branchName}
                 </option>
               ))}
-            </select>
+            </SelectPill>
           </div>
 
           {/* Lọc Lớp học */}
@@ -638,10 +638,9 @@ export default function Schedules() {
             <label className="block text-[11px] font-semibold uppercase tracking-wider text-ink-muted mb-1">
               Lớp học:
             </label>
-            <select
+            <SelectPill
               value={classFilter}
               onChange={(e) => setClassFilter(e.target.value)}
-              className="w-full h-10 rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
             >
               <option value="">-- Tất cả lớp học --</option>
               {classes.map((c) => (
@@ -649,7 +648,7 @@ export default function Schedules() {
                   {c.className}
                 </option>
               ))}
-            </select>
+            </SelectPill>
           </div>
 
           {/* Lọc Giáo viên */}
@@ -657,10 +656,9 @@ export default function Schedules() {
             <label className="block text-[11px] font-semibold uppercase tracking-wider text-ink-muted mb-1">
               Giáo viên:
             </label>
-            <select
+            <SelectPill
               value={teacherFilter}
               onChange={(e) => setTeacherFilter(e.target.value)}
-              className="w-full h-10 rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
             >
               <option value="">-- Tất cả giáo viên --</option>
               {teachers.map((t) => (
@@ -668,7 +666,7 @@ export default function Schedules() {
                   {t.fullName}
                 </option>
               ))}
-            </select>
+            </SelectPill>
           </div>
         </div>
       </Card>
@@ -900,13 +898,12 @@ export default function Schedules() {
                   </div>
                 ) : (
                   <>
-                    <select
+                    <SelectPill
                       required
                       value={formData.classId}
                       onChange={(e) =>
                         setFormData((prev) => ({ ...prev, classId: e.target.value }))
                       }
-                      className="w-full h-10 rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
                     >
                       <option value="">-- Chọn lớp học --</option>
                       {availableModalClasses.map((cls) => {
@@ -924,7 +921,7 @@ export default function Schedules() {
                           </option>
                         );
                       })}
-                    </select>
+                    </SelectPill>
 
                     {/* Cảnh báo nếu lớp chưa gán GV */}
                     {formData.classId &&
@@ -1011,7 +1008,7 @@ export default function Schedules() {
                 <label className="block text-xs font-semibold text-ink mb-1">
                   Giáo viên dạy thay (Tùy chọn)
                 </label>
-                <select
+                <SelectPill
                   value={formData.substituteTeacherId}
                   onChange={(e) =>
                     setFormData((prev) => ({
@@ -1019,7 +1016,6 @@ export default function Schedules() {
                       substituteTeacherId: e.target.value,
                     }))
                   }
-                  className="w-full h-10 rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
                 >
                   <option value="">-- Không có (Giáo viên chính phụ trách) --</option>
                   {teachers.map((t) => (
@@ -1027,7 +1023,7 @@ export default function Schedules() {
                       👩‍🏫 {t.fullName} ({t.phoneNumber || 'Không có SĐT'})
                     </option>
                   ))}
-                </select>
+                </SelectPill>
                 <p className="mt-1 text-[11px] text-ink-muted">
                   Chỉ chọn khi giáo viên chính bận việc hoặc nghỉ phép đột xuất.
                 </p>
@@ -1039,18 +1035,17 @@ export default function Schedules() {
                   <label className="block text-xs font-semibold text-ink mb-1">
                     Trạng thái buổi học
                   </label>
-                  <select
+                  <SelectPill
                     disabled={isAttendanceLocked}
                     value={formData.status}
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, status: e.target.value }))
                     }
-                    className="w-full h-10 rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
                   >
                     <option value="Scheduled">Đã lên lịch (Scheduled)</option>
                     <option value="Completed">Đã hoàn thành / Đã điểm danh (Completed)</option>
                     <option value="Cancelled">Đã hủy (Cancelled)</option>
-                  </select>
+                  </SelectPill>
                 </div>
               )}
 

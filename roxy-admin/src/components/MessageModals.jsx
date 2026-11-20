@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import axiosClient from '../api/axiosClient';
 import { formatDateTime } from '../utils/formatters';
-import { PrimaryButton, SecondaryButton, InputPill, Badge } from './ui';
+import { PrimaryButton, SecondaryButton, InputPill, SelectPill, Badge } from './ui';
 
 const ROLE_LABELS = {
   SuperAdmin: 'Quản trị cấp cao',
@@ -261,13 +261,12 @@ export function ComposeMessageModal({
                   Đang tải danh sách người nhận hợp lệ...
                 </div>
               ) : mode === 'user' ? (
-                <select
+                <SelectPill
                   value={receiverId}
                   onChange={(e) => {
                     setReceiverId(e.target.value);
                     setFieldError('');
                   }}
-                  className="w-full min-h-[42px] rounded-full border border-line bg-surface px-3.5 py-2 text-sm text-ink focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
                 >
                   <option value="">-- Chọn người nhận --</option>
                   {filteredUsers.map((u) => (
@@ -276,15 +275,14 @@ export function ComposeMessageModal({
                       {u.branchName ? ` (${u.branchName})` : ''}
                     </option>
                   ))}
-                </select>
+                </SelectPill>
               ) : (
-                <select
+                <SelectPill
                   value={classId}
                   onChange={(e) => {
                     setClassId(e.target.value);
                     setFieldError('');
                   }}
-                  className="w-full min-h-[42px] rounded-full border border-line bg-surface px-3.5 py-2 text-sm text-ink focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
                 >
                   <option value="">-- Chọn lớp học --</option>
                   {filteredClasses.map((c) => (
@@ -293,7 +291,7 @@ export function ComposeMessageModal({
                       {c.branchName ? ` (${c.branchName})` : ''}
                     </option>
                   ))}
-                </select>
+                </SelectPill>
               )}
             </div>
           )}

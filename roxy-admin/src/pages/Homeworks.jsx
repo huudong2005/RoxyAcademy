@@ -10,6 +10,7 @@ import {
   SecondaryButton,
   IconButton,
   InputPill,
+  SelectPill,
   Badge,
 } from '../components/ui';
 
@@ -783,7 +784,7 @@ export default function Homeworks() {
 
           {/* Lọc theo Lớp học */}
           <div>
-            <select
+            <SelectPill
               value={classFilter}
               onChange={(e) => {
                 const val = e.target.value;
@@ -794,7 +795,6 @@ export default function Homeworks() {
                 }
                 setCurrentPage(1);
               }}
-              className="w-full h-10 rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
             >
               <option value="">Tất cả lớp học</option>
               {classes.map((c) => (
@@ -802,19 +802,18 @@ export default function Homeworks() {
                   {c.className} {c.branchName ? `(${c.branchName})` : ''}
                 </option>
               ))}
-            </select>
+            </SelectPill>
           </div>
 
           {/* Lọc theo Buổi học (Chỉ hiện khi đã chọn lớp) */}
           <div>
-            <select
+            <SelectPill
               value={scheduleFilter}
               disabled={!classFilter}
               onChange={(e) => {
                 setScheduleFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full h-10 rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
             >
               <option value="">{classFilter ? 'Tất cả buổi học' : 'Chọn lớp trước'}</option>
               {schedules.map((s) => (
@@ -822,24 +821,24 @@ export default function Homeworks() {
                   {formatDate(s.studyDate)} ({s.startTime?.slice(0, 5)} - {s.endTime?.slice(0, 5)})
                 </option>
               ))}
-            </select>
+            </SelectPill>
           </div>
 
           {/* Lọc theo Tình trạng Hạn nộp & Nút reset */}
           <div className="flex gap-2">
-            <select
+            <SelectPill
               value={dueStatusFilter}
               onChange={(e) => {
                 setDueStatusFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="flex-1 h-10 rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
+              wrapperClassName="flex-1 min-w-0"
             >
               <option value="all">Tất cả hạn nộp</option>
               <option value="active">Đang mở / Còn hạn</option>
               <option value="warning">Sắp hết hạn (&lt; 24h)</option>
               <option value="overdue">Đã quá hạn nộp</option>
-            </select>
+            </SelectPill>
 
             <SecondaryButton
               type="button"
@@ -1258,11 +1257,10 @@ export default function Homeworks() {
                 <label className="block text-xs font-semibold text-ink mb-1">
                   Lớp học áp dụng <span className="text-rose-500">*</span>
                 </label>
-                <select
+                <SelectPill
                   disabled={!!editingHomework}
                   value={formData.classId}
                   onChange={handleFormClassChange}
-                  className="w-full h-10 rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
                 >
                   <option value="">-- Chọn lớp học --</option>
                   {classes.map((c) => (
@@ -1270,7 +1268,7 @@ export default function Homeworks() {
                       {c.className} {c.branchName ? `(${c.branchName})` : ''}
                     </option>
                   ))}
-                </select>
+                </SelectPill>
               </div>
 
               {/* Buổi học liên kết */}
@@ -1278,10 +1276,9 @@ export default function Homeworks() {
                 <label className="block text-xs font-semibold text-ink mb-1">
                   Buổi học liên kết <span className="text-ink-muted font-normal">(Tùy chọn)</span>
                 </label>
-                <select
+                <SelectPill
                   value={formData.scheduleId}
                   onChange={(e) => setFormData((prev) => ({ ...prev, scheduleId: e.target.value }))}
-                  className="w-full h-10 rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
                 >
                   <option value="">-- Toàn khóa học (Không gắn buổi riêng) --</option>
                   {classSchedulesForModal.map((s) => (
@@ -1289,7 +1286,7 @@ export default function Homeworks() {
                       Buổi ngày {formatDate(s.studyDate)} ({s.startTime?.slice(0, 5)} - {s.endTime?.slice(0, 5)})
                     </option>
                   ))}
-                </select>
+                </SelectPill>
                 <p className="text-[11px] text-ink-muted mt-1">
                   ℹ️ Gắn bài tập vào buổi học cụ thể giúp phụ huynh theo dõi sát lộ trình từng ngày.
                 </p>

@@ -14,6 +14,7 @@ import {
   SecondaryButton,
   IconButton,
   InputPill,
+  SelectPill,
   Badge,
 } from '../components/ui';
 
@@ -244,11 +245,10 @@ export default function Newsfeed() {
           {/* Branch Filter */}
           <div className="lg:col-span-4">
             {isBranchManager ? (
-              <select
+              <SelectPill
                 value={branchFilter}
                 disabled={isBranchManager}
                 onChange={(e) => setBranchFilter(e.target.value)}
-                className="w-full h-10 rounded-full border border-line bg-surface px-3.5 py-2 text-sm text-ink focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none transition-[border-color,box-shadow] duration-150 disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
               >
                 {managerBranchId && (
                   <option value={String(managerBranchId)}>
@@ -256,12 +256,11 @@ export default function Newsfeed() {
                       ?.branchName || 'Chi nhánh của tôi'}
                   </option>
                 )}
-              </select>
+              </SelectPill>
             ) : (
-              <select
+              <SelectPill
                 value={branchFilter}
                 onChange={(e) => setBranchFilter(e.target.value)}
-                className="w-full h-10 rounded-full border border-line bg-surface px-3.5 py-2 text-sm text-ink focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none transition-[border-color,box-shadow] duration-150"
               >
                 <option value="">Tất cả chi nhánh</option>
                 {fallbackBranchesFromPosts.map((b) => (
@@ -269,22 +268,21 @@ export default function Newsfeed() {
                     {b.branchName}
                   </option>
                 ))}
-              </select>
+              </SelectPill>
             )}
           </div>
 
           {/* Audience Filter */}
           <div className="lg:col-span-3">
-            <select
+            <SelectPill
               value={audienceFilter}
               onChange={(e) => setAudienceFilter(e.target.value)}
-              className="w-full h-10 rounded-full border border-line bg-surface px-3.5 py-2 text-sm text-ink focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none transition-[border-color,box-shadow] duration-150"
             >
               <option value="all">Mọi đối tượng</option>
               <option value="All">Tất cả</option>
               <option value="Parents">Phụ huynh</option>
               <option value="Teachers">Giáo viên</option>
-            </select>
+            </SelectPill>
           </div>
         </div>
       </Card>

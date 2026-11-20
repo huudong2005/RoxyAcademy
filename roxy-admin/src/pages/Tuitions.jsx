@@ -12,6 +12,7 @@ import {
   SecondaryButton,
   IconButton,
   InputPill,
+  SelectPill,
   Badge,
 } from '../components/ui';
 
@@ -511,10 +512,10 @@ export default function Tuitions() {
 
           {/* Lọc theo Học viên */}
           <div>
-            <select
+            <SelectPill
               value={studentFilter}
               onChange={(e) => setStudentFilter(e.target.value)}
-              className="w-full h-10 px-3.5 text-xs md:text-sm bg-surface border border-line rounded-full focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/25 text-ink transition-[border-color,box-shadow] duration-150"
+              className="text-xs md:text-sm"
             >
               <option value="">Tất cả học viên</option>
               {students.map((st) => (
@@ -522,15 +523,15 @@ export default function Tuitions() {
                   {st.fullName} (#{st.id})
                 </option>
               ))}
-            </select>
+            </SelectPill>
           </div>
 
           {/* Lọc theo Lớp học */}
           <div>
-            <select
+            <SelectPill
               value={classFilter}
               onChange={(e) => setClassFilter(e.target.value)}
-              className="w-full h-10 px-3.5 text-xs md:text-sm bg-surface border border-line rounded-full focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/25 text-ink transition-[border-color,box-shadow] duration-150"
+              className="text-xs md:text-sm"
             >
               <option value="">Tất cả lớp học</option>
               {classes.map((c) => (
@@ -538,20 +539,16 @@ export default function Tuitions() {
                   {c.className}
                 </option>
               ))}
-            </select>
+            </SelectPill>
           </div>
 
           {/* Lọc theo Cơ sở (SuperAdmin chọn, BranchManager khóa) */}
           <div>
-            <select
+            <SelectPill
               value={branchFilter}
               disabled={isBranchManager}
               onChange={(e) => setBranchFilter(e.target.value)}
-              className={`w-full h-10 px-3.5 text-xs md:text-sm border rounded-full focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/25 transition-[border-color,box-shadow] duration-150 ${
-                isBranchManager
-                  ? 'bg-surface-subtle border-line cursor-not-allowed text-ink-muted'
-                  : 'bg-surface border-line text-ink'
-              }`}
+              className="text-xs md:text-sm"
             >
               {!isBranchManager && <option value="">Tất cả cơ sở</option>}
               {branches.map((b) => (
@@ -559,7 +556,7 @@ export default function Tuitions() {
                   {b.branchName}
                 </option>
               ))}
-            </select>
+            </SelectPill>
           </div>
         </div>
 
@@ -1792,7 +1789,7 @@ function CreateTuitionModal({
               <label className="block font-semibold text-ink-secondary mb-1">
                 Cơ sở áp dụng <span className="text-rose-500">*</span>
               </label>
-              <select
+              <SelectPill
                 value={branchId}
                 disabled={isBranchManager}
                 onChange={(e) => {
@@ -1801,16 +1798,13 @@ function CreateTuitionModal({
                   setClassId('');
                   setStudentEnrolledClasses([]);
                 }}
-                className={`w-full h-10 px-3.5 border rounded-full focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/25 transition-[border-color,box-shadow] duration-150 ${
-                  isBranchManager ? 'bg-surface-subtle border-line cursor-not-allowed text-ink-muted' : 'bg-surface border-line text-ink'
-                }`}
               >
                 {branches.map((b) => (
                   <option key={b.id} value={b.id}>
                     {b.branchName}
                   </option>
                 ))}
-              </select>
+              </SelectPill>
             </div>
 
             {/* Chọn học viên */}
@@ -1823,11 +1817,10 @@ function CreateTuitionModal({
                   {studentsLoadError}
                 </p>
               )}
-              <select
+              <SelectPill
                 value={studentId}
                 onChange={(e) => handleStudentChange(e.target.value)}
                 required
-                className="w-full h-10 px-3.5 bg-surface border border-line rounded-full focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/25 text-ink"
               >
                 <option value="">-- Chọn học viên --</option>
                 {filteredStudents.map((st) => (
@@ -1835,7 +1828,7 @@ function CreateTuitionModal({
                     {st.fullName} (#{st.id}) {st.school ? `• ${st.school}` : ''}
                   </option>
                 ))}
-              </select>
+              </SelectPill>
             </div>
 
             {/* Chọn lớp học (tự động lọc theo các lớp học viên đã ghi danh) */}
@@ -1846,10 +1839,9 @@ function CreateTuitionModal({
               {loadingStudentClasses ? (
                 <div className="text-ink-muted py-2">Đang nạp lớp học viên đã ghi danh...</div>
               ) : (
-                <select
+                <SelectPill
                   value={classId}
                   onChange={(e) => setClassId(e.target.value)}
-                  className="w-full h-10 px-3.5 bg-surface border border-line rounded-full focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/25 text-ink"
                 >
                   <option value="">-- Khoản thu ngoài lớp (Không gắn lớp) --</option>
                   {studentEnrolledClasses.map((sc) => (
@@ -1857,7 +1849,7 @@ function CreateTuitionModal({
                       {sc.className} ({sc.status === 'Active' ? 'Đang học' : 'Chờ duyệt'})
                     </option>
                   ))}
-                </select>
+                </SelectPill>
               )}
               <p className="text-[11px] text-ink-muted mt-1">
                 Hệ thống tự động lọc các lớp học viên đã ghi danh để đảm bảo tính toàn vẹn dữ liệu.
@@ -2770,15 +2762,15 @@ function ParentPaymentModal({ tuition, onClose, onSuccess }) {
               <label className="block text-xs font-semibold text-ink-secondary mb-1">
                 Phương thức thanh toán <span className="text-rose-600">*</span>
               </label>
-              <select
+              <SelectPill
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
-                className="w-full h-10 px-3.5 text-xs md:text-sm bg-surface border border-line rounded-full focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/25 text-ink"
+                className="text-xs md:text-sm"
               >
                 <option value="BankTransfer">Chuyển khoản ngân hàng (Khuyên dùng)</option>
                 <option value="ZaloPay">Ví ZaloPay</option>
                 <option value="Cash">Đóng tiền mặt tại quầy trung tâm</option>
-              </select>
+              </SelectPill>
             </div>
 
             {/* Mã giao dịch ngân hàng */}

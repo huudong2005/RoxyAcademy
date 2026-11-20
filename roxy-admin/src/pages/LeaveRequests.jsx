@@ -12,6 +12,7 @@ import {
   SecondaryButton,
   IconButton,
   InputPill,
+  SelectPill,
 } from '../components/ui';
 
 // Helper: Định dạng ngày kèm thứ tiếng Việt (VD: "Thứ Sáu, 14/11/2026")
@@ -840,29 +841,27 @@ export default function LeaveRequests() {
 
           {/* Lọc theo Đối tượng */}
           <div>
-            <select
+            <SelectPill
               value={requesterTypeFilter}
               onChange={(e) => {
                 setRequesterTypeFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full h-10 rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
             >
               <option value="all">Tất cả đối tượng</option>
               <option value="Student">🎓 Học viên xin nghỉ</option>
               <option value="Teacher">👩‍🏫 Giáo viên xin nghỉ</option>
-            </select>
+            </SelectPill>
           </div>
 
           {/* Lọc theo Học viên */}
           <div>
-            <select
+            <SelectPill
               value={studentFilter}
               onChange={(e) => {
                 setStudentFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full h-10 rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
             >
               <option value="">Tất cả học viên</option>
               {students.map((s) => (
@@ -870,18 +869,17 @@ export default function LeaveRequests() {
                   {s.fullName} ({s.code || `#STU-${s.id}`})
                 </option>
               ))}
-            </select>
+            </SelectPill>
           </div>
 
           {/* Lọc theo Lớp học */}
           <div>
-            <select
+            <SelectPill
               value={classFilter}
               onChange={(e) => {
                 setClassFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full h-10 rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
             >
               <option value="">Tất cả lớp học</option>
               {classes.map((c) => (
@@ -889,7 +887,7 @@ export default function LeaveRequests() {
                   {c.className}
                 </option>
               ))}
-            </select>
+            </SelectPill>
           </div>
 
           {/* Lọc theo Chi nhánh */}
@@ -905,14 +903,13 @@ export default function LeaveRequests() {
                 </span>
               </div>
             ) : (
-              <select
+              <SelectPill
                 value={branchFilter}
                 onChange={(e) => {
                   setBranchFilter(e.target.value);
                   setCurrentPage(1);
                 }}
                 disabled={!isSuperAdmin}
-                className="w-full h-10 rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
               >
                 <option value="">Tất cả cơ sở</option>
                 {branches.map((b) => (
@@ -920,7 +917,7 @@ export default function LeaveRequests() {
                     {b.branchName}
                   </option>
                 ))}
-              </select>
+              </SelectPill>
             )}
           </div>
         </div>
@@ -1564,13 +1561,12 @@ export default function LeaveRequests() {
                           ⚠️ {studentsLoadError}
                         </p>
                       )}
-                      <select
+                      <SelectPill
                         value={createFormData.studentId}
                         onChange={(e) =>
                           setCreateFormData((prev) => ({ ...prev, studentId: e.target.value }))
                         }
                         required
-                        className="w-full h-10 rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
                       >
                         <option value="">-- Chọn học viên --</option>
                         {students.map((s) => (
@@ -1578,20 +1574,19 @@ export default function LeaveRequests() {
                             {s.fullName} ({s.code || `#STU-${s.id}`}) {s.branchName ? `• ${s.branchName}` : ''}
                           </option>
                         ))}
-                      </select>
+                      </SelectPill>
                     </div>
                   ) : (
                     <div>
                       <label className="block text-xs font-semibold text-ink mt-2 mb-1">
                         Chọn giáo viên: <span className="text-rose-500">*</span>
                       </label>
-                      <select
+                      <SelectPill
                         value={createFormData.teacherId}
                         onChange={(e) =>
                           setCreateFormData((prev) => ({ ...prev, teacherId: e.target.value }))
                         }
                         required
-                        className="w-full h-10 rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
                       >
                         <option value="">-- Chọn giáo viên --</option>
                         {teachers.map((t) => (
@@ -1599,7 +1594,7 @@ export default function LeaveRequests() {
                             {t.fullName} ({t.email || t.username})
                           </option>
                         ))}
-                      </select>
+                      </SelectPill>
                     </div>
                   )}
                 </div>
@@ -1624,13 +1619,12 @@ export default function LeaveRequests() {
                       ⚠️ {studentsLoadError}
                     </p>
                   )}
-                  <select
+                  <SelectPill
                     value={createFormData.studentId}
                     onChange={(e) =>
                       setCreateFormData((prev) => ({ ...prev, studentId: e.target.value }))
                     }
                     required
-                    className="w-full h-10 rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
                   >
                     <option value="">-- Chọn học viên --</option>
                     {students.map((s) => (
@@ -1638,7 +1632,7 @@ export default function LeaveRequests() {
                         {s.fullName} ({s.code || `#STU-${s.id}`})
                       </option>
                     ))}
-                  </select>
+                  </SelectPill>
                 </div>
               ) : (
                 /* Học viên tự gửi: Tự động cho chính mình */
@@ -1657,7 +1651,7 @@ export default function LeaveRequests() {
                 <label className="block text-xs font-semibold text-ink mb-1">
                   Lớp học liên quan: <span className="text-ink-muted font-normal">(Khuyên dùng)</span>
                 </label>
-                <select
+                <SelectPill
                   value={createFormData.classId}
                   onChange={(e) => {
                     const newClassId = e.target.value;
@@ -1670,7 +1664,6 @@ export default function LeaveRequests() {
                       setAvailableSchedules([]);
                     }
                   }}
-                  className="w-full h-10 rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
                 >
                   <option value="">-- Không chọn lớp cụ thể (Nghỉ cả ngày) --</option>
                   {classes.map((c) => (
@@ -1678,7 +1671,7 @@ export default function LeaveRequests() {
                       {c.className} {c.branchName ? `• ${c.branchName}` : ''}
                     </option>
                   ))}
-                </select>
+                </SelectPill>
                 <p className="text-[11px] text-ink-muted mt-1">
                   Chọn lớp học để hệ thống tự động đồng bộ điểm danh khi đơn được duyệt.
                 </p>
@@ -1707,12 +1700,11 @@ export default function LeaveRequests() {
                     Buổi học cụ thể:{' '}
                     {loadingSchedules && <span className="text-teal font-normal">Đang tìm...</span>}
                   </label>
-                  <select
+                  <SelectPill
                     value={createFormData.scheduleId}
                     onChange={(e) =>
                       setCreateFormData((prev) => ({ ...prev, scheduleId: e.target.value }))
                     }
-                    className="w-full h-10 rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
                   >
                     <option value="">-- Nghỉ cả ngày / Không theo buổi cụ thể --</option>
                     {availableSchedules.map((sc) => (
@@ -1721,7 +1713,7 @@ export default function LeaveRequests() {
                         {sc.room ? `• ${sc.room}` : ''}
                       </option>
                     ))}
-                  </select>
+                  </SelectPill>
                   {availableSchedules.length === 0 && !loadingSchedules && (
                     <p className="text-[11px] text-ink-muted mt-1">
                       (Không tìm thấy buổi học nào trong ngày này của lớp. Đơn sẽ áp dụng nghỉ cả ngày).
