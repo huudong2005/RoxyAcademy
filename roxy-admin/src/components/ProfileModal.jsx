@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axiosClient from '../api/axiosClient';
+import ImageUpload from './ImageUpload';
 
 function getInitials(name) {
   if (!name) return 'R';
@@ -289,23 +290,24 @@ export default function ProfileModal({ isOpen, onClose, currentUser, onUserUpdat
               </div>
 
               <div>
-                <label className="mb-1.5 block text-xs font-semibold text-slate-700">
-                  Ảnh đại diện (URL) <span className="font-normal text-slate-400">(tùy chọn)</span>
-                </label>
-                <input
-                  type="url"
-                  placeholder="https://..."
+                <ImageUpload
+                  label={
+                    <>
+                      Ảnh đại diện <span className="font-normal text-slate-400">(tùy chọn)</span>
+                    </>
+                  }
                   value={formData.avatarUrl}
-                  onChange={(e) => {
+                  onChange={(url) => {
                     setFailedAvatarUrl(null);
-                    setFormData((prev) => ({ ...prev, avatarUrl: e.target.value }));
+                    setFormData((prev) => ({ ...prev, avatarUrl: url }));
                     if (error) setError('');
                     if (successMsg) setSuccessMsg('');
                   }}
-                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 focus:outline-none"
+                  folder="general"
+                  disabled={submitting}
                 />
                 <p className="mt-1 text-[11px] text-slate-500">
-                  Dán đường dẫn ảnh (http:// hoặc https://) hoặc để trống để dùng chữ cái đầu.
+                  Tải ảnh đại diện lên hoặc xóa ảnh để dùng chữ cái đầu.
                 </p>
               </div>
 

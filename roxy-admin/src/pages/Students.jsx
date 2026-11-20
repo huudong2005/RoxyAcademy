@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
+import ImageUpload from '../components/ImageUpload';
 import {
   PrimaryButton,
   SecondaryButton,
@@ -2334,30 +2335,29 @@ export default function Students() {
               {/* Trường 1: Ảnh đại diện (avatarUrl) kèm live preview 56x56px */}
               <div>
                 <label className="mb-2 block text-xs font-semibold text-ink-secondary">
-                  Ảnh đại diện (URL)
+                  Ảnh đại diện
                 </label>
-                <div className="flex items-center gap-3.5">
+                <div className="flex items-start gap-3.5">
                   <StudentAvatar
                     src={parentEditForm.avatarUrl}
                     name={parentEditStudent.fullName}
                     sizeClass="h-14 w-14"
                     textClass="text-lg"
                   />
-                  <div className="flex-1">
-                    <input
-                      type="url"
-                      placeholder="https://..."
+                  <div className="min-w-0 flex-1">
+                    <ImageUpload
                       value={parentEditForm.avatarUrl}
-                      onChange={(e) => {
-                        setParentEditForm((prev) => ({ ...prev, avatarUrl: e.target.value }));
+                      onChange={(url) => {
+                        setParentEditForm((prev) => ({ ...prev, avatarUrl: url }));
                         if (parentEditError) setParentEditError('');
                       }}
-                      className="w-full rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink placeholder:text-ink-muted focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
+                      folder="general"
+                      disabled={parentEditSubmitting}
                     />
                   </div>
                 </div>
                 <p className="mt-1.5 text-[11px] text-ink-muted">
-                  Dán đường dẫn ảnh (URL) hoặc để trống để dùng chữ cái đầu.
+                  Tải ảnh đại diện lên hoặc xóa ảnh để dùng chữ cái đầu.
                 </p>
               </div>
 

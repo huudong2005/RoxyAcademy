@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
 import { formatCurrency, formatDateTime, numberToVietnameseWords } from '../utils/formatters';
 import ConfirmModal from '../components/ConfirmModal';
+import ImageUpload from '../components/ImageUpload';
 import {
   PageHeader,
   Card,
@@ -1259,19 +1260,18 @@ function RecordPaymentModal({ tuitions, onClose, onSuccess }) {
               />
             </div>
 
-            {/* URL ảnh chứng từ */}
-            <div>
-              <label className="block font-semibold text-ink-secondary mb-1">
-                URL ảnh chụp biên lai / Chứng từ <span className="text-ink-muted font-normal">(Tùy chọn)</span>
-              </label>
-              <InputPill
-                type="url"
-                placeholder="https://..."
-                value={proofImageUrl}
-                onChange={(e) => setProofImageUrl(e.target.value)}
-                className="!h-10 !py-0 text-xs"
-              />
-            </div>
+            {/* Ảnh chứng từ */}
+            <ImageUpload
+              label={
+                <>
+                  Ảnh chụp biên lai / Chứng từ <span className="text-ink-muted font-normal">(Tùy chọn)</span>
+                </>
+              }
+              value={proofImageUrl}
+              onChange={setProofImageUrl}
+              folder="payments"
+              disabled={submitting}
+            />
 
             {/* Ghi chú */}
             <div>

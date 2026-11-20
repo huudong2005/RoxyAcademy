@@ -1274,3 +1274,29 @@ Toàn bộ **8/8 hạng mục** của **Giai đoạn 1N-2 (8 bẫy đồng bộ)
 
 ## 3. Kết luận 3C
 - **Trạng thái nghiệm thu cuối cùng:** **PASS 100%** (0 lỗi chặn; đã dọn dẹp sạch bản ghi test tạm trong DB và dừng server test; đã cập nhật `docs/API.md` mục 5.3). Đủ điều kiện commit.
+
+
+---
+
+# BÁO CÁO QA — ĐỢT SỬA 2D-3: UPLOAD ẢNH CHỌN FILE CHO AVATAR + MINH CHỨNG NHÂN VIÊN
+**Ngày kiểm tra:** 20/11/2026  
+**Người thực hiện:** QA Agent (build/lint/static check) + Đông (kiểm thử thủ công trên trình duyệt thật)  
+**Phạm vi:** `roxy-admin/src/components/ProfileModal.jsx`, `roxy-admin/src/pages/Students.jsx`, `roxy-admin/src/pages/Payments.jsx` (không sửa `Homeworks.jsx`, không sửa backend).
+
+## 1. Kết quả Build, Lint & Đối chiếu mã nguồn (`roxy-admin/`)
+- `npm run lint` (`eslint .`): **PASS** (0 error, 0 warning).
+- `npm run build` (`vite build`): **PASS** (`✓ 113 modules transformed`, `✓ built in 366ms`).
+- **Đối chiếu tĩnh 3/3 vị trí:**
+  - `ProfileModal.jsx` (L293–308): đã thay ô nhập URL bằng `<ImageUpload folder="general" value={formData.avatarUrl} ... />`, giữ live preview avatar `h-16 w-16` (L216–222) và validation cũ (URL rỗng = không đổi avatar); không còn `placeholder="https://..."`.
+  - `Students.jsx` (L2340–2358): đã thay ô nhập URL bằng `<ImageUpload folder="general" value={parentEditForm.avatarUrl} ... />` cạnh `<StudentAvatar sizeClass="h-14 w-14" ... />` (56x56px), giữ nguyên `PUT /Students` (chỉ `School`/`Grade`/`AvatarUrl`); không còn `placeholder="https://..."`.
+  - `Payments.jsx` (L1264–1274): `RecordPaymentModal` đã thay ô nhập URL bằng `<ImageUpload folder="payments" value={proofImageUrl} onChange={setProofImageUrl} ... />`, giữ nguyên `POST /Payments` (`ProofImageUrl`); không còn `placeholder="https://..."`.
+
+## 2. Kết quả kiểm thử trên trình duyệt thật (xác nhận thủ công bởi Đông)
+| Màn hình kiểm tra | Kết quả | Chi tiết xác nhận |
+| :--- | :---: | :--- |
+| **Hồ sơ cá nhân (`ProfileModal.jsx`)** | **PASS** | Có nút chọn file + xem trước ảnh, không còn ô nhập URL; chọn ảnh thật và lưu, ảnh hiển thị đúng sau khi tải lại trang. |
+| **Form phụ huynh sửa thông tin liên hệ con (`Students.jsx`)** | **PASS** | Có nút chọn file + xem trước 56x56, không còn ô nhập URL; chọn ảnh thật và lưu, ảnh hiển thị đúng sau khi tải lại trang. |
+| **Form nhân viên tạo thanh toán (`Payments.jsx`)** | **PASS** | Có nút chọn file + xem trước ảnh, không còn ô nhập URL; chọn ảnh thật và lưu, ảnh minh chứng hiển thị đúng sau khi tải lại trang. |
+
+## 3. Kết luận 2D-3
+- **Trạng thái nghiệm thu cuối cùng:** **PASS 100%** (build, lint, kiểm tra tĩnh 3/3 vị trí và kiểm thử thực tế trên trình duyệt đều đạt). Đủ điều kiện commit.
