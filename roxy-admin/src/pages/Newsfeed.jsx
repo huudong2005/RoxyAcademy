@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import axiosClient from '../api/axiosClient';
 import { formatDateTime, NEWSFEED_AUDIENCE_META } from '../utils/formatters';
+import { getStoredUser } from '../utils/authStorage';
 import {
   NewsfeedDetailModal,
   CreateEditNewsfeedModal,
@@ -23,13 +24,7 @@ import {
  * - Teacher / Parent / Student: chỉ xem các bài được phép đọc, không có nút đăng/sửa/xóa.
  */
 export default function Newsfeed() {
-  const [currentUser] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('user') || '{}');
-    } catch {
-      return {};
-    }
-  });
+  const [currentUser] = useState(() => getStoredUser());
 
   const isSuperAdmin = currentUser?.role === 'SuperAdmin';
   const isBranchManager = currentUser?.role === 'BranchManager';
@@ -43,7 +38,9 @@ export default function Newsfeed() {
   const [reloadKey, setReloadKey] = useState(0);
 
   // Bộ lọc
-  const [branchFilter, setBranchFilter] = useState(''); // '' = tất cả bài hiển thị
+  const [branchFilter, setBranchFilter] = useState(
+    isBranchManager && managerBranchId ? String(managerBranchId) : ''
+  );
   const [audienceFilter, setAudienceFilter] = useState('all'); // 'all' | 'All' | 'Parents' | 'Teachers'
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -249,12 +246,15 @@ export default function Newsfeed() {
             {isBranchManager ? (
               <select
                 value={branchFilter}
+                disabled={isBranchManager}
                 onChange={(e) => setBranchFilter(e.target.value)}
-                className="w-full h-10 rounded-full border border-line bg-surface px-3.5 py-2 text-sm text-ink focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none transition-[border-color,box-shadow] duration-150"
+                className="w-full h-10 rounded-full border border-line bg-surface px-3.5 py-2 text-sm text-ink focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none transition-[border-color,box-shadow] duration-150 disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
               >
-                <option value="">Tất cả bài hiển thị</option>
                 {managerBranchId && (
-                  <option value={String(managerBranchId)}>Chi nhánh của tôi</option>
+                  <option value={String(managerBranchId)}>
+                    {fallbackBranchesFromPosts.find((b) => Number(b.id) === managerBranchId)
+                      ?.branchName || 'Chi nhánh của tôi'}
+                  </option>
                 )}
               </select>
             ) : (

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Navigate } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
 import { formatCurrency, numberToVietnameseWords } from '../utils/formatters';
+import { getStoredUser } from '../utils/authStorage';
 import {
   PageHeader,
   Card,
@@ -14,13 +15,7 @@ import {
 
 export default function Courses() {
   // 1. Phân quyền truy cập: Chỉ SuperAdmin và BranchManager
-  const [currentUser] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('user') || '{}');
-    } catch {
-      return {};
-    }
-  });
+  const [currentUser] = useState(() => getStoredUser());
 
   const isStaff = currentUser.role === 'SuperAdmin' || currentUser.role === 'BranchManager';
 

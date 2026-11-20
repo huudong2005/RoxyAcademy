@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
 import { formatCurrency } from '../utils/formatters';
+import { getStoredUser } from '../utils/authStorage';
 import {
   Card,
   PageHeader,
@@ -92,15 +93,7 @@ function DashboardSkeleton() {
 }
 
 export default function Dashboard() {
-  const [user] = useState(() => {
-    try {
-      const stored = localStorage.getItem('user');
-      return stored ? JSON.parse(stored) : { fullName: '', role: '' };
-    } catch (e) {
-      console.warn('Lỗi đọc user tại Dashboard:', e);
-      return { fullName: '', role: '' };
-    }
-  });
+  const [user] = useState(() => getStoredUser({ fullName: '', role: '' }));
 
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);

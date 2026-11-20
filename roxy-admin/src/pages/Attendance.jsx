@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
 import ConfirmModal from '../components/ConfirmModal';
+import { getStoredUser } from '../utils/authStorage';
 import {
   PageHeader,
   Card,
@@ -15,13 +16,7 @@ export default function Attendance() {
   const navigate = useNavigate();
 
   // Thông tin user đăng nhập
-  const [currentUser] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('user') || '{}');
-    } catch {
-      return {};
-    }
-  });
+  const [currentUser] = useState(() => getStoredUser());
 
   const isSuperAdmin = currentUser.role === 'SuperAdmin';
   const isBranchManager = currentUser.role === 'BranchManager';

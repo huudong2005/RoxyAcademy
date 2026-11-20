@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axiosClient from '../api/axiosClient';
 import ImageUpload from './ImageUpload';
+import { updateStoredUser } from '../utils/authStorage';
 
 function getInitials(name) {
   if (!name) return 'R';
@@ -141,7 +142,7 @@ export default function ProfileModal({ isOpen, onClose, currentUser, onUserUpdat
       const res = await axiosClient.put('/Auth/me', payload);
       const updatedUser = res.data;
 
-      localStorage.setItem('user', JSON.stringify(updatedUser));
+      updateStoredUser(updatedUser);
       if (onUserUpdated) {
         onUserUpdated(updatedUser);
       }

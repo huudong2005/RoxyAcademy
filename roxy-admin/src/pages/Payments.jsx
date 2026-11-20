@@ -4,6 +4,7 @@ import axiosClient from '../api/axiosClient';
 import { formatCurrency, formatDateTime, numberToVietnameseWords } from '../utils/formatters';
 import ConfirmModal from '../components/ConfirmModal';
 import ImageUpload from '../components/ImageUpload';
+import { getStoredUser } from '../utils/authStorage';
 import {
   PageHeader,
   Card,
@@ -18,14 +19,8 @@ export default function Payments() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // Thông tin user đăng nhập từ localStorage
-  const [currentUser] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('user') || '{}');
-    } catch {
-      return {};
-    }
-  });
+  // Thông tin user đăng nhập từ storage
+  const [currentUser] = useState(() => getStoredUser());
 
   const isTeacher = currentUser.role === 'Teacher';
   const isSuperAdmin = currentUser.role === 'SuperAdmin';

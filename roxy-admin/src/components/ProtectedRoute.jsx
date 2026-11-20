@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react';
 import { Navigate, Outlet, useNavigate } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
 import { useAuth } from '../context/authContext';
+import { clearAuthSession, getStoredToken, updateStoredUser } from '../utils/authStorage';
 
 export default function ProtectedRoute({ allowedRoles }) {
   const navigate = useNavigate();
   const { user: verifiedUser, setUser: setVerifiedUser } = useAuth();
-  const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
+  const token = getStoredToken();
 
   const [verifying, setVerifying] = useState(() => Boolean(token && !verifiedUser));
   const [authFailed, setAuthFailed] = useState(false);
@@ -26,13 +27,11 @@ export default function ProtectedRoute({ allowedRoles }) {
         if (!meData || !meData.role) {
           throw new Error('Thông tin tài khoản không hợp lệ.');
         }
-        localStorage.setItem('user', JSON.stringify(meData));
+        updateStoredUser(meData);
         setVerifiedUser(meData);
       } catch {
         if (ignore) return;
-        localStorage.removeItem('token');
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('user');
+        clearAuthSession();
         setVerifiedUser(null);
         setAuthFailed(true);
       } finally {

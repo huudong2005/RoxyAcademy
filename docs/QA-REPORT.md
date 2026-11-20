@@ -1323,3 +1323,25 @@ Toàn bộ **8/8 hạng mục** của **Giai đoạn 1N-2 (8 bẫy đồng bộ)
 
 ## 3. Kết luận
 - **Trạng thái nghiệm thu cuối cùng:** **PASS 100%** — đủ điều kiện commit.
+
+
+---
+
+# BÁO CÁO QA — KHÓA LỌC CHI NHÁNH + GHI NHỚ ĐĂNG NHẬP + TOGGLE MẬT KHẨU
+**Ngày kiểm tra:** 20/11/2026  
+**Người thực hiện:** QA / Commander (Chrome headless + Playwright, API `http://localhost:5123`)  
+**Phạm vi:** `authStorage.js`, `axiosClient.js`, `Login.jsx`, `BranchModals.jsx`, `ProtectedRoute.jsx`, `AdminLayout.jsx`, `ProfileModal.jsx`, `ClassList.jsx`, `Newsfeed.jsx` và các trang đọc `user` / lọc chi nhánh.
+
+## 1. Kết quả Build & Lint (`roxy-admin/`)
+- `npm run lint` (`eslint .`): **PASS** (0 error, 0 warning).
+- `npm run build` (`vite build`): **PASS** (`✓ 114 modules transformed`, `✓ built in 324ms`).
+
+## 2. Kết quả kiểm thử thực tế trên trình duyệt thật
+| Hạng mục kiểm tra | Kết quả | Chi tiết thực tế |
+| :--- | :---: | :--- |
+| **(a) Khóa bộ lọc chi nhánh cho `BranchManager`** | **PASS** | - Đăng nhập `BranchManager` (`BranchId = 1`): `/classes`, `/students`, `/teachers`, `/schedules`, `/newsfeed` đều khóa `<select>` (`disabled = true`, `value = "1"`, không còn option `"Tất cả cơ sở"`).<br>- `/leave-requests` hiển thị ô khóa thay cho `<select>`; `/tuitions` xác nhận trong code (`L547–556`) có `disabled={isBranchManager}` và ẩn `"Tất cả cơ sở"`.<br>- `BranchDetail.jsx`, `Branches.jsx`, `Payments.jsx`, `Grades.jsx`, `Homeworks.jsx` không có bộ lọc chi nhánh. |
+| **(b) Checkbox "Ghi nhớ đăng nhập" (`Login.jsx` + `authStorage.js` + `axiosClient.js`)** | **PASS** | - Mặc định tích (`defaultChecked = true`).<br>- Khi **BỎ tích**: `token` & `user` lưu vào `sessionStorage`, `localStorage` để `null`; mở browser context mới truy cập `/` tự chuyển về `/login`.<br>- Khi **TÍCH**: `token` & `user` lưu vào `localStorage`, `sessionStorage` là `null`.<br>- Khi **Đăng xuất**: xóa sạch cả `localStorage` và `sessionStorage` (`token = null`, `user = null`). |
+| **(c) Toggle mật khẩu trong form chi nhánh (`BranchModals.jsx`)** | **PASS** | - Ô mật khẩu quản lý khởi đầu `type="password"` -> bấm `aria-label="Hiện mật khẩu"` đổi sang `type="text"` -> bấm `aria-label="Ẩn mật khẩu"` quay lại `type="password"`. |
+
+## 3. Kết luận
+- **Trạng thái nghiệm thu cuối cùng:** **PASS 100%** — đủ điều kiện commit.

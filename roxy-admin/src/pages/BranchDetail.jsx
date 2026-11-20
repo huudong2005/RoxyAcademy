@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
 import { formatDate } from '../utils/formatters';
+import { getStoredUser } from '../utils/authStorage';
 import {
   Card,
   Badge,
@@ -24,13 +25,7 @@ export default function BranchDetail() {
   const branchId = Number(id);
   const isValidBranchId = Boolean(id) && Number.isInteger(branchId) && branchId > 0;
 
-  const [currentUser] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('user') || '{}');
-    } catch {
-      return {};
-    }
-  });
+  const [currentUser] = useState(() => getStoredUser());
 
   const isSuperAdmin = currentUser?.role === 'SuperAdmin';
 

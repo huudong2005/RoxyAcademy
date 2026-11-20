@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import axiosClient from '../api/axiosClient';
 import { formatDateTime } from '../utils/formatters';
 import { ComposeMessageModal, MessageDetailModal } from '../components/MessageModals';
+import { getStoredUser } from '../utils/authStorage';
 import {
   PageHeader,
   Card,
@@ -23,13 +24,7 @@ const TABS = [
  * Backend tự lọc phạm vi dữ liệu theo vai trò & chi nhánh. Không có chức năng xóa tin nhắn.
  */
 export default function Messages() {
-  const [currentUser] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('user') || '{}');
-    } catch {
-      return {};
-    }
-  });
+  const [currentUser] = useState(() => getStoredUser());
 
   const currentUserId = currentUser?.id ? Number(currentUser.id) : null;
 

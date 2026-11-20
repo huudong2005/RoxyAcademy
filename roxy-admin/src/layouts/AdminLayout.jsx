@@ -4,6 +4,7 @@ import NotificationBell from '../components/NotificationBell';
 import ProfileModal from '../components/ProfileModal';
 import ChangePasswordModal from '../components/ChangePasswordModal';
 import { useAuth } from '../context/authContext';
+import { clearAuthSession, getStoredUser } from '../utils/authStorage';
 
 export default function AdminLayout() {
   const navigate = useNavigate();
@@ -15,15 +16,9 @@ export default function AdminLayout() {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef(null);
   const [failedAvatarUrl, setFailedAvatarUrl] = useState(null);
-  const [localUser, setLocalUser] = useState(() => {
-    try {
-      const stored = localStorage.getItem('user');
-      return stored ? JSON.parse(stored) : { fullName: '', role: '', branchId: null };
-    } catch (e) {
-      console.warn('Lỗi phân tích dữ liệu user từ localStorage:', e);
-      return { fullName: '', role: '', branchId: null };
-    }
-  });
+  const [localUser, setLocalUser] = useState(() =>
+    getStoredUser({ fullName: '', role: '', branchId: null })
+  );
 
   const user = verifiedUser || localUser;
 
@@ -51,9 +46,7 @@ export default function AdminLayout() {
   }, [userMenuOpen]);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('user');
+    clearAuthSession();
     setVerifiedUser(null);
     navigate('/login', { replace: true });
   };

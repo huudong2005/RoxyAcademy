@@ -4,6 +4,7 @@ import axiosClient from '../api/axiosClient';
 import { formatCurrency, formatDate, formatDateTime, numberToVietnameseWords } from '../utils/formatters';
 import { fetchAllStudents } from '../utils/fetchAllStudents';
 import ImageUpload from '../components/ImageUpload';
+import { getStoredUser } from '../utils/authStorage';
 import {
   PageHeader,
   Card,
@@ -17,14 +18,8 @@ import {
 export default function Tuitions() {
   const navigate = useNavigate();
 
-  // Thông tin user đăng nhập từ localStorage
-  const [currentUser] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('user') || '{}');
-    } catch {
-      return {};
-    }
-  });
+  // Thông tin user đăng nhập từ storage
+  const [currentUser] = useState(() => getStoredUser());
 
   const isTeacher = currentUser.role === 'Teacher';
   const isSuperAdmin = currentUser.role === 'SuperAdmin';

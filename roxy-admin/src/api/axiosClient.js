@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { clearAuthSession, getStoredToken } from '../utils/authStorage';
 
 // Sử dụng biến môi trường VITE_API_BASE_URL nếu có, mặc định là '/api' qua Vite proxy
 const baseURL = import.meta.env.VITE_API_BASE_URL || '/api';
@@ -13,7 +14,7 @@ const axiosClient = axios.create({
 // INTERCEPTOR REQUEST: Tự động đính kèm Bearer Token nếu đã đăng nhập
 axiosClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
+    const token = getStoredToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -27,9 +28,7 @@ axiosClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('user');
+      clearAuthSession();
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';
       }

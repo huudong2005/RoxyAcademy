@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
 import ImageUpload from '../components/ImageUpload';
+import { getStoredUser } from '../utils/authStorage';
 import {
   PrimaryButton,
   SecondaryButton,
@@ -41,13 +42,7 @@ function StudentAvatar({ src, name, sizeClass = 'h-9 w-9', textClass = 'text-xs'
 
 export default function Students() {
   // Thông tin user đăng nhập
-  const [currentUser] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('user') || '{}');
-    } catch {
-      return {};
-    }
-  });
+  const [currentUser] = useState(() => getStoredUser());
 
   const isStaff = currentUser.role === 'SuperAdmin' || currentUser.role === 'BranchManager';
   const isSuperAdmin = currentUser.role === 'SuperAdmin';

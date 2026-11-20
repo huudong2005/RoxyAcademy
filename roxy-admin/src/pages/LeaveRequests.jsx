@@ -4,6 +4,7 @@ import axiosClient from '../api/axiosClient';
 import { formatDate, formatDateTime } from '../utils/formatters';
 import ConfirmModal from '../components/ConfirmModal';
 import { fetchAllStudents } from '../utils/fetchAllStudents';
+import { getStoredUser } from '../utils/authStorage';
 import {
   PageHeader,
   Card,
@@ -42,13 +43,7 @@ export default function LeaveRequests() {
   // ==========================================
   // 1. THÔNG TIN NGƯỜI DÙNG & VAI TRÒ
   // ==========================================
-  const [currentUser] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('user') || '{}');
-    } catch {
-      return {};
-    }
-  });
+  const [currentUser] = useState(() => getStoredUser());
 
   const role = currentUser.role || '';
   const isSuperAdmin = role === 'SuperAdmin';

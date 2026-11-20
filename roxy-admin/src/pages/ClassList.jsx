@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
 import { formatDateTime } from '../utils/formatters';
 import ConfirmModal from '../components/ConfirmModal';
+import { getStoredUser } from '../utils/authStorage';
 import {
   PrimaryButton,
   SecondaryButton,
@@ -15,15 +16,10 @@ import {
 
 export default function ClassList() {
   // Lấy quyền từ user đang đăng nhập
-  const [currentUser] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('user') || '{}');
-    } catch {
-      return {};
-    }
-  });
+  const [currentUser] = useState(() => getStoredUser());
 
   const isSuperAdmin = currentUser.role === 'SuperAdmin';
+  const isBranchManager = currentUser.role === 'BranchManager';
 
   // State danh sách lớp và trạng thái tải
   const [classes, setClasses] = useState([]);
@@ -43,7 +39,11 @@ export default function ClassList() {
   const validStatuses = ['Upcoming', 'Ongoing', 'Finished'];
   const [search, setSearch] = useState('');
   const [branchFilter, setBranchFilter] = useState(
-    initialBranchId && /^\d+$/.test(initialBranchId) ? initialBranchId : ''
+    isBranchManager && currentUser?.branchId
+      ? String(currentUser.branchId)
+      : initialBranchId && /^\d+$/.test(initialBranchId)
+      ? initialBranchId
+      : ''
   );
   const [courseFilter, setCourseFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState(
@@ -723,9 +723,10 @@ export default function ClassList() {
               setBranchFilter(e.target.value);
               setCurrentPage(1);
             }}
-            className="w-full sm:w-auto min-w-[165px] rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink transition focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
+            disabled={isBranchManager}
+            className="w-full sm:w-auto min-w-[165px] rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink transition focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
           >
-            <option value="">Tất cả cơ sở</option>
+            {!isBranchManager && <option value="">Tất cả cơ sở</option>}
             {branches.map((b) => (
               <option key={b.id} value={b.id}>
                 {b.branchName}
@@ -769,7 +770,9 @@ export default function ClassList() {
             type="button"
             onClick={() => {
               setSearch('');
-              setBranchFilter('');
+              setBranchFilter(
+                isBranchManager && currentUser?.branchId ? String(currentUser.branchId) : ''
+              );
               setCourseFilter('');
               setStatusFilter('');
               setCurrentPage(1);

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import axiosClient from '../api/axiosClient';
 import { formatDate, formatDateTime } from '../utils/formatters';
 import { fetchAllStudents } from '../utils/fetchAllStudents';
+import { getStoredUser } from '../utils/authStorage';
 import {
   PageHeader,
   Card,
@@ -172,14 +173,8 @@ function ScoreDisplay({ score, maxScore, compact = false }) {
 }
 
 export default function Grades() {
-  // 1. Phân quyền UI từ localStorage
-  const [currentUser] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('user') || '{}');
-    } catch {
-      return {};
-    }
-  });
+  // 1. Phân quyền UI từ storage
+  const [currentUser] = useState(() => getStoredUser());
 
   const role = currentUser.role || '';
   const canEdit = role === 'SuperAdmin' || role === 'BranchManager' || role === 'Teacher';

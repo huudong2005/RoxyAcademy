@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
 import { Card, InputPill, PrimaryButton } from '../components/ui';
+import { saveAuthSession } from '../utils/authStorage';
 
 export default function Login() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -31,23 +33,25 @@ export default function Login() {
 
       const { accessToken, user } = response.data;
 
-      // Lưu Token vào LocalStorage
-      localStorage.setItem('token', accessToken);
-      localStorage.setItem('accessToken', accessToken);
-
       // Nếu Backend trả sẵn thông tin user, lưu luôn; nếu chưa có thì gọi /Auth/me
-      if (user) {
-        localStorage.setItem('user', JSON.stringify(user));
-      } else {
+      let resolvedUser = user;
+      if (!resolvedUser) {
         try {
           const meRes = await axiosClient.get('/Auth/me', {
             headers: { Authorization: `Bearer ${accessToken}` },
           });
-          localStorage.setItem('user', JSON.stringify(meRes.data));
+          resolvedUser = meRes.data;
         } catch (meErr) {
           console.warn('Không thể nạp thông tin tài khoản qua /Auth/me:', meErr);
         }
       }
+
+      // Lưu token và user vào localStorage (khi ghi nhớ) hoặc sessionStorage (chỉ phiên hiện tại)
+      saveAuthSession({
+        token: accessToken,
+        user: resolvedUser,
+        rememberMe,
+      });
 
       // Đăng nhập thành công -> Điều hướng về trang quản trị
       navigate('/', { replace: true });
@@ -186,6 +190,19 @@ export default function Login() {
                 )}
               </button>
             </div>
+          </div>
+
+          <div className="flex items-center justify-between pt-0.5">
+            <label className="inline-flex items-center gap-2 text-xs text-ink-secondary cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                disabled={loading}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="h-4 w-4 rounded border-line text-teal accent-teal focus:ring-2 focus:ring-gold/30 cursor-pointer"
+              />
+              <span>Ghi nhớ đăng nhập</span>
+            </label>
           </div>
 
           <PrimaryButton

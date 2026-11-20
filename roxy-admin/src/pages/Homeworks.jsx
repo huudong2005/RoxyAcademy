@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import axiosClient from '../api/axiosClient';
 import { formatDate, formatDateTime } from '../utils/formatters';
 import ConfirmModal from '../components/ConfirmModal';
+import { getStoredUser } from '../utils/authStorage';
 import {
   PageHeader,
   Card,
@@ -14,13 +15,7 @@ import {
 
 export default function Homeworks() {
   // 1. Phân quyền người dùng hiện tại
-  const [currentUser] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('user') || '{}');
-    } catch {
-      return {};
-    }
-  });
+  const [currentUser] = useState(() => getStoredUser());
 
   const role = currentUser.role || '';
   const isSuperAdmin = role === 'SuperAdmin';
