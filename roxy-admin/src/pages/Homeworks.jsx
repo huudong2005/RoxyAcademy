@@ -11,6 +11,7 @@ import {
   IconButton,
   InputPill,
   SelectPill,
+  CustomSelect,
   Badge,
 } from '../components/ui';
 
@@ -784,10 +785,10 @@ export default function Homeworks() {
 
           {/* Lọc theo Lớp học */}
           <div>
-            <SelectPill
+            <CustomSelect
               value={classFilter}
-              onChange={(e) => {
-                const val = e.target.value;
+              aria-label="Lọc theo lớp học"
+              onChange={(val) => {
                 setClassFilter(val);
                 if (!val) {
                   setSchedules([]);
@@ -795,50 +796,53 @@ export default function Homeworks() {
                 }
                 setCurrentPage(1);
               }}
-            >
-              <option value="">Tất cả lớp học</option>
-              {classes.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.className} {c.branchName ? `(${c.branchName})` : ''}
-                </option>
-              ))}
-            </SelectPill>
+              options={[
+                { value: '', label: 'Tất cả lớp học' },
+                ...classes.map((c) => ({
+                  value: String(c.id),
+                  label: `${c.className}${c.branchName ? ` (${c.branchName})` : ''}`,
+                })),
+              ]}
+            />
           </div>
 
           {/* Lọc theo Buổi học (Chỉ hiện khi đã chọn lớp) */}
           <div>
-            <SelectPill
+            <CustomSelect
               value={scheduleFilter}
               disabled={!classFilter}
-              onChange={(e) => {
-                setScheduleFilter(e.target.value);
+              aria-label="Lọc theo buổi học"
+              onChange={(v) => {
+                setScheduleFilter(v);
                 setCurrentPage(1);
               }}
-            >
-              <option value="">{classFilter ? 'Tất cả buổi học' : 'Chọn lớp trước'}</option>
-              {schedules.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {formatDate(s.studyDate)} ({s.startTime?.slice(0, 5)} - {s.endTime?.slice(0, 5)})
-                </option>
-              ))}
-            </SelectPill>
+              options={[
+                { value: '', label: classFilter ? 'Tất cả buổi học' : 'Chọn lớp trước' },
+                ...schedules.map((s) => ({
+                  value: String(s.id),
+                  label: `${formatDate(s.studyDate)} (${s.startTime?.slice(0, 5)} - ${s.endTime?.slice(0, 5)})`,
+                })),
+              ]}
+            />
           </div>
 
           {/* Lọc theo Tình trạng Hạn nộp & Nút reset */}
           <div className="flex gap-2">
-            <SelectPill
+            <CustomSelect
               value={dueStatusFilter}
-              onChange={(e) => {
-                setDueStatusFilter(e.target.value);
+              aria-label="Lọc theo tình trạng hạn nộp"
+              onChange={(v) => {
+                setDueStatusFilter(v);
                 setCurrentPage(1);
               }}
               wrapperClassName="flex-1 min-w-0"
-            >
-              <option value="all">Tất cả hạn nộp</option>
-              <option value="active">Đang mở / Còn hạn</option>
-              <option value="warning">Sắp hết hạn (&lt; 24h)</option>
-              <option value="overdue">Đã quá hạn nộp</option>
-            </SelectPill>
+              options={[
+                { value: 'all', label: 'Tất cả hạn nộp' },
+                { value: 'active', label: 'Đang mở / Còn hạn' },
+                { value: 'warning', label: 'Sắp hết hạn (< 24h)' },
+                { value: 'overdue', label: 'Đã quá hạn nộp' },
+              ]}
+            />
 
             <SecondaryButton
               type="button"

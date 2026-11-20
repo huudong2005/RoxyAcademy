@@ -14,7 +14,7 @@ import {
   SecondaryButton,
   IconButton,
   InputPill,
-  SelectPill,
+  CustomSelect,
   Badge,
 } from '../components/ui';
 
@@ -245,44 +245,53 @@ export default function Newsfeed() {
           {/* Branch Filter */}
           <div className="lg:col-span-4">
             {isBranchManager ? (
-              <SelectPill
+              <CustomSelect
                 value={branchFilter}
                 disabled={isBranchManager}
-                onChange={(e) => setBranchFilter(e.target.value)}
-              >
-                {managerBranchId && (
-                  <option value={String(managerBranchId)}>
-                    {fallbackBranchesFromPosts.find((b) => Number(b.id) === managerBranchId)
-                      ?.branchName || 'Chi nhánh của tôi'}
-                  </option>
-                )}
-              </SelectPill>
+                onChange={(v) => setBranchFilter(v)}
+                aria-label="Lọc theo chi nhánh"
+                options={
+                  managerBranchId
+                    ? [
+                        {
+                          value: String(managerBranchId),
+                          label:
+                            fallbackBranchesFromPosts.find((b) => Number(b.id) === managerBranchId)
+                              ?.branchName || 'Chi nhánh của tôi',
+                        },
+                      ]
+                    : []
+                }
+              />
             ) : (
-              <SelectPill
+              <CustomSelect
                 value={branchFilter}
-                onChange={(e) => setBranchFilter(e.target.value)}
-              >
-                <option value="">Tất cả chi nhánh</option>
-                {fallbackBranchesFromPosts.map((b) => (
-                  <option key={b.id} value={String(b.id)}>
-                    {b.branchName}
-                  </option>
-                ))}
-              </SelectPill>
+                onChange={(v) => setBranchFilter(v)}
+                aria-label="Lọc theo chi nhánh"
+                options={[
+                  { value: '', label: 'Tất cả chi nhánh' },
+                  ...fallbackBranchesFromPosts.map((b) => ({
+                    value: String(b.id),
+                    label: b.branchName,
+                  })),
+                ]}
+              />
             )}
           </div>
 
           {/* Audience Filter */}
           <div className="lg:col-span-3">
-            <SelectPill
+            <CustomSelect
               value={audienceFilter}
-              onChange={(e) => setAudienceFilter(e.target.value)}
-            >
-              <option value="all">Mọi đối tượng</option>
-              <option value="All">Tất cả</option>
-              <option value="Parents">Phụ huynh</option>
-              <option value="Teachers">Giáo viên</option>
-            </SelectPill>
+              onChange={(v) => setAudienceFilter(v)}
+              aria-label="Lọc theo đối tượng"
+              options={[
+                { value: 'all', label: 'Mọi đối tượng' },
+                { value: 'All', label: 'Tất cả' },
+                { value: 'Parents', label: 'Phụ huynh' },
+                { value: 'Teachers', label: 'Giáo viên' },
+              ]}
+            />
           </div>
         </div>
       </Card>

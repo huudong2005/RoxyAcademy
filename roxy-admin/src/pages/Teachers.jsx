@@ -11,7 +11,7 @@ import {
   SecondaryButton,
   IconButton,
   InputPill,
-  SelectPill,
+  CustomSelect,
 } from '../components/ui';
 import {
   CreateEditTeacherModal,
@@ -360,46 +360,40 @@ export default function Teachers() {
           </div>
 
           {/* Lọc chi nhánh */}
-          <SelectPill
+          <CustomSelect
             aria-label="Lọc theo chi nhánh"
             value={branchFilter}
             disabled={!isSuperAdmin}
-            onChange={(e) => {
-              setBranchFilter(e.target.value);
+            onChange={(v) => {
+              setBranchFilter(v);
               setPage(1);
             }}
             wrapperClassName="w-full md:w-auto md:min-w-[175px]"
-          >
-            {isSuperAdmin ? (
-              <>
-                <option value="">Tất cả chi nhánh</option>
-                {branches.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.branchName}
-                  </option>
-                ))}
-              </>
-            ) : (
-              <option value={managerBranchId || ''}>
-                {currentManagerBranchName}
-              </option>
-            )}
-          </SelectPill>
+            options={
+              isSuperAdmin
+                ? [
+                    { value: '', label: 'Tất cả chi nhánh' },
+                    ...branches.map((b) => ({ value: String(b.id), label: b.branchName })),
+                  ]
+                : [{ value: String(managerBranchId || ''), label: currentManagerBranchName }]
+            }
+          />
 
           {/* Lọc trạng thái */}
-          <SelectPill
+          <CustomSelect
             aria-label="Lọc theo trạng thái"
             value={statusFilter}
-            onChange={(e) => {
-              setStatusFilter(e.target.value);
+            onChange={(v) => {
+              setStatusFilter(v);
               setPage(1);
             }}
             wrapperClassName="w-full md:w-auto md:min-w-[175px]"
-          >
-            <option value="all">Tất cả ({kpiStats.total})</option>
-            <option value="active">Đang hoạt động ({kpiStats.active})</option>
-            <option value="inactive">Đã khóa ({kpiStats.inactive})</option>
-          </SelectPill>
+            options={[
+              { value: 'all', label: `Tất cả (${kpiStats.total})` },
+              { value: 'active', label: `Đang hoạt động (${kpiStats.active})` },
+              { value: 'inactive', label: `Đã khóa (${kpiStats.inactive})` },
+            ]}
+          />
 
           <SecondaryButton
             type="button"

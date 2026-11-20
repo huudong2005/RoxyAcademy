@@ -1367,3 +1367,25 @@ Toàn bộ **8/8 hạng mục** của **Giai đoạn 1N-2 (8 bẫy đồng bộ)
 
 ## 3. Kết luận
 - **Trạng thái nghiệm thu cuối cùng:** **PASS 100%** — đủ điều kiện commit.
+
+
+---
+
+# BÁO CÁO QA — DROPDOWN TỰ VẼ BƯỚC 1: Ô LỌC TRANG DANH SÁCH (`CustomSelect`)
+**Ngày kiểm tra:** 20/11/2026  
+**Người thực hiện:** QA / Commander (Chrome headless + Playwright, API `http://localhost:5123`)  
+**Phạm vi:** `roxy-admin/src/components/ui.jsx` (`CustomSelect`, giữ nguyên `SelectPill`) và 36 ô lọc tại hàng lọc chính trên 13 trang (`Students`, `ClassList`, `Teachers`, `Schedules`, `Attendance`, `Homeworks`, `Grades`, `LeaveRequests`, `Tuitions`, `Payments`, `Newsfeed`, `Courses`, `Branches`); không đụng dropdown trong modal/popup/form.
+
+## 1. Kết quả Build & Lint (`roxy-admin/`)
+- `npm run lint` (`eslint .`): **PASS** (0 error, 0 warning).
+- `npm run build` (`vite build`): **PASS** (`✓ 114 modules transformed`, `✓ built in 302ms`).
+
+## 2. Kết quả kiểm thử thực tế trên trình duyệt thật (`1440px` & `1280px`)
+| Hạng mục kiểm tra | Kết quả | Số liệu đo DOM thực tế |
+| :--- | :---: | :--- |
+| **13 trang danh sách chính (`1440px` & `1280px`)** | **PASS** | - `/students` (3), `/classes` (3), `/teachers` (2), `/schedules` (3), `/attendance` (1), `/homeworks` (3), `/grades` (3, `44px`), `/leave-requests` (4), `/tuitions` (3), `/payments` (3), `/newsfeed` (2), `/courses` (1), `/branches` (1) đều render `CustomSelect` (`height = 40px` / `44px` trên `/grades`).<br>- `docOverflow = 0px` trên toàn bộ 13 trang ở cả `1440px` và `1280px`. |
+| **Tương tác chuột, bàn phím & styling (`CustomSelect` trên `/students`)** | **PASS** | - Mở listbox: `aria-expanded="true"`, `maxHeight = 240px`, `scrollbarWidth = "thin"`, dòng đang chọn có `aria-selected="true"` + icon tick SVG gold.<br>- Phím `ArrowDown` + `Enter`: đổi `"Tất cả trạng thái"` -> `"Đang học"` và đóng listbox (`aria-expanded="false"`).<br>- Phím `Escape` & bấm ra ngoài: đều đóng listbox (`aria-expanded="false"`). |
+| **Khóa chi nhánh cho `BranchManager`** | **PASS** | - Đăng nhập `BranchManager` (`BranchId = 1`): `/students`, `/classes`, `/teachers`, `/schedules`, `/tuitions`, `/newsfeed` đều khóa `CustomSelect` chi nhánh (`disabledCount = 1`, `disabledTexts = ["Cơ sở 1"]`). |
+
+## 3. Kết luận
+- **Trạng thái nghiệm thu cuối cùng:** **PASS 100%** — đủ điều kiện commit.

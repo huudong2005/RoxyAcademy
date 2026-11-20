@@ -11,6 +11,7 @@ import {
   IconButton,
   InputPill,
   SelectPill,
+  CustomSelect,
   Badge,
 } from '../components/ui';
 
@@ -612,23 +613,20 @@ export default function Grades() {
             <label htmlFor="filter-class" className="block text-[11px] font-semibold uppercase tracking-wider text-ink-muted mb-1">
               Lớp học
             </label>
-            <SelectPill
+            <CustomSelect
               id="filter-class"
               value={classFilter}
-              onChange={(e) => {
-                setClassFilter(e.target.value);
+              onChange={(v) => {
+                setClassFilter(v);
                 setStudentFilter('');
                 setCurrentPage(1);
               }}
               className="min-h-[44px]"
-            >
-              <option value="">Tất cả lớp học</option>
-              {classes.map((c) => (
-                <option key={c.id} value={String(c.id)}>
-                  {c.className}
-                </option>
-              ))}
-            </SelectPill>
+              options={[
+                { value: '', label: 'Tất cả lớp học' },
+                ...classes.map((c) => ({ value: String(c.id), label: c.className })),
+              ]}
+            />
           </div>
 
           {/* Lọc theo Học viên (Cascading) */}
@@ -636,25 +634,26 @@ export default function Grades() {
             <label htmlFor="filter-student" className="block text-[11px] font-semibold uppercase tracking-wider text-ink-muted mb-1">
               Học viên {loadingFilterStudents && <span className="text-teal font-normal normal-case">(Đang tải...)</span>}
             </label>
-            <SelectPill
+            <CustomSelect
               id="filter-student"
               value={studentFilter}
-              onChange={(e) => {
-                setStudentFilter(e.target.value);
+              onChange={(v) => {
+                setStudentFilter(v);
                 setCurrentPage(1);
               }}
               disabled={loadingFilterStudents}
               className="min-h-[44px]"
-            >
-              <option value="">
-                {loadingFilterStudents ? 'Đang tải danh sách học viên...' : 'Tất cả học viên'}
-              </option>
-              {filterStudents.map((s) => (
-                <option key={s.id} value={String(s.id)}>
-                  {s.fullName} (#STU-{s.id})
-                </option>
-              ))}
-            </SelectPill>
+              options={[
+                {
+                  value: '',
+                  label: loadingFilterStudents ? 'Đang tải danh sách học viên...' : 'Tất cả học viên',
+                },
+                ...filterStudents.map((s) => ({
+                  value: String(s.id),
+                  label: `${s.fullName} (#STU-${s.id})`,
+                })),
+              ]}
+            />
           </div>
 
           {/* Lọc theo Loại bài */}
@@ -662,22 +661,19 @@ export default function Grades() {
             <label htmlFor="filter-exam-type" className="block text-[11px] font-semibold uppercase tracking-wider text-ink-muted mb-1">
               Loại bài
             </label>
-            <SelectPill
+            <CustomSelect
               id="filter-exam-type"
               value={examTypeFilter}
-              onChange={(e) => {
-                setExamTypeFilter(e.target.value);
+              onChange={(v) => {
+                setExamTypeFilter(v);
                 setCurrentPage(1);
               }}
               className="min-h-[44px]"
-            >
-              <option value="">Tất cả loại bài</option>
-              {EXAM_TYPES.map((t) => (
-                <option key={t.value} value={t.value}>
-                  {t.icon} {t.label}
-                </option>
-              ))}
-            </SelectPill>
+              options={[
+                { value: '', label: 'Tất cả loại bài' },
+                ...EXAM_TYPES.map((t) => ({ value: t.value, label: `${t.icon} ${t.label}` })),
+              ]}
+            />
           </div>
 
           {/* Lọc theo Ngày thi */}

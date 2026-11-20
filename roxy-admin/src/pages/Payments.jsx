@@ -13,6 +13,7 @@ import {
   IconButton,
   InputPill,
   SelectPill,
+  CustomSelect,
   Badge,
 } from '../components/ui';
 
@@ -351,47 +352,52 @@ export default function Payments() {
 
           {/* Lọc theo Khoản thu */}
           <div>
-            <SelectPill
+            <CustomSelect
               value={tuitionFilter}
-              onChange={(e) => setTuitionFilter(e.target.value)}
-              className="text-xs md:text-sm truncate"
-            >
-              <option value="">Tất cả khoản thu</option>
-              {tuitions.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.studentName} — {t.title}
-                </option>
-              ))}
-            </SelectPill>
+              onChange={(v) => setTuitionFilter(v)}
+              className="text-xs md:text-sm"
+              aria-label="Lọc theo khoản thu"
+              options={[
+                { value: '', label: 'Tất cả khoản thu' },
+                ...tuitions.map((t) => ({
+                  value: String(t.id),
+                  label: `${t.studentName} — ${t.title}`,
+                })),
+              ]}
+            />
           </div>
 
           {/* Lọc theo Phương thức */}
           <div>
-            <SelectPill
+            <CustomSelect
               value={methodFilter}
-              onChange={(e) => setMethodFilter(e.target.value)}
+              onChange={(v) => setMethodFilter(v)}
               className="text-xs md:text-sm"
-            >
-              <option value="">Tất cả phương thức</option>
-              <option value="BankTransfer">Chuyển khoản ngân hàng</option>
-              <option value="Cash">Tiền mặt tại quầy</option>
-              <option value="ZaloPay">Ví ZaloPay</option>
-              <option value="Other">Phương thức khác</option>
-            </SelectPill>
+              aria-label="Lọc theo phương thức"
+              options={[
+                { value: '', label: 'Tất cả phương thức' },
+                { value: 'BankTransfer', label: 'Chuyển khoản ngân hàng' },
+                { value: 'Cash', label: 'Tiền mặt tại quầy' },
+                { value: 'ZaloPay', label: 'Ví ZaloPay' },
+                { value: 'Other', label: 'Phương thức khác' },
+              ]}
+            />
           </div>
 
           {/* Lọc theo Trạng thái duyệt */}
           <div>
-            <SelectPill
+            <CustomSelect
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(v) => setStatusFilter(v)}
               className="text-xs md:text-sm"
-            >
-              <option value="">Tất cả trạng thái</option>
-              <option value="PendingConfirm">Chờ xác nhận (Pending)</option>
-              <option value="Confirmed">Đã xác nhận (Confirmed)</option>
-              <option value="Rejected">Đã từ chối (Rejected)</option>
-            </SelectPill>
+              aria-label="Lọc theo trạng thái duyệt"
+              options={[
+                { value: '', label: 'Tất cả trạng thái' },
+                { value: 'PendingConfirm', label: 'Chờ xác nhận (Pending)' },
+                { value: 'Confirmed', label: 'Đã xác nhận (Confirmed)' },
+                { value: 'Rejected', label: 'Đã từ chối (Rejected)' },
+              ]}
+            />
           </div>
         </div>
 

@@ -8,7 +8,7 @@ import {
   Card,
   PrimaryButton,
   SecondaryButton,
-  SelectPill,
+  CustomSelect,
   Badge,
 } from '../components/ui';
 
@@ -139,8 +139,7 @@ export default function Attendance() {
   }, [selectedDate, selectedScheduleId, setSearchParams]);
 
   // Khi người dùng đổi buổi học từ dropdown
-  const handleSelectSchedule = (e) => {
-    const sId = e.target.value;
+  const handleSelectSchedule = (sId) => {
     setSelectedScheduleId(sId);
     setSaveSuccessMessage('');
     setSaveErrorMessage('');
@@ -436,27 +435,31 @@ export default function Attendance() {
             <label className="block text-[11px] font-semibold uppercase tracking-wider text-ink-muted">
               Buổi học trong ngày:
             </label>
-            <SelectPill
+            <CustomSelect
               value={selectedScheduleId}
               onChange={handleSelectSchedule}
               disabled={loadingSchedules || daySchedules.length === 0}
-            >
-              {daySchedules.length === 0 ? (
-                <option value="">
-                  {loadingSchedules
-                    ? 'Đang tìm kiếm buổi học...'
-                    : '-- Ngày này không có buổi học nào --'}
-                </option>
-              ) : (
-                daySchedules.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {formatTime(s.startTime)} – {formatTime(s.endTime)} • {s.className} •{' '}
-                    {s.room || 'Chưa xếp phòng'} • GV: {s.mainTeacherName || 'Chưa phân công'}{' '}
-                    {s.status === 'Completed' ? '✓ [Đã điểm danh]' : '⏳ [Chưa điểm danh]'}
-                  </option>
-                ))
-              )}
-            </SelectPill>
+              aria-label="Buổi học trong ngày"
+              options={
+                daySchedules.length === 0
+                  ? [
+                      {
+                        value: '',
+                        label: loadingSchedules
+                          ? 'Đang tìm kiếm buổi học...'
+                          : '-- Ngày này không có buổi học nào --',
+                      },
+                    ]
+                  : daySchedules.map((s) => ({
+                      value: String(s.id),
+                      label: `${formatTime(s.startTime)} – ${formatTime(s.endTime)} • ${s.className} • ${
+                        s.room || 'Chưa xếp phòng'
+                      } • GV: ${s.mainTeacherName || 'Chưa phân công'} ${
+                        s.status === 'Completed' ? '✓ [Đã điểm danh]' : '⏳ [Chưa điểm danh]'
+                      }`,
+                    }))
+              }
+            />
           </div>
         </div>
 

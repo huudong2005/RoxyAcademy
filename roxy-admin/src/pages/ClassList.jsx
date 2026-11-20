@@ -10,6 +10,7 @@ import {
   IconButton,
   InputPill,
   SelectPill,
+  CustomSelect,
   Badge,
   Card,
   PageHeader,
@@ -718,54 +719,52 @@ export default function ClassList() {
           </div>
 
           {/* Lọc theo Cơ sở */}
-          <SelectPill
+          <CustomSelect
             value={branchFilter}
-            onChange={(e) => {
-              setBranchFilter(e.target.value);
+            onChange={(v) => {
+              setBranchFilter(v);
               setCurrentPage(1);
             }}
             disabled={isBranchManager}
             wrapperClassName="w-full sm:w-auto sm:min-w-[165px]"
-          >
-            {!isBranchManager && <option value="">Tất cả cơ sở</option>}
-            {branches.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.branchName}
-              </option>
-            ))}
-          </SelectPill>
+            aria-label="Lọc theo cơ sở"
+            options={[
+              ...(!isBranchManager ? [{ value: '', label: 'Tất cả cơ sở' }] : []),
+              ...branches.map((b) => ({ value: String(b.id), label: b.branchName })),
+            ]}
+          />
 
           {/* Lọc theo Khóa học */}
-          <SelectPill
+          <CustomSelect
             value={courseFilter}
-            onChange={(e) => {
-              setCourseFilter(e.target.value);
+            onChange={(v) => {
+              setCourseFilter(v);
               setCurrentPage(1);
             }}
             wrapperClassName="w-full sm:w-auto sm:min-w-[165px]"
-          >
-            <option value="">Tất cả khóa học</option>
-            {courses.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.courseName}
-              </option>
-            ))}
-          </SelectPill>
+            aria-label="Lọc theo khóa học"
+            options={[
+              { value: '', label: 'Tất cả khóa học' },
+              ...courses.map((c) => ({ value: String(c.id), label: c.courseName })),
+            ]}
+          />
 
           {/* Lọc theo Trạng thái */}
-          <SelectPill
+          <CustomSelect
             value={statusFilter}
-            onChange={(e) => {
-              setStatusFilter(e.target.value);
+            onChange={(v) => {
+              setStatusFilter(v);
               setCurrentPage(1);
             }}
             wrapperClassName="w-full sm:w-auto sm:min-w-[175px]"
-          >
-            <option value="">Tất cả trạng thái</option>
-            <option value="Upcoming">Sắp mở</option>
-            <option value="Ongoing">Đang học</option>
-            <option value="Finished">Đã kết thúc</option>
-          </SelectPill>
+            aria-label="Lọc theo trạng thái"
+            options={[
+              { value: '', label: 'Tất cả trạng thái' },
+              { value: 'Upcoming', label: 'Sắp mở' },
+              { value: 'Ongoing', label: 'Đang học' },
+              { value: 'Finished', label: 'Đã kết thúc' },
+            ]}
+          />
 
           <SecondaryButton
             type="button"

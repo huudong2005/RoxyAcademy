@@ -13,6 +13,7 @@ import {
   IconButton,
   InputPill,
   SelectPill,
+  CustomSelect,
 } from '../components/ui';
 
 // Helper: Định dạng ngày kèm thứ tiếng Việt (VD: "Thứ Sáu, 14/11/2026")
@@ -841,53 +842,54 @@ export default function LeaveRequests() {
 
           {/* Lọc theo Đối tượng */}
           <div>
-            <SelectPill
+            <CustomSelect
               value={requesterTypeFilter}
-              onChange={(e) => {
-                setRequesterTypeFilter(e.target.value);
+              aria-label="Lọc theo đối tượng"
+              onChange={(v) => {
+                setRequesterTypeFilter(v);
                 setCurrentPage(1);
               }}
-            >
-              <option value="all">Tất cả đối tượng</option>
-              <option value="Student">🎓 Học viên xin nghỉ</option>
-              <option value="Teacher">👩‍🏫 Giáo viên xin nghỉ</option>
-            </SelectPill>
+              options={[
+                { value: 'all', label: 'Tất cả đối tượng' },
+                { value: 'Student', label: '🎓 Học viên xin nghỉ' },
+                { value: 'Teacher', label: '👩‍🏫 Giáo viên xin nghỉ' },
+              ]}
+            />
           </div>
 
           {/* Lọc theo Học viên */}
           <div>
-            <SelectPill
+            <CustomSelect
               value={studentFilter}
-              onChange={(e) => {
-                setStudentFilter(e.target.value);
+              aria-label="Lọc theo học viên"
+              onChange={(v) => {
+                setStudentFilter(v);
                 setCurrentPage(1);
               }}
-            >
-              <option value="">Tất cả học viên</option>
-              {students.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.fullName} ({s.code || `#STU-${s.id}`})
-                </option>
-              ))}
-            </SelectPill>
+              options={[
+                { value: '', label: 'Tất cả học viên' },
+                ...students.map((s) => ({
+                  value: String(s.id),
+                  label: `${s.fullName} (${s.code || `#STU-${s.id}`})`,
+                })),
+              ]}
+            />
           </div>
 
           {/* Lọc theo Lớp học */}
           <div>
-            <SelectPill
+            <CustomSelect
               value={classFilter}
-              onChange={(e) => {
-                setClassFilter(e.target.value);
+              aria-label="Lọc theo lớp học"
+              onChange={(v) => {
+                setClassFilter(v);
                 setCurrentPage(1);
               }}
-            >
-              <option value="">Tất cả lớp học</option>
-              {classes.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.className}
-                </option>
-              ))}
-            </SelectPill>
+              options={[
+                { value: '', label: 'Tất cả lớp học' },
+                ...classes.map((c) => ({ value: String(c.id), label: c.className })),
+              ]}
+            />
           </div>
 
           {/* Lọc theo Chi nhánh */}
@@ -903,21 +905,19 @@ export default function LeaveRequests() {
                 </span>
               </div>
             ) : (
-              <SelectPill
+              <CustomSelect
                 value={branchFilter}
-                onChange={(e) => {
-                  setBranchFilter(e.target.value);
+                aria-label="Lọc theo chi nhánh"
+                onChange={(v) => {
+                  setBranchFilter(v);
                   setCurrentPage(1);
                 }}
                 disabled={!isSuperAdmin}
-              >
-                <option value="">Tất cả cơ sở</option>
-                {branches.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.branchName}
-                  </option>
-                ))}
-              </SelectPill>
+                options={[
+                  { value: '', label: 'Tất cả cơ sở' },
+                  ...branches.map((b) => ({ value: String(b.id), label: b.branchName })),
+                ]}
+              />
             )}
           </div>
         </div>

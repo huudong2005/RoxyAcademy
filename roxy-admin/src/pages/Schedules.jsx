@@ -10,6 +10,7 @@ import {
   SecondaryButton,
   IconButton,
   SelectPill,
+  CustomSelect,
   Badge,
 } from '../components/ui';
 
@@ -619,18 +620,16 @@ export default function Schedules() {
             <label className="block text-[11px] font-semibold uppercase tracking-wider text-ink-muted mb-1">
               Chi nhánh:
             </label>
-            <SelectPill
+            <CustomSelect
               disabled={isBranchManager}
               value={branchFilter}
-              onChange={(e) => setBranchFilter(e.target.value)}
-            >
-              {isSuperAdmin && <option value="">-- Tất cả chi nhánh --</option>}
-              {branches.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.branchName}
-                </option>
-              ))}
-            </SelectPill>
+              onChange={(v) => setBranchFilter(v)}
+              aria-label="Lọc theo chi nhánh"
+              options={[
+                ...(isSuperAdmin ? [{ value: '', label: '-- Tất cả chi nhánh --' }] : []),
+                ...branches.map((b) => ({ value: String(b.id), label: b.branchName })),
+              ]}
+            />
           </div>
 
           {/* Lọc Lớp học */}
@@ -638,17 +637,15 @@ export default function Schedules() {
             <label className="block text-[11px] font-semibold uppercase tracking-wider text-ink-muted mb-1">
               Lớp học:
             </label>
-            <SelectPill
+            <CustomSelect
               value={classFilter}
-              onChange={(e) => setClassFilter(e.target.value)}
-            >
-              <option value="">-- Tất cả lớp học --</option>
-              {classes.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.className}
-                </option>
-              ))}
-            </SelectPill>
+              onChange={(v) => setClassFilter(v)}
+              aria-label="Lọc theo lớp học"
+              options={[
+                { value: '', label: '-- Tất cả lớp học --' },
+                ...classes.map((c) => ({ value: String(c.id), label: c.className })),
+              ]}
+            />
           </div>
 
           {/* Lọc Giáo viên */}
@@ -656,17 +653,15 @@ export default function Schedules() {
             <label className="block text-[11px] font-semibold uppercase tracking-wider text-ink-muted mb-1">
               Giáo viên:
             </label>
-            <SelectPill
+            <CustomSelect
               value={teacherFilter}
-              onChange={(e) => setTeacherFilter(e.target.value)}
-            >
-              <option value="">-- Tất cả giáo viên --</option>
-              {teachers.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.fullName}
-                </option>
-              ))}
-            </SelectPill>
+              onChange={(v) => setTeacherFilter(v)}
+              aria-label="Lọc theo giáo viên"
+              options={[
+                { value: '', label: '-- Tất cả giáo viên --' },
+                ...teachers.map((t) => ({ value: String(t.id), label: t.fullName })),
+              ]}
+            />
           </div>
         </div>
       </Card>

@@ -11,7 +11,7 @@ import {
   SecondaryButton,
   IconButton,
   InputPill,
-  SelectPill,
+  CustomSelect,
 } from '../components/ui';
 
 export default function Courses() {
@@ -253,16 +253,17 @@ export default function Courses() {
           </div>
 
           {/* Select lọc trạng thái */}
-          <SelectPill
+          <CustomSelect
             aria-label="Lọc trạng thái khóa học"
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(v) => setStatusFilter(v)}
             wrapperClassName="w-full md:w-auto md:min-w-[175px]"
-          >
-            <option value="ALL">Tất cả ({stats.total})</option>
-            <option value="ACTIVE">Đang kích hoạt ({stats.active})</option>
-            <option value="INACTIVE">Tạm ngưng ({stats.inactive})</option>
-          </SelectPill>
+            options={[
+              { value: 'ALL', label: `Tất cả (${stats.total})` },
+              { value: 'ACTIVE', label: `Đang kích hoạt (${stats.active})` },
+              { value: 'INACTIVE', label: `Tạm ngưng (${stats.inactive})` },
+            ]}
+          />
 
           <SecondaryButton
             type="button"

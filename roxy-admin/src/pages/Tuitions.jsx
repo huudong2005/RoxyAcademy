@@ -13,6 +13,7 @@ import {
   IconButton,
   InputPill,
   SelectPill,
+  CustomSelect,
   Badge,
 } from '../components/ui';
 
@@ -512,51 +513,48 @@ export default function Tuitions() {
 
           {/* Lọc theo Học viên */}
           <div>
-            <SelectPill
+            <CustomSelect
               value={studentFilter}
-              onChange={(e) => setStudentFilter(e.target.value)}
+              onChange={(v) => setStudentFilter(v)}
               className="text-xs md:text-sm"
-            >
-              <option value="">Tất cả học viên</option>
-              {students.map((st) => (
-                <option key={st.id} value={st.id}>
-                  {st.fullName} (#{st.id})
-                </option>
-              ))}
-            </SelectPill>
+              aria-label="Lọc theo học viên"
+              options={[
+                { value: '', label: 'Tất cả học viên' },
+                ...students.map((st) => ({
+                  value: String(st.id),
+                  label: `${st.fullName} (#${st.id})`,
+                })),
+              ]}
+            />
           </div>
 
           {/* Lọc theo Lớp học */}
           <div>
-            <SelectPill
+            <CustomSelect
               value={classFilter}
-              onChange={(e) => setClassFilter(e.target.value)}
+              onChange={(v) => setClassFilter(v)}
               className="text-xs md:text-sm"
-            >
-              <option value="">Tất cả lớp học</option>
-              {classes.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.className}
-                </option>
-              ))}
-            </SelectPill>
+              aria-label="Lọc theo lớp học"
+              options={[
+                { value: '', label: 'Tất cả lớp học' },
+                ...classes.map((c) => ({ value: String(c.id), label: c.className })),
+              ]}
+            />
           </div>
 
           {/* Lọc theo Cơ sở (SuperAdmin chọn, BranchManager khóa) */}
           <div>
-            <SelectPill
+            <CustomSelect
               value={branchFilter}
               disabled={isBranchManager}
-              onChange={(e) => setBranchFilter(e.target.value)}
+              onChange={(v) => setBranchFilter(v)}
               className="text-xs md:text-sm"
-            >
-              {!isBranchManager && <option value="">Tất cả cơ sở</option>}
-              {branches.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.branchName}
-                </option>
-              ))}
-            </SelectPill>
+              aria-label="Lọc theo cơ sở"
+              options={[
+                ...(!isBranchManager ? [{ value: '', label: 'Tất cả cơ sở' }] : []),
+                ...branches.map((b) => ({ value: String(b.id), label: b.branchName })),
+              ]}
+            />
           </div>
         </div>
 

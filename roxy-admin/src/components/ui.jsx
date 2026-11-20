@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 const BADGE_VARIANTS = {
@@ -119,6 +120,230 @@ export function SelectPill({
           <path strokeLinecap="round" strokeLinejoin="round" d="M6 8l4 4 4-4" />
         </svg>
       </span>
+    </div>
+  );
+}
+
+/** Dropdown tự vẽ đồng bộ hoàn toàn hệ Teal & Gold, thay thế <select> hệ điều hành. */
+export function CustomSelect({
+  id,
+  options = [],
+  value,
+  onChange,
+  disabled = false,
+  className = '',
+  wrapperClassName = 'w-full',
+  placeholder,
+  ariaLabel,
+  'aria-label': ariaLabelAttr,
+  title,
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [openUpward, setOpenUpward] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+
+  const containerRef = useRef(null);
+  const triggerRef = useRef(null);
+  const optionRefs = useRef([]);
+
+  const normalizedValue = String(value ?? '');
+  const selectedIndex = options.findIndex((opt) => String(opt.value) === normalizedValue);
+  const selectedOption = selectedIndex >= 0 ? options[selectedIndex] : null;
+  const resolvedAriaLabel = ariaLabelAttr ?? ariaLabel;
+
+  const findNextEnabledIndex = (startIndex, step) => {
+    if (!options.length) return -1;
+    let idx = startIndex;
+    for (let i = 0; i < options.length; i += 1) {
+      idx = (idx + step + options.length) % options.length;
+      if (!options[idx]?.disabled) return idx;
+    }
+    return -1;
+  };
+
+  const openMenu = () => {
+    if (disabled) return;
+    if (triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      setOpenUpward(spaceBelow < 250 && rect.top > spaceBelow);
+    }
+    let initialIdx = selectedIndex >= 0 && !options[selectedIndex]?.disabled ? selectedIndex : -1;
+    if (initialIdx === -1) {
+      initialIdx = options.findIndex((opt) => !opt.disabled);
+    }
+    setHighlightedIndex(initialIdx);
+    setIsOpen(true);
+  };
+
+  const closeMenu = (restoreFocus = false) => {
+    setIsOpen(false);
+    if (restoreFocus) {
+      triggerRef.current?.focus();
+    }
+  };
+
+  const handleSelect = (opt) => {
+    if (!opt || opt.disabled) return;
+    onChange?.(opt.value);
+    closeMenu(true);
+  };
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    const handlePointerDown = (event) => {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen || highlightedIndex < 0) return;
+    optionRefs.current[highlightedIndex]?.scrollIntoView({ block: 'nearest' });
+  }, [isOpen, highlightedIndex]);
+
+  const handleKeyDown = (event) => {
+    if (disabled) return;
+    switch (event.key) {
+      case 'ArrowDown': {
+        event.preventDefault();
+        if (!isOpen) {
+          openMenu();
+        } else {
+          setHighlightedIndex((prev) => findNextEnabledIndex(prev < 0 ? -1 : prev, 1));
+        }
+        break;
+      }
+      case 'ArrowUp': {
+        event.preventDefault();
+        if (!isOpen) {
+          openMenu();
+        } else {
+          setHighlightedIndex((prev) => findNextEnabledIndex(prev < 0 ? 0 : prev, -1));
+        }
+        break;
+      }
+      case 'Enter': {
+        if (isOpen) {
+          event.preventDefault();
+          const opt = options[highlightedIndex];
+          if (opt && !opt.disabled) {
+            handleSelect(opt);
+          }
+        }
+        break;
+      }
+      case 'Escape': {
+        if (isOpen) {
+          event.preventDefault();
+          closeMenu(true);
+        }
+        break;
+      }
+      case 'Tab': {
+        if (isOpen) {
+          setIsOpen(false);
+        }
+        break;
+      }
+      default:
+        break;
+    }
+  };
+
+  return (
+    <div ref={containerRef} className={`relative ${wrapperClassName}`}>
+      <button
+        id={id}
+        ref={triggerRef}
+        type="button"
+        disabled={disabled}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        aria-label={resolvedAriaLabel}
+        title={title}
+        onClick={() => (isOpen ? closeMenu(false) : openMenu())}
+        onKeyDown={handleKeyDown}
+        className={`w-full h-10 rounded-full border border-line bg-surface pl-4 pr-10 text-left text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed cursor-pointer ${className}`}
+      >
+        <span className={`truncate block ${!selectedOption && placeholder ? 'text-ink-muted' : ''}`}>
+          {selectedOption ? selectedOption.label : (placeholder ?? '')}
+        </span>
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 right-3.5 flex items-center text-ink-muted"
+        >
+          <svg
+            className={`h-4 w-4 transition-transform duration-150 ${isOpen ? 'rotate-180' : ''}`}
+            viewBox="0 0 20 20"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.75"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 8l4 4 4-4" />
+          </svg>
+        </span>
+      </button>
+
+      {isOpen && (
+        <ul
+          role="listbox"
+          aria-label={resolvedAriaLabel}
+          className={`absolute left-0 z-30 w-full max-h-60 overflow-y-auto rounded-card border border-line bg-surface py-1 shadow-modal ${
+            openUpward ? 'bottom-full mb-1.5' : 'top-full mt-1.5'
+          }`}
+        >
+          {options.map((opt, idx) => {
+            const isSelected = String(opt.value) === normalizedValue;
+            const isHighlighted = idx === highlightedIndex;
+            const isDisabled = Boolean(opt.disabled);
+
+            return (
+              <li
+                key={String(opt.value)}
+                ref={(el) => {
+                  optionRefs.current[idx] = el;
+                }}
+                role="option"
+                aria-selected={isSelected}
+                aria-disabled={isDisabled || undefined}
+                onMouseEnter={() => {
+                  if (!isDisabled) setHighlightedIndex(idx);
+                }}
+                onClick={() => handleSelect(opt)}
+                className={`px-4 py-2.5 text-sm flex items-center justify-between gap-2 transition-colors duration-100 ${
+                  isDisabled
+                    ? 'opacity-50 cursor-not-allowed text-ink-muted'
+                    : isSelected
+                      ? 'font-semibold text-teal bg-gold-soft/45 cursor-pointer hover:bg-gold-soft'
+                      : isHighlighted
+                        ? 'bg-gold-soft text-ink cursor-pointer'
+                        : 'text-ink cursor-pointer hover:bg-gold-soft'
+                }`}
+              >
+                <span className="truncate">{opt.label}</span>
+                {isSelected && (
+                  <svg
+                    aria-hidden="true"
+                    className="h-4 w-4 shrink-0 text-gold-active"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.25"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 10.5l3.5 3.5L15 7" />
+                  </svg>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }

@@ -11,7 +11,7 @@ import {
   SecondaryButton,
   IconButton,
   InputPill,
-  SelectPill,
+  CustomSelect,
 } from '../components/ui';
 import {
   CreateEditBranchModal,
@@ -282,16 +282,17 @@ export default function Branches() {
             )}
           </div>
 
-          <SelectPill
+          <CustomSelect
             aria-label="Lọc theo trạng thái chi nhánh"
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(v) => setStatusFilter(v)}
             wrapperClassName="w-full md:w-auto md:min-w-[175px]"
-          >
-            <option value="all">Tất cả ({summaryStats.total})</option>
-            <option value="active">Đang hoạt động ({summaryStats.activeCount})</option>
-            <option value="inactive">Ngừng hoạt động ({summaryStats.inactiveCount})</option>
-          </SelectPill>
+            options={[
+              { value: 'all', label: `Tất cả (${summaryStats.total})` },
+              { value: 'active', label: `Đang hoạt động (${summaryStats.activeCount})` },
+              { value: 'inactive', label: `Ngừng hoạt động (${summaryStats.inactiveCount})` },
+            ]}
+          />
 
           <SecondaryButton
             type="button"
