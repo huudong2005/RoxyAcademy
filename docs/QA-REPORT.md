@@ -1389,3 +1389,25 @@ Toàn bộ **8/8 hạng mục** của **Giai đoạn 1N-2 (8 bẫy đồng bộ)
 
 ## 3. Kết luận
 - **Trạng thái nghiệm thu cuối cùng:** **PASS 100%** — đủ điều kiện commit.
+
+
+---
+
+# BÁO CÁO QA — DROPDOWN TỰ VẼ BƯỚC 2: POPUP/FORM + XÓA `SelectPill`
+**Ngày kiểm tra:** 20/11/2026  
+**Người thực hiện:** QA / Commander (Chrome headless + Playwright, API `http://localhost:5123`)  
+**Phạm vi:** Nâng cấp `CustomSelect` dùng `createPortal` trong `ui.jsx`, thay toàn bộ 39 chỗ `SelectPill` còn lại trên 12 file popup/form, và xóa `SelectPill` khỏi `ui.jsx`.
+
+## 1. Kết quả Build, Lint & Đối chiếu tĩnh (`roxy-admin/`)
+- `npm run lint` (`eslint .`): **PASS** (0 error, 0 warning).
+- `npm run build` (`vite build`): **PASS** (`✓ 114 modules transformed`, `✓ built in 325ms`).
+- **Grep toàn `roxy-admin/src/`:** `SelectPill` = **0**, thẻ `<select` thô = **0**.
+
+## 2. Kết quả kiểm thử thực tế trên trình duyệt thật (`1440px` & `1280px`)
+| Hạng mục kiểm tra | Kết quả | Số liệu đo DOM thực tế |
+| :--- | :---: | :--- |
+| **Portal `CustomSelect` trong các popup/form (`teachers`, `newsfeed`, `messages`, `students`, `classes`, `tuitions`, `payments`)** | **PASS** | - Ở cả `1440px` và `1280px`: `ul[role="listbox"]` render trực tiếp dưới `document.body` (`isDirectBodyChild = true`, `position = fixed`, `zIndex = 60`), `inViewport = true` (không bị cắt ở mép popup).<br>- Chọn giá trị trong mỗi popup cập nhật đúng nhãn trigger (`selectedMatches = true`) và đóng listbox (`closedAfterSelect = true`). |
+| **Kiểm tra lại ô lọc bước 1 sau khi đổi sang Portal (`/students`)** | **PASS** | - Mở listbox portal + `ArrowDown` + `Enter` chọn `"Đang học"` thành công ở cả `1440px` và `1280px`. |
+
+## 3. Kết luận
+- **Trạng thái nghiệm thu cuối cùng:** **PASS 100%** — đủ điều kiện commit.

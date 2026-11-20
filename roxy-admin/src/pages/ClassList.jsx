@@ -9,7 +9,6 @@ import {
   SecondaryButton,
   IconButton,
   InputPill,
-  SelectPill,
   CustomSelect,
   Badge,
   Card,
@@ -1048,21 +1047,20 @@ export default function ClassList() {
                   <label className="block text-xs font-semibold text-ink-secondary mb-1">
                     Khóa học đào tạo <span className="text-rose-500">*</span>
                   </label>
-                  <SelectPill
-                    name="courseId"
-                    required
+                  <CustomSelect
                     value={formData.courseId}
-                    onChange={handleChange}
-                  >
-                    <option value="">-- Chọn khóa học --</option>
-                    {courses
-                      .filter((c) => !editingClass ? c.isActive !== false : c.isActive !== false || String(c.id) === String(editingClass.courseId))
-                      .map((c) => (
-                        <option key={c.id} value={c.id} disabled={c.isActive === false}>
-                          {c.courseName} {c.isActive === false ? '(Đã ngừng hoạt động)' : ''}
-                        </option>
-                      ))}
-                  </SelectPill>
+                    onChange={(v) => handleChange({ target: { name: 'courseId', value: v } })}
+                    options={[
+                      { value: '', label: '-- Chọn khóa học --' },
+                      ...courses
+                        .filter((c) => !editingClass ? c.isActive !== false : c.isActive !== false || String(c.id) === String(editingClass.courseId))
+                        .map((c) => ({
+                          value: c.id,
+                          disabled: c.isActive === false,
+                          label: `${c.courseName}${c.isActive === false ? ' (Đã ngừng hoạt động)' : ''}`,
+                        })),
+                    ]}
+                  />
                 </div>
 
                 {/* Giáo viên phụ trách (BẮT BUỘC) */}
@@ -1070,21 +1068,20 @@ export default function ClassList() {
                   <label className="block text-xs font-semibold text-ink-secondary mb-1">
                     Giáo viên phụ trách <span className="text-rose-500">*</span>
                   </label>
-                  <SelectPill
-                    name="teacherId"
-                    required
+                  <CustomSelect
                     value={formData.teacherId}
-                    onChange={handleChange}
-                  >
-                    <option value="">-- Chọn giáo viên phụ trách --</option>
-                    {teachers
-                      .filter((t) => !editingClass ? t.isActive !== false : t.isActive !== false || String(t.id) === String(editingClass.teacherId))
-                      .map((t) => (
-                        <option key={t.id} value={t.id} disabled={t.isActive === false}>
-                          👩‍🏫 {t.fullName} ({t.phoneNumber}) {t.isActive === false ? '(Đã khóa tài khoản)' : ''}
-                        </option>
-                      ))}
-                  </SelectPill>
+                    onChange={(v) => handleChange({ target: { name: 'teacherId', value: v } })}
+                    options={[
+                      { value: '', label: '-- Chọn giáo viên phụ trách --' },
+                      ...teachers
+                        .filter((t) => !editingClass ? t.isActive !== false : t.isActive !== false || String(t.id) === String(editingClass.teacherId))
+                        .map((t) => ({
+                          value: t.id,
+                          disabled: t.isActive === false,
+                          label: `👩‍🏫 ${t.fullName} (${t.phoneNumber})${t.isActive === false ? ' (Đã khóa tài khoản)' : ''}`,
+                        })),
+                    ]}
+                  />
                   {editingClass &&
                     teachers.find((t) => String(t.id) === String(formData.teacherId))?.isActive === false && (
                       <p className="mt-1 text-[11px] text-rose-600 font-medium">
@@ -1105,21 +1102,20 @@ export default function ClassList() {
                   <label className="block text-xs font-semibold text-ink-secondary mb-1">
                     Cơ sở tổ chức <span className="text-rose-500">*</span>
                   </label>
-                  <SelectPill
-                    name="branchId"
-                    required
+                  <CustomSelect
                     value={formData.branchId}
-                    onChange={handleChange}
-                  >
-                    <option value="">-- Chọn cơ sở --</option>
-                    {branches
-                      .filter((b) => !editingClass ? b.isActive !== false : b.isActive !== false || String(b.id) === String(editingClass.branchId))
-                      .map((b) => (
-                        <option key={b.id} value={b.id} disabled={b.isActive === false}>
-                          {b.branchName} {b.isActive === false ? '(Đã ngừng hoạt động)' : ''}
-                        </option>
-                      ))}
-                  </SelectPill>
+                    onChange={(v) => handleChange({ target: { name: 'branchId', value: v } })}
+                    options={[
+                      { value: '', label: '-- Chọn cơ sở --' },
+                      ...branches
+                        .filter((b) => !editingClass ? b.isActive !== false : b.isActive !== false || String(b.id) === String(editingClass.branchId))
+                        .map((b) => ({
+                          value: b.id,
+                          disabled: b.isActive === false,
+                          label: `${b.branchName}${b.isActive === false ? ' (Đã ngừng hoạt động)' : ''}`,
+                        })),
+                    ]}
+                  />
                 </div>
 
                 {/* Hình thức lớp học (Group / OneToOne) */}
@@ -1127,15 +1123,14 @@ export default function ClassList() {
                   <label className="block text-xs font-semibold text-ink-secondary mb-1">
                     Hình thức lớp học <span className="text-rose-500">*</span>
                   </label>
-                  <SelectPill
-                    name="classType"
-                    required
+                  <CustomSelect
                     value={formData.classType}
-                    onChange={handleChange}
-                  >
-                    <option value="Group">Lớp nhóm (Group)</option>
-                    <option value="OneToOne">Kèm 1-1 (OneToOne)</option>
-                  </SelectPill>
+                    onChange={(v) => handleChange({ target: { name: 'classType', value: v } })}
+                    options={[
+                      { value: 'Group', label: 'Lớp nhóm (Group)' },
+                      { value: 'OneToOne', label: 'Kèm 1-1 (OneToOne)' },
+                    ]}
+                  />
                 </div>
 
                 {/* Sĩ số tối đa */}
@@ -1230,16 +1225,16 @@ export default function ClassList() {
                     <label className="block text-xs font-semibold text-ink-secondary mb-1">
                       Trạng thái lớp học
                     </label>
-                    <SelectPill
-                      name="status"
+                    <CustomSelect
                       disabled={editingClass.status === 'Finished'}
                       value={formData.status}
-                      onChange={handleChange}
-                    >
-                      <option value="Upcoming">Sắp mở (Upcoming)</option>
-                      <option value="Ongoing">Đang học (Ongoing)</option>
-                      <option value="Finished">Đã kết thúc (Finished)</option>
-                    </SelectPill>
+                      onChange={(v) => handleChange({ target: { name: 'status', value: v } })}
+                      options={[
+                        { value: 'Upcoming', label: 'Sắp mở (Upcoming)' },
+                        { value: 'Ongoing', label: 'Đang học (Ongoing)' },
+                        { value: 'Finished', label: 'Đã kết thúc (Finished)' },
+                      ]}
+                    />
                     {editingClass.status === 'Finished' && (
                       <p className="mt-1 text-[11px] text-ink-muted">
                         🔒 Lớp học đã kết thúc (Finished), không thể chuyển trạng thái quay lại Đang học.
@@ -1476,26 +1471,26 @@ export default function ClassList() {
                                 <label className="block font-semibold text-ink-secondary mb-1">
                                   Chọn học viên <span className="text-rose-500">*</span>
                                 </label>
-                                <SelectPill
-                                  required
+                                <CustomSelect
                                   disabled={loadingBranchStudents}
                                   value={enrollStudentId}
-                                  onChange={(e) => setEnrollStudentId(e.target.value)}
+                                  onChange={(v) => setEnrollStudentId(v)}
                                   className="text-xs"
-                                >
-                                  <option value="">
-                                    {loadingBranchStudents
-                                      ? 'Đang tải học viên...'
-                                      : availableStudents.length === 0
-                                        ? '-- Không còn học viên phù hợp --'
-                                        : '-- Chọn học viên đang học --'}
-                                  </option>
-                                  {availableStudents.map((stu) => (
-                                    <option key={stu.id} value={stu.id}>
-                                      {stu.fullName} {stu.parentPhone ? `(${stu.parentPhone})` : ''}
-                                    </option>
-                                  ))}
-                                </SelectPill>
+                                  options={[
+                                    {
+                                      value: '',
+                                      label: loadingBranchStudents
+                                        ? 'Đang tải học viên...'
+                                        : availableStudents.length === 0
+                                          ? '-- Không còn học viên phù hợp --'
+                                          : '-- Chọn học viên đang học --',
+                                    },
+                                    ...availableStudents.map((stu) => ({
+                                      value: stu.id,
+                                      label: `${stu.fullName}${stu.parentPhone ? ` (${stu.parentPhone})` : ''}`,
+                                    })),
+                                  ]}
+                                />
                               </div>
 
                               <div>
@@ -1928,17 +1923,17 @@ export default function ClassList() {
                 <label className="block text-xs font-semibold text-ink-secondary mb-1">
                   Buổi học trong lịch <span className="text-ink-muted font-normal">(Khuyên dùng)</span>
                 </label>
-                <SelectPill
+                <CustomSelect
                   value={progressFormData.scheduleId}
-                  onChange={(e) => setProgressFormData((prev) => ({ ...prev, scheduleId: e.target.value }))}
-                >
-                  <option value="">-- Chọn buổi học tương ứng (Nếu có) --</option>
-                  {classSchedules.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      Buổi ngày {formatDate(s.studyDate)} ({s.startTime?.slice(0, 5)} - {s.endTime?.slice(0, 5)})
-                    </option>
-                  ))}
-                </SelectPill>
+                  onChange={(v) => setProgressFormData((prev) => ({ ...prev, scheduleId: v }))}
+                  options={[
+                    { value: '', label: '-- Chọn buổi học tương ứng (Nếu có) --' },
+                    ...classSchedules.map((s) => ({
+                      value: s.id,
+                      label: `Buổi ngày ${formatDate(s.studyDate)} (${s.startTime?.slice(0, 5)} - ${s.endTime?.slice(0, 5)})`,
+                    })),
+                  ]}
+                />
                 <p className="text-[11px] text-ink-muted mt-1">
                   ℹ️ Chọn buổi học tương ứng để hệ thống đồng bộ với lịch học và bảng điểm danh.
                 </p>

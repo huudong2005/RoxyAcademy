@@ -9,7 +9,7 @@ import {
   PrimaryButton,
   SecondaryButton,
   InputPill,
-  SelectPill,
+  CustomSelect,
 } from '../components/ui';
 import {
   CreateEditBranchModal,
@@ -647,17 +647,18 @@ function ClassesTabContent({
           />
         </div>
 
-        <SelectPill
+        <CustomSelect
           aria-label="Lọc trạng thái lớp học"
           value={statusFilter}
-          onChange={(e) => onStatusFilterChange(e.target.value)}
+          onChange={(v) => onStatusFilterChange(v)}
           wrapperClassName="w-full sm:w-auto sm:min-w-[165px]"
-        >
-          <option value="all">Tất cả trạng thái</option>
-          <option value="Ongoing">Đang học</option>
-          <option value="Upcoming">Sắp mở</option>
-          <option value="Finished">Đã kết thúc</option>
-        </SelectPill>
+          options={[
+            { value: 'all', label: 'Tất cả trạng thái' },
+            { value: 'Ongoing', label: 'Đang học' },
+            { value: 'Upcoming', label: 'Sắp mở' },
+            { value: 'Finished', label: 'Đã kết thúc' },
+          ]}
+        />
       </div>
 
       {classes.length === 0 ? (
@@ -963,18 +964,19 @@ function StudentsTabContent({
           />
         </div>
 
-        <SelectPill
+        <CustomSelect
           aria-label="Lọc trạng thái học viên"
           value={statusFilter}
-          onChange={(e) => onStatusFilterChange(e.target.value)}
+          onChange={(v) => onStatusFilterChange(v)}
           wrapperClassName="w-full sm:w-auto sm:min-w-[165px]"
-        >
-          <option value="all">Tất cả trạng thái</option>
-          <option value="Active">Đang học</option>
-          <option value="Paused">Tạm dừng</option>
-          <option value="Graduated">Tốt nghiệp</option>
-          <option value="Dropped">Thôi học</option>
-        </SelectPill>
+          options={[
+            { value: 'all', label: 'Tất cả trạng thái' },
+            { value: 'Active', label: 'Đang học' },
+            { value: 'Paused', label: 'Tạm dừng' },
+            { value: 'Graduated', label: 'Tốt nghiệp' },
+            { value: 'Dropped', label: 'Thôi học' },
+          ]}
+        />
       </div>
 
       {students.length === 0 ? (

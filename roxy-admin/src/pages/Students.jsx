@@ -8,7 +8,6 @@ import {
   SecondaryButton,
   IconButton,
   InputPill,
-  SelectPill,
   CustomSelect,
   Badge,
   Card,
@@ -1353,20 +1352,20 @@ export default function Students() {
 
             <div className="flex flex-wrap items-center gap-2">
               {parentChildren.length > 1 && (
-                <SelectPill
+                <CustomSelect
                   value={registrationStudentFilter}
-                  onChange={(e) => setRegistrationStudentFilter(e.target.value)}
+                  onChange={(v) => setRegistrationStudentFilter(v)}
                   aria-label="Lọc đơn đăng ký theo con"
-                  wrapperClassName="w-auto"
+                  wrapperClassName="w-auto min-w-[160px]"
                   className="text-xs"
-                >
-                  <option value="">Tất cả các con</option>
-                  {parentChildren.map((child) => (
-                    <option key={child.id} value={child.id}>
-                      {child.fullName}
-                    </option>
-                  ))}
-                </SelectPill>
+                  options={[
+                    { value: '', label: 'Tất cả các con' },
+                    ...parentChildren.map((child) => ({
+                      value: child.id,
+                      label: child.fullName,
+                    })),
+                  ]}
+                />
               )}
 
               <PrimaryButton
@@ -1701,14 +1700,15 @@ export default function Students() {
                   <label className="block text-xs font-semibold text-ink-secondary mb-1">
                     Giới tính
                   </label>
-                  <SelectPill
+                  <CustomSelect
                     value={formData.gender}
-                    onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                  >
-                    <option value="Male">Nam</option>
-                    <option value="Female">Nữ</option>
-                    <option value="Other">Khác</option>
-                  </SelectPill>
+                    onChange={(v) => setFormData({ ...formData, gender: v })}
+                    options={[
+                      { value: 'Male', label: 'Nam' },
+                      { value: 'Female', label: 'Nữ' },
+                      { value: 'Other', label: 'Khác' },
+                    ]}
+                  />
                 </div>
 
                 {/* Phụ huynh (Chỉ chọn khi tạo mới; hỗ trợ tạo nhanh tài khoản Phụ huynh tại chỗ) */}
@@ -1739,18 +1739,17 @@ export default function Students() {
                       className="w-full rounded-full border border-line bg-surface-subtle px-4 py-2.5 text-sm text-ink-muted cursor-not-allowed"
                     />
                   ) : (
-                    <SelectPill
-                      required
+                    <CustomSelect
                       value={formData.parentId}
-                      onChange={(e) => setFormData({ ...formData, parentId: e.target.value })}
-                    >
-                      <option value="">-- Chọn phụ huynh --</option>
-                      {parents.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.fullName} ({p.phoneNumber})
-                        </option>
-                      ))}
-                    </SelectPill>
+                      onChange={(v) => setFormData({ ...formData, parentId: v })}
+                      options={[
+                        { value: '', label: '-- Chọn phụ huynh --' },
+                        ...parents.map((p) => ({
+                          value: p.id,
+                          label: `${p.fullName} (${p.phoneNumber})`,
+                        })),
+                      ]}
+                    />
                   )}
 
                   {inlineParentSuccess && (
@@ -1843,18 +1842,18 @@ export default function Students() {
                   <label className="block text-xs font-semibold text-ink-secondary mb-1">
                     Cơ sở trung tâm {!editingStudent && <span className="text-rose-500">*</span>}
                   </label>
-                  <SelectPill
+                  <CustomSelect
                     disabled={isBranchManager || (editingStudent && !isSuperAdmin)}
                     value={formData.branchId}
-                    onChange={(e) => setFormData({ ...formData, branchId: e.target.value })}
-                  >
-                    {isSuperAdmin && <option value="">-- Chọn cơ sở --</option>}
-                    {branches.map((b) => (
-                      <option key={b.id} value={b.id}>
-                        {b.branchName}
-                      </option>
-                    ))}
-                  </SelectPill>
+                    onChange={(v) => setFormData({ ...formData, branchId: v })}
+                    options={[
+                      ...(isSuperAdmin ? [{ value: '', label: '-- Chọn cơ sở --' }] : []),
+                      ...branches.map((b) => ({
+                        value: b.id,
+                        label: b.branchName,
+                      })),
+                    ]}
+                  />
                   {isBranchManager && (
                     <p className="mt-1 text-[11px] text-ink-muted">
                       Tự động gắn vào chi nhánh bạn đang quản lý
@@ -1896,15 +1895,16 @@ export default function Students() {
                     <label className="block text-xs font-semibold text-ink-secondary mb-1">
                       Trạng thái hồ sơ
                     </label>
-                    <SelectPill
+                    <CustomSelect
                       value={formData.status}
-                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    >
-                      <option value="Active">Đang học (Active)</option>
-                      <option value="Paused">Tạm dừng (Paused)</option>
-                      <option value="Graduated">Tốt nghiệp (Graduated)</option>
-                      <option value="Dropped">Thôi học (Dropped)</option>
-                    </SelectPill>
+                      onChange={(v) => setFormData({ ...formData, status: v })}
+                      options={[
+                        { value: 'Active', label: 'Đang học (Active)' },
+                        { value: 'Paused', label: 'Tạm dừng (Paused)' },
+                        { value: 'Graduated', label: 'Tốt nghiệp (Graduated)' },
+                        { value: 'Dropped', label: 'Thôi học (Dropped)' },
+                      ]}
+                    />
                   </div>
                 )}
 
@@ -2125,25 +2125,26 @@ export default function Students() {
                   <label className="block text-xs font-semibold text-ink-secondary mb-1.5">
                     Chọn học viên <span className="text-rose-500">*</span>
                   </label>
-                  <SelectPill
-                    required
+                  <CustomSelect
                     value={registerForm.studentId}
-                    onChange={(e) => {
+                    onChange={(v) => {
                       setRegisterError('');
                       setRegisterForm((prev) => ({
                         ...prev,
-                        studentId: e.target.value,
+                        studentId: v,
                         classId: '',
                       }));
                     }}
-                  >
-                    {eligibleChildren.length > 1 && <option value="">-- Chọn con để đăng ký --</option>}
-                    {eligibleChildren.map((child) => (
-                      <option key={child.id} value={child.id}>
-                        {child.fullName} — {child.branchName || `Cơ sở #${child.branchId}`}
-                      </option>
-                    ))}
-                  </SelectPill>
+                    options={[
+                      ...(eligibleChildren.length > 1
+                        ? [{ value: '', label: '-- Chọn con để đăng ký --' }]
+                        : []),
+                      ...eligibleChildren.map((child) => ({
+                        value: child.id,
+                        label: `${child.fullName} — ${child.branchName || `Cơ sở #${child.branchId}`}`,
+                      })),
+                    ]}
+                  />
                 </div>
 
                 {/* Danh sách lớp đang mở đăng ký đúng chi nhánh */}

@@ -12,7 +12,6 @@ import {
   SecondaryButton,
   IconButton,
   InputPill,
-  SelectPill,
   CustomSelect,
   Badge,
 } from '../components/ui';
@@ -1787,22 +1786,20 @@ function CreateTuitionModal({
               <label className="block font-semibold text-ink-secondary mb-1">
                 Cơ sở áp dụng <span className="text-rose-500">*</span>
               </label>
-              <SelectPill
+              <CustomSelect
                 value={branchId}
                 disabled={isBranchManager}
-                onChange={(e) => {
-                  setBranchId(e.target.value);
+                onChange={(v) => {
+                  setBranchId(v);
                   setStudentId('');
                   setClassId('');
                   setStudentEnrolledClasses([]);
                 }}
-              >
-                {branches.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.branchName}
-                  </option>
-                ))}
-              </SelectPill>
+                options={branches.map((b) => ({
+                  value: b.id,
+                  label: b.branchName,
+                }))}
+              />
             </div>
 
             {/* Chọn học viên */}
@@ -1815,18 +1812,17 @@ function CreateTuitionModal({
                   {studentsLoadError}
                 </p>
               )}
-              <SelectPill
+              <CustomSelect
                 value={studentId}
-                onChange={(e) => handleStudentChange(e.target.value)}
-                required
-              >
-                <option value="">-- Chọn học viên --</option>
-                {filteredStudents.map((st) => (
-                  <option key={st.id} value={st.id}>
-                    {st.fullName} (#{st.id}) {st.school ? `• ${st.school}` : ''}
-                  </option>
-                ))}
-              </SelectPill>
+                onChange={(v) => handleStudentChange(v)}
+                options={[
+                  { value: '', label: '-- Chọn học viên --' },
+                  ...filteredStudents.map((st) => ({
+                    value: st.id,
+                    label: `${st.fullName} (#${st.id})${st.school ? ` • ${st.school}` : ''}`,
+                  })),
+                ]}
+              />
             </div>
 
             {/* Chọn lớp học (tự động lọc theo các lớp học viên đã ghi danh) */}
@@ -1837,17 +1833,17 @@ function CreateTuitionModal({
               {loadingStudentClasses ? (
                 <div className="text-ink-muted py-2">Đang nạp lớp học viên đã ghi danh...</div>
               ) : (
-                <SelectPill
+                <CustomSelect
                   value={classId}
-                  onChange={(e) => setClassId(e.target.value)}
-                >
-                  <option value="">-- Khoản thu ngoài lớp (Không gắn lớp) --</option>
-                  {studentEnrolledClasses.map((sc) => (
-                    <option key={sc.classId} value={sc.classId}>
-                      {sc.className} ({sc.status === 'Active' ? 'Đang học' : 'Chờ duyệt'})
-                    </option>
-                  ))}
-                </SelectPill>
+                  onChange={(v) => setClassId(v)}
+                  options={[
+                    { value: '', label: '-- Khoản thu ngoài lớp (Không gắn lớp) --' },
+                    ...studentEnrolledClasses.map((sc) => ({
+                      value: sc.classId,
+                      label: `${sc.className} (${sc.status === 'Active' ? 'Đang học' : 'Chờ duyệt'})`,
+                    })),
+                  ]}
+                />
               )}
               <p className="text-[11px] text-ink-muted mt-1">
                 Hệ thống tự động lọc các lớp học viên đã ghi danh để đảm bảo tính toàn vẹn dữ liệu.
@@ -2760,15 +2756,16 @@ function ParentPaymentModal({ tuition, onClose, onSuccess }) {
               <label className="block text-xs font-semibold text-ink-secondary mb-1">
                 Phương thức thanh toán <span className="text-rose-600">*</span>
               </label>
-              <SelectPill
+              <CustomSelect
                 value={paymentMethod}
-                onChange={(e) => setPaymentMethod(e.target.value)}
+                onChange={(v) => setPaymentMethod(v)}
                 className="text-xs md:text-sm"
-              >
-                <option value="BankTransfer">Chuyển khoản ngân hàng (Khuyên dùng)</option>
-                <option value="ZaloPay">Ví ZaloPay</option>
-                <option value="Cash">Đóng tiền mặt tại quầy trung tâm</option>
-              </SelectPill>
+                options={[
+                  { value: 'BankTransfer', label: 'Chuyển khoản ngân hàng (Khuyên dùng)' },
+                  { value: 'ZaloPay', label: 'Ví ZaloPay' },
+                  { value: 'Cash', label: 'Đóng tiền mặt tại quầy trung tâm' },
+                ]}
+              />
             </div>
 
             {/* Mã giao dịch ngân hàng */}

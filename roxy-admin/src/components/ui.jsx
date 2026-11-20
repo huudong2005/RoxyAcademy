@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 
 const BADGE_VARIANTS = {
@@ -97,33 +98,6 @@ export function InputPill({ className = '', ...props }) {
   );
 }
 
-/** Ô chọn dạng pill đồng bộ với InputPill. */
-export function SelectPill({
-  className = '',
-  wrapperClassName = 'w-full',
-  children,
-  ...props
-}) {
-  return (
-    <div className={`relative ${wrapperClassName}`}>
-      <select
-        className={`w-full h-10 appearance-none rounded-full border border-line bg-surface pl-4 pr-10 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed ${className}`}
-        {...props}
-      >
-        {children}
-      </select>
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-y-0 right-3.5 flex items-center text-ink-muted"
-      >
-        <svg className="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.75">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M6 8l4 4 4-4" />
-        </svg>
-      </span>
-    </div>
-  );
-}
-
 /** Dropdown tự vẽ đồng bộ hoàn toàn hệ Teal & Gold, thay thế <select> hệ điều hành. */
 export function CustomSelect({
   id,
@@ -139,17 +113,37 @@ export function CustomSelect({
   title,
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [openUpward, setOpenUpward] = useState(false);
+  const [menuStyle, setMenuStyle] = useState(null);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
 
   const containerRef = useRef(null);
   const triggerRef = useRef(null);
+  const listboxRef = useRef(null);
   const optionRefs = useRef([]);
 
   const normalizedValue = String(value ?? '');
   const selectedIndex = options.findIndex((opt) => String(opt.value) === normalizedValue);
   const selectedOption = selectedIndex >= 0 ? options[selectedIndex] : null;
   const resolvedAriaLabel = ariaLabelAttr ?? ariaLabel;
+
+  const computeMenuPosition = () => {
+    if (!triggerRef.current) return null;
+    const rect = triggerRef.current.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const shouldOpenUpward = spaceBelow < 250 && rect.top > spaceBelow;
+    if (shouldOpenUpward) {
+      return {
+        left: rect.left,
+        width: rect.width,
+        bottom: window.innerHeight - rect.top + 6,
+      };
+    }
+    return {
+      left: rect.left,
+      width: rect.width,
+      top: rect.bottom + 6,
+    };
+  };
 
   const findNextEnabledIndex = (startIndex, step) => {
     if (!options.length) return -1;
@@ -163,11 +157,8 @@ export function CustomSelect({
 
   const openMenu = () => {
     if (disabled) return;
-    if (triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect();
-      const spaceBelow = window.innerHeight - rect.bottom;
-      setOpenUpward(spaceBelow < 250 && rect.top > spaceBelow);
-    }
+    const pos = computeMenuPosition();
+    if (pos) setMenuStyle(pos);
     let initialIdx = selectedIndex >= 0 && !options[selectedIndex]?.disabled ? selectedIndex : -1;
     if (initialIdx === -1) {
       initialIdx = options.findIndex((opt) => !opt.disabled);
@@ -192,13 +183,24 @@ export function CustomSelect({
   useEffect(() => {
     if (!isOpen) return undefined;
     const handlePointerDown = (event) => {
-      if (containerRef.current && !containerRef.current.contains(event.target)) {
+      if (
+        !containerRef.current?.contains(event.target) &&
+        !listboxRef.current?.contains(event.target)
+      ) {
         setIsOpen(false);
       }
     };
+    const handleReposition = () => {
+      const pos = computeMenuPosition();
+      if (pos) setMenuStyle(pos);
+    };
     document.addEventListener('pointerdown', handlePointerDown);
+    window.addEventListener('scroll', handleReposition, { capture: true, passive: true });
+    window.addEventListener('resize', handleReposition);
     return () => {
       document.removeEventListener('pointerdown', handlePointerDown);
+      window.removeEventListener('scroll', handleReposition, { capture: true });
+      window.removeEventListener('resize', handleReposition);
     };
   }, [isOpen]);
 
@@ -290,13 +292,19 @@ export function CustomSelect({
         </span>
       </button>
 
-      {isOpen && (
+      {isOpen && menuStyle && createPortal(
         <ul
+          ref={listboxRef}
           role="listbox"
           aria-label={resolvedAriaLabel}
-          className={`absolute left-0 z-30 w-full max-h-60 overflow-y-auto rounded-card border border-line bg-surface py-1 shadow-modal ${
-            openUpward ? 'bottom-full mb-1.5' : 'top-full mt-1.5'
-          }`}
+          style={{
+            position: 'fixed',
+            left: menuStyle.left,
+            width: menuStyle.width,
+            zIndex: 60,
+            ...(menuStyle.top !== undefined ? { top: menuStyle.top } : { bottom: menuStyle.bottom }),
+          }}
+          className="z-[60] max-h-60 overflow-y-auto rounded-card border border-line bg-surface py-1 shadow-modal"
         >
           {options.map((opt, idx) => {
             const isSelected = String(opt.value) === normalizedValue;
@@ -342,7 +350,8 @@ export function CustomSelect({
               </li>
             );
           })}
-        </ul>
+        </ul>,
+        document.body
       )}
     </div>
   );

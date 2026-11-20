@@ -12,7 +12,6 @@ import {
   SecondaryButton,
   IconButton,
   InputPill,
-  SelectPill,
   CustomSelect,
   Badge,
 } from '../components/ui';
@@ -1114,17 +1113,14 @@ function RecordPaymentModal({ tuitions, onClose, onSuccess }) {
                   Không có khoản thu nào còn nợ. Tất cả các khoản học phí đều đã tất toán!
                 </div>
               ) : (
-                <SelectPill
+                <CustomSelect
                   value={tuitionId}
-                  onChange={(e) => handleSelectTuition(e.target.value)}
-                  required
-                >
-                  {activeUnpaidTuitions.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.studentName} — {t.title} (Còn nợ: {formatCurrency(t.remainingAmount)})
-                    </option>
-                  ))}
-                </SelectPill>
+                  onChange={(v) => handleSelectTuition(v)}
+                  options={activeUnpaidTuitions.map((t) => ({
+                    value: t.id,
+                    label: `${t.studentName} — ${t.title} (Còn nợ: ${formatCurrency(t.remainingAmount)})`,
+                  }))}
+                />
               )}
             </div>
 

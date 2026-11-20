@@ -10,7 +10,6 @@ import {
   SecondaryButton,
   IconButton,
   InputPill,
-  SelectPill,
   CustomSelect,
   Badge,
 } from '../components/ui';
@@ -1240,21 +1239,20 @@ export default function Grades() {
                   <label htmlFor="modal-class" className="block text-xs font-semibold text-ink mb-1.5">
                     Lớp học <span className="text-rose-500">*</span>
                   </label>
-                  <SelectPill
+                  <CustomSelect
                     id="modal-class"
                     value={formData.classId}
                     disabled={Boolean(editingGrade)}
-                    onChange={(e) => handleModalClassChange(e.target.value)}
+                    onChange={(v) => handleModalClassChange(v)}
                     className="min-h-[44px]"
-                  >
-                    <option value="">-- Chọn lớp học --</option>
-                    {classes.map((c) => (
-                      <option key={c.id} value={String(c.id)}>
-                        {c.className}
-                        {c.branchName ? ` - ${c.branchName}` : ''}
-                      </option>
-                    ))}
-                  </SelectPill>
+                    options={[
+                      { value: '', label: '-- Chọn lớp học --' },
+                      ...classes.map((c) => ({
+                        value: String(c.id),
+                        label: `${c.className}${c.branchName ? ` - ${c.branchName}` : ''}`,
+                      })),
+                    ]}
+                  />
                   {fieldErrors.classId && (
                     <p className="mt-1 text-xs text-rose-600">{fieldErrors.classId}</p>
                   )}
@@ -1274,31 +1272,32 @@ export default function Grades() {
                     />
                   ) : (
                     <>
-                      <SelectPill
+                      <CustomSelect
                         id="modal-student"
                         value={formData.studentId}
                         disabled={!formData.classId || loadingModalStudents}
-                        onChange={(e) => {
-                          setFormData((prev) => ({ ...prev, studentId: e.target.value }));
+                        onChange={(v) => {
+                          setFormData((prev) => ({ ...prev, studentId: v }));
                           setFieldErrors((prev) => ({ ...prev, studentId: '' }));
                         }}
                         className="min-h-[44px]"
-                      >
-                        <option value="">
-                          {!formData.classId
-                            ? 'Vui lòng chọn lớp học trước'
-                            : loadingModalStudents
-                            ? 'Đang tải danh sách học viên...'
-                            : modalStudents.length === 0
-                            ? 'Lớp chưa có học viên ghi danh'
-                            : '-- Chọn học viên --'}
-                        </option>
-                        {modalStudents.map((s) => (
-                          <option key={s.id} value={String(s.id)}>
-                            {s.fullName} (#STU-{s.id})
-                          </option>
-                        ))}
-                      </SelectPill>
+                        options={[
+                          {
+                            value: '',
+                            label: !formData.classId
+                              ? 'Vui lòng chọn lớp học trước'
+                              : loadingModalStudents
+                                ? 'Đang tải danh sách học viên...'
+                                : modalStudents.length === 0
+                                  ? 'Lớp chưa có học viên ghi danh'
+                                  : '-- Chọn học viên --',
+                          },
+                          ...modalStudents.map((s) => ({
+                            value: String(s.id),
+                            label: `${s.fullName} (#STU-${s.id})`,
+                          })),
+                        ]}
+                      />
                       {modalStudentsError && (
                         <p className="mt-1 text-xs text-rose-600">{modalStudentsError}</p>
                       )}
@@ -1337,20 +1336,18 @@ export default function Grades() {
                   <label htmlFor="modal-exam-type" className="block text-xs font-semibold text-ink mb-1.5">
                     Loại bài thi
                   </label>
-                  <SelectPill
+                  <CustomSelect
                     id="modal-exam-type"
                     value={formData.examType}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, examType: e.target.value }))
+                    onChange={(v) =>
+                      setFormData((prev) => ({ ...prev, examType: v }))
                     }
                     className="min-h-[44px]"
-                  >
-                    {EXAM_TYPES.map((t) => (
-                      <option key={t.value} value={t.value}>
-                        {t.icon} {t.label} ({t.value})
-                      </option>
-                    ))}
-                  </SelectPill>
+                    options={EXAM_TYPES.map((t) => ({
+                      value: t.value,
+                      label: `${t.icon} ${t.label} (${t.value})`,
+                    }))}
+                  />
                 </div>
               </div>
 

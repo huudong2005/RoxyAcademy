@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import axiosClient from '../api/axiosClient';
 import { formatDateTime } from '../utils/formatters';
-import { PrimaryButton, SecondaryButton, InputPill, SelectPill, Badge } from './ui';
+import { PrimaryButton, SecondaryButton, InputPill, CustomSelect, Badge } from './ui';
 
 const ROLE_LABELS = {
   SuperAdmin: 'Quản trị cấp cao',
@@ -261,37 +261,35 @@ export function ComposeMessageModal({
                   Đang tải danh sách người nhận hợp lệ...
                 </div>
               ) : mode === 'user' ? (
-                <SelectPill
+                <CustomSelect
                   value={receiverId}
-                  onChange={(e) => {
-                    setReceiverId(e.target.value);
+                  onChange={(v) => {
+                    setReceiverId(v);
                     setFieldError('');
                   }}
-                >
-                  <option value="">-- Chọn người nhận --</option>
-                  {filteredUsers.map((u) => (
-                    <option key={u.id} value={u.id}>
-                      {u.fullName} — {ROLE_LABELS[u.role] || u.role}
-                      {u.branchName ? ` (${u.branchName})` : ''}
-                    </option>
-                  ))}
-                </SelectPill>
+                  options={[
+                    { value: '', label: '-- Chọn người nhận --' },
+                    ...filteredUsers.map((u) => ({
+                      value: u.id,
+                      label: `${u.fullName} — ${ROLE_LABELS[u.role] || u.role}${u.branchName ? ` (${u.branchName})` : ''}`,
+                    })),
+                  ]}
+                />
               ) : (
-                <SelectPill
+                <CustomSelect
                   value={classId}
-                  onChange={(e) => {
-                    setClassId(e.target.value);
+                  onChange={(v) => {
+                    setClassId(v);
                     setFieldError('');
                   }}
-                >
-                  <option value="">-- Chọn lớp học --</option>
-                  {filteredClasses.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.className}
-                      {c.branchName ? ` (${c.branchName})` : ''}
-                    </option>
-                  ))}
-                </SelectPill>
+                  options={[
+                    { value: '', label: '-- Chọn lớp học --' },
+                    ...filteredClasses.map((c) => ({
+                      value: c.id,
+                      label: `${c.className}${c.branchName ? ` (${c.branchName})` : ''}`,
+                    })),
+                  ]}
+                />
               )}
             </div>
           )}

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import axiosClient from '../api/axiosClient';
 import { formatDateTime, NEWSFEED_AUDIENCE_META } from '../utils/formatters';
 import ImageUpload from './ImageUpload';
-import { PrimaryButton, SecondaryButton, InputPill, SelectPill, Badge } from './ui';
+import { PrimaryButton, SecondaryButton, InputPill, CustomSelect, Badge } from './ui';
 
 /**
  * Modal xem chi tiết bài đăng Bảng tin.
@@ -373,14 +373,15 @@ export function CreateEditNewsfeedModal({
               <label className="block text-xs font-semibold text-ink-secondary mb-1.5">
                 Đối tượng nhận tin <span className="text-rose-500">*</span>
               </label>
-              <SelectPill
+              <CustomSelect
                 value={targetAudience}
-                onChange={(e) => setTargetAudience(e.target.value)}
-              >
-                <option value="All">Tất cả (Phụ huynh &amp; Giáo viên)</option>
-                <option value="Parents">Chỉ Phụ huynh</option>
-                <option value="Teachers">Chỉ Giáo viên</option>
-              </SelectPill>
+                onChange={(v) => setTargetAudience(v)}
+                options={[
+                  { value: 'All', label: 'Tất cả (Phụ huynh & Giáo viên)' },
+                  { value: 'Parents', label: 'Chỉ Phụ huynh' },
+                  { value: 'Teachers', label: 'Chỉ Giáo viên' },
+                ]}
+              />
             </div>
 
             <div>
@@ -392,17 +393,14 @@ export function CreateEditNewsfeedModal({
                   {managerBranchName}
                 </div>
               ) : (
-                <SelectPill
+                <CustomSelect
                   value={branchId}
-                  onChange={(e) => setBranchId(e.target.value)}
-                >
-                  <option value="">Toàn hệ thống</option>
-                  {branches.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.branchName}
-                    </option>
-                  ))}
-                </SelectPill>
+                  onChange={(v) => setBranchId(v)}
+                  options={[
+                    { value: '', label: 'Toàn hệ thống' },
+                    ...branches.map((b) => ({ value: b.id, label: b.branchName })),
+                  ]}
+                />
               )}
               {fieldErrors.branchId && (
                 <p className="mt-1 text-xs font-medium text-rose-600">{fieldErrors.branchId}</p>

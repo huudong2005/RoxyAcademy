@@ -12,7 +12,6 @@ import {
   SecondaryButton,
   IconButton,
   InputPill,
-  SelectPill,
   CustomSelect,
 } from '../components/ui';
 
@@ -1561,40 +1560,38 @@ export default function LeaveRequests() {
                           ⚠️ {studentsLoadError}
                         </p>
                       )}
-                      <SelectPill
+                      <CustomSelect
                         value={createFormData.studentId}
-                        onChange={(e) =>
-                          setCreateFormData((prev) => ({ ...prev, studentId: e.target.value }))
+                        onChange={(v) =>
+                          setCreateFormData((prev) => ({ ...prev, studentId: v }))
                         }
-                        required
-                      >
-                        <option value="">-- Chọn học viên --</option>
-                        {students.map((s) => (
-                          <option key={s.id} value={s.id}>
-                            {s.fullName} ({s.code || `#STU-${s.id}`}) {s.branchName ? `• ${s.branchName}` : ''}
-                          </option>
-                        ))}
-                      </SelectPill>
+                        options={[
+                          { value: '', label: '-- Chọn học viên --' },
+                          ...students.map((s) => ({
+                            value: s.id,
+                            label: `${s.fullName} (${s.code || `#STU-${s.id}`})${s.branchName ? ` • ${s.branchName}` : ''}`,
+                          })),
+                        ]}
+                      />
                     </div>
                   ) : (
                     <div>
                       <label className="block text-xs font-semibold text-ink mt-2 mb-1">
                         Chọn giáo viên: <span className="text-rose-500">*</span>
                       </label>
-                      <SelectPill
+                      <CustomSelect
                         value={createFormData.teacherId}
-                        onChange={(e) =>
-                          setCreateFormData((prev) => ({ ...prev, teacherId: e.target.value }))
+                        onChange={(v) =>
+                          setCreateFormData((prev) => ({ ...prev, teacherId: v }))
                         }
-                        required
-                      >
-                        <option value="">-- Chọn giáo viên --</option>
-                        {teachers.map((t) => (
-                          <option key={t.id} value={t.id}>
-                            {t.fullName} ({t.email || t.username})
-                          </option>
-                        ))}
-                      </SelectPill>
+                        options={[
+                          { value: '', label: '-- Chọn giáo viên --' },
+                          ...teachers.map((t) => ({
+                            value: t.id,
+                            label: `${t.fullName} (${t.email || t.username})`,
+                          })),
+                        ]}
+                      />
                     </div>
                   )}
                 </div>
@@ -1619,20 +1616,19 @@ export default function LeaveRequests() {
                       ⚠️ {studentsLoadError}
                     </p>
                   )}
-                  <SelectPill
+                  <CustomSelect
                     value={createFormData.studentId}
-                    onChange={(e) =>
-                      setCreateFormData((prev) => ({ ...prev, studentId: e.target.value }))
+                    onChange={(v) =>
+                      setCreateFormData((prev) => ({ ...prev, studentId: v }))
                     }
-                    required
-                  >
-                    <option value="">-- Chọn học viên --</option>
-                    {students.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.fullName} ({s.code || `#STU-${s.id}`})
-                      </option>
-                    ))}
-                  </SelectPill>
+                    options={[
+                      { value: '', label: '-- Chọn học viên --' },
+                      ...students.map((s) => ({
+                        value: s.id,
+                        label: `${s.fullName} (${s.code || `#STU-${s.id}`})`,
+                      })),
+                    ]}
+                  />
                 </div>
               ) : (
                 /* Học viên tự gửi: Tự động cho chính mình */
@@ -1651,10 +1647,9 @@ export default function LeaveRequests() {
                 <label className="block text-xs font-semibold text-ink mb-1">
                   Lớp học liên quan: <span className="text-ink-muted font-normal">(Khuyên dùng)</span>
                 </label>
-                <SelectPill
+                <CustomSelect
                   value={createFormData.classId}
-                  onChange={(e) => {
-                    const newClassId = e.target.value;
+                  onChange={(newClassId) => {
                     setCreateFormData((prev) => ({
                       ...prev,
                       classId: newClassId,
@@ -1664,14 +1659,14 @@ export default function LeaveRequests() {
                       setAvailableSchedules([]);
                     }
                   }}
-                >
-                  <option value="">-- Không chọn lớp cụ thể (Nghỉ cả ngày) --</option>
-                  {classes.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.className} {c.branchName ? `• ${c.branchName}` : ''}
-                    </option>
-                  ))}
-                </SelectPill>
+                  options={[
+                    { value: '', label: '-- Không chọn lớp cụ thể (Nghỉ cả ngày) --' },
+                    ...classes.map((c) => ({
+                      value: c.id,
+                      label: `${c.className}${c.branchName ? ` • ${c.branchName}` : ''}`,
+                    })),
+                  ]}
+                />
                 <p className="text-[11px] text-ink-muted mt-1">
                   Chọn lớp học để hệ thống tự động đồng bộ điểm danh khi đơn được duyệt.
                 </p>
@@ -1700,20 +1695,19 @@ export default function LeaveRequests() {
                     Buổi học cụ thể:{' '}
                     {loadingSchedules && <span className="text-teal font-normal">Đang tìm...</span>}
                   </label>
-                  <SelectPill
+                  <CustomSelect
                     value={createFormData.scheduleId}
-                    onChange={(e) =>
-                      setCreateFormData((prev) => ({ ...prev, scheduleId: e.target.value }))
+                    onChange={(v) =>
+                      setCreateFormData((prev) => ({ ...prev, scheduleId: v }))
                     }
-                  >
-                    <option value="">-- Nghỉ cả ngày / Không theo buổi cụ thể --</option>
-                    {availableSchedules.map((sc) => (
-                      <option key={sc.id} value={sc.id}>
-                        Buổi #{sc.id}: {formatDate(sc.studyDate)} ({sc.startTime} - {sc.endTime}){' '}
-                        {sc.room ? `• ${sc.room}` : ''}
-                      </option>
-                    ))}
-                  </SelectPill>
+                    options={[
+                      { value: '', label: '-- Nghỉ cả ngày / Không theo buổi cụ thể --' },
+                      ...availableSchedules.map((sc) => ({
+                        value: sc.id,
+                        label: `Buổi #${sc.id}: ${formatDate(sc.studyDate)} (${sc.startTime} - ${sc.endTime})${sc.room ? ` • ${sc.room}` : ''}`,
+                      })),
+                    ]}
+                  />
                   {availableSchedules.length === 0 && !loadingSchedules && (
                     <p className="text-[11px] text-ink-muted mt-1">
                       (Không tìm thấy buổi học nào trong ngày này của lớp. Đơn sẽ áp dụng nghỉ cả ngày).

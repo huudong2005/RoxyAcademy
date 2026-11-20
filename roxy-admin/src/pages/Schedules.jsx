@@ -9,7 +9,6 @@ import {
   PrimaryButton,
   SecondaryButton,
   IconButton,
-  SelectPill,
   CustomSelect,
   Badge,
 } from '../components/ui';
@@ -893,30 +892,25 @@ export default function Schedules() {
                   </div>
                 ) : (
                   <>
-                    <SelectPill
-                      required
+                    <CustomSelect
                       value={formData.classId}
-                      onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, classId: e.target.value }))
+                      onChange={(v) =>
+                        setFormData((prev) => ({ ...prev, classId: v }))
                       }
-                    >
-                      <option value="">-- Chọn lớp học --</option>
-                      {availableModalClasses.map((cls) => {
-                        const hasTeacher = Boolean(cls.teacherId);
-                        return (
-                          <option
-                            key={cls.id}
-                            value={cls.id}
-                            disabled={!hasTeacher}
-                            className={!hasTeacher ? 'text-ink-muted' : ''}
-                          >
-                            {hasTeacher
+                      options={[
+                        { value: '', label: '-- Chọn lớp học --' },
+                        ...availableModalClasses.map((cls) => {
+                          const hasTeacher = Boolean(cls.teacherId);
+                          return {
+                            value: cls.id,
+                            disabled: !hasTeacher,
+                            label: hasTeacher
                               ? `${cls.className} (${cls.teacherName || 'Đã có GV'})`
-                              : `[Chưa gán GV] ${cls.className} (Không thể chọn)`}
-                          </option>
-                        );
-                      })}
-                    </SelectPill>
+                              : `[Chưa gán GV] ${cls.className} (Không thể chọn)`,
+                          };
+                        }),
+                      ]}
+                    />
 
                     {/* Cảnh báo nếu lớp chưa gán GV */}
                     {formData.classId &&
@@ -1003,22 +997,22 @@ export default function Schedules() {
                 <label className="block text-xs font-semibold text-ink mb-1">
                   Giáo viên dạy thay (Tùy chọn)
                 </label>
-                <SelectPill
+                <CustomSelect
                   value={formData.substituteTeacherId}
-                  onChange={(e) =>
+                  onChange={(v) =>
                     setFormData((prev) => ({
                       ...prev,
-                      substituteTeacherId: e.target.value,
+                      substituteTeacherId: v,
                     }))
                   }
-                >
-                  <option value="">-- Không có (Giáo viên chính phụ trách) --</option>
-                  {teachers.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      👩‍🏫 {t.fullName} ({t.phoneNumber || 'Không có SĐT'})
-                    </option>
-                  ))}
-                </SelectPill>
+                  options={[
+                    { value: '', label: '-- Không có (Giáo viên chính phụ trách) --' },
+                    ...teachers.map((t) => ({
+                      value: t.id,
+                      label: `👩‍🏫 ${t.fullName} (${t.phoneNumber || 'Không có SĐT'})`,
+                    })),
+                  ]}
+                />
                 <p className="mt-1 text-[11px] text-ink-muted">
                   Chỉ chọn khi giáo viên chính bận việc hoặc nghỉ phép đột xuất.
                 </p>
@@ -1030,17 +1024,18 @@ export default function Schedules() {
                   <label className="block text-xs font-semibold text-ink mb-1">
                     Trạng thái buổi học
                   </label>
-                  <SelectPill
+                  <CustomSelect
                     disabled={isAttendanceLocked}
                     value={formData.status}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, status: e.target.value }))
+                    onChange={(v) =>
+                      setFormData((prev) => ({ ...prev, status: v }))
                     }
-                  >
-                    <option value="Scheduled">Đã lên lịch (Scheduled)</option>
-                    <option value="Completed">Đã hoàn thành / Đã điểm danh (Completed)</option>
-                    <option value="Cancelled">Đã hủy (Cancelled)</option>
-                  </SelectPill>
+                    options={[
+                      { value: 'Scheduled', label: 'Đã lên lịch (Scheduled)' },
+                      { value: 'Completed', label: 'Đã hoàn thành / Đã điểm danh (Completed)' },
+                      { value: 'Cancelled', label: 'Đã hủy (Cancelled)' },
+                    ]}
+                  />
                 </div>
               )}
 

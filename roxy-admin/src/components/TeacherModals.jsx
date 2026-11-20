@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import axiosClient from '../api/axiosClient';
 import { formatDate, formatDateTime } from '../utils/formatters';
-import { PrimaryButton, SecondaryButton, InputPill, SelectPill, Badge } from './ui';
+import { PrimaryButton, SecondaryButton, InputPill, CustomSelect, Badge } from './ui';
 
 /**
  * Helper trích xuất thông báo lỗi dễ hiểu từ response của ASP.NET Core API.
@@ -301,11 +301,11 @@ export function CreateEditTeacherModal({
               >
                 Chi nhánh <span className="text-rose-600">*</span>
               </label>
-              <SelectPill
+              <CustomSelect
                 id="teacher-branch"
                 value={branchId}
-                onChange={(e) => {
-                  setBranchId(e.target.value);
+                onChange={(v) => {
+                  setBranchId(v);
                   if (fieldErrors.branchId) setFieldErrors((p) => ({ ...p, branchId: '' }));
                 }}
                 disabled={!isSuperAdmin || isSubmitting}
@@ -314,14 +314,11 @@ export function CreateEditTeacherModal({
                     ? '!border-rose-400 focus:!border-rose-500 focus:!ring-rose-500/20'
                     : ''
                 }
-              >
-                <option value="">-- Chọn chi nhánh --</option>
-                {activeBranches.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.branchName}
-                  </option>
-                ))}
-              </SelectPill>
+                options={[
+                  { value: '', label: '-- Chọn chi nhánh --' },
+                  ...activeBranches.map((b) => ({ value: b.id, label: b.branchName })),
+                ]}
+              />
               {!isSuperAdmin && (
                 <p className="mt-1 text-[11px] text-ink-muted">
                   Cố định theo chi nhánh bạn đang quản lý.
@@ -339,15 +336,16 @@ export function CreateEditTeacherModal({
               >
                 Ngôn ngữ giao diện
               </label>
-              <SelectPill
+              <CustomSelect
                 id="teacher-lang"
                 value={preferredLanguage}
-                onChange={(e) => setPreferredLanguage(e.target.value)}
+                onChange={(v) => setPreferredLanguage(v)}
                 disabled={isSubmitting}
-              >
-                <option value="vi">Tiếng Việt (vi)</option>
-                <option value="en">English (en)</option>
-              </SelectPill>
+                options={[
+                  { value: 'vi', label: 'Tiếng Việt (vi)' },
+                  { value: 'en', label: 'English (en)' },
+                ]}
+              />
             </div>
           </div>
 

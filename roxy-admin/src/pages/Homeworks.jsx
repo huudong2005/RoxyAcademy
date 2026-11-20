@@ -10,7 +10,6 @@ import {
   SecondaryButton,
   IconButton,
   InputPill,
-  SelectPill,
   CustomSelect,
   Badge,
 } from '../components/ui';
@@ -1261,18 +1260,18 @@ export default function Homeworks() {
                 <label className="block text-xs font-semibold text-ink mb-1">
                   Lớp học áp dụng <span className="text-rose-500">*</span>
                 </label>
-                <SelectPill
+                <CustomSelect
                   disabled={!!editingHomework}
                   value={formData.classId}
-                  onChange={handleFormClassChange}
-                >
-                  <option value="">-- Chọn lớp học --</option>
-                  {classes.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.className} {c.branchName ? `(${c.branchName})` : ''}
-                    </option>
-                  ))}
-                </SelectPill>
+                  onChange={(v) => handleFormClassChange({ target: { value: v } })}
+                  options={[
+                    { value: '', label: '-- Chọn lớp học --' },
+                    ...classes.map((c) => ({
+                      value: c.id,
+                      label: `${c.className}${c.branchName ? ` (${c.branchName})` : ''}`,
+                    })),
+                  ]}
+                />
               </div>
 
               {/* Buổi học liên kết */}
@@ -1280,17 +1279,17 @@ export default function Homeworks() {
                 <label className="block text-xs font-semibold text-ink mb-1">
                   Buổi học liên kết <span className="text-ink-muted font-normal">(Tùy chọn)</span>
                 </label>
-                <SelectPill
+                <CustomSelect
                   value={formData.scheduleId}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, scheduleId: e.target.value }))}
-                >
-                  <option value="">-- Toàn khóa học (Không gắn buổi riêng) --</option>
-                  {classSchedulesForModal.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      Buổi ngày {formatDate(s.studyDate)} ({s.startTime?.slice(0, 5)} - {s.endTime?.slice(0, 5)})
-                    </option>
-                  ))}
-                </SelectPill>
+                  onChange={(v) => setFormData((prev) => ({ ...prev, scheduleId: v }))}
+                  options={[
+                    { value: '', label: '-- Toàn khóa học (Không gắn buổi riêng) --' },
+                    ...classSchedulesForModal.map((s) => ({
+                      value: s.id,
+                      label: `Buổi ngày ${formatDate(s.studyDate)} (${s.startTime?.slice(0, 5)} - ${s.endTime?.slice(0, 5)})`,
+                    })),
+                  ]}
+                />
                 <p className="text-[11px] text-ink-muted mt-1">
                   ℹ️ Gắn bài tập vào buổi học cụ thể giúp phụ huynh theo dõi sát lộ trình từng ngày.
                 </p>
