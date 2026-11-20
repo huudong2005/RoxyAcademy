@@ -1300,3 +1300,26 @@ Toàn bộ **8/8 hạng mục** của **Giai đoạn 1N-2 (8 bẫy đồng bộ)
 
 ## 3. Kết luận 2D-3
 - **Trạng thái nghiệm thu cuối cùng:** **PASS 100%** (build, lint, kiểm tra tĩnh 3/3 vị trí và kiểm thử thực tế trên trình duyệt đều đạt). Đủ điều kiện commit.
+
+
+---
+
+# BÁO CÁO QA — TÍNH NĂNG: TÀI KHOẢN QUẢN LÝ TRONG FORM CHI NHÁNH
+**Ngày kiểm tra:** 20/11/2026  
+**Người thực hiện:** QA Agent (build/lint/static check) + Commander (E2E Chrome thật TC a, b, c) + Đông (kiểm thử thủ công đầy đủ TC a, b, c, d)  
+**Phạm vi:** `roxy-admin/src/components/BranchModals.jsx`, `roxy-admin/src/pages/Branches.jsx` (không sửa backend, giữ nguyên phân quyền `SuperAdmin`).
+
+## 1. Kết quả Build & Lint (`roxy-admin/`)
+- `npm run lint` (`eslint .`): **PASS** (0 error, 0 warning).
+- `npm run build` (`vite build`): **PASS** (`✓ 113 modules transformed`, `✓ built in 362ms`).
+
+## 2. Kết quả kiểm thử thực tế trên trình duyệt thật
+| Test Case | Kết quả | Chi tiết thực tế |
+| :--- | :---: | :--- |
+| **(a) Tạo chi nhánh mới KÈM tài khoản quản lý** | **PASS** | - `POST /api/Branches` (`201`) -> `POST /api/Users` (`201`, `role: "BranchManager"`, `branchId` mới).<br>- Đăng nhập bằng tài khoản `BranchManager` vừa tạo: sidebar không có mục `Quản lý chi nhánh`, chỉ thấy dữ liệu của chi nhánh mới. |
+| **(b) Tạo chi nhánh KHÔNG kèm tài khoản** | **PASS** | - Để trống cả 3 ô quản lý: `POST /api/Branches` (`201`), không gọi `POST /api/Users`, chi nhánh tạo thành công như cũ. |
+| **(c) Tạo chi nhánh với SĐT đã có người dùng (`409`)** | **PASS** | - `POST /api/Branches` (`201`), `POST /api/Users` (`409`).<br>- Chi nhánh mới vẫn được giữ nguyên trong danh sách/DB; modal giữ nguyên dữ liệu đang nhập và hiển thị rõ lỗi `"Chi nhánh đã được tạo thành công (#BR-...), nhưng chưa tạo được tài khoản quản lý: Số điện thoại này đã được đăng ký..."`. |
+| **(d) Mở form SỬA chi nhánh đã có quản lý** | **PASS** | - Gọi `GET /api/Users?Role=BranchManager&BranchId={id}`, hiển thị đúng tên + SĐT quản lý dạng chỉ đọc (`"Quản lý hiện tại: ..."`), không hiển thị mục tạo thêm tài khoản quản lý (xác nhận thủ công bởi Đông). |
+
+## 3. Kết luận
+- **Trạng thái nghiệm thu cuối cùng:** **PASS 100%** — đủ điều kiện commit.

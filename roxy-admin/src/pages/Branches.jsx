@@ -397,6 +397,7 @@ export default function Branches() {
             setFormModalOpen(false);
             setEditingBranch(null);
           }}
+          onBranchSaved={refreshBranches}
           onSuccess={(message) => {
             setFormModalOpen(false);
             setEditingBranch(null);

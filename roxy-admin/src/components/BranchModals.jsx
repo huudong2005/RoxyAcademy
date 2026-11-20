@@ -57,7 +57,7 @@ function DeactivationBlockedAlert({ branchId, message, reasons = [], onNavigate 
  * Modal Thêm mới / Chỉnh sửa thông tin Chi nhánh.
  * Mobile: Bottom sheet; Desktop: Centered modal.
  */
-export function CreateEditBranchModal({ branch, onClose, onSuccess }) {
+export function CreateEditBranchModal({ branch, onClose, onBranchSaved, onSuccess }) {
   const isEdit = Boolean(branch);
 
   const [branchName, setBranchName] = useState(branch?.branchName || '');
@@ -65,11 +65,61 @@ export function CreateEditBranchModal({ branch, onClose, onSuccess }) {
   const [phone, setPhone] = useState(branch?.phone || '');
   const [isActive, setIsActive] = useState(branch ? Boolean(branch.isActive) : true);
 
+  // Giữ ID chi nhánh vừa tạo nếu bước tạo tài khoản quản lý bị lỗi để tránh tạo trùng khi thử lại
+  const [createdBranchId, setCreatedBranchId] = useState(null);
+
+  // Thông tin quản lý hiện tại (khi sửa) & form tạo tài khoản quản lý (tùy chọn)
+  const [loadingManager, setLoadingManager] = useState(isEdit);
+  const [managerLoadError, setManagerLoadError] = useState('');
+  const [existingManagers, setExistingManagers] = useState([]);
+  const [managerFullName, setManagerFullName] = useState('');
+  const [managerPhone, setManagerPhone] = useState('');
+  const [managerPassword, setManagerPassword] = useState('');
+
   const [fieldErrors, setFieldErrors] = useState({});
   const [submitError, setSubmitError] = useState('');
   const [isDeactivationBlocked, setIsDeactivationBlocked] = useState(false);
   const [blockedReasons, setBlockedReasons] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const hasExistingManager = isEdit && existingManagers.length > 0;
+
+  // Tải danh sách quản lý hiện tại của chi nhánh khi mở modal sửa
+  useEffect(() => {
+    if (!isEdit || !branch?.id) return;
+
+    let ignore = false;
+    const fetchBranchManager = async () => {
+      setLoadingManager(true);
+      setManagerLoadError('');
+      try {
+        const res = await axiosClient.get('/Users', {
+          params: {
+            Role: 'BranchManager',
+            BranchId: branch.id,
+          },
+        });
+        if (!ignore) {
+          const items = Array.isArray(res.data?.items) ? res.data.items : [];
+          setExistingManagers(items);
+        }
+      } catch (err) {
+        if (!ignore) {
+          console.error('Lỗi tải thông tin quản lý chi nhánh:', err);
+          setManagerLoadError(
+            err.response?.data?.message || 'Không thể tải thông tin quản lý hiện tại của chi nhánh.'
+          );
+        }
+      } finally {
+        if (!ignore) setLoadingManager(false);
+      }
+    };
+
+    fetchBranchManager();
+    return () => {
+      ignore = true;
+    };
+  }, [isEdit, branch?.id]);
 
   // Đóng modal bằng phím Escape
   useEffect(() => {
@@ -107,6 +157,32 @@ export function CreateEditBranchModal({ branch, onClose, onSuccess }) {
       }
     }
 
+    const trimmedManagerName = managerFullName.trim();
+    const trimmedManagerPhone = managerPhone.trim();
+    const hasAnyManagerField =
+      !hasExistingManager &&
+      !loadingManager &&
+      !managerLoadError &&
+      (trimmedManagerName.length > 0 ||
+        trimmedManagerPhone.length > 0 ||
+        managerPassword.length > 0);
+
+    if (hasAnyManagerField) {
+      if (!trimmedManagerName) {
+        errors.managerFullName = 'Vui lòng nhập họ tên quản lý.';
+      }
+      if (!trimmedManagerPhone) {
+        errors.managerPhone = 'Vui lòng nhập số điện thoại quản lý.';
+      } else if (!/^0\d{9}$/.test(trimmedManagerPhone)) {
+        errors.managerPhone = 'Số điện thoại quản lý phải gồm 10 chữ số và bắt đầu bằng 0.';
+      }
+      if (!managerPassword) {
+        errors.managerPassword = 'Vui lòng nhập mật khẩu cho tài khoản quản lý.';
+      } else if (managerPassword.length < 8) {
+        errors.managerPassword = 'Mật khẩu phải có tối thiểu 8 ký tự.';
+      }
+    }
+
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -121,9 +197,21 @@ export function CreateEditBranchModal({ branch, onClose, onSuccess }) {
 
     if (!validate()) return;
 
+    const trimmedPhone = phone.trim();
+    const trimmedManagerName = managerFullName.trim();
+    const trimmedManagerPhone = managerPhone.trim();
+    const shouldCreateManager =
+      !hasExistingManager &&
+      !loadingManager &&
+      !managerLoadError &&
+      (trimmedManagerName.length > 0 ||
+        trimmedManagerPhone.length > 0 ||
+        managerPassword.length > 0);
+
     setIsSubmitting(true);
     try {
-      const trimmedPhone = phone.trim();
+      let targetBranchId = isEdit ? branch.id : createdBranchId;
+
       if (isEdit) {
         await axiosClient.put(`/Branches/${branch.id}`, {
           branchName: branchName.trim(),
@@ -131,15 +219,63 @@ export function CreateEditBranchModal({ branch, onClose, onSuccess }) {
           phone: trimmedPhone || null,
           isActive,
         });
-        onSuccess('Cập nhật thông tin chi nhánh thành công.');
+      } else if (targetBranchId) {
+        await axiosClient.put(`/Branches/${targetBranchId}`, {
+          branchName: branchName.trim(),
+          address: address.trim(),
+          phone: trimmedPhone || null,
+          isActive: true,
+        });
       } else {
-        await axiosClient.post('/Branches', {
+        const branchRes = await axiosClient.post('/Branches', {
           branchName: branchName.trim(),
           address: address.trim(),
           phone: trimmedPhone || null,
         });
-        onSuccess('Thêm chi nhánh mới thành công.');
+        targetBranchId = branchRes.data?.id;
+        if (!targetBranchId) {
+          throw new Error('Không nhận được mã chi nhánh mới từ máy chủ.');
+        }
+        setCreatedBranchId(targetBranchId);
       }
+
+      onBranchSaved?.();
+
+      if (shouldCreateManager) {
+        try {
+          await axiosClient.post('/Users', {
+            phoneNumber: trimmedManagerPhone,
+            fullName: trimmedManagerName,
+            role: 'BranchManager',
+            branchId: targetBranchId,
+            password: managerPassword,
+          });
+          onSuccess(
+            isEdit
+              ? 'Cập nhật chi nhánh và tạo tài khoản quản lý thành công.'
+              : 'Thêm chi nhánh mới và tạo tài khoản quản lý thành công.'
+          );
+        } catch (userErr) {
+          console.error('Lỗi tạo tài khoản quản lý chi nhánh:', userErr);
+          const userErrMsg =
+            userErr.response?.data?.message ||
+            'Không thể tạo tài khoản quản lý. Vui lòng thử lại.';
+          setSubmitError(
+            isEdit
+              ? `Đã cập nhật thông tin chi nhánh, nhưng chưa tạo được tài khoản quản lý: ${userErrMsg} Bạn có thể sửa lại thông tin để thử lại.`
+              : `Chi nhánh đã được tạo thành công (#BR-${targetBranchId}), nhưng chưa tạo được tài khoản quản lý: ${userErrMsg} Bạn có thể sửa lại số điện thoại để thử lại hoặc thêm sau ở mục Chỉnh sửa chi nhánh.`
+          );
+        }
+        return;
+      }
+
+      onSuccess(
+        isEdit
+          ? 'Cập nhật thông tin chi nhánh thành công.'
+          : createdBranchId
+            ? 'Đã lưu thông tin chi nhánh.'
+            : 'Thêm chi nhánh mới thành công.'
+      );
     } catch (err) {
       console.error('Lỗi lưu chi nhánh:', err);
       const status = err.response?.status;
@@ -335,6 +471,129 @@ export function CreateEditBranchModal({ branch, onClose, onSuccess }) {
             </div>
           )}
 
+          {/* Tài khoản quản lý (BranchManager) */}
+          {isEdit && loadingManager ? (
+            <div className="pt-2 border-t border-line/60">
+              <div className="flex items-center gap-2 text-xs text-ink-muted py-2">
+                <span className="w-3.5 h-3.5 border-2 border-teal/30 border-t-teal rounded-full animate-spin" />
+                <span>Đang tải thông tin tài khoản quản lý...</span>
+              </div>
+            </div>
+          ) : isEdit && managerLoadError ? (
+            <div className="pt-2 border-t border-line/60">
+              <div className="bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-card p-3">
+                {managerLoadError}
+              </div>
+            </div>
+          ) : hasExistingManager ? (
+            <div className="pt-2 border-t border-line/60">
+              <div className="bg-surface-subtle border border-line rounded-card p-3 space-y-1">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted">
+                  Tài khoản quản lý
+                </p>
+                {existingManagers.map((m) => (
+                  <p key={m.id} className="text-sm text-ink">
+                    Quản lý hiện tại:{' '}
+                    <span className="font-semibold text-teal">{m.fullName}</span> —{' '}
+                    <span className="font-mono">{m.phoneNumber}</span>
+                  </p>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="pt-2 border-t border-line/60 space-y-3">
+              <div>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-teal">
+                  Tài khoản quản lý (tùy chọn)
+                </h4>
+                <p className="text-xs text-ink-muted mt-0.5">
+                  Để trống cả 3 ô nếu chưa cần tạo tài khoản quản lý cho chi nhánh này.
+                </p>
+              </div>
+
+              {/* Họ tên quản lý */}
+              <div>
+                <label className="block text-xs font-semibold text-ink mb-1.5">
+                  Họ tên quản lý
+                </label>
+                <InputPill
+                  type="text"
+                  maxLength={100}
+                  value={managerFullName}
+                  onChange={(e) => {
+                    setManagerFullName(e.target.value);
+                    if (fieldErrors.managerFullName) {
+                      setFieldErrors((prev) => ({ ...prev, managerFullName: '' }));
+                    }
+                  }}
+                  placeholder="VD: Nguyễn Văn A"
+                  className={
+                    fieldErrors.managerFullName
+                      ? '!border-rose-400 bg-rose-50/40 focus:!border-rose-500 focus:!ring-rose-500/20'
+                      : ''
+                  }
+                />
+                {fieldErrors.managerFullName && (
+                  <p className="mt-1 text-xs text-rose-600">{fieldErrors.managerFullName}</p>
+                )}
+              </div>
+
+              {/* Số điện thoại quản lý */}
+              <div>
+                <label className="block text-xs font-semibold text-ink mb-1.5">
+                  Số điện thoại quản lý
+                </label>
+                <InputPill
+                  type="tel"
+                  maxLength={10}
+                  value={managerPhone}
+                  onChange={(e) => {
+                    setManagerPhone(e.target.value);
+                    if (fieldErrors.managerPhone) {
+                      setFieldErrors((prev) => ({ ...prev, managerPhone: '' }));
+                    }
+                  }}
+                  placeholder="VD: 0912345678"
+                  className={
+                    fieldErrors.managerPhone
+                      ? '!border-rose-400 bg-rose-50/40 focus:!border-rose-500 focus:!ring-rose-500/20'
+                      : ''
+                  }
+                />
+                {fieldErrors.managerPhone && (
+                  <p className="mt-1 text-xs text-rose-600">{fieldErrors.managerPhone}</p>
+                )}
+              </div>
+
+              {/* Mật khẩu quản lý */}
+              <div>
+                <label className="block text-xs font-semibold text-ink mb-1.5">
+                  Mật khẩu
+                </label>
+                <InputPill
+                  type="password"
+                  autoComplete="new-password"
+                  value={managerPassword}
+                  onChange={(e) => {
+                    setManagerPassword(e.target.value);
+                    if (fieldErrors.managerPassword) {
+                      setFieldErrors((prev) => ({ ...prev, managerPassword: '' }));
+                    }
+                  }}
+                  placeholder="Tối thiểu 8 ký tự"
+                  className={
+                    fieldErrors.managerPassword
+                      ? '!border-rose-400 bg-rose-50/40 focus:!border-rose-500 focus:!ring-rose-500/20'
+                      : ''
+                  }
+                />
+                {fieldErrors.managerPassword && (
+                  <p className="mt-1 text-xs text-rose-600">{fieldErrors.managerPassword}</p>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Footer Buttons */}
           <div className="pt-3 border-t border-line/60 flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
             <SecondaryButton
@@ -354,10 +613,7 @@ export function CreateEditBranchModal({ branch, onClose, onSuccess }) {
                   <span>Đang lưu dữ liệu...</span>
                 </>
               ) : (
-                <>
-                  <span>💾</span>
-                  <span>{isEdit ? 'Lưu thay đổi' : 'Lưu chi nhánh'}</span>
-                </>
+                <span>{isEdit ? 'Lưu thay đổi' : 'Lưu chi nhánh'}</span>
               )}
             </PrimaryButton>
           </div>
