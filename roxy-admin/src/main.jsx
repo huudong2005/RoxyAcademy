@@ -8,3 +8,18 @@ createRoot(document.getElementById('root')).render(
     <App />
   </StrictMode>,
 )
+
+requestAnimationFrame(() => {
+  const splash = document.getElementById('app-splash')
+  if (!splash) return
+
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    splash.remove()
+  } else {
+    splash.style.opacity = '0'
+    splash.style.pointerEvents = 'none'
+    setTimeout(() => {
+      splash.remove()
+    }, 300)
+  }
+})

@@ -7,6 +7,64 @@
     <title>Roxy Academy — Quản trị học tập</title>
   </head>
   <body>
+    <style>
+      #app-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        background-color: #2F4F4A;
+        transition: opacity 300ms ease-out;
+      }
+      .app-splash-dots {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .app-splash-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 9999px;
+        background-color: #D9A441;
+        animation: roxy-splash-pulse 1.2s ease-in-out infinite;
+      }
+      .app-splash-dot:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      .app-splash-dot:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+      @keyframes roxy-splash-pulse {
+        0%, 100% {
+          opacity: 0.35;
+          transform: scale(0.85);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #app-splash {
+          transition: none;
+        }
+        .app-splash-dot {
+          animation: none;
+        }
+      }
+    </style>
+    <div id="app-splash" aria-hidden="true">
+      <img src="/favicon.svg" alt="Roxy Academy" style="width: 160px; height: auto; display: block;" />
+      <div class="app-splash-dots">
+        <span class="app-splash-dot"></span>
+        <span class="app-splash-dot"></span>
+        <span class="app-splash-dot"></span>
+      </div>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

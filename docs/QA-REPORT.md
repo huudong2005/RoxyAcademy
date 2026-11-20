@@ -1441,3 +1441,27 @@ Toàn bộ **8/8 hạng mục** của **Giai đoạn 1N-2 (8 bẫy đồng bộ)
 
 ## 3. Kết luận R5
 - **Trạng thái nghiệm thu cuối cùng:** **PASS 100%** ở cả `1920px`, `1440px` và `1280px` — đủ điều kiện commit.
+
+
+---
+
+# BÁO CÁO QA — LOGO THẬT + MÀN HÌNH LOAD (SPLASH SCREEN)
+**Ngày kiểm tra:** 20/11/2026  
+**Người thực hiện:** QA / Commander (Chrome headless + Playwright, API `http://localhost:5123`)  
+**Phạm vi:** `roxy-admin/src/assets/logo-roxy-v2.svg`, `roxy-admin/public/favicon.svg`, `roxy-admin/index.html`, `roxy-admin/src/main.jsx`, `roxy-admin/src/layouts/AdminLayout.jsx`, `roxy-admin/src/pages/Login.jsx`.
+
+## 1. Kết quả Build & Lint (`roxy-admin/`)
+- `npm run lint` (`eslint .`): **PASS** (0 error, 0 warning).
+- `npm run build` (`vite build`): **PASS** (`✓ 116 modules transformed`, `✓ built in 452ms`).
+
+## 2. Kết quả kiểm thử thực tế trên trình duyệt thật (`1440px`, `1280px` & Mobile Drawer `390x844`)
+| Hạng mục kiểm tra | Kết quả | Số liệu đo DOM thực tế |
+| :--- | :---: | :--- |
+| **Favicon (`public/favicon.svg`)** | **PASS** | - Khớp 100% với `roxy-admin/src/assets/logo-roxy-v2.svg` (`faviconMatchesSourceSvg = true`, `18,275 bytes`), giữ nguyên link `/favicon.svg` trong `index.html`. |
+| **Logo trang đăng nhập (`Login.jsx` ở `1440px` & `1280px`)** | **PASS** | - Đã bỏ ô vuông gold chữ `"R"`, hiển thị logo thật `<img alt="Roxy Academy">` (`complete = true`, `naturalWidth = 176`, `height = 64px` / `h-16`, `width = 75px`). |
+| **Logo Sidebar Desktop (`AdminLayout.jsx` L257) & Ngăn kéo Mobile (`AdminLayout.jsx` L310, `390x844`)** | **PASS** | - Đã bỏ ô vuông gold chữ `"R"`, hiển thị `<img src={logo} alt="Roxy Academy" className="h-9 w-auto shrink-0" />` (`complete = true`, `naturalWidth = 176`, `height = 36px` / `h-9`) bên cạnh `"Roxy Academy"` / `"Quản trị học tập"`. |
+| **Màn hình Splash (`index.html` + `main.jsx`)** | **PASS** | - Hiển thị ngay từ HTML tĩnh trước khi JS mount: `#app-splash` nền `rgb(47, 79, 74)` (`#2F4F4A`), logo giữa màn hình `logoWidth = 160px`, `dotsCount = 3` chấm gold `#D9A441` (không chớp trắng).<br>- Sau khi React mount xong: làm mờ `300ms ease-out` rồi gỡ khỏi DOM (`splashRemovedAfterMount = true`, không kẹt ở splash). |
+| **Splash với `prefers-reduced-motion: reduce`** | **PASS** | - `matchesReducedMotion = true`, `#app-splash` được gỡ ngay lập tức sau `requestAnimationFrame` đầu tiên mà không chờ fade `300ms` (`removedImmediatelyBefore300ms = true`). |
+
+## 3. Kết luận
+- **Trạng thái nghiệm thu cuối cùng:** **PASS 100%** — đủ điều kiện commit.

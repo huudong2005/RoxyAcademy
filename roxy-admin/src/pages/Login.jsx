@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
+import logo from '../assets/logo-roxy-v2.svg';
 import { Card, InputPill, PrimaryButton } from '../components/ui';
 import { saveAuthSession } from '../utils/authStorage';
 
@@ -73,9 +74,7 @@ export default function Login() {
       <Card large className="w-full max-w-md p-8">
         {/* Header Thương hiệu */}
         <div className="mb-6 text-center">
-          <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gold text-teal font-bold text-xl shadow-xs mb-3">
-            R
-          </div>
+          <img src={logo} alt="Roxy Academy" className="mx-auto mb-3 h-16 w-auto" />
           <h1 className="text-2xl font-bold tracking-tight text-ink">
             Roxy Academy
           </h1>

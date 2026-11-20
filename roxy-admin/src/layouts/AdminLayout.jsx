@@ -3,6 +3,7 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import NotificationBell from '../components/NotificationBell';
 import ProfileModal from '../components/ProfileModal';
 import ChangePasswordModal from '../components/ChangePasswordModal';
+import logo from '../assets/logo-roxy-v2.svg';
 import { useAuth } from '../context/authContext';
 import { clearAuthSession, getStoredUser } from '../utils/authStorage';
 
@@ -253,9 +254,7 @@ export default function AdminLayout() {
       <aside className="hidden md:flex w-64 flex-col bg-teal text-white/80 shadow-card">
         {/* Brand Logo Header */}
         <div className="flex h-16 items-center gap-3 border-b border-white/10 px-6">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gold font-bold text-teal shadow-xs">
-            R
-          </div>
+          <img src={logo} alt="Roxy Academy" className="h-9 w-auto shrink-0" />
           <div>
             <h1 className="text-base font-bold leading-tight text-white">Roxy Academy</h1>
             <p className="text-[11px] text-white/60">Quản trị học tập</p>
@@ -308,9 +307,7 @@ export default function AdminLayout() {
           <div className="relative flex w-72 max-w-[80%] flex-1 flex-col bg-teal text-white/80 shadow-modal transition-transform duration-200 ease-out z-10">
             <div className="flex h-16 items-center justify-between border-b border-white/10 px-5">
               <div className="flex items-center gap-2.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gold font-bold text-teal text-sm shadow-xs">
-                  R
-                </div>
+                <img src={logo} alt="Roxy Academy" className="h-9 w-auto shrink-0" />
                 <span className="font-bold text-white">Roxy Academy</span>
               </div>
               <button
