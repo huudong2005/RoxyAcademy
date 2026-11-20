@@ -432,7 +432,7 @@ CREATE TABLE Notifications (
     ReadAt     DATETIME2(0)   NULL,
     CreatedAt  DATETIME2(0)   NOT NULL CONSTRAINT DF_Notif_CreatedAt DEFAULT SYSUTCDATETIME(),
     CONSTRAINT FK_Notif_Users FOREIGN KEY (UserId) REFERENCES Users(Id) ON DELETE CASCADE,  -- CASCADE #2
-    CONSTRAINT CK_Notif_Type CHECK (Type IN ('Newsfeed','Attendance','Tuition','Leave','Grade','Homework','Message','Schedule','System'))
+    CONSTRAINT CK_Notif_Type CHECK (Type IN ('Newsfeed','Attendance','Tuition','Payment','Leave','Grade','Homework','Message','Schedule','System'))
 );
 CREATE INDEX IX_Notif_User_Read ON Notifications(UserId, IsRead, CreatedAt DESC);
 GO

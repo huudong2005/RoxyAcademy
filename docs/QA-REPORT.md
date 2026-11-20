@@ -1246,3 +1246,31 @@ Toàn bộ **8/8 hạng mục** của **Giai đoạn 1N-2 (8 bẫy đồng bộ)
 
 ## 4. Kết luận R4
 - **Trạng thái nghiệm thu:** **PASS 100%** ở cả `1440px` và `1280px` (build, lint, kiểm tra tĩnh 7 file sạch `bg-blue-*`/`bg-indigo-*` và emoji, giữ nguyên padding `Payments.jsx`, `<ImageUpload>` và hành vi `ConfirmModal.jsx`; cả `Tuitions` và `Payments` đạt `0px` cuộn ngang nội bộ, `THAO TÁC` căn giữa `deltaPx = 0px`, badge gọn `1` dòng; `Messages` và `Newsfeed` đạt `0px` tràn ngang; modal thu tiền và modal đăng bài chọn/upload ảnh hoạt động bình thường). Không còn lỗi chặn, đủ điều kiện để commit.
+
+
+---
+
+# BÁO CÁO QA — TÍNH NĂNG NHỎ 3C: THÔNG BÁO CHO ADMIN KHI PHỤ HUYNH GỬI THANH TOÁN
+**Ngày kiểm tra:** 20/11/2026  
+**Người thực hiện:** QA Agent  
+**Phạm vi:** Kiểm thử thay đổi tại `RoxyAppBE/RoxyAcademy.Api/Controllers/PaymentsController.cs` (dòng 241–272), ràng buộc `CK_Notif_Type` trong `RoxyAppDB.sql` (dòng 435), và tích hợp `NotificationBell.jsx`; không sửa code nguồn ứng dụng.
+
+## 1. Lần kiểm thử 1 (Phát hiện & xử lý Blocker)
+- **Build API:** `dotnet build --no-restore` **PASS** (`0 Warning(s)`, `0 Error(s)`).
+- **Phát hiện `[BLOCKER-3C-01]`:** `POST /api/Payments` (`BankTransfer` -> `PendingConfirm`) trả `201 Created`, nhưng SQL Server chặn chèn `Notification` với `Type = "Payment"` do ràng buộc `CK_Notif_Type` trong `RoxyAppDB.sql` (dòng 435) chưa có `'Payment'`; khối `try/catch` trong `PaymentsController.cs` (dòng 225–277) nuốt lỗi khiến không lưu được thông báo nào.
+- **Khắc phục (Phương án B):** Đã bổ sung `'Payment'` vào `CK_Notif_Type` trong `RoxyAppDB.sql` (dòng 435), tạo `docs/ALTER-Notifications-Payment-Type.sql` (idempotent cho production), và chạy script trên DB local thành công.
+
+## 2. Kết quả tái kiểm thử cuối cùng (Sau Phương án B)
+- **Build API:** `dotnet build --no-restore` (tại `RoxyAppBE/RoxyAcademy.Api`): **PASS** (`0 Warning(s)`, `0 Error(s)`).
+- **Môi trường kiểm thử:** `RoxyAcademy.Api` (`http://localhost:5123`) + Vite dev server (`http://localhost:5174`) + Chrome headless.
+- **Dữ liệu kiểm thử:** Khoản thu `TuitionId = 4` (`BranchId = 1`, `ParentId = 4`), tạo tạm chi nhánh 2 (`Id = 3`) và 2 tài khoản `BranchManager` (`BM1` thuộc `BranchId = 1`, `BM2` thuộc `BranchId = 3`) — đã dọn dẹp sạch sau khi kiểm thử.
+
+| Hạng mục / Test Case | Kết quả | Chi tiết thực tế |
+| :--- | :---: | :--- |
+| **TC1: Phụ huynh gửi `BankTransfer` -> `PendingConfirm`** | **PASS** | - `POST /api/Payments` (`ParentId = 4`, `tuitionId = 4`, `amount = 50,000`, `transactionCode = "QA3C_TX_002"`) trả `201 Created` (`id = 9`, `status = "PendingConfirm"`).<br>- `GET /api/Notifications` của `SuperAdmin` trả bản ghi `id = 8`, `type = "Payment"`, `refId = 9`, `title = "Có thanh toán mới cần xác nhận"`, `body = "Học viên TEST Học Viên A vừa gửi yêu cầu thanh toán 50,000 đ cho 'TEST Học phí đợt 2A' (mã GD: QA3C_TX_002)."`. |
+| **TC2: Nhân viên thu trực tiếp `Cash` -> `Confirmed`** | **PASS** | - `POST /api/Payments` (`SuperAdmin`, `tuitionId = 4`, `amount = 50,000`) trả `201 Created` (`id = 10`, `status = "Confirmed"`).<br>- `SuperAdmin`, `BM1`, `BM2` đều nhận `0` thông báo `"Có thanh toán mới cần xác nhận"`. |
+| **TC3: `BranchManager` cùng chi nhánh / khác chi nhánh** | **PASS** | - `BM1` (`BranchId = 1`, cùng `Tuition.BranchId`) nhận `1` thông báo (`id = 9`, `type = "Payment"`, `refId = 9`).<br>- `BM2` (`BranchId = 3`, khác chi nhánh) nhận `0` thông báo. |
+| **UI: Chuông `NotificationBell.jsx` trên trình duyệt thật** | **PASS** | - Đăng nhập `SuperAdmin` tại `http://localhost:5174/login`, chuông hiển thị badge `1`.<br>- Bấm mở popover thấy đủ tiêu đề, tên học viên, tên khoản thu, số tiền `50,000`, mã GD `QA3C_TX_002`.<br>- Bấm vào thông báo đóng popover và điều hướng chính xác tới `/payments`. |
+
+## 3. Kết luận 3C
+- **Trạng thái nghiệm thu cuối cùng:** **PASS 100%** (0 lỗi chặn; đã dọn dẹp sạch bản ghi test tạm trong DB và dừng server test; đã cập nhật `docs/API.md` mục 5.3). Đủ điều kiện commit.

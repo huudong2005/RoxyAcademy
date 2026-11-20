@@ -220,7 +220,8 @@ public class PaymentsController(RoxyDbContext db) : ControllerBase
         db.Payments.Add(payment);
         await db.SaveChangesAsync();
 
-        // Gửi thông báo đến phụ huynh (nếu có tài khoản) khi staff ghi nhận thanh toán
+        // Gửi thông báo đến phụ huynh (nếu có tài khoản) khi staff ghi nhận thanh toán,
+        // hoặc gửi thông báo đến admin/quản lý chi nhánh khi phụ huynh gửi yêu cầu chờ xác nhận
         try
         {
             if (IsStaff && tuition.Student.ParentId > 0)
@@ -236,6 +237,38 @@ public class PaymentsController(RoxyDbContext db) : ControllerBase
                     CreatedAt = DateTime.UtcNow
                 });
                 await db.SaveChangesAsync();
+            }
+            else if (payment.Status == "PendingConfirm")
+            {
+                var adminRecipientIds = await db.Users
+                    .AsNoTracking()
+                    .Where(u => u.IsActive && (u.Role == "SuperAdmin" || (u.Role == "BranchManager" && u.BranchId == tuition.BranchId)))
+                    .Select(u => u.Id)
+                    .Distinct()
+                    .ToListAsync();
+
+                if (adminRecipientIds.Count > 0)
+                {
+                    var txCodePart = string.IsNullOrWhiteSpace(payment.TransactionCode)
+                        ? string.Empty
+                        : $" (mã GD: {payment.TransactionCode})";
+                    var body = $"Học viên {tuition.Student.FullName} vừa gửi yêu cầu thanh toán {payment.Amount:N0} đ cho '{tuition.Title}'{txCodePart}.";
+                    var nowUtc = DateTime.UtcNow;
+
+                    var notifications = adminRecipientIds.Select(userId => new Notification
+                    {
+                        UserId = userId,
+                        Title = "Có thanh toán mới cần xác nhận",
+                        Body = body,
+                        Type = "Payment",
+                        RefId = payment.Id,
+                        IsRead = false,
+                        CreatedAt = nowUtc
+                    });
+
+                    db.Notifications.AddRange(notifications);
+                    await db.SaveChangesAsync();
+                }
             }
         }
         catch
