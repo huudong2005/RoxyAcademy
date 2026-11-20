@@ -2,6 +2,15 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import axiosClient from '../api/axiosClient';
 import { formatDateTime } from '../utils/formatters';
 import { ComposeMessageModal, MessageDetailModal } from '../components/MessageModals';
+import {
+  PageHeader,
+  Card,
+  PrimaryButton,
+  SecondaryButton,
+  IconButton,
+  InputPill,
+  Badge,
+} from '../components/ui';
 
 const TABS = [
   { key: 'inbox', label: 'Hộp thư đến' },
@@ -243,45 +252,45 @@ export default function Messages() {
       {/* Toast */}
       {toastMessage && (
         <div
-          className={`fixed bottom-4 right-4 z-50 flex items-center gap-2.5 rounded-xl border px-4 py-3 text-sm font-medium shadow-lg transition-all ${
+          className={`fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium shadow-modal transition-all duration-150 ease-out ${
             toastMessage.type === 'error'
-              ? 'border-rose-200 bg-rose-50 text-rose-800'
-              : 'border-emerald-200 bg-emerald-50 text-emerald-800'
+              ? 'bg-rose-600 text-white'
+              : 'bg-teal text-white'
           }`}
         >
-          <span>{toastMessage.type === 'error' ? '❌' : '✅'}</span>
+          {toastMessage.type === 'error' ? (
+            <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          ) : (
+            <svg className="h-4 w-4 shrink-0 text-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          )}
           <span>{toastMessage.message}</span>
         </div>
       )}
 
       {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
-            Tin nhắn trao đổi
-          </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Trao đổi trực tiếp với phụ huynh, giáo viên, quản lý hoặc gửi thông báo theo lớp học
-          </p>
-        </div>
-
-        <button
-          type="button"
-          onClick={handleOpenCompose}
-          className="min-h-[44px] inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-blue-700 active:scale-[0.98] transition-all cursor-pointer shrink-0"
-        >
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          <span>Soạn tin nhắn</span>
-        </button>
-      </div>
+      <PageHeader
+        eyebrow="Trao đổi & Liên lạc"
+        title="Tin nhắn trao đổi"
+        description="Trao đổi trực tiếp với phụ huynh, giáo viên, quản lý hoặc gửi thông báo theo lớp học"
+        actions={
+          <PrimaryButton onClick={handleOpenCompose}>
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M12 4v16m8-8H4" />
+            </svg>
+            <span>Soạn tin nhắn</span>
+          </PrimaryButton>
+        }
+      />
 
       {/* Tabs + Search Bar */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-3 sm:p-4 shadow-xs space-y-3">
+      <Card className="p-3 sm:p-4 space-y-3">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           {/* Tabs */}
-          <div className="flex items-center gap-1.5 rounded-xl bg-slate-100 p-1 overflow-x-auto">
+          <div className="flex items-center gap-1 rounded-full bg-surface-subtle p-1 overflow-x-auto border border-line/70">
             {TABS.map((tab) => {
               const isActive = activeTab === tab.key;
               return (
@@ -292,15 +301,15 @@ export default function Messages() {
                     setActiveTab(tab.key);
                     setOnlyUnread(false);
                   }}
-                  className={`min-h-[38px] inline-flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs sm:text-sm font-semibold whitespace-nowrap transition-all cursor-pointer active:scale-[0.98] ${
+                  className={`min-h-[36px] inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs sm:text-sm font-semibold whitespace-nowrap transition-all duration-150 ease-out cursor-pointer active:scale-[0.98] ${
                     isActive
-                      ? 'bg-white text-blue-700 shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900'
+                      ? 'bg-teal text-gold shadow-xs'
+                      : 'text-ink-secondary hover:text-ink'
                   }`}
                 >
                   <span>{tab.label}</span>
                   {tab.key === 'inbox' && inboxUnreadCount > 0 && (
-                    <span className="inline-flex min-w-[20px] items-center justify-center rounded-full bg-blue-600 px-1.5 py-0.5 text-[11px] font-bold text-white">
+                    <span className="inline-flex min-w-[20px] items-center justify-center rounded-full bg-gold px-1.5 py-0.5 text-[11px] font-bold text-teal">
                       {inboxUnreadCount}
                     </span>
                   )}
@@ -313,7 +322,7 @@ export default function Messages() {
           <div className="flex items-center gap-2">
             <div className="relative flex-1 md:w-72">
               <svg
-                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+                className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -325,12 +334,12 @@ export default function Messages() {
                   d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                 />
               </svg>
-              <input
+              <InputPill
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Tìm nội dung, người gửi/nhận, lớp..."
-                className="w-full min-h-[40px] rounded-lg border border-slate-200 bg-slate-50 pl-9 pr-3 py-2 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:outline-none"
+                className="!h-10 !pl-9 !pr-4 !py-0 text-sm"
               />
             </div>
 
@@ -338,22 +347,21 @@ export default function Messages() {
               <button
                 type="button"
                 onClick={() => setOnlyUnread((v) => !v)}
-                className={`min-h-[40px] rounded-lg border px-3 py-2 text-xs font-semibold whitespace-nowrap transition-all cursor-pointer active:scale-[0.98] ${
+                className={`min-h-[40px] rounded-full border px-3.5 py-2 text-xs font-semibold whitespace-nowrap transition-all duration-150 ease-out cursor-pointer active:scale-[0.98] ${
                   onlyUnread
-                    ? 'border-blue-300 bg-blue-50 text-blue-700'
-                    : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                    ? 'border-gold bg-gold-soft text-teal'
+                    : 'border-line bg-surface text-ink-secondary hover:bg-mint-canvas'
                 }`}
               >
                 Chưa đọc
               </button>
             )}
 
-            <button
-              type="button"
+            <IconButton
               onClick={refreshMessages}
               title="Làm mới danh sách"
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 active:scale-[0.97] transition-all cursor-pointer"
               aria-label="Làm mới"
+              className="h-10 w-10 shrink-0"
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -363,46 +371,47 @@ export default function Messages() {
                   d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                 />
               </svg>
-            </button>
+            </IconButton>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Error State */}
       {error && (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800 flex items-center justify-between gap-3">
+        <div className="rounded-card border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800 flex items-center justify-between gap-3">
           <span>{error}</span>
-          <button
-            type="button"
+          <SecondaryButton
             onClick={refreshMessages}
-            className="rounded-lg border border-rose-300 bg-white px-3 py-1.5 text-xs font-semibold text-rose-700 hover:bg-rose-50 cursor-pointer"
+            className="!px-3.5 !py-1.5 text-xs !border-rose-300 !text-rose-700 hover:!bg-rose-100"
           >
             Thử lại
-          </button>
+          </SecondaryButton>
         </div>
       )}
 
       {/* Message List */}
-      <div className="tab-content rounded-2xl border border-slate-200 bg-white shadow-xs overflow-hidden">
+      <Card large className="tab-content overflow-hidden">
         {loading ? (
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-line/60">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="p-4 sm:p-5 animate-pulse flex items-start gap-3.5">
-                <div className="h-10 w-10 rounded-full bg-slate-200 shrink-0" />
+                <div className="h-10 w-10 rounded-full bg-surface-subtle shrink-0" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-4 w-48 rounded bg-slate-200" />
-                  <div className="h-3.5 w-full rounded bg-slate-100" />
-                  <div className="h-3.5 w-2/3 rounded bg-slate-100" />
+                  <div className="h-4 w-48 rounded bg-surface-subtle" />
+                  <div className="h-3.5 w-full rounded bg-surface-subtle" />
+                  <div className="h-3.5 w-2/3 rounded bg-surface-subtle" />
                 </div>
               </div>
             ))}
           </div>
         ) : filteredMessages.length === 0 ? (
           <div className="py-14 px-4 text-center space-y-2">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-2xl">
-              💬
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-surface-subtle border border-line text-ink-muted">
+              <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+              </svg>
             </div>
-            <p className="text-sm font-semibold text-slate-700">
+            <p className="text-sm font-semibold text-ink">
               {searchTerm.trim() || onlyUnread
                 ? 'Không tìm thấy tin nhắn phù hợp'
                 : activeTab === 'inbox'
@@ -411,14 +420,14 @@ export default function Messages() {
                 ? 'Bạn chưa gửi tin nhắn nào'
                 : 'Chưa có tin nhắn lớp học nào'}
             </p>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-ink-muted">
               {searchTerm.trim() || onlyUnread
                 ? 'Thử thay đổi từ khóa tìm kiếm hoặc bỏ bộ lọc chưa đọc.'
                 : 'Nhấn "Soạn tin nhắn" để bắt đầu trao đổi.'}
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-line/60">
             {filteredMessages.map((msg) => {
               const isInboxUnread =
                 activeTab === 'inbox' &&
@@ -454,24 +463,24 @@ export default function Messages() {
                       handleOpenDetail(msg);
                     }
                   }}
-                  className={`group flex items-start gap-3.5 p-4 sm:px-5 sm:py-4 transition-colors cursor-pointer ${
+                  className={`group flex items-start gap-3.5 p-4 sm:px-5 sm:py-4 transition-colors duration-150 cursor-pointer ${
                     isInboxUnread
-                      ? 'bg-blue-50/60 hover:bg-blue-50'
-                      : 'bg-white hover:bg-slate-50'
+                      ? 'bg-gold-soft/45 hover:bg-gold-soft/70'
+                      : 'bg-surface hover:bg-mint-canvas/50'
                   }`}
                 >
                   {/* Avatar */}
                   <div
                     className={`relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
                       isInboxUnread
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-slate-100 text-slate-700'
+                        ? 'bg-teal text-gold'
+                        : 'bg-surface-subtle text-ink-secondary border border-line/70'
                     }`}
                   >
                     {getInitials(avatarName)}
                     {isInboxUnread && (
                       <span
-                        className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-white bg-amber-500"
+                        className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-surface bg-gold"
                         title="Chưa đọc"
                       />
                     )}
@@ -483,39 +492,39 @@ export default function Messages() {
                       <div className="flex flex-wrap items-center gap-2 min-w-0">
                         <span
                           className={`truncate text-sm ${
-                            isInboxUnread ? 'font-bold text-slate-900' : 'font-semibold text-slate-800'
+                            isInboxUnread ? 'font-bold text-ink' : 'font-semibold text-ink'
                           }`}
                         >
                           {primaryTitle}
                         </span>
 
                         {activeTab === 'class' && msg.senderName && (
-                          <span className="text-xs text-slate-500">
-                            • Gửi bởi <span className="font-medium text-slate-700">{msg.senderName}</span>
+                          <span className="text-xs text-ink-muted">
+                            • Gửi bởi <span className="font-medium text-ink-secondary">{msg.senderName}</span>
                           </span>
                         )}
 
                         {msg.classId && activeTab !== 'class' && (
-                          <span className="inline-flex items-center rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-800">
-                            🏫 {msg.className || `Lớp #${msg.classId}`}
-                          </span>
+                          <Badge variant="teal" className="normal-case tracking-normal">
+                            {msg.className || `Lớp #${msg.classId}`}
+                          </Badge>
                         )}
 
                         {msg.studentName && (
-                          <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700">
-                            🎓 {msg.studentName}
-                          </span>
+                          <Badge variant="neutral" className="normal-case tracking-normal">
+                            {msg.studentName}
+                          </Badge>
                         )}
                       </div>
 
-                      <span className="text-xs text-slate-400 whitespace-nowrap">
+                      <span className="text-xs text-ink-muted whitespace-nowrap">
                         {formatDateTime(msg.createdAt)}
                       </span>
                     </div>
 
                     <p
                       className={`text-sm line-clamp-2 break-words ${
-                        isInboxUnread ? 'font-medium text-slate-800' : 'text-slate-600'
+                        isInboxUnread ? 'font-medium text-ink' : 'text-ink-secondary'
                       }`}
                     >
                       {msg.content}
@@ -526,14 +535,14 @@ export default function Messages() {
                         {activeTab === 'inbox' && msg.receiverId && (
                           <span
                             className={`text-[11px] font-medium ${
-                              msg.isRead ? 'text-emerald-700' : 'text-blue-700'
+                              msg.isRead ? 'text-emerald-700' : 'text-teal font-semibold'
                             }`}
                           >
-                            {msg.isRead ? '✓ Đã đọc' : '● Chưa đọc'}
+                            {msg.isRead ? 'Đã đọc' : 'Chưa đọc'}
                           </span>
                         )}
                         {activeTab === 'outbox' && msg.receiverId && (
-                          <span className="text-[11px] text-slate-400">
+                          <span className="text-[11px] text-ink-muted">
                             {msg.isRead ? 'Người nhận đã xem' : 'Đã gửi'}
                           </span>
                         )}
@@ -541,19 +550,18 @@ export default function Messages() {
 
                       <div className="flex items-center gap-2">
                         {isInboxUnread && (
-                          <button
-                            type="button"
+                          <SecondaryButton
                             onClick={(e) => {
                               e.stopPropagation();
                               handleMarkAsRead(msg.id);
                             }}
                             disabled={markingReadId === msg.id}
-                            className="rounded-md border border-blue-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-blue-700 hover:bg-blue-50 active:scale-[0.97] transition-all cursor-pointer"
+                            className="!px-3 !py-1 text-[11px]"
                           >
                             {markingReadId === msg.id ? 'Đang lưu...' : 'Đánh dấu đã đọc'}
-                          </button>
+                          </SecondaryButton>
                         )}
-                        <span className="text-xs font-medium text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:inline">
+                        <span className="text-xs font-medium text-teal opacity-0 group-hover:opacity-100 transition-opacity duration-150 hidden sm:inline">
                           Xem chi tiết →
                         </span>
                       </div>
@@ -564,7 +572,7 @@ export default function Messages() {
             })}
           </div>
         )}
-      </div>
+      </Card>
 
       {/* Modals */}
       {composeOpen && (

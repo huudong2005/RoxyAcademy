@@ -1209,3 +1209,40 @@ Toàn bộ **8/8 hạng mục** của **Giai đoạn 1N-2 (8 bẫy đồng bộ)
 
 ## 4. Kết luận R3
 - **Trạng thái nghiệm thu:** **PASS 100%** ở cả `1440px` và `1280px` (build, lint, kiểm tra tĩnh 6 file sạch nút `bg-blue-*`/`bg-indigo-*` và sạch emoji trong nút, 4 bảng `Attendance`/`Homeworks`/`Grades`/`LeaveRequests` đều `0px` cuộn ngang nội bộ, `Schedules` giữ lưới 7 cột `min-w-[1320px]` không tràn trang, cột `THAO TÁC` căn giữa `deltaPx = 0px`, `Dashboard` chỉ dùng `teal`+`gold`, menu người dùng nằm trên mọi nội dung). Không còn lỗi chặn, đủ điều kiện để commit.
+
+
+---
+
+# BÁO CÁO QA — ĐỢT TRÙNG TU GIAO DIỆN R4: HỌC PHÍ, THANH TOÁN, TIN NHẮN, BẢNG TIN & CONFIRM MODAL
+**Ngày kiểm tra:** 20/11/2026  
+**Người thực hiện:** QA Agent  
+**Commit gốc:** `542ac17`  
+**Phạm vi:** Kiểm thử 7 file đã sửa (`ConfirmModal.jsx`, `Tuitions.jsx`, `Payments.jsx`, `Messages.jsx`, `MessageModals.jsx`, `Newsfeed.jsx`, `NewsfeedModals.jsx`, chưa commit); không sửa code nguồn ứng dụng.
+
+## 1. Kết quả Lint & Build (`roxy-admin/`)
+- `npm run lint` (`eslint .`): **PASS** (0 error, 0 warning).
+- `npm run build` (`vite build`): **PASS** (`✓ 113 modules transformed`, `✓ built in 301ms`).
+
+## 2. Kiểm tra tĩnh trên 7 file đã sửa
+- **Nút chính `bg-blue-*` / `bg-indigo-*`:** **PASS** — 0 kết quả khớp `bg-blue-*` hoặc `bg-indigo-*` trên cả 7 file.
+- **Emoji trong nút / JSX:** **PASS** — 0 emoji màu trên cả 7 file.
+- **Padding bảng `Payments.jsx`:** **PASS** — Giữ nguyên `pl-1.5 pr-3.5` (cột `Số tiền`, L466 & L503) và `pl-3.5 pr-1.5` (cột `Phương thức`, L467 & L510).
+- **`<ImageUpload>` & `ConfirmModal.jsx`:** **PASS** — Giữ nguyên `<ImageUpload>` tại `Tuitions.jsx` (L2501, L2808) và `NewsfeedModals.jsx` (L436); `ConfirmModal.jsx` giữ nguyên hành vi (`mode === 'alert'`, `tone === 'danger'`, `onConfirm`, `onCancel`, `autoFocus`, phím `Escape`) và chỉ thay styling sang `PrimaryButton`/`SecondaryButton` + token bề mặt.
+
+## 3. Kết quả kiểm tra thực tế trên trình duyệt thật (`1440px` & `1280px`)
+- **Môi trường đo:** Chrome headless + Playwright, Vite dev server `http://localhost:5174` proxy tới API `http://localhost:5123` (đăng nhập `SuperAdmin`).
+
+| Màn hình & Hạng mục | Kết quả `1440px` | Kết quả `1280px` | Số liệu đo DOM thực tế |
+| :--- | :---: | :---: | :--- |
+| **`/tuitions` — Cuộn ngang nội bộ bảng** *(6 dòng dữ liệu thật)* | **PASS** | **PASS** | - `1440px`: `doc = 1440/1440px`; vùng bảng `clientWidth = 1118px`, `scrollWidth = 1118px`, `table.offsetWidth = 1118px` (tràn `0px`).<br>- `1280px`: `doc = 1280/1280px`; vùng bảng `clientWidth = 958px`, `scrollWidth = 958px`, `table.offsetWidth = 958px` (tràn `0px`). |
+| **`/tuitions` — Căn giữa cột `THAO TÁC`** | **PASS** | **PASS** | - `1440px`: `thCenter = 1313.1px`, `btnsCenter = 1313.1px` (`deltaPx = 0px`).<br>- `1280px`: `thCenter = 1161.0px`, `btnsCenter = 1161.0px` (`deltaPx = 0px`). |
+| **`/tuitions` — Badge trạng thái 1 dòng** | **PASS** | **PASS** | - `Thu ngoài lớp`, `Lớp Toán 1`, `Chưa thanh toán`, `Đã thanh toán`: `height = 20.7px`, `lineCount = 1`; `Chờ duyệt: 51.000 đ`: `height = 19.3px`, `lineCount = 1` ở cả `1440px` & `1280px`. |
+| **`/payments` — Cuộn ngang nội bộ bảng** *(4 dòng dữ liệu thật)* | **PASS** | **PASS** | - `1440px`: `doc = 1440/1440px`; vùng bảng `clientWidth = 1118px`, `scrollWidth = 1118px`, `table.offsetWidth = 1118px` (tràn `0px`).<br>- `1280px`: `doc = 1280/1280px`; vùng bảng `clientWidth = 958px`, `scrollWidth = 958px`, `table.offsetWidth = 958px` (tràn `0px`). |
+| **`/payments` — Căn giữa cột `THAO TÁC`** | **PASS** | **PASS** | - `1440px`: `thCenter = 1305.7px`, `btnsCenter = 1305.7px` (`deltaPx = 0px`).<br>- `1280px`: `thCenter = 1160.2px`, `btnsCenter = 1160.2px` (`deltaPx = 0px`). |
+| **`/payments` — Badge phương thức & trạng thái 1 dòng** | **PASS** | **PASS** | - `Chuyển khoản`, `Tiền mặt`, `Đã xác nhận`, `Chờ xác nhận`: `height = 20.7px`, `lineCount = 1` ở cả `1440px` & `1280px`. |
+| **`/messages` — Không tràn trang** | **PASS** | **PASS** | - `1440px`: `docClientWidth = 1440px`, `docScrollWidth = 1440px`; `main` `clientWidth = 1184px`, `scrollWidth = 1184px` (tràn `0px`).<br>- `1280px`: `docClientWidth = 1280px`, `docScrollWidth = 1280px`; `main` `clientWidth = 1024px`, `scrollWidth = 1024px` (tràn `0px`). |
+| **`/newsfeed` — Không tràn trang** | **PASS** | **PASS** | - `1440px`: `docClientWidth = 1440px`, `docScrollWidth = 1440px`; `main` `clientWidth = 1184px`, `scrollWidth = 1184px` (tràn `0px`).<br>- `1280px`: `docClientWidth = 1280px`, `docScrollWidth = 1280px`; `main` `clientWidth = 1024px`, `scrollWidth = 1024px` (tràn `0px`). |
+| **Modal thu tiền (`Tuitions`) & Modal đăng bài (`Newsfeed`) — `<ImageUpload>`** | **PASS** | **PASS** | - Mở được cả 2 modal, đều có `input[type="file"]` của `<ImageUpload>`.<br>- Chọn file ảnh test (`1x1.png`) upload thành công qua `POST /api/Uploads/image` (`200 OK`) và hiển thị ảnh xem trước (`tuitionPreviewImgs = 1`, `newsfeedPreviewImgs = 2`). |
+
+## 4. Kết luận R4
+- **Trạng thái nghiệm thu:** **PASS 100%** ở cả `1440px` và `1280px` (build, lint, kiểm tra tĩnh 7 file sạch `bg-blue-*`/`bg-indigo-*` và emoji, giữ nguyên padding `Payments.jsx`, `<ImageUpload>` và hành vi `ConfirmModal.jsx`; cả `Tuitions` và `Payments` đạt `0px` cuộn ngang nội bộ, `THAO TÁC` căn giữa `deltaPx = 0px`, badge gọn `1` dòng; `Messages` và `Newsfeed` đạt `0px` tràn ngang; modal thu tiền và modal đăng bài chọn/upload ảnh hoạt động bình thường). Không còn lỗi chặn, đủ điều kiện để commit.

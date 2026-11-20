@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axiosClient from '../api/axiosClient';
 import { formatDateTime, NEWSFEED_AUDIENCE_META } from '../utils/formatters';
 import ImageUpload from './ImageUpload';
+import { PrimaryButton, SecondaryButton, InputPill, Badge } from './ui';
 
 /**
  * Modal xem chi tiết bài đăng Bảng tin.
@@ -31,49 +32,56 @@ export function NewsfeedDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/50 backdrop-blur-[2px] p-0 sm:p-4"
-      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="newsfeed-detail-title"
     >
       <div
-        className="w-full sm:max-w-2xl rounded-t-2xl sm:rounded-2xl bg-white shadow-xl border border-slate-200 overflow-hidden max-h-[92vh] flex flex-col"
+        className="modal-backdrop fixed inset-0 bg-teal-deep/40 backdrop-blur-[2px]"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+      <div
+        className="modal-panel relative z-10 w-full sm:max-w-2xl rounded-t-card-lg sm:rounded-card-lg bg-surface shadow-modal border border-line/80 overflow-hidden max-h-[92vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
+        <div className="flex items-start justify-between gap-3 border-b border-line/60 bg-surface-subtle px-5 py-4">
           <div className="min-w-0 space-y-1.5">
             <div className="flex flex-wrap items-center gap-1.5">
               {post.isPinned && (
-                <span className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-100 px-2.5 py-0.5 text-[11px] font-semibold text-amber-900">
-                  📌 Ghim
-                </span>
+                <Badge variant="gold" className="normal-case tracking-normal">
+                  Ghim
+                </Badge>
               )}
               {!post.isPublished && (
-                <span className="inline-flex items-center rounded-full border border-slate-300 bg-slate-100 px-2.5 py-0.5 text-[11px] font-semibold text-slate-700">
+                <Badge variant="neutral" className="normal-case tracking-normal">
                   Nháp
-                </span>
+                </Badge>
               )}
               <span
                 className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${audience.badgeClass}`}
               >
                 {audience.label}
               </span>
-              <span className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-[11px] font-semibold text-blue-800">
+              <Badge
+                variant={post.branchId ? 'teal' : 'neutral'}
+                className="normal-case tracking-normal"
+              >
                 {post.branchId ? post.branchName || `Chi nhánh #${post.branchId}` : 'Toàn hệ thống'}
-              </span>
+              </Badge>
             </div>
 
             <h3
               id="newsfeed-detail-title"
-              className="text-lg font-bold leading-snug text-slate-900 break-words"
+              className="text-lg font-bold leading-snug text-ink break-words"
             >
               {post.title}
             </h3>
 
-            <p className="text-xs text-slate-500">
-              Đăng bởi <span className="font-semibold text-slate-700">{post.createdByName || 'Ban quản trị'}</span>
+            <p className="text-xs text-ink-muted">
+              Đăng bởi <span className="font-semibold text-ink-secondary">{post.createdByName || 'Ban quản trị'}</span>
               {' • '}
               {formatDateTime(post.createdAt)}
               {post.updatedAt && post.updatedAt !== post.createdAt && (
@@ -85,10 +93,10 @@ export function NewsfeedDetailModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors cursor-pointer"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-ink-muted hover:bg-mint-canvas hover:text-ink transition-colors duration-150 ease-out cursor-pointer"
             aria-label="Đóng"
           >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -97,7 +105,7 @@ export function NewsfeedDetailModal({
         {/* Body */}
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
           {post.imageUrl && !imgError && (
-            <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
+            <div className="overflow-hidden rounded-card border border-line bg-surface-subtle">
               <img
                 src={post.imageUrl}
                 alt={post.title}
@@ -107,20 +115,20 @@ export function NewsfeedDetailModal({
             </div>
           )}
 
-          <div className="text-sm leading-relaxed text-slate-800 whitespace-pre-line break-words">
+          <div className="text-sm leading-relaxed text-ink whitespace-pre-line break-words">
             {post.content}
           </div>
 
           {(post.titleEn || post.contentEn) && (
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-1.5">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+            <div className="rounded-card border border-line bg-surface-subtle p-4 space-y-1.5">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted">
                 English Version
               </p>
               {post.titleEn && (
-                <p className="text-sm font-bold text-slate-800">{post.titleEn}</p>
+                <p className="text-sm font-bold text-ink">{post.titleEn}</p>
               )}
               {post.contentEn && (
-                <p className="text-sm text-slate-700 whitespace-pre-line break-words">
+                <p className="text-sm text-ink-secondary whitespace-pre-line break-words">
                   {post.contentEn}
                 </p>
               )}
@@ -129,35 +137,36 @@ export function NewsfeedDetailModal({
         </div>
 
         {/* Footer */}
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 bg-slate-50/70 px-5 py-3.5">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line/60 bg-surface-subtle px-5 py-3.5">
           <div className="flex items-center gap-2">
             {canManage && (
               <>
-                <button
-                  type="button"
+                <SecondaryButton
                   onClick={() => onEdit(post)}
-                  className="min-h-[40px] rounded-lg border border-blue-200 bg-blue-50 px-3.5 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100 active:scale-[0.98] transition-all cursor-pointer"
+                  className="!px-4 !py-2 text-xs"
                 >
-                  ✏️ Sửa bài
-                </button>
+                  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+                  </svg>
+                  <span>Sửa bài</span>
+                </SecondaryButton>
                 <button
                   type="button"
                   onClick={() => onDelete(post)}
-                  className="min-h-[40px] rounded-lg border border-rose-200 bg-rose-50 px-3.5 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-100 active:scale-[0.98] transition-all cursor-pointer"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-100 active:scale-[0.98] transition-all duration-150 ease-out cursor-pointer"
                 >
-                  🗑️ Xóa bài
+                  <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                  </svg>
+                  <span>Xóa bài</span>
                 </button>
               </>
             )}
           </div>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="min-h-[40px] rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 active:scale-[0.98] transition-all cursor-pointer"
-          >
+          <SecondaryButton onClick={onClose} className="!px-4 !py-2 text-xs">
             Đóng
-          </button>
+          </SecondaryButton>
         </div>
       </div>
     </div>
@@ -292,23 +301,27 @@ export function CreateEditNewsfeedModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/50 backdrop-blur-[2px] p-0 sm:p-4"
-      onClick={() => !isSubmitting && onClose()}
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="newsfeed-form-title"
     >
       <div
-        className="w-full sm:max-w-xl rounded-t-2xl sm:rounded-2xl bg-white shadow-xl border border-slate-200 overflow-hidden max-h-[92vh] flex flex-col"
+        className="modal-backdrop fixed inset-0 bg-teal-deep/40 backdrop-blur-[2px]"
+        onClick={() => !isSubmitting && onClose()}
+        aria-hidden="true"
+      />
+      <div
+        className="modal-panel relative z-10 w-full sm:max-w-xl rounded-t-card-lg sm:rounded-card-lg bg-surface shadow-modal border border-line/80 overflow-hidden max-h-[92vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+        <div className="flex items-center justify-between border-b border-line/60 bg-surface-subtle px-5 py-4">
           <div>
-            <h3 id="newsfeed-form-title" className="text-base font-bold text-slate-900">
+            <h3 id="newsfeed-form-title" className="text-base font-bold text-ink">
               {isEdit ? 'Chỉnh sửa bài đăng' : 'Đăng bài mới lên Bảng tin'}
             </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-ink-muted mt-0.5">
               Thông báo sẽ hiển thị tới đúng đối tượng và chi nhánh được chọn
             </p>
           </div>
@@ -316,10 +329,10 @@ export function CreateEditNewsfeedModal({
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors cursor-pointer"
+            className="flex h-8 w-8 items-center justify-center rounded-full text-ink-muted hover:bg-mint-canvas hover:text-ink transition-colors duration-150 ease-out cursor-pointer"
             aria-label="Đóng"
           >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -328,17 +341,17 @@ export function CreateEditNewsfeedModal({
         {/* Form */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-4">
           {submitError && (
-            <div className="rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-xs font-medium text-rose-800">
+            <div className="rounded-card border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-xs font-medium text-rose-800">
               {submitError}
             </div>
           )}
 
           {/* Tiêu đề */}
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+            <label className="block text-xs font-semibold text-ink-secondary mb-1.5">
               Tiêu đề <span className="text-rose-500">*</span>
             </label>
-            <input
+            <InputPill
               type="text"
               maxLength={200}
               value={title}
@@ -347,7 +360,7 @@ export function CreateEditNewsfeedModal({
                 setFieldErrors((prev) => ({ ...prev, title: '' }));
               }}
               placeholder="Ví dụ: Thông báo lịch nghỉ lễ 30/4 - 1/5..."
-              className="w-full min-h-[42px] rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none"
+              className="!h-10 !py-0 text-sm"
             />
             {fieldErrors.title && (
               <p className="mt-1 text-xs font-medium text-rose-600">{fieldErrors.title}</p>
@@ -357,13 +370,13 @@ export function CreateEditNewsfeedModal({
           {/* Đối tượng & Chi nhánh */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label className="block text-xs font-semibold text-ink-secondary mb-1.5">
                 Đối tượng nhận tin <span className="text-rose-500">*</span>
               </label>
               <select
                 value={targetAudience}
                 onChange={(e) => setTargetAudience(e.target.value)}
-                className="w-full min-h-[42px] rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:border-blue-500 focus:outline-none"
+                className="w-full h-10 rounded-full border border-line bg-surface px-3.5 py-2 text-sm text-ink focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
               >
                 <option value="All">Tất cả (Phụ huynh &amp; Giáo viên)</option>
                 <option value="Parents">Chỉ Phụ huynh</option>
@@ -372,18 +385,18 @@ export function CreateEditNewsfeedModal({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label className="block text-xs font-semibold text-ink-secondary mb-1.5">
                 Phạm vi chi nhánh
               </label>
               {isBranchManager ? (
-                <div className="min-h-[42px] flex items-center rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-sm font-medium text-slate-700">
-                  🏢 {managerBranchName}
+                <div className="h-10 flex items-center rounded-full border border-line bg-surface-subtle px-3.5 py-2 text-sm font-medium text-ink-secondary">
+                  {managerBranchName}
                 </div>
               ) : (
                 <select
                   value={branchId}
                   onChange={(e) => setBranchId(e.target.value)}
-                  className="w-full min-h-[42px] rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:border-blue-500 focus:outline-none"
+                  className="w-full h-10 rounded-full border border-line bg-surface px-3.5 py-2 text-sm text-ink focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
                 >
                   <option value="">Toàn hệ thống</option>
                   {branches.map((b) => (
@@ -401,7 +414,7 @@ export function CreateEditNewsfeedModal({
 
           {/* Nội dung */}
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+            <label className="block text-xs font-semibold text-ink-secondary mb-1.5">
               Nội dung <span className="text-rose-500">*</span>
             </label>
             <textarea
@@ -412,7 +425,7 @@ export function CreateEditNewsfeedModal({
                 setFieldErrors((prev) => ({ ...prev, content: '' }));
               }}
               placeholder="Nhập nội dung chi tiết thông báo..."
-              className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none resize-y"
+              className="w-full rounded-card border border-line bg-surface px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-muted focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none resize-y"
             />
             {fieldErrors.content && (
               <p className="mt-1 text-xs font-medium text-rose-600">{fieldErrors.content}</p>
@@ -433,23 +446,23 @@ export function CreateEditNewsfeedModal({
           />
 
           {/* Checkboxes */}
-          <div className="flex flex-wrap gap-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-            <label className="inline-flex items-center gap-2 text-sm font-medium text-slate-800 cursor-pointer">
+          <div className="flex flex-wrap gap-4 rounded-card border border-line bg-surface-subtle px-4 py-3">
+            <label className="inline-flex items-center gap-2 text-sm font-medium text-ink cursor-pointer">
               <input
                 type="checkbox"
                 checked={isPinned}
                 onChange={(e) => setIsPinned(e.target.checked)}
-                className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                className="h-4 w-4 rounded border-line text-teal focus:ring-gold/40"
               />
-              <span>📌 Ghim bài lên đầu</span>
+              <span>Ghim bài lên đầu</span>
             </label>
 
-            <label className="inline-flex items-center gap-2 text-sm font-medium text-slate-800 cursor-pointer">
+            <label className="inline-flex items-center gap-2 text-sm font-medium text-ink cursor-pointer">
               <input
                 type="checkbox"
                 checked={isPublished}
                 onChange={(e) => setIsPublished(e.target.checked)}
-                className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                className="h-4 w-4 rounded border-line text-teal focus:ring-gold/40"
               />
               <span>Xuất bản ngay</span>
             </label>
@@ -460,28 +473,28 @@ export function CreateEditNewsfeedModal({
             <button
               type="button"
               onClick={() => setShowEnglish((v) => !v)}
-              className="text-xs font-semibold text-blue-600 hover:text-blue-700 cursor-pointer"
+              className="text-xs font-semibold text-teal hover:text-teal-hover cursor-pointer"
             >
               {showEnglish ? '− Ẩn nội dung tiếng Anh' : '+ Thêm nội dung tiếng Anh (tùy chọn)'}
             </button>
 
             {showEnglish && (
-              <div className="mt-3 space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-3.5">
+              <div className="mt-3 space-y-3 rounded-card border border-line bg-surface-subtle p-3.5">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-ink-secondary mb-1">
                     Tiêu đề tiếng Anh (Title EN)
                   </label>
-                  <input
+                  <InputPill
                     type="text"
                     maxLength={200}
                     value={titleEn}
                     onChange={(e) => setTitleEn(e.target.value)}
                     placeholder="English title..."
-                    className="w-full min-h-[40px] rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-800 focus:border-blue-500 focus:outline-none"
+                    className="!h-10 !py-0 text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-ink-secondary mb-1">
                     Nội dung tiếng Anh (Content EN)
                   </label>
                   <textarea
@@ -489,7 +502,7 @@ export function CreateEditNewsfeedModal({
                     value={contentEn}
                     onChange={(e) => setContentEn(e.target.value)}
                     placeholder="English content..."
-                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:border-blue-500 focus:outline-none resize-y"
+                    className="w-full rounded-card border border-line bg-surface px-3 py-2 text-sm text-ink focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none resize-y"
                   />
                 </div>
               </div>
@@ -497,26 +510,17 @@ export function CreateEditNewsfeedModal({
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isSubmitting}
-              className="min-h-[42px] rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 active:scale-[0.98] transition-all cursor-pointer"
-            >
+          <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-line/60">
+            <SecondaryButton onClick={onClose} disabled={isSubmitting}>
               Hủy
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="min-h-[42px] rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 active:scale-[0.98] transition-all cursor-pointer"
-            >
+            </SecondaryButton>
+            <PrimaryButton type="submit" disabled={isSubmitting}>
               {isSubmitting
                 ? 'Đang lưu...'
                 : isEdit
                 ? 'Lưu thay đổi'
                 : 'Đăng bài'}
-            </button>
+            </PrimaryButton>
           </div>
         </form>
       </div>
@@ -559,54 +563,59 @@ export function DeleteNewsfeedModal({ post, onClose, onSuccess }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-[2px] p-4"
-      onClick={() => !isDeleting && onClose()}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="delete-newsfeed-title"
     >
       <div
-        className="w-full max-w-md rounded-2xl bg-white shadow-xl border border-slate-200 overflow-hidden"
+        className="modal-backdrop fixed inset-0 bg-teal-deep/40 backdrop-blur-[2px]"
+        onClick={() => !isDeleting && onClose()}
+        aria-hidden="true"
+      />
+      <div
+        className="modal-panel relative z-10 w-full max-w-md rounded-card-lg bg-surface shadow-modal border border-line/80 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-5 space-y-3">
           <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-100 text-lg">
-              🗑️
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rose-50 border border-rose-200 text-rose-600">
+              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+              </svg>
             </div>
             <div>
-              <h3 id="delete-newsfeed-title" className="text-base font-bold text-slate-900">
+              <h3 id="delete-newsfeed-title" className="text-base font-bold text-ink">
                 Xác nhận xóa bài đăng
               </h3>
-              <p className="mt-1 text-sm text-slate-600">
+              <p className="mt-1 text-sm text-ink-secondary">
                 Bạn có chắc chắn muốn xóa bài viết{' '}
-                <span className="font-semibold text-slate-900">“{post.title}”</span>? Hành động
+                <span className="font-semibold text-ink">“{post.title}”</span>? Hành động
                 này không thể hoàn tác.
               </p>
             </div>
           </div>
 
           {error && (
-            <div className="rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-xs font-medium text-rose-800">
+            <div className="rounded-card border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-xs font-medium text-rose-800">
               {error}
             </div>
           )}
         </div>
 
-        <div className="flex items-center justify-end gap-2.5 border-t border-slate-100 bg-slate-50 px-5 py-3.5">
-          <button
-            type="button"
+        <div className="flex items-center justify-end gap-2.5 border-t border-line/60 bg-surface-subtle px-5 py-3.5">
+          <SecondaryButton
             onClick={onClose}
             disabled={isDeleting}
-            className="min-h-[40px] rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 active:scale-[0.98] transition-all cursor-pointer"
+            className="!px-4 !py-2 text-xs"
           >
             Hủy
-          </button>
+          </SecondaryButton>
           <button
             type="button"
             onClick={handleDelete}
             disabled={isDeleting}
-            className="min-h-[40px] rounded-lg bg-rose-600 px-4 py-2 text-xs font-semibold text-white hover:bg-rose-700 disabled:opacity-50 active:scale-[0.98] transition-all cursor-pointer"
+            className="inline-flex items-center justify-center rounded-full bg-rose-600 px-5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-rose-700 disabled:opacity-50 active:scale-[0.98] transition-[transform,background-color] duration-150 ease-out cursor-pointer"
           >
             {isDeleting ? 'Đang xóa...' : 'Xóa bài viết'}
           </button>
