@@ -2,6 +2,15 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import axiosClient from '../api/axiosClient';
 import { formatDate, formatDateTime } from '../utils/formatters';
 import { fetchAllStudents } from '../utils/fetchAllStudents';
+import {
+  PageHeader,
+  Card,
+  PrimaryButton,
+  SecondaryButton,
+  IconButton,
+  InputPill,
+  Badge,
+} from '../components/ui';
 
 // 5 giá trị Enum ExamType khớp chính xác 100% với DB CK_Grades_Type & Backend DTO
 const EXAM_TYPES = [
@@ -578,39 +587,33 @@ export default function Grades() {
       )}
 
       {/* Header Page */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex flex-wrap items-center gap-2.5">
-            <h1 className="text-xl md:text-2xl font-bold text-slate-900">
-              Quản lý Điểm kiểm tra
-            </h1>
-            <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-2.5 py-0.5 text-xs font-semibold text-slate-600 shadow-xs">
-              {totalItems} bản ghi
-            </span>
-          </div>
-          <p className="mt-1 text-xs md:text-sm text-slate-500">
-            Theo dõi kết quả học tập, bài thi định kỳ và nhận xét sư phạm của giáo viên
-          </p>
-        </div>
-
-        {canEdit && (
-          <button
-            type="button"
-            onClick={openCreateModal}
-            className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-blue-700 active:scale-[0.98] transition cursor-pointer"
-          >
-            <span>+</span>
-            <span>Nhập điểm mới</span>
-          </button>
-        )}
-      </div>
+      <PageHeader
+        eyebrow="Kết quả học tập"
+        title={
+          <span className="inline-flex flex-wrap items-center gap-2.5">
+            <span>Quản lý Điểm kiểm tra</span>
+            <Badge variant="gold">{totalItems} bản ghi</Badge>
+          </span>
+        }
+        description="Theo dõi kết quả học tập, bài thi định kỳ và nhận xét sư phạm của giáo viên"
+        actions={
+          canEdit && (
+            <PrimaryButton type="button" onClick={openCreateModal}>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              <span>Nhập điểm mới</span>
+            </PrimaryButton>
+          )
+        }
+      />
 
       {/* Filter Bar */}
-      <section className="rounded-xl border border-slate-200 bg-white p-3.5 md:p-4 shadow-xs">
+      <Card className="p-4">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-12">
           {/* Lọc theo Lớp học */}
           <div className="lg:col-span-3">
-            <label htmlFor="filter-class" className="block text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-1">
+            <label htmlFor="filter-class" className="block text-[11px] font-semibold uppercase tracking-wider text-ink-muted mb-1">
               Lớp học
             </label>
             <select
@@ -621,7 +624,7 @@ export default function Grades() {
                 setStudentFilter('');
                 setCurrentPage(1);
               }}
-              className="w-full min-h-[44px] rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="w-full min-h-[44px] rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
             >
               <option value="">Tất cả lớp học</option>
               {classes.map((c) => (
@@ -634,8 +637,8 @@ export default function Grades() {
 
           {/* Lọc theo Học viên (Cascading) */}
           <div className="lg:col-span-3">
-            <label htmlFor="filter-student" className="block text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-1">
-              Học viên {loadingFilterStudents && <span className="text-blue-600 font-normal normal-case">(Đang tải...)</span>}
+            <label htmlFor="filter-student" className="block text-[11px] font-semibold uppercase tracking-wider text-ink-muted mb-1">
+              Học viên {loadingFilterStudents && <span className="text-teal font-normal normal-case">(Đang tải...)</span>}
             </label>
             <select
               id="filter-student"
@@ -645,7 +648,7 @@ export default function Grades() {
                 setCurrentPage(1);
               }}
               disabled={loadingFilterStudents}
-              className="w-full min-h-[44px] rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:bg-slate-50 disabled:text-slate-400"
+              className="w-full min-h-[44px] rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
             >
               <option value="">
                 {loadingFilterStudents ? 'Đang tải danh sách học viên...' : 'Tất cả học viên'}
@@ -660,7 +663,7 @@ export default function Grades() {
 
           {/* Lọc theo Loại bài */}
           <div className="lg:col-span-2">
-            <label htmlFor="filter-exam-type" className="block text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-1">
+            <label htmlFor="filter-exam-type" className="block text-[11px] font-semibold uppercase tracking-wider text-ink-muted mb-1">
               Loại bài
             </label>
             <select
@@ -670,7 +673,7 @@ export default function Grades() {
                 setExamTypeFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full min-h-[44px] rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="w-full min-h-[44px] rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
             >
               <option value="">Tất cả loại bài</option>
               {EXAM_TYPES.map((t) => (
@@ -683,7 +686,7 @@ export default function Grades() {
 
           {/* Lọc theo Ngày thi */}
           <div className="lg:col-span-2">
-            <label htmlFor="filter-exam-date" className="block text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-1">
+            <label htmlFor="filter-exam-date" className="block text-[11px] font-semibold uppercase tracking-wider text-ink-muted mb-1">
               Ngày thi
             </label>
             <input
@@ -694,185 +697,206 @@ export default function Grades() {
                 setExamDateFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full min-h-[44px] rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="w-full min-h-[44px] rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
             />
           </div>
 
           {/* Nút Đặt lại bộ lọc */}
           <div className="lg:col-span-2 flex items-end">
-            <button
+            <SecondaryButton
               type="button"
               onClick={handleResetFilters}
               disabled={!hasActiveFilters}
-              className="w-full min-h-[44px] inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-700 hover:bg-slate-100 active:scale-[0.98] transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="w-full min-h-[44px]"
             >
-              <span>🔄</span>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
               <span>Đặt lại</span>
-            </button>
+            </SecondaryButton>
           </div>
         </div>
-      </section>
+      </Card>
 
       {/* Error State */}
       {error && (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-rose-800 text-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="rounded-card border border-rose-200 bg-rose-50 p-4 text-rose-800 text-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <span>⚠️ {error}</span>
-          <button
+          <SecondaryButton
             type="button"
             onClick={() => setReloadKey((k) => k + 1)}
-            className="min-h-[44px] inline-flex items-center justify-center rounded-lg border border-rose-300 bg-white px-4 text-xs font-semibold text-rose-700 hover:bg-rose-100 active:scale-[0.98] transition cursor-pointer"
+            className="min-h-[44px] !text-xs"
           >
             Thử lại
-          </button>
+          </SecondaryButton>
         </div>
       )}
 
       {/* Loading Skeleton */}
       {loading && (
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs space-y-2">
+        <Card className="p-4 space-y-2">
           {Array.from({ length: 5 }).map((_, idx) => (
             <div
               key={idx}
-              className="animate-pulse bg-slate-200/60 rounded-lg h-12 w-full"
+              className="animate-pulse bg-surface-subtle rounded-lg h-12 w-full"
             />
           ))}
-        </div>
+        </Card>
       )}
 
       {/* Empty States */}
       {!loading && !error && grades.length === 0 && (
-        <div className="rounded-xl border border-slate-200 bg-white px-6 py-12 text-center shadow-xs">
-          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 text-2xl">
+        <Card className="px-6 py-12 text-center">
+          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-surface-subtle text-2xl">
             {hasActiveFilters ? '🔍' : '💯'}
           </div>
-          <h3 className="text-base font-bold text-slate-900">
+          <h3 className="text-base font-bold text-ink">
             {hasActiveFilters
               ? 'Không tìm thấy kết quả phù hợp'
               : 'Chưa có bài kiểm tra nào được ghi nhận'}
           </h3>
-          <p className="mx-auto mt-1.5 max-w-md text-sm text-slate-500">
+          <p className="mx-auto mt-1.5 max-w-md text-sm text-ink-secondary">
             {hasActiveFilters
               ? 'Thử thay đổi lớp học, học viên, ngày thi hoặc loại bài kiểm tra đang chọn.'
               : 'Các bài kiểm tra 15 phút, giữa kỳ, cuối khóa và nhận xét sư phạm của lớp học sẽ xuất hiện tại đây.'}
           </p>
           <div className="mt-5 flex justify-center">
             {hasActiveFilters ? (
-              <button
+              <SecondaryButton
                 type="button"
                 onClick={handleResetFilters}
-                className="min-h-[44px] inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 active:scale-[0.98] transition cursor-pointer"
+                className="min-h-[44px]"
               >
-                <span>🔄</span>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
                 <span>Đặt lại bộ lọc</span>
-              </button>
+              </SecondaryButton>
             ) : (
               canEdit && (
-                <button
+                <PrimaryButton
                   type="button"
                   onClick={openCreateModal}
-                  className="min-h-[44px] inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700 active:scale-[0.98] transition cursor-pointer"
+                  className="min-h-[44px]"
                 >
-                  <span>+</span>
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                  </svg>
                   <span>Nhập điểm mới</span>
-                </button>
+                </PrimaryButton>
               )
             )}
           </div>
-        </div>
+        </Card>
       )}
 
       {/* Danh sách dữ liệu */}
       {!loading && !error && grades.length > 0 && (
         <>
           {/* Bảng Desktop (>= 1024px) */}
-          <div className="hidden lg:block overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xs">
+          <Card className="hidden lg:block overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50/80 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-                    <th className="py-3.5 px-4">Học viên</th>
-                    <th className="py-3.5 px-4">Lớp học</th>
-                    <th className="py-3.5 px-4">Tên bài kiểm tra</th>
-                    <th className="py-3.5 px-4">Loại bài</th>
-                    <th className="py-3.5 px-4">Ngày thi</th>
-                    <th className="py-3.5 px-4">Điểm số</th>
-                    <th className="py-3.5 px-4">Người chấm</th>
-                    <th className="py-3.5 px-4 text-center whitespace-nowrap">Thao tác</th>
+                  <tr className="border-b border-line bg-surface-subtle text-[11px] font-semibold uppercase tracking-wider text-ink-muted">
+                    <th className="py-3.5 px-2.5">Học viên</th>
+                    <th className="py-3.5 px-2.5">Lớp học</th>
+                    <th className="py-3.5 px-2.5">Tên bài kiểm tra</th>
+                    <th className="py-3.5 px-2.5">Loại bài</th>
+                    <th className="py-3.5 px-2.5">Ngày thi</th>
+                    <th className="py-3.5 px-2.5">Điểm số</th>
+                    <th className="py-3.5 px-2.5">Người chấm</th>
+                    <th className="py-3.5 px-2.5 text-center whitespace-nowrap">Thao tác</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 text-sm">
+                <tbody className="divide-y divide-line/60 text-sm">
                   {paginatedGrades.map((g) => (
                     <tr
                       key={g.id}
                       onClick={() => setDetailGrade(g)}
-                      className="hover:bg-slate-50/90 transition-colors cursor-pointer"
+                      className="hover:bg-mint-canvas/60 transition-colors cursor-pointer"
                     >
-                      <td className="py-3.5 px-4">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-700">
+                      <td className="py-3.5 px-2.5">
+                        <div className="flex items-center gap-2.5">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gold-soft text-xs font-bold text-teal border border-gold/30">
                             {getInitials(g.studentName)}
                           </div>
-                          <div className="min-w-0">
-                            <p className="font-semibold text-slate-900 text-sm hover:text-blue-600 transition truncate">
+                          <div className="min-w-0 max-w-[140px]">
+                            <p
+                              className="font-semibold text-ink text-sm hover:text-teal transition truncate"
+                              title={g.studentName || `Học viên #${g.studentId}`}
+                            >
                               {g.studentName || `Học viên #${g.studentId}`}
                             </p>
-                            <p className="text-[11px] text-slate-400 font-mono">
+                            <p className="text-[11px] text-ink-muted font-mono">
                               #STU-{g.studentId}
                             </p>
                           </div>
                         </div>
                       </td>
-                      <td className="py-3.5 px-4">
-                        <span className="text-slate-800 font-medium text-xs md:text-sm">
+                      <td className="py-3.5 px-2.5 max-w-[110px]">
+                        <span
+                          className="block text-ink font-medium text-xs md:text-sm truncate"
+                          title={g.className || `Lớp #${g.classId}`}
+                        >
                           {g.className || `Lớp #${g.classId}`}
                         </span>
                       </td>
-                      <td className="py-3.5 px-4 max-w-xs">
-                        <p className="text-slate-900 font-medium text-sm truncate">
+                      <td className="py-3.5 px-2.5 max-w-[180px]">
+                        <p
+                          className="text-ink font-medium text-sm truncate"
+                          title={g.examName}
+                        >
                           {g.examName}
                         </p>
                         {g.teacherComment && (
-                          <p className="mt-0.5 truncate max-w-xs text-xs text-slate-500 italic">
+                          <p
+                            className="mt-0.5 truncate max-w-[180px] text-xs text-ink-secondary italic"
+                            title={g.teacherComment}
+                          >
                             💬 {g.teacherComment}
                           </p>
                         )}
                       </td>
-                      <td className="py-3.5 px-4">
+                      <td className="py-3.5 px-2.5">
                         <ExamTypeBadge examType={g.examType} />
                       </td>
-                      <td className="py-3.5 px-4 text-xs text-slate-600 whitespace-nowrap">
+                      <td className="py-3.5 px-2.5 text-xs text-ink-secondary whitespace-nowrap">
                         {formatDate(g.examDate)}
                       </td>
-                      <td className="py-3.5 px-4">
+                      <td className="py-3.5 px-2.5">
                         <ScoreDisplay score={g.score} maxScore={g.maxScore} compact />
                       </td>
-                      <td className="py-3.5 px-4 text-xs text-slate-600">
-                        {g.gradedByName || '—'}
+                      <td className="py-3.5 px-2.5 max-w-[100px] text-xs text-ink-secondary">
+                        <span className="block truncate" title={g.gradedByName || '—'}>
+                          {g.gradedByName || '—'}
+                        </span>
                       </td>
                       <td
-                        className="py-3.5 px-4 text-center whitespace-nowrap"
+                        className="py-3.5 px-2.5 text-center whitespace-nowrap"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <div className="inline-flex items-center justify-center gap-1.5">
-                          <button
-                            type="button"
+                        <div className="inline-flex items-center justify-center gap-1">
+                          <IconButton
+                            variant="neutral"
                             onClick={() => setDetailGrade(g)}
                             title="Xem chi tiết"
-                            className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 active:scale-[0.98] transition cursor-pointer"
                           >
-                            <span>👁️</span>
-                            <span>Xem</span>
-                          </button>
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                          </IconButton>
                           {canEdit && (
-                            <button
-                              type="button"
+                            <IconButton
+                              variant="neutral"
                               onClick={() => openEditModal(g)}
                               title="Sửa điểm"
-                              className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 active:scale-[0.98] transition cursor-pointer"
                             >
-                              <span>✏️</span>
-                              <span>Sửa</span>
-                            </button>
+                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+                              </svg>
+                            </IconButton>
                           )}
                         </div>
                       </td>
@@ -881,23 +905,24 @@ export default function Grades() {
                 </tbody>
               </table>
             </div>
-          </div>
+          </Card>
 
           {/* Card Stack Mobile (< 1024px) */}
           <div className="lg:hidden space-y-3">
             {paginatedGrades.map((g) => (
-              <article
+              <Card
+                as="article"
                 key={g.id}
                 onClick={() => setDetailGrade(g)}
-                className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs space-y-3 cursor-pointer"
+                className="p-4 space-y-3 cursor-pointer"
               >
                 {/* Dòng 1: Học viên + Lớp | Điểm số */}
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <h3 className="font-bold text-slate-900 text-base truncate">
+                    <h3 className="font-bold text-ink text-base truncate">
                       {g.studentName || `Học viên #${g.studentId}`}
                     </h3>
-                    <p className="text-xs text-slate-500 truncate">
+                    <p className="text-xs text-ink-secondary truncate">
                       {g.className || `Lớp #${g.classId}`} •{' '}
                       <span className="font-mono">#STU-{g.studentId}</span>
                     </p>
@@ -909,19 +934,19 @@ export default function Grades() {
 
                 {/* Dòng 2: Tên bài kiểm tra + Badge loại bài */}
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="text-sm font-semibold text-slate-800">{g.examName}</p>
+                  <p className="text-sm font-semibold text-ink">{g.examName}</p>
                   <ExamTypeBadge examType={g.examType} />
                 </div>
 
                 {/* Dòng 3: Ngày thi + Người chấm */}
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-ink-secondary">
                   <span>📅 {formatDate(g.examDate)}</span>
                   <span>👩‍🏫 {g.gradedByName || '—'}</span>
                 </div>
 
                 {/* Dòng 4: Nhận xét giáo viên nếu có */}
                 {g.teacherComment && (
-                  <div className="bg-slate-50 rounded-lg p-2.5 text-xs text-slate-600 italic line-clamp-2">
+                  <div className="bg-surface-subtle rounded-xl p-2.5 text-xs text-ink-secondary italic line-clamp-2">
                     💬 {g.teacherComment}
                   </div>
                 )}
@@ -931,58 +956,63 @@ export default function Grades() {
                   className="flex items-center gap-2 pt-1"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <button
+                  <SecondaryButton
                     type="button"
                     onClick={() => setDetailGrade(g)}
-                    className="min-h-[44px] flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 text-xs font-semibold text-slate-700 hover:bg-slate-100 active:scale-[0.98] transition cursor-pointer"
+                    className="min-h-[44px] flex-1 !text-xs"
                   >
-                    <span>👁️</span>
+                    <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
                     <span>Xem chi tiết</span>
-                  </button>
+                  </SecondaryButton>
                   {canEdit && (
-                    <button
+                    <PrimaryButton
                       type="button"
                       onClick={() => openEditModal(g)}
-                      className="min-h-[44px] px-4 inline-flex items-center justify-center gap-1.5 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 text-xs font-semibold hover:bg-blue-100 active:scale-[0.98] transition cursor-pointer"
+                      className="min-h-[44px] !px-4 !text-xs"
                     >
-                      <span>✏️</span>
+                      <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+                      </svg>
                       <span>Sửa điểm</span>
-                    </button>
+                    </PrimaryButton>
                   )}
                 </div>
-              </article>
+              </Card>
             ))}
           </div>
 
           {/* Pagination */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs md:text-sm text-slate-600 shadow-xs">
+          <Card className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 py-3 text-xs md:text-sm text-ink-secondary">
             <p>
-              Hiển thị <span className="font-semibold text-slate-900">{startIndex}</span> –{' '}
-              <span className="font-semibold text-slate-900">{endIndex}</span> trên tổng số{' '}
-              <span className="font-semibold text-slate-900">{totalItems}</span> bản ghi điểm số
+              Hiển thị <span className="font-semibold text-ink">{startIndex}</span> –{' '}
+              <span className="font-semibold text-ink">{endIndex}</span> trên tổng số{' '}
+              <span className="font-semibold text-ink">{totalItems}</span> bản ghi điểm số
             </p>
             <div className="flex items-center gap-1.5">
-              <button
+              <SecondaryButton
                 type="button"
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={safePage <= 1}
-                className="min-h-[44px] sm:min-h-[36px] rounded-lg border border-slate-200 bg-white px-3 font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition cursor-pointer"
+                className="min-h-[44px] sm:min-h-[36px] !px-3.5 !py-1.5 !text-xs"
               >
                 &lt; Trước
-              </button>
-              <span className="px-2.5 font-semibold text-slate-700">
+              </SecondaryButton>
+              <span className="px-2.5 font-semibold text-ink">
                 Trang {safePage} / {totalPages}
               </span>
-              <button
+              <SecondaryButton
                 type="button"
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                 disabled={safePage >= totalPages}
-                className="min-h-[44px] sm:min-h-[36px] rounded-lg border border-slate-200 bg-white px-3 font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] transition cursor-pointer"
+                className="min-h-[44px] sm:min-h-[36px] !px-3.5 !py-1.5 !text-xs"
               >
                 Sau &gt;
-              </button>
+              </SecondaryButton>
             </div>
-          </div>
+          </Card>
         </>
       )}
 
@@ -993,7 +1023,7 @@ export default function Grades() {
         <div className="fixed inset-0 z-50 flex justify-end">
           {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-[2px] transition-opacity"
+            className="fixed inset-0 bg-teal-deep/40 backdrop-blur-[2px] modal-backdrop"
             onClick={() => setDetailGrade(null)}
             aria-hidden="true"
           />
@@ -1003,31 +1033,32 @@ export default function Grades() {
             role="dialog"
             aria-modal="true"
             aria-label="Chi tiết kết quả kiểm tra"
-            className="relative z-10 flex h-full w-full max-w-lg flex-col bg-white shadow-2xl"
+            className="relative z-10 flex h-full w-full max-w-lg flex-col bg-surface border-l border-line/60 shadow-modal modal-panel"
           >
             {/* Header Drawer */}
-            <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-              <h2 className="text-base font-bold text-slate-900">
+            <div className="flex items-center justify-between border-b border-line/60 px-5 py-4">
+              <h2 className="text-base font-bold text-ink">
                 Chi tiết kết quả kiểm tra
               </h2>
-              <button
-                type="button"
+              <IconButton
+                variant="neutral"
                 onClick={() => setDetailGrade(null)}
-                className="flex h-11 w-11 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 active:scale-[0.98] transition cursor-pointer"
-                aria-label="Đóng chi tiết"
+                title="Đóng chi tiết"
               >
-                ✕
-              </button>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </IconButton>
             </div>
 
             {/* Body Drawer */}
             <div className="flex-1 overflow-y-auto p-5 space-y-5">
               {/* Khối Hero Thống kê Điểm số */}
               <div
-                className={`rounded-2xl border p-5 ${
+                className={`rounded-card-lg border p-5 ${
                   detailGrade.score !== null && detailGrade.score !== undefined
-                    ? 'border-blue-100 bg-blue-50/60'
-                    : 'border-amber-200 bg-amber-50/60'
+                    ? 'border-line bg-mint-canvas/70'
+                    : 'border-gold/40 bg-gold-soft/60'
                 }`}
               >
                 {detailGrade.score !== null && detailGrade.score !== undefined ? (
@@ -1035,29 +1066,29 @@ export default function Grades() {
                     <span
                       className={`text-4xl font-extrabold tabular-nums ${
                         getScoreTier(detailGrade.score, detailGrade.maxScore)?.textClass ||
-                        'text-slate-900'
+                        'text-ink'
                       }`}
                     >
                       {detailGrade.score}
                     </span>
-                    <span className="text-base font-medium text-slate-500">
+                    <span className="text-base font-medium text-ink-secondary">
                       / {detailGrade.maxScore} điểm
                     </span>
                   </div>
                 ) : (
-                  <div className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-white px-3 py-1.5 text-xs font-semibold text-amber-800">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-gold/40 bg-surface px-3 py-1.5 text-xs font-semibold text-teal">
                     <span>💬</span>
                     <span>Đánh giá định tính sư phạm — Không áp điểm số</span>
                   </div>
                 )}
 
-                <h3 className="mt-3 text-lg font-bold text-slate-900">
+                <h3 className="mt-3 text-lg font-bold text-ink">
                   {detailGrade.examName}
                 </h3>
 
-                <div className="mt-2.5 flex flex-wrap items-center gap-2.5 text-xs text-slate-600">
+                <div className="mt-2.5 flex flex-wrap items-center gap-2.5 text-xs text-ink-secondary">
                   <ExamTypeBadge examType={detailGrade.examType} />
-                  <span className="inline-flex items-center gap-1 rounded-full bg-white/80 px-2.5 py-0.5 border border-slate-200">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-surface/80 px-2.5 py-0.5 border border-line">
                     📅 Ngày thi: {formatDate(detailGrade.examDate)}
                   </span>
                 </div>
@@ -1065,34 +1096,34 @@ export default function Grades() {
 
               {/* Khối Thông tin Học viên & Lớp học (2 Cột) */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3.5">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                <div className="rounded-card border border-line bg-surface-subtle/60 p-3.5">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted">
                     Học viên
                   </p>
                   <div className="mt-2 flex items-center gap-2.5">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-700">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gold-soft text-xs font-bold text-teal border border-gold/30">
                       {getInitials(detailGrade.studentName)}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-slate-900 truncate">
+                      <p className="text-sm font-semibold text-ink truncate">
                         {detailGrade.studentName || `Học viên #${detailGrade.studentId}`}
                       </p>
-                      <p className="text-[11px] text-slate-500 font-mono">
+                      <p className="text-[11px] text-ink-muted font-mono">
                         #STU-{detailGrade.studentId}
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3.5">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                <div className="rounded-card border border-line bg-surface-subtle/60 p-3.5">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted">
                     Lớp học
                   </p>
-                  <p className="mt-2 text-sm font-semibold text-slate-900">
+                  <p className="mt-2 text-sm font-semibold text-ink">
                     {detailGrade.className || `Lớp #${detailGrade.classId}`}
                   </p>
                   {classMap.get(detailGrade.classId)?.branchName && (
-                    <p className="mt-0.5 text-xs text-slate-500">
+                    <p className="mt-0.5 text-xs text-ink-secondary">
                       🏢 {classMap.get(detailGrade.classId).branchName}
                     </p>
                   )}
@@ -1101,38 +1132,38 @@ export default function Grades() {
 
               {/* Khối Nhận xét Sư phạm của Giáo viên */}
               <div>
-                <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
+                <h4 className="text-xs font-semibold uppercase tracking-wider text-ink-muted mb-2">
                   📝 Lời nhận xét &amp; Đánh giá năng lực của Giáo viên
                 </h4>
                 {detailGrade.teacherComment ? (
-                  <blockquote className="bg-amber-50/60 border-l-4 border-amber-400 p-4 rounded-r-xl text-sm leading-relaxed text-slate-800 whitespace-pre-line">
+                  <blockquote className="bg-gold-soft/40 border-l-4 border-gold p-4 rounded-r-card text-sm leading-relaxed text-ink whitespace-pre-line">
                     {detailGrade.teacherComment}
                   </blockquote>
                 ) : (
-                  <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/60 p-4 text-sm text-slate-400 italic">
+                  <div className="rounded-card border border-dashed border-line bg-surface-subtle/60 p-4 text-sm text-ink-muted italic">
                     Chưa có nhận xét bổ sung từ giáo viên.
                   </div>
                 )}
               </div>
 
               {/* Khối Lịch sử & Kiểm toán */}
-              <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-2 text-xs text-slate-600">
+              <div className="rounded-card border border-line bg-surface p-4 space-y-2 text-xs text-ink-secondary">
                 <div className="flex justify-between gap-2">
-                  <span className="text-slate-400">Người chấm điểm:</span>
-                  <span className="font-semibold text-slate-800">
+                  <span className="text-ink-muted">Người chấm điểm:</span>
+                  <span className="font-semibold text-ink">
                     {detailGrade.gradedByName || 'Cán bộ quản lý'}
                   </span>
                 </div>
                 <div className="flex justify-between gap-2">
-                  <span className="text-slate-400">Ngày ghi nhận:</span>
-                  <span className="font-medium text-slate-700">
+                  <span className="text-ink-muted">Ngày ghi nhận:</span>
+                  <span className="font-medium text-ink">
                     {formatDateTime(detailGrade.createdAt)}
                   </span>
                 </div>
                 {detailGrade.updatedAt && (
                   <div className="flex justify-between gap-2">
-                    <span className="text-slate-400">Cập nhật lần cuối:</span>
-                    <span className="font-medium text-slate-700">
+                    <span className="text-ink-muted">Cập nhật lần cuối:</span>
+                    <span className="font-medium text-ink">
                       {formatDateTime(detailGrade.updatedAt)}
                     </span>
                   </div>
@@ -1141,27 +1172,29 @@ export default function Grades() {
             </div>
 
             {/* Footer Drawer */}
-            <div className="flex items-center justify-end gap-2.5 border-t border-slate-100 px-5 py-4 bg-slate-50/60">
-              <button
+            <div className="flex items-center justify-end gap-2.5 border-t border-line/60 px-5 py-4 bg-surface-subtle/60">
+              <SecondaryButton
                 type="button"
                 onClick={() => setDetailGrade(null)}
-                className="min-h-[44px] rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 active:scale-[0.98] transition cursor-pointer"
+                className="min-h-[44px]"
               >
                 Đóng
-              </button>
+              </SecondaryButton>
               {canEdit && (
-                <button
+                <PrimaryButton
                   type="button"
                   onClick={() => {
                     const target = detailGrade;
                     setDetailGrade(null);
                     openEditModal(target);
                   }}
-                  className="min-h-[44px] inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700 active:scale-[0.98] transition cursor-pointer"
+                  className="min-h-[44px]"
                 >
-                  <span>✏️</span>
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+                  </svg>
                   <span>Chỉnh sửa điểm số</span>
-                </button>
+                </PrimaryButton>
               )}
             </div>
           </aside>
@@ -1174,7 +1207,7 @@ export default function Grades() {
       {isModalOpen && canEdit && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
           <div
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-[2px] transition-opacity"
+            className="fixed inset-0 bg-teal-deep/40 backdrop-blur-[2px] modal-backdrop"
             onClick={() => !formSubmitting && setIsModalOpen(false)}
             aria-hidden="true"
           />
@@ -1183,21 +1216,22 @@ export default function Grades() {
             role="dialog"
             aria-modal="true"
             aria-label={editingGrade ? 'Chỉnh sửa điểm kiểm tra' : 'Nhập điểm kiểm tra mới'}
-            className="relative z-10 flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
+            className="relative z-10 flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-card-lg bg-surface border border-line/60 shadow-modal modal-panel"
           >
             {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-              <h2 className="text-base md:text-lg font-bold text-slate-900">
-                {editingGrade ? '✏️ Chỉnh sửa điểm kiểm tra' : '✏️ Nhập điểm kiểm tra mới'}
+            <div className="flex items-center justify-between border-b border-line/60 px-5 py-4">
+              <h2 className="text-base md:text-lg font-bold text-ink">
+                {editingGrade ? 'Chỉnh sửa điểm kiểm tra' : 'Nhập điểm kiểm tra mới'}
               </h2>
-              <button
-                type="button"
+              <IconButton
+                variant="neutral"
                 onClick={() => !formSubmitting && setIsModalOpen(false)}
-                className="flex h-11 w-11 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 active:scale-[0.98] transition cursor-pointer"
-                aria-label="Đóng biểu mẫu"
+                title="Đóng biểu mẫu"
               >
-                ✕
-              </button>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </IconButton>
             </div>
 
             {/* Modal Body */}
@@ -1211,7 +1245,7 @@ export default function Grades() {
               {/* Row 1: Lớp học & Học viên */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="modal-class" className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  <label htmlFor="modal-class" className="block text-xs font-semibold text-ink mb-1.5">
                     Lớp học <span className="text-rose-500">*</span>
                   </label>
                   <select
@@ -1219,7 +1253,7 @@ export default function Grades() {
                     value={formData.classId}
                     disabled={Boolean(editingGrade)}
                     onChange={(e) => handleModalClassChange(e.target.value)}
-                    className="w-full min-h-[44px] rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"
+                    className="w-full min-h-[44px] rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
                   >
                     <option value="">-- Chọn lớp học --</option>
                     {classes.map((c) => (
@@ -1235,16 +1269,16 @@ export default function Grades() {
                 </div>
 
                 <div>
-                  <label htmlFor="modal-student" className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  <label htmlFor="modal-student" className="block text-xs font-semibold text-ink mb-1.5">
                     Học viên ghi danh <span className="text-rose-500">*</span>
                   </label>
                   {editingGrade ? (
-                    <input
+                    <InputPill
                       id="modal-student"
                       type="text"
                       disabled
                       value={`${editingGrade.studentName || `Học viên #${editingGrade.studentId}`} (#STU-${editingGrade.studentId})`}
-                      className="w-full min-h-[44px] rounded-lg border border-slate-200 bg-slate-100 px-3 text-sm text-slate-500 cursor-not-allowed"
+                      className="min-h-[44px]"
                     />
                   ) : (
                     <>
@@ -1256,7 +1290,7 @@ export default function Grades() {
                           setFormData((prev) => ({ ...prev, studentId: e.target.value }));
                           setFieldErrors((prev) => ({ ...prev, studentId: '' }));
                         }}
-                        className="w-full min-h-[44px] rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"
+                        className="w-full min-h-[44px] rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
                       >
                         <option value="">
                           {!formData.classId
@@ -1287,10 +1321,10 @@ export default function Grades() {
               {/* Row 2: Tên bài kiểm tra & Loại bài thi */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="modal-exam-name" className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  <label htmlFor="modal-exam-name" className="block text-xs font-semibold text-ink mb-1.5">
                     Tên bài kiểm tra <span className="text-rose-500">*</span>
                   </label>
-                  <input
+                  <InputPill
                     id="modal-exam-name"
                     type="text"
                     maxLength={150}
@@ -1300,7 +1334,7 @@ export default function Grades() {
                       setFormData((prev) => ({ ...prev, examName: e.target.value }));
                       setFieldErrors((prev) => ({ ...prev, examName: '' }));
                     }}
-                    className="w-full min-h-[44px] rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    className="min-h-[44px]"
                   />
                   {fieldErrors.examName && (
                     <p className="mt-1 text-xs text-rose-600">{fieldErrors.examName}</p>
@@ -1308,7 +1342,7 @@ export default function Grades() {
                 </div>
 
                 <div>
-                  <label htmlFor="modal-exam-type" className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  <label htmlFor="modal-exam-type" className="block text-xs font-semibold text-ink mb-1.5">
                     Loại bài thi
                   </label>
                   <select
@@ -1317,7 +1351,7 @@ export default function Grades() {
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, examType: e.target.value }))
                     }
-                    className="w-full min-h-[44px] rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    className="w-full min-h-[44px] rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
                   >
                     {EXAM_TYPES.map((t) => (
                       <option key={t.value} value={t.value}>
@@ -1331,7 +1365,7 @@ export default function Grades() {
               {/* Row 3: Ngày thi & Thang điểm tối đa */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="modal-exam-date" className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  <label htmlFor="modal-exam-date" className="block text-xs font-semibold text-ink mb-1.5">
                     Ngày thi
                   </label>
                   <input
@@ -1341,15 +1375,15 @@ export default function Grades() {
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, examDate: e.target.value }))
                     }
-                    className="w-full min-h-[44px] rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    className="w-full min-h-[44px] rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="modal-max-score" className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  <label htmlFor="modal-max-score" className="block text-xs font-semibold text-ink mb-1.5">
                     Thang điểm tối đa <span className="text-rose-500">*</span>
                   </label>
-                  <input
+                  <InputPill
                     id="modal-max-score"
                     type="number"
                     step="0.5"
@@ -1359,7 +1393,7 @@ export default function Grades() {
                       setFormData((prev) => ({ ...prev, maxScore: e.target.value }));
                       setFieldErrors((prev) => ({ ...prev, maxScore: '', score: '' }));
                     }}
-                    className="w-full min-h-[44px] rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    className="min-h-[44px]"
                   />
                   {fieldErrors.maxScore && (
                     <p className="mt-1 text-xs text-rose-600">{fieldErrors.maxScore}</p>
@@ -1369,11 +1403,11 @@ export default function Grades() {
 
               {/* Row 4: Điểm số đạt được */}
               <div>
-                <label htmlFor="modal-score" className="block text-xs font-semibold text-slate-700 mb-1.5">
+                <label htmlFor="modal-score" className="block text-xs font-semibold text-ink mb-1.5">
                   Điểm số đạt được (Có thể để trống)
                 </label>
                 <div className="flex items-center gap-2.5">
-                  <input
+                  <InputPill
                     id="modal-score"
                     type="number"
                     step="0.25"
@@ -1384,13 +1418,13 @@ export default function Grades() {
                       setFormData((prev) => ({ ...prev, score: e.target.value }));
                       setFieldErrors((prev) => ({ ...prev, score: '', hasContent: '' }));
                     }}
-                    className="w-full sm:w-48 min-h-[44px] rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    className="w-full sm:!w-48 min-h-[44px] font-semibold"
                   />
-                  <span className="text-sm font-medium text-slate-500">
+                  <span className="text-sm font-medium text-ink-secondary">
                     / {formData.maxScore || 10}
                   </span>
                 </div>
-                <p className="mt-1.5 text-xs text-slate-500">
+                <p className="mt-1.5 text-xs text-ink-muted">
                   💡 Có thể để trống điểm nếu bài kiểm tra có nhận xét định tính của giáo viên
                 </p>
                 {fieldErrors.score && (
@@ -1400,7 +1434,7 @@ export default function Grades() {
 
               {/* Row 5: Nhận xét của giáo viên + Quick Feedback Chips */}
               <div>
-                <label htmlFor="modal-comment" className="block text-xs font-semibold text-slate-700 mb-1.5">
+                <label htmlFor="modal-comment" className="block text-xs font-semibold text-ink mb-1.5">
                   Nhận xét của giáo viên
                 </label>
                 <textarea
@@ -1413,16 +1447,16 @@ export default function Grades() {
                     setFormData((prev) => ({ ...prev, teacherComment: e.target.value }));
                     setFieldErrors((prev) => ({ ...prev, hasContent: '' }));
                   }}
-                  className="w-full rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-800 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  className="w-full rounded-2xl border border-line bg-surface px-4 py-3 text-sm text-ink placeholder:text-ink-muted transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
                 />
                 {fieldErrors.hasContent && (
-                  <p className="mt-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">
+                  <p className="mt-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">
                     ⚠️ {fieldErrors.hasContent}
                   </p>
                 )}
 
                 <div className="mt-2.5">
-                  <p className="text-[11px] font-semibold text-slate-500 mb-1.5">
+                  <p className="text-[11px] font-semibold text-ink-muted mb-1.5">
                     Mẫu nhận xét nhanh:
                   </p>
                   <div className="flex flex-wrap gap-2">
@@ -1431,7 +1465,7 @@ export default function Grades() {
                         key={chip.label}
                         type="button"
                         onClick={() => handleAppendQuickChip(chip.text)}
-                        className="min-h-[36px] rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-700 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 active:scale-[0.98] transition cursor-pointer"
+                        className="min-h-[36px] rounded-full border border-line bg-surface-subtle px-3 py-1 text-xs font-medium text-ink-secondary hover:bg-gold-soft/70 hover:border-gold/40 hover:text-teal active:scale-[0.98] transition cursor-pointer"
                       >
                         {chip.label}
                       </button>
@@ -1441,22 +1475,25 @@ export default function Grades() {
               </div>
 
               {/* Modal Footer */}
-              <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 border-t border-slate-100 pt-4">
-                <button
+              <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 border-t border-line/60 pt-4">
+                <SecondaryButton
                   type="button"
                   disabled={formSubmitting}
                   onClick={() => setIsModalOpen(false)}
-                  className="min-h-[44px] rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 hover:bg-slate-50 active:scale-[0.98] transition disabled:opacity-50 cursor-pointer"
+                  className="min-h-[44px]"
                 >
                   Hủy bỏ
-                </button>
-                <button
+                </SecondaryButton>
+                <PrimaryButton
                   type="submit"
                   disabled={formSubmitting}
-                  className="min-h-[44px] inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-sm font-semibold text-white hover:bg-blue-700 active:scale-[0.98] transition disabled:opacity-60 cursor-pointer"
+                  className="min-h-[44px]"
                 >
-                  {formSubmitting ? 'Đang lưu...' : '✓ Lưu điểm số'}
-                </button>
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>{formSubmitting ? 'Đang lưu...' : 'Lưu điểm số'}</span>
+                </PrimaryButton>
               </div>
             </form>
           </div>

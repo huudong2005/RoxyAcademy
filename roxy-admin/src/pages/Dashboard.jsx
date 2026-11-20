@@ -230,7 +230,7 @@ export default function Dashboard() {
           ? `${overview.upcomingClasses} lớp sắp mở`
           : 'Đang diễn ra',
       icon: '🏫',
-      accent: 'emerald',
+      accent: 'teal',
       to: '/classes?status=Ongoing',
     },
     ...(showTeachersCard
@@ -243,7 +243,7 @@ export default function Dashboard() {
               ? 'Đang công tác tại cơ sở'
               : 'Đang công tác toàn hệ thống',
             icon: '👩‍🏫',
-            accent: 'gold',
+            accent: 'teal',
             to: null,
           },
         ]
@@ -257,7 +257,7 @@ export default function Dashboard() {
           ? 'Đang chờ xử lý'
           : 'Không có đơn chờ duyệt',
       icon: '📝',
-      accent: 'amber',
+      accent: 'teal',
       to: '/leave-requests?status=Pending',
     },
   ];

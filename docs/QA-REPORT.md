@@ -1174,3 +1174,38 @@ Toàn bộ **8/8 hạng mục** của **Giai đoạn 1N-2 (8 bẫy đồng bộ)
 
 ## 4. Kết luận R2b-fix3
 - **Trạng thái nghiệm thu:** **PASS 100%** ở cả `1440px` và `1280px` (build, lint, bảng `Teachers` hết cuộn ngang & hết cắt ngày, dropdown menu người dùng hiển thị trọn vẹn trên nút `"Đặt lại"` và toàn bộ nội dung). Không còn lỗi chặn, đủ điều kiện để commit.
+
+---
+
+# BÁO CÁO QA — ĐỢT TRÙNG TU GIAO DIỆN R3: DASHBOARD, LỊCH HỌC, ĐIỂM DANH, BÀI TẬP, BẢNG ĐIỂM & ĐƠN XIN NGHỈ
+**Ngày kiểm tra:** 20/11/2026  
+**Người thực hiện:** QA Agent  
+**Commit gốc:** `aa03bd8`  
+**Phạm vi:** Kiểm thử 6 file đã sửa (`Dashboard.jsx`, `Schedules.jsx`, `Attendance.jsx`, `Homeworks.jsx`, `Grades.jsx`, `LeaveRequests.jsx`, chưa commit); không sửa `AdminLayout.jsx`, không sửa code nguồn ứng dụng.
+
+## 1. Kết quả Lint & Build (`roxy-admin/`)
+- `npm run lint` (`eslint .`): **PASS** (0 error, 0 warning).
+- `npm run build` (`vite build`): **PASS** (`✓ 113 modules transformed`, `✓ built in 344ms`).
+
+## 2. Kiểm tra tĩnh trên 6 file đã sửa
+- **Nút chính `bg-blue-*` / `bg-indigo-*`:** **PASS** — Không còn `<button>` nào dùng `bg-blue-*` hoặc `bg-indigo-*` trên cả 6 file (chỉ còn badge/link phụ `bg-blue-50` / `bg-indigo-50`).
+- **Emoji làm icon trong nút:** **PASS** — Đã dọn sạch toàn bộ emoji màu trong các nút modal ở `Homeworks.jsx` & `LeaveRequests.jsx` (chỉ còn các ký tự văn bản/dingbat đơn giản `✓`, `✕`, `✉`).
+
+## 3. Kết quả kiểm tra thực tế trên trình duyệt thật (`1440px` & `1280px`)
+- **Môi trường đo:** Chrome headless + Playwright, Vite dev server `http://localhost:5174` proxy tới API `http://localhost:5123` (đăng nhập `SuperAdmin`).
+
+| Màn hình & Hạng mục | Kết quả `1440px` | Kết quả `1280px` | Số liệu đo DOM thực tế |
+| :--- | :---: | :---: | :--- |
+| **`/dashboard` — 4 thẻ thống kê & tràn trang** | **PASS** | **PASS** | - `docClientWidth === docScrollWidth` (`1440px` & `1280px`, tràn `0px`).<br>- Cả 4 thẻ thống kê (`HỌC VIÊN ĐANG HỌC`, `LỚP ĐANG MỞ`, `GIÁO VIÊN`, `ĐƠN XIN NGHỈ CHỜ DUYỆT`) đều dùng `border-l-4 border-l-teal`, không còn viền `emerald`/`amber`. |
+| **`/schedules` — Không tràn trang & giữ lưới 7 cột `min-w-[1320px]`** | **PASS** | **PASS** | - `1440px`: `docScrollWidth = 1440px` (tràn trang `0px`); `.overflow-x-auto` (`clientWidth = 1120px`, `scrollWidth = 1322px`) chứa lưới 7 cột `min-w-[1320px]` (`offsetWidth = 1320px`).<br>- `1280px`: `docScrollWidth = 1280px` (tràn trang `0px`); `.overflow-x-auto` (`clientWidth = 960px`, `scrollWidth = 1322px`) chứa lưới 7 cột `min-w-[1320px]` (`offsetWidth = 1320px`). |
+| **`/attendance` — Cuộn ngang nội bộ bảng** *(buổi `2026-10-20`)* | **PASS** | **PASS** | - `1440px`: `clientWidth = 1118px`, `scrollWidth = 1118px`, `table.offsetWidth = 1118px` (tràn `0px`).<br>- `1280px`: `clientWidth = 958px`, `scrollWidth = 958px`, `table.offsetWidth = 958px` (tràn `0px`). |
+| **`/homeworks` — Cuộn ngang nội bộ bảng** | **PASS** | **PASS** | - `1440px`: `clientWidth = 1118px`, `scrollWidth = 1118px`, `table.offsetWidth = 1118px` (tràn `0px`).<br>- `1280px`: `clientWidth = 958px`, `scrollWidth = 958px`, `table.offsetWidth = 958px` (tràn `0px`). |
+| **`/homeworks` — Căn giữa cột `THAO TÁC`** | **PASS** | **PASS** | - `1440px`: `thCenter = 1325.4px`, `btnsCenter = 1325.4px` (`deltaPx = 0px`).<br>- `1280px`: `thCenter = 1173.0px`, `btnsCenter = 1173.0px` (`deltaPx = 0px`). |
+| **`/grades` — Cuộn ngang nội bộ bảng** *(sau khi `frontend` sửa)* | **PASS** | **PASS** | - `1440px`: `clientWidth = 1118px`, `scrollWidth = 1118px`, `table.offsetWidth = 1118px` (tràn `0px`).<br>- `1280px`: `clientWidth = 958px`, `scrollWidth = 958px`, `table.offsetWidth = 958px` (tràn `0px`). |
+| **`/grades` — Căn giữa cột `THAO TÁC`** | **PASS** | **PASS** | - `1440px`: `thCenter = 1347.9px`, `btnsCenter = 1347.9px` (`deltaPx = 0px`).<br>- `1280px`: `thCenter = 1196.4px`, `btnsCenter = 1196.4px` (`deltaPx = 0px`). |
+| **`/leave-requests` — Cuộn ngang nội bộ bảng** | **PASS** | **PASS** | - `1440px`: `clientWidth = 1118px`, `scrollWidth = 1118px`, `table.offsetWidth = 1118px` (tràn `0px`).<br>- `1280px`: `clientWidth = 958px`, `scrollWidth = 958px`, `table.offsetWidth = 958px` (tràn `0px`). |
+| **`/leave-requests` — Căn giữa cột `THAO TÁC`** | **PASS** | **PASS** | - `1440px`: `thCenter = 1353.0px`, `btnsCenter = 1353.0px` (`deltaPx = 0px`).<br>- `1280px`: `thCenter = 1193.0px`, `btnsCenter = 1193.0px` (`deltaPx = 0px`). |
+| **`/grades` & `/homeworks` — Menu người dùng** | **PASS** | **PASS** | - `<header>`: `position: relative; z-index: 40`.<br>- `elementsFromPoint()` tại 9 điểm mẫu & tâm nút `"Đăng xuất"` đều trả về `div[role="menu"]` trên cùng (`logoutTopmost: true`, `occludedPoints: []`) ở cả `1440px` & `1280px`. |
+
+## 4. Kết luận R3
+- **Trạng thái nghiệm thu:** **PASS 100%** ở cả `1440px` và `1280px` (build, lint, kiểm tra tĩnh 6 file sạch nút `bg-blue-*`/`bg-indigo-*` và sạch emoji trong nút, 4 bảng `Attendance`/`Homeworks`/`Grades`/`LeaveRequests` đều `0px` cuộn ngang nội bộ, `Schedules` giữ lưới 7 cột `min-w-[1320px]` không tràn trang, cột `THAO TÁC` căn giữa `deltaPx = 0px`, `Dashboard` chỉ dùng `teal`+`gold`, menu người dùng nằm trên mọi nội dung). Không còn lỗi chặn, đủ điều kiện để commit.

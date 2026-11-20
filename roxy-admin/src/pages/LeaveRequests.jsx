@@ -4,6 +4,14 @@ import axiosClient from '../api/axiosClient';
 import { formatDate, formatDateTime } from '../utils/formatters';
 import ConfirmModal from '../components/ConfirmModal';
 import { fetchAllStudents } from '../utils/fetchAllStudents';
+import {
+  PageHeader,
+  Card,
+  PrimaryButton,
+  SecondaryButton,
+  IconButton,
+  InputPill,
+} from '../components/ui';
 
 // Helper: Định dạng ngày kèm thứ tiếng Việt (VD: "Thứ Sáu, 14/11/2026")
 function formatDateWithWeekday(dateString) {
@@ -758,31 +766,25 @@ export default function LeaveRequests() {
       )}
 
       {/* HEADER TRANG */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
-            <span>📋</span> Quản lý Đơn xin nghỉ phép
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Theo dõi, tiếp nhận và xét duyệt đơn xin nghỉ học của học viên và nghỉ dạy của giáo viên tại các chi nhánh.
-          </p>
-        </div>
-
-        {/* NÚT TẠO ĐƠN MỚI - HIỂN THỊ CHO TẤT CẢ VAI TRÒ */}
-        <button
-          onClick={handleOpenCreateModal}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-lg shadow-xs active:scale-[0.98] transition-all duration-150 shrink-0 min-h-[44px]"
-        >
-          <span>➕</span>
-          <span>Gửi đơn xin nghỉ</span>
-        </button>
-      </div>
+      <PageHeader
+        eyebrow="Nghỉ phép & Chuyên cần"
+        title="Quản lý Đơn xin nghỉ phép"
+        description="Theo dõi, tiếp nhận và xét duyệt đơn xin nghỉ học của học viên và nghỉ dạy của giáo viên tại các chi nhánh."
+        actions={
+          <PrimaryButton type="button" onClick={handleOpenCreateModal}>
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            <span>Gửi đơn xin nghỉ</span>
+          </PrimaryButton>
+        }
+      />
 
       {/* BANNER CẢNH BÁO KHÔNG TỰ TẮT KHI CÓ BUỔI ĐÃ CHẤM PRESENT/LATE ĐƯỢC GIỮ NGUYÊN */}
       {skippedBanner && (
         <div
           role="alert"
-          className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900 shadow-xs flex items-start justify-between gap-3"
+          className="rounded-card border border-amber-200 bg-amber-50 p-4 text-amber-900 shadow-xs flex items-start justify-between gap-3"
         >
           <div className="flex items-start gap-2.5 text-sm">
             <span className="text-base shrink-0 mt-0.5">⚠️</span>
@@ -812,25 +814,29 @@ export default function LeaveRequests() {
       )}
 
       {/* BỘ LỌC ĐA NĂNG (FILTER TOOLBAR) */}
-      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs space-y-3.5">
+      <Card className="p-4 space-y-3.5">
         {/* Hàng 1: Search + Dropdown filters */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
           {/* Ô Tìm kiếm thông minh */}
           <div className="lg:col-span-2 relative">
-            <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-              🔍
+            <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-ink-muted">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
             </span>
-            <input
+            <InputPill
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Tìm tên người xin, người gửi, lý do..."
-              className="w-full h-10 pl-9 pr-3 text-sm bg-white border border-slate-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 placeholder:text-slate-400 transition-all duration-150"
+              className="!h-10 !pl-9 !pr-8 !py-0"
             />
             {search && (
               <button
+                type="button"
                 onClick={() => setSearch('')}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 text-xs"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-ink-muted hover:text-ink text-xs cursor-pointer"
+                aria-label="Xóa từ khóa"
               >
                 ✕
               </button>
@@ -845,7 +851,7 @@ export default function LeaveRequests() {
                 setRequesterTypeFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full h-10 px-3 text-sm bg-white border border-slate-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-slate-700 transition-all duration-150"
+              className="w-full h-10 rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
             >
               <option value="all">Tất cả đối tượng</option>
               <option value="Student">🎓 Học viên xin nghỉ</option>
@@ -861,7 +867,7 @@ export default function LeaveRequests() {
                 setStudentFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full h-10 px-3 text-sm bg-white border border-slate-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-slate-700 transition-all duration-150"
+              className="w-full h-10 rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
             >
               <option value="">Tất cả học viên</option>
               {students.map((s) => (
@@ -880,7 +886,7 @@ export default function LeaveRequests() {
                 setClassFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full h-10 px-3 text-sm bg-white border border-slate-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-slate-700 transition-all duration-150"
+              className="w-full h-10 rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
             >
               <option value="">Tất cả lớp học</option>
               {classes.map((c) => (
@@ -896,10 +902,10 @@ export default function LeaveRequests() {
             {isBranchManager ? (
               <div
                 title="Chi nhánh bị khóa theo quyền quản lý cơ sở"
-                className="w-full min-h-[40px] px-3 py-2 flex items-center gap-1.5 text-sm bg-slate-100 border border-slate-200 rounded-lg text-slate-600 cursor-not-allowed select-none"
+                className="w-full h-10 px-4 flex items-center gap-1.5 text-sm bg-surface-subtle border border-line rounded-full text-ink-muted cursor-not-allowed select-none truncate"
               >
                 <span className="shrink-0">🔒</span>
-                <span className="break-words">
+                <span className="truncate">
                   {branches.find((b) => b.id === currentUser.branchId)?.branchName || 'Cơ sở của tôi'}
                 </span>
               </div>
@@ -911,7 +917,7 @@ export default function LeaveRequests() {
                   setCurrentPage(1);
                 }}
                 disabled={!isSuperAdmin}
-                className="w-full h-10 px-3 text-sm bg-white border border-slate-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-slate-700 transition-all duration-150 disabled:bg-slate-100 disabled:text-slate-500"
+                className="w-full h-10 rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
               >
                 <option value="">Tất cả cơ sở</option>
                 {branches.map((b) => (
@@ -925,7 +931,7 @@ export default function LeaveRequests() {
         </div>
 
         {/* Hàng 2: Segmented Status Pills + Lọc Khoảng ngày */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 pt-2 border-t border-slate-100">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 pt-2.5 border-t border-line/60">
           {/* Pills trạng thái */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
             {[
@@ -944,7 +950,7 @@ export default function LeaveRequests() {
                     setStatusFilter(tab.key);
                     setCurrentPage(1);
                   }}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 whitespace-nowrap active:scale-95 ${
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-150 whitespace-nowrap active:scale-95 cursor-pointer ${
                     active
                       ? tab.key === 'Pending'
                         ? 'bg-amber-500 text-white shadow-xs'
@@ -952,14 +958,18 @@ export default function LeaveRequests() {
                         ? 'bg-emerald-600 text-white shadow-xs'
                         : tab.key === 'Rejected'
                         ? 'bg-rose-600 text-white shadow-xs'
-                        : 'bg-blue-600 text-white shadow-xs'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        : 'bg-teal text-gold shadow-xs'
+                      : 'bg-surface-subtle text-ink-secondary hover:bg-mint-canvas'
                   }`}
                 >
                   <span>{tab.label}</span>
                   <span
                     className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold ${
-                      active ? 'bg-white/25 text-white' : 'bg-slate-200 text-slate-700'
+                      active
+                        ? tab.key === 'all' || tab.key === 'Cancelled'
+                          ? 'bg-gold/20 text-gold'
+                          : 'bg-white/25 text-white'
+                        : 'bg-line/70 text-ink'
                     }`}
                   >
                     {tab.count}
@@ -970,7 +980,7 @@ export default function LeaveRequests() {
           </div>
 
           {/* Lọc khoảng ngày xin nghỉ */}
-          <div className="flex items-center gap-2 text-xs text-slate-600">
+          <div className="flex flex-wrap items-center gap-2 text-xs text-ink-secondary">
             <span className="font-medium whitespace-nowrap">Ngày nghỉ:</span>
             <input
               type="date"
@@ -980,7 +990,7 @@ export default function LeaveRequests() {
                 setCurrentPage(1);
               }}
               title="Từ ngày"
-              className="h-8 px-2 text-xs bg-white border border-slate-300 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-100"
+              className="h-9 px-3 text-xs bg-surface border border-line rounded-full text-ink focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
             />
             <span>đến</span>
             <input
@@ -991,7 +1001,7 @@ export default function LeaveRequests() {
                 setCurrentPage(1);
               }}
               title="Đến ngày"
-              className="h-8 px-2 text-xs bg-white border border-slate-300 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-100"
+              className="h-9 px-3 text-xs bg-surface border border-line rounded-full text-ink focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
             />
             {(fromDate || toDate) && (
               <button
@@ -1001,14 +1011,14 @@ export default function LeaveRequests() {
                   setToDate('');
                   setCurrentPage(1);
                 }}
-                className="text-xs text-blue-600 hover:underline ml-1"
+                className="text-xs font-semibold text-teal hover:text-gold-active hover:underline ml-1 cursor-pointer"
               >
                 Xóa lọc ngày
               </button>
             )}
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* THÔNG BÁO LỖI NẾU CÓ */}
       {error && (
@@ -1027,35 +1037,38 @@ export default function LeaveRequests() {
       )}
 
       {/* DANH SÁCH ĐƠN XIN NGHỈ PHÉP */}
-      <div className="rounded-xl border border-slate-200 bg-white shadow-xs overflow-hidden">
+      <Card className="overflow-hidden">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-16 space-y-3">
-            <div className="h-8 w-8 animate-spin rounded-full border-3 border-blue-600 border-t-transparent" />
-            <p className="text-xs text-slate-500">Đang tải danh sách đơn xin nghỉ phép...</p>
+            <div className="h-8 w-8 animate-spin rounded-full border-3 border-teal border-t-transparent" />
+            <p className="text-xs text-ink-secondary">Đang tải danh sách đơn xin nghỉ phép...</p>
           </div>
         ) : filteredRequests.length === 0 ? (
           /* TRẠNG THÁI RỖNG (TASTEFUL EMPTY STATE) */
           <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-            <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center text-3xl mb-3">
+            <div className="w-16 h-16 rounded-full bg-gold-soft flex items-center justify-center text-3xl mb-3">
               📋
             </div>
-            <h3 className="text-base font-semibold text-slate-800">
+            <h3 className="text-base font-semibold text-ink">
               {search || statusFilter !== 'all' || fromDate || toDate
                 ? 'Không tìm thấy đơn xin nghỉ nào phù hợp'
                 : 'Chưa có đơn xin nghỉ phép nào'}
             </h3>
-            <p className="text-xs text-slate-500 max-w-md mt-1 leading-relaxed">
+            <p className="text-xs text-ink-secondary max-w-md mt-1 leading-relaxed">
               {search || statusFilter !== 'all' || fromDate || toDate
                 ? 'Thử thay đổi bộ lọc hoặc xóa từ khóa tìm kiếm để xem các đơn khác.'
                 : 'Phụ huynh, học viên hoặc giáo viên có thể gửi đơn xin nghỉ học / nghỉ dạy tại đây.'}
             </p>
-            <button
+            <PrimaryButton
+              type="button"
               onClick={handleOpenCreateModal}
-              className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-xs active:scale-95 transition-all"
+              className="mt-4 !text-xs"
             >
-              <span>➕</span>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
               <span>Gửi đơn xin nghỉ đầu tiên</span>
-            </button>
+            </PrimaryButton>
           </div>
         ) : (
           <>
@@ -1063,7 +1076,7 @@ export default function LeaveRequests() {
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left border-collapse text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200 bg-slate-50 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                  <tr className="border-b border-line bg-surface-subtle text-[11px] font-semibold uppercase tracking-wider text-ink-muted">
                     <th className="px-4 py-3">Người xin nghỉ &amp; Vai trò</th>
                     <th className="px-4 py-3">Lớp &amp; Buổi học / Ngày nghỉ</th>
                     <th className="px-4 py-3 max-w-xs">Lý do xin nghỉ</th>
@@ -1072,7 +1085,7 @@ export default function LeaveRequests() {
                     <th className="px-4 py-3 text-center whitespace-nowrap">Thao tác</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-line/60">
                   {paginatedRequests.map((req) => {
                     const isPending = req.status === 'Pending';
                     const isStudentReq = req.requesterType === 'Student';
@@ -1083,7 +1096,7 @@ export default function LeaveRequests() {
                       <tr
                         key={req.id}
                         onClick={() => handleOpenDetail(req)}
-                        className="hover:bg-slate-50/80 cursor-pointer transition-colors duration-100"
+                        className="hover:bg-mint-canvas/60 cursor-pointer transition-colors duration-100"
                       >
                         {/* Cột 1: Người xin nghỉ & Vai trò */}
                         <td className="px-4 py-3.5">
@@ -1091,22 +1104,22 @@ export default function LeaveRequests() {
                             <div
                               className={`h-9 w-9 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${
                                 isStudentReq
-                                  ? 'bg-sky-100 text-sky-700'
-                                  : 'bg-indigo-100 text-indigo-700'
+                                  ? 'bg-gold-soft text-teal border border-gold/30'
+                                  : 'bg-mint-canvas text-teal border border-line'
                               }`}
                             >
                               {getInitials(displayName)}
                             </div>
                             <div className="min-w-0">
                               <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className="font-semibold text-slate-900 truncate">
+                                <span className="font-semibold text-ink truncate">
                                   {displayName || 'Chưa cập nhật tên'}
                                 </span>
                                 {renderRequesterBadge(req.requesterType)}
                               </div>
-                              <div className="text-xs text-slate-500 mt-0.5 space-x-1">
+                              <div className="text-xs text-ink-secondary mt-0.5 space-x-1">
                                 {isStudentReq && req.studentId && (
-                                  <span className="font-mono text-[11px] font-semibold text-slate-600">
+                                  <span className="font-mono text-[11px] font-semibold text-ink-secondary">
                                     #STU-{req.studentId}
                                   </span>
                                 )}
@@ -1123,26 +1136,26 @@ export default function LeaveRequests() {
                         {/* Cột 2: Lớp & Buổi học / Ngày nghỉ */}
                         <td className="px-4 py-3.5">
                           <div>
-                            <div className="font-medium text-slate-900">
+                            <div className="font-medium text-ink">
                               {req.className || (
-                                <span className="text-slate-400 italic">Nghỉ cả ngày — tất cả các lớp đang học</span>
+                                <span className="text-ink-muted italic">Nghỉ cả ngày — tất cả các lớp đang học</span>
                               )}
                             </div>
-                            <div className="text-xs font-semibold text-blue-700 mt-0.5">
+                            <div className="text-xs font-semibold text-teal mt-0.5">
                               📅 {formatDateWithWeekday(req.leaveDate)}
                             </div>
-                            <div className="text-[11px] text-slate-500 mt-0.5">
+                            <div className="text-[11px] text-ink-secondary mt-0.5">
                               {req.scheduleId ? (
-                                <span className="inline-flex items-center gap-1 text-slate-600">
+                                <span className="inline-flex items-center gap-1 text-ink-secondary">
                                   <span>⏰ Buổi #{req.scheduleId}</span>
                                 </span>
                               ) : (
-                                <span className="inline-block rounded bg-slate-100 px-1.5 py-0.2 text-[10px] text-slate-600 font-medium">
+                                <span className="inline-block rounded-full bg-surface-subtle px-2 py-0.2 text-[10px] text-ink-secondary font-medium">
                                   Nghỉ cả ngày
                                 </span>
                               )}
                               {req.branchName && (
-                                <span className="ml-1 text-slate-400">• {req.branchName}</span>
+                                <span className="ml-1 text-ink-muted">• {req.branchName}</span>
                               )}
                             </div>
                           </div>
@@ -1151,7 +1164,7 @@ export default function LeaveRequests() {
                         {/* Cột 3: Lý do xin nghỉ */}
                         <td className="px-4 py-3.5 max-w-xs">
                           <p
-                            className="text-xs text-slate-700 italic line-clamp-2"
+                            className="text-xs text-ink-secondary italic line-clamp-2"
                             title={req.reason}
                           >
                             &ldquo;{req.reason}&rdquo;
@@ -1177,17 +1190,17 @@ export default function LeaveRequests() {
                         <td className="px-4 py-3.5">
                           {req.reviewedByName ? (
                             <div className="text-xs">
-                              <div className="font-medium text-slate-800">
+                              <div className="font-medium text-ink">
                                 {req.reviewedByName}
                               </div>
                               {req.reviewedAt && (
-                                <div className="text-[11px] text-slate-400">
+                                <div className="text-[11px] text-ink-muted">
                                   {formatDateTime(req.reviewedAt)}
                                 </div>
                               )}
                               {req.reviewNote && (
                                 <div
-                                  className="text-[11px] text-slate-600 italic line-clamp-1 mt-0.5"
+                                  className="text-[11px] text-ink-secondary italic line-clamp-1 mt-0.5"
                                   title={req.reviewNote}
                                 >
                                   Note: {req.reviewNote}
@@ -1195,22 +1208,22 @@ export default function LeaveRequests() {
                               )}
                             </div>
                           ) : req.status === 'Pending' ? (
-                            <span className="text-xs text-slate-400 italic">
+                            <span className="text-xs text-ink-muted italic">
                               — (Đang chờ xét duyệt)
                             </span>
                           ) : (
                             <div className="text-xs">
-                              <div className="font-medium text-slate-600">
+                              <div className="font-medium text-ink-secondary">
                                 Đã xử lý
                               </div>
                               {req.reviewedAt && (
-                                <div className="text-[11px] text-slate-400">
+                                <div className="text-[11px] text-ink-muted">
                                   {formatDateTime(req.reviewedAt)}
                                 </div>
                               )}
                               {req.reviewNote && (
                                 <div
-                                  className="text-[11px] text-slate-600 italic line-clamp-1 mt-0.5"
+                                  className="text-[11px] text-ink-secondary italic line-clamp-1 mt-0.5"
                                   title={req.reviewNote}
                                 >
                                   Note: {req.reviewNote}
@@ -1222,65 +1235,69 @@ export default function LeaveRequests() {
 
                         {/* Cột 6: Thao tác */}
                         <td className="px-4 py-3.5 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                          <div className="flex items-center justify-center gap-1.5">
+                          <div className="inline-flex items-center justify-center gap-1">
                             {/* Phím duyệt nhanh cho SuperAdmin & BranchManager khi Pending */}
                             {canReview && isPending && (
                               <>
-                                <button
-                                  type="button"
+                                <IconButton
+                                  variant="neutral"
                                   onClick={(e) => handleQuickApprove(req, e)}
                                   title="Duyệt nhanh đơn này"
-                                  className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-md shadow-2xs active:scale-95 transition-all duration-100"
+                                  className="!bg-emerald-50 !border-emerald-200 !text-emerald-700 hover:!bg-emerald-100"
                                 >
-                                  <span>✓</span>
-                                  <span>Duyệt</span>
-                                </button>
-                                <button
-                                  type="button"
+                                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                  </svg>
+                                </IconButton>
+                                <IconButton
+                                  variant="danger"
                                   onClick={() => handleOpenDetail(req)}
                                   title="Từ chối đơn (nhập lý do)"
-                                  className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold rounded-md active:scale-95 transition-all duration-100"
                                 >
-                                  <span>✕</span>
-                                  <span>Từ chối</span>
-                                </button>
+                                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                  </svg>
+                                </IconButton>
                               </>
                             )}
 
                             {/* Hủy đơn khi Pending */}
                             {canCancelThis && !canReview && (
-                              <button
-                                type="button"
+                              <IconButton
+                                variant="danger"
                                 onClick={(e) => handleCancelRequest(req, e)}
                                 title="Hủy đơn xin nghỉ này"
-                                className="inline-flex items-center px-2 py-1 text-xs text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors"
                               >
-                                Hủy đơn
-                              </button>
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </IconButton>
                             )}
 
                             {/* Hủy đơn đã duyệt (dành cho SuperAdmin & BranchManager khi Approved) */}
                             {canReview && req.status === 'Approved' && (
-                              <button
-                                type="button"
+                              <IconButton
+                                variant="danger"
                                 onClick={(e) => handleCancelRequest(req, e)}
                                 title="Hủy đơn đã duyệt & hoàn tác điểm danh / lịch dạy"
-                                className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 active:scale-[0.98] rounded-md text-xs font-medium transition-all"
                               >
-                                <span>Hủy đơn đã duyệt</span>
-                              </button>
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </IconButton>
                             )}
 
                             {/* Xem chi tiết */}
-                            <button
-                              type="button"
+                            <IconButton
+                              variant="neutral"
                               onClick={() => handleOpenDetail(req)}
                               title="Xem chi tiết đơn"
-                              className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-md active:scale-95 transition-all"
                             >
-                              <span>👁</span>
-                              <span>Chi tiết</span>
-                            </button>
+                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              </svg>
+                            </IconButton>
                           </div>
                         </td>
                       </tr>
@@ -1291,7 +1308,7 @@ export default function LeaveRequests() {
             </div>
 
             {/* 2. CARD STACK TRÊN MOBILE (< 768px) CHUẨN APPLE HIG */}
-            <div className="md:hidden divide-y divide-slate-100">
+            <div className="md:hidden divide-y divide-line/60">
               {paginatedRequests.map((req) => {
                 const isPending = req.status === 'Pending';
                 const isStudentReq = req.requesterType === 'Student';
@@ -1302,23 +1319,23 @@ export default function LeaveRequests() {
                   <div
                     key={req.id}
                     onClick={() => handleOpenDetail(req)}
-                    className="p-4 space-y-2.5 active:bg-slate-50 transition-colors"
+                    className="p-4 space-y-2.5 active:bg-mint-canvas/50 transition-colors"
                   >
                     {/* Header Card: Tên + Badge trạng thái */}
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2">
                         <div
                           className={`h-8 w-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${
-                            isStudentReq ? 'bg-sky-100 text-sky-700' : 'bg-indigo-100 text-indigo-700'
+                            isStudentReq ? 'bg-gold-soft text-teal border border-gold/30' : 'bg-mint-canvas text-teal border border-line'
                           }`}
                         >
                           {getInitials(displayName)}
                         </div>
                         <div>
-                          <div className="font-semibold text-slate-900 text-sm">
+                          <div className="font-semibold text-ink text-sm">
                             {displayName || 'Chưa cập nhật tên'}
                           </div>
-                          <div className="flex items-center gap-1 text-[11px] text-slate-500">
+                          <div className="flex items-center gap-1 text-[11px] text-ink-secondary">
                             {renderRequesterBadge(req.requesterType)}
                             {isStudentReq && req.studentId && <span>• #STU-{req.studentId}</span>}
                           </div>
@@ -1328,21 +1345,21 @@ export default function LeaveRequests() {
                     </div>
 
                     {/* Chi tiết ngày nghỉ & lớp */}
-                    <div className="rounded-lg bg-slate-50 p-2.5 text-xs space-y-1">
-                      <div className="font-semibold text-blue-700">
+                    <div className="rounded-xl bg-surface-subtle p-2.5 text-xs space-y-1">
+                      <div className="font-semibold text-teal">
                         📅 {formatDateWithWeekday(req.leaveDate)}
                       </div>
-                      <div className="text-slate-700">
+                      <div className="text-ink">
                         🏫 {req.className || 'Nghỉ cả ngày — tất cả các lớp đang học'}
                         {req.scheduleId && ` • Buổi #${req.scheduleId}`}
                       </div>
-                      <div className="text-slate-600 italic line-clamp-2">
+                      <div className="text-ink-secondary italic line-clamp-2">
                         💬 &ldquo;{req.reason}&rdquo;
                       </div>
                     </div>
 
                     {/* Dòng phụ người gửi */}
-                    <div className="flex items-center justify-between text-[11px] text-slate-400">
+                    <div className="flex items-center justify-between text-[11px] text-ink-muted">
                       <span>Gửi bởi: {req.requestedByName || 'Phụ huynh'}</span>
                       <span>Mã: #LR-{req.id}</span>
                     </div>
@@ -1354,37 +1371,50 @@ export default function LeaveRequests() {
                           <button
                             type="button"
                             onClick={(e) => handleQuickApprove(req, e)}
-                            className="flex-1 min-h-[44px] flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-xs active:scale-95"
+                            className="flex-1 min-h-[44px] flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-full shadow-xs active:scale-95 cursor-pointer"
                           >
-                            <span>✓</span> Duyệt
+                            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span>Duyệt</span>
                           </button>
                           <button
                             type="button"
                             onClick={() => handleOpenDetail(req)}
-                            className="flex-1 min-h-[44px] flex items-center justify-center gap-1.5 bg-rose-50 text-rose-700 border border-rose-200 text-xs font-semibold rounded-lg active:scale-95"
+                            className="flex-1 min-h-[44px] flex items-center justify-center gap-1.5 bg-rose-50 text-rose-700 border border-rose-200 text-xs font-semibold rounded-full active:scale-95 cursor-pointer"
                           >
-                            <span>✕</span> Từ chối
+                            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                            <span>Từ chối</span>
                           </button>
                         </>
                       )}
 
-                      <button
+                      <SecondaryButton
                         type="button"
                         onClick={() => handleOpenDetail(req)}
-                        className={`flex-1 min-h-[44px] flex items-center justify-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-lg active:scale-95 ${
+                        className={`flex-1 min-h-[44px] !text-xs ${
                           canReview && isPending ? '' : 'w-full'
                         }`}
                       >
-                        <span>👁</span> Chi tiết
-                      </button>
+                        <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span>Chi tiết</span>
+                      </SecondaryButton>
 
                       {canCancelThis && !canReview && (
                         <button
                           type="button"
                           onClick={(e) => handleCancelRequest(req, e)}
-                          className="min-h-[44px] px-3 flex items-center justify-center text-xs text-rose-600 hover:bg-rose-50 rounded-lg"
+                          className="min-h-[44px] px-3.5 flex items-center justify-center gap-1 text-xs font-medium text-rose-600 hover:bg-rose-50 rounded-full cursor-pointer"
                         >
-                          Hủy
+                          <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                          <span>Hủy</span>
                         </button>
                       )}
 
@@ -1392,9 +1422,12 @@ export default function LeaveRequests() {
                         <button
                           type="button"
                           onClick={(e) => handleCancelRequest(req, e)}
-                          className="min-h-[44px] px-3 flex items-center justify-center text-xs font-medium text-rose-700 bg-rose-50 border border-rose-200 hover:bg-rose-100 rounded-lg active:scale-95 transition-all"
+                          className="min-h-[44px] px-3.5 flex items-center justify-center gap-1 text-xs font-medium text-rose-700 bg-rose-50 border border-rose-200 hover:bg-rose-100 rounded-full active:scale-95 transition-all cursor-pointer"
                         >
-                          Hủy đơn đã duyệt
+                          <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                          <span>Hủy đơn đã duyệt</span>
                         </button>
                       )}
                     </div>
@@ -1405,68 +1438,77 @@ export default function LeaveRequests() {
 
             {/* THANH PHÂN TRANG */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between border-t border-slate-200 bg-white px-4 py-3 text-xs text-slate-600">
+              <div className="flex items-center justify-between border-t border-line bg-surface-subtle px-4 py-3 text-xs text-ink-secondary">
                 <div>
-                  Hiển thị <span className="font-semibold">{(currentPage - 1) * pageSize + 1}</span> -{' '}
-                  <span className="font-semibold">
+                  Hiển thị <span className="font-semibold text-ink">{(currentPage - 1) * pageSize + 1}</span> -{' '}
+                  <span className="font-semibold text-ink">
                     {Math.min(currentPage * pageSize, filteredRequests.length)}
                   </span>{' '}
-                  trên tổng số <span className="font-semibold">{filteredRequests.length}</span> đơn
+                  trên tổng số <span className="font-semibold text-ink">{filteredRequests.length}</span> đơn
                 </div>
-                <div className="flex items-center gap-1">
-                  <button
+                <div className="flex items-center gap-1.5">
+                  <SecondaryButton
+                    type="button"
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
-                    className="px-2.5 py-1.5 rounded border border-slate-300 disabled:opacity-40 hover:bg-slate-50 transition-colors"
+                    className="!px-3 !py-1.5 !text-xs"
                   >
                     Trước
-                  </button>
-                  <span className="px-2 font-medium">
+                  </SecondaryButton>
+                  <span className="px-2 font-medium text-ink">
                     {currentPage} / {totalPages}
                   </span>
-                  <button
+                  <SecondaryButton
+                    type="button"
                     onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
-                    className="px-2.5 py-1.5 rounded border border-slate-300 disabled:opacity-40 hover:bg-slate-50 transition-colors"
+                    className="!px-3 !py-1.5 !text-xs"
                   >
                     Sau
-                  </button>
+                  </SecondaryButton>
                 </div>
               </div>
             )}
           </>
         )}
-      </div>
+      </Card>
 
       {/* ============================================================ */}
       {/* 8. MODAL TẠO ĐƠN XIN NGHỈ MỚI (ROLE-ADAPTIVE FORM)            */}
       {/* ============================================================ */}
       {isCreateModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs transition-opacity animate-in fade-in duration-150">
-          <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden transform transition-all duration-150 scale-100 flex flex-col max-h-[92vh]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="fixed inset-0 bg-teal-deep/40 backdrop-blur-[2px] modal-backdrop"
+            onClick={() => !createSubmitting && setIsCreateModalOpen(false)}
+          />
+          <div className="relative z-10 w-full max-w-lg rounded-card-lg bg-surface border border-line/60 shadow-modal modal-panel overflow-hidden flex flex-col max-h-[92vh]">
             {/* Header Modal */}
-            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50/50">
+            <div className="flex items-center justify-between border-b border-line/60 px-6 py-4 bg-surface-subtle/60">
               <div>
-                <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <h2 className="text-base font-bold text-ink flex items-center gap-2">
                   <span>📝</span> Tạo đơn xin nghỉ phép mới
                 </h2>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-ink-secondary mt-0.5">
                   Gửi đơn xin nghỉ học hoặc nghỉ dạy đến Ban quản trị Roxy Academy.
                 </p>
               </div>
-              <button
-                type="button"
+              <IconButton
+                variant="neutral"
                 onClick={() => setIsCreateModalOpen(false)}
-                className="h-8 w-8 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center transition-colors"
+                title="Đóng"
+                className="!h-8 !w-8"
               >
-                ✕
-              </button>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </IconButton>
             </div>
 
             {/* Form nội dung cuộn */}
             <form onSubmit={handleCreateSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
               {createError && (
-                <div className="rounded-lg bg-rose-50 border border-rose-200 p-3 text-xs text-rose-700 flex items-center gap-2">
+                <div className="rounded-xl bg-rose-50 border border-rose-200 p-3 text-xs text-rose-700 flex items-center gap-2">
                   <span>⚠️</span>
                   <span>{createError}</span>
                 </div>
@@ -1476,7 +1518,7 @@ export default function LeaveRequests() {
               {isStaff ? (
                 /* SuperAdmin / BranchManager: Được chọn Học viên hoặc Giáo viên */
                 <div className="space-y-2">
-                  <label className="block text-xs font-semibold text-slate-700">
+                  <label className="block text-xs font-semibold text-ink">
                     Loại đối tượng xin nghỉ: <span className="text-rose-500">*</span>
                   </label>
                   <div className="grid grid-cols-2 gap-3">
@@ -1489,13 +1531,13 @@ export default function LeaveRequests() {
                           teacherId: '',
                         }))
                       }
-                      className={`flex items-center justify-center gap-2 py-2 px-3 rounded-lg border text-xs font-semibold transition-all ${
+                      className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-full border text-xs font-semibold transition-all cursor-pointer ${
                         createFormData.requesterType === 'Student'
-                          ? 'border-blue-600 bg-blue-50 text-blue-700 shadow-xs'
-                          : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                          ? 'border-teal bg-gold-soft text-teal shadow-xs'
+                          : 'border-line bg-surface text-ink-secondary hover:bg-mint-canvas'
                       }`}
                     >
-                      <span>🎓</span> Học viên xin nghỉ
+                      Học viên xin nghỉ
                     </button>
                     <button
                       type="button"
@@ -1506,24 +1548,24 @@ export default function LeaveRequests() {
                           studentId: '',
                         }))
                       }
-                      className={`flex items-center justify-center gap-2 py-2 px-3 rounded-lg border text-xs font-semibold transition-all ${
+                      className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-full border text-xs font-semibold transition-all cursor-pointer ${
                         createFormData.requesterType === 'Teacher'
-                          ? 'border-indigo-600 bg-indigo-50 text-indigo-700 shadow-xs'
-                          : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                          ? 'border-teal bg-gold-soft text-teal shadow-xs'
+                          : 'border-line bg-surface text-ink-secondary hover:bg-mint-canvas'
                       }`}
                     >
-                      <span>👩‍🏫</span> Giáo viên xin nghỉ
+                      Giáo viên xin nghỉ
                     </button>
                   </div>
 
                   {/* Dropdown chọn Người xin tương ứng */}
                   {createFormData.requesterType === 'Student' ? (
                     <div>
-                      <label className="block text-xs font-semibold text-slate-700 mt-2 mb-1">
+                      <label className="block text-xs font-semibold text-ink mt-2 mb-1">
                         Chọn học viên: <span className="text-rose-500">*</span>
                       </label>
                       {studentsLoadError && (
-                        <p className="mb-1.5 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs text-rose-700">
+                        <p className="mb-1.5 rounded-xl border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs text-rose-700">
                           ⚠️ {studentsLoadError}
                         </p>
                       )}
@@ -1533,7 +1575,7 @@ export default function LeaveRequests() {
                           setCreateFormData((prev) => ({ ...prev, studentId: e.target.value }))
                         }
                         required
-                        className="w-full h-10 px-3 text-sm bg-white border border-slate-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                        className="w-full h-10 rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
                       >
                         <option value="">-- Chọn học viên --</option>
                         {students.map((s) => (
@@ -1545,7 +1587,7 @@ export default function LeaveRequests() {
                     </div>
                   ) : (
                     <div>
-                      <label className="block text-xs font-semibold text-slate-700 mt-2 mb-1">
+                      <label className="block text-xs font-semibold text-ink mt-2 mb-1">
                         Chọn giáo viên: <span className="text-rose-500">*</span>
                       </label>
                       <select
@@ -1554,7 +1596,7 @@ export default function LeaveRequests() {
                           setCreateFormData((prev) => ({ ...prev, teacherId: e.target.value }))
                         }
                         required
-                        className="w-full h-10 px-3 text-sm bg-white border border-slate-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                        className="w-full h-10 rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
                       >
                         <option value="">-- Chọn giáo viên --</option>
                         {teachers.map((t) => (
@@ -1568,22 +1610,22 @@ export default function LeaveRequests() {
                 </div>
               ) : isTeacher ? (
                 /* Giáo viên: Tự động điền chính mình */
-                <div className="rounded-lg bg-indigo-50 border border-indigo-200 p-3">
-                  <div className="text-xs font-semibold text-indigo-900">
+                <div className="rounded-xl bg-mint-canvas border border-line p-3">
+                  <div className="text-xs font-semibold text-teal">
                     👩‍🏫 Đơn xin nghỉ dạy của Giáo viên
                   </div>
-                  <div className="text-xs text-indigo-700 mt-0.5">
-                    Họ và tên: <span className="font-semibold">{currentUser.fullName || 'Tôi'}</span>
+                  <div className="text-xs text-ink-secondary mt-0.5">
+                    Họ và tên: <span className="font-semibold text-ink">{currentUser.fullName || 'Tôi'}</span>
                   </div>
                 </div>
               ) : isParent ? (
                 /* Phụ huynh: Chọn con mình */
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-ink mb-1">
                     Chọn học viên (con của bạn): <span className="text-rose-500">*</span>
                   </label>
                   {studentsLoadError && (
-                    <p className="mb-1.5 rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs text-rose-700">
+                    <p className="mb-1.5 rounded-xl border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs text-rose-700">
                       ⚠️ {studentsLoadError}
                     </p>
                   )}
@@ -1593,7 +1635,7 @@ export default function LeaveRequests() {
                       setCreateFormData((prev) => ({ ...prev, studentId: e.target.value }))
                     }
                     required
-                    className="w-full h-10 px-3 text-sm bg-white border border-slate-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    className="w-full h-10 rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
                   >
                     <option value="">-- Chọn học viên --</option>
                     {students.map((s) => (
@@ -1605,20 +1647,20 @@ export default function LeaveRequests() {
                 </div>
               ) : (
                 /* Học viên tự gửi: Tự động cho chính mình */
-                <div className="rounded-lg bg-sky-50 border border-sky-200 p-3">
-                  <div className="text-xs font-semibold text-sky-900">
+                <div className="rounded-xl bg-mint-canvas border border-line p-3">
+                  <div className="text-xs font-semibold text-teal">
                     🎓 Đơn xin nghỉ học của Học viên
                   </div>
-                  <div className="text-xs text-sky-700 mt-0.5">
-                    Học viên: <span className="font-semibold">{currentUser.fullName || 'Tôi'}</span>
+                  <div className="text-xs text-ink-secondary mt-0.5">
+                    Học viên: <span className="font-semibold text-ink">{currentUser.fullName || 'Tôi'}</span>
                   </div>
                 </div>
               )}
 
               {/* 2. Lớp học liên quan (Tùy chọn) */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Lớp học liên quan: <span className="text-slate-400 font-normal">(Khuyên dùng)</span>
+                <label className="block text-xs font-semibold text-ink mb-1">
+                  Lớp học liên quan: <span className="text-ink-muted font-normal">(Khuyên dùng)</span>
                 </label>
                 <select
                   value={createFormData.classId}
@@ -1633,7 +1675,7 @@ export default function LeaveRequests() {
                       setAvailableSchedules([]);
                     }
                   }}
-                  className="w-full h-10 px-3 text-sm bg-white border border-slate-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-slate-700"
+                  className="w-full h-10 rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
                 >
                   <option value="">-- Không chọn lớp cụ thể (Nghỉ cả ngày) --</option>
                   {classes.map((c) => (
@@ -1642,14 +1684,14 @@ export default function LeaveRequests() {
                     </option>
                   ))}
                 </select>
-                <p className="text-[11px] text-slate-400 mt-1">
+                <p className="text-[11px] text-ink-muted mt-1">
                   Chọn lớp học để hệ thống tự động đồng bộ điểm danh khi đơn được duyệt.
                 </p>
               </div>
 
               {/* 3. Ngày xin nghỉ */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-ink mb-1">
                   Ngày xin nghỉ: <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -1659,23 +1701,23 @@ export default function LeaveRequests() {
                     setCreateFormData((prev) => ({ ...prev, leaveDate: e.target.value }))
                   }
                   required
-                  className="w-full h-10 px-3 text-sm bg-white border border-slate-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-slate-700"
+                  className="w-full h-10 rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
                 />
               </div>
 
               {/* 4. Buổi học trong ngày (nếu đã chọn lớp) */}
               {createFormData.classId && (
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-ink mb-1">
                     Buổi học cụ thể:{' '}
-                    {loadingSchedules && <span className="text-blue-600 font-normal">Đang tìm...</span>}
+                    {loadingSchedules && <span className="text-teal font-normal">Đang tìm...</span>}
                   </label>
                   <select
                     value={createFormData.scheduleId}
                     onChange={(e) =>
                       setCreateFormData((prev) => ({ ...prev, scheduleId: e.target.value }))
                     }
-                    className="w-full h-10 px-3 text-sm bg-white border border-slate-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 text-slate-700"
+                    className="w-full h-10 rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
                   >
                     <option value="">-- Nghỉ cả ngày / Không theo buổi cụ thể --</option>
                     {availableSchedules.map((sc) => (
@@ -1686,7 +1728,7 @@ export default function LeaveRequests() {
                     ))}
                   </select>
                   {availableSchedules.length === 0 && !loadingSchedules && (
-                    <p className="text-[11px] text-slate-400 mt-1">
+                    <p className="text-[11px] text-ink-muted mt-1">
                       (Không tìm thấy buổi học nào trong ngày này của lớp. Đơn sẽ áp dụng nghỉ cả ngày).
                     </p>
                   )}
@@ -1696,10 +1738,10 @@ export default function LeaveRequests() {
               {/* 5. Lý do xin nghỉ phép */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-semibold text-slate-700">
+                  <label className="text-xs font-semibold text-ink">
                     Lý do xin nghỉ phép: <span className="text-rose-500">*</span>
                   </label>
-                  <span className="text-[11px] text-slate-400">
+                  <span className="text-[11px] text-ink-muted">
                     {createFormData.reason.length} / 500 ký tự
                   </span>
                 </div>
@@ -1712,12 +1754,12 @@ export default function LeaveRequests() {
                   rows={3}
                   maxLength={500}
                   placeholder="Nhập lý do chi tiết (VD: Bé bị ốm sốt cần đi khám, gia đình có việc bận...)"
-                  className="w-full p-3 text-sm bg-white border border-slate-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  className="w-full rounded-2xl border border-line bg-surface px-4 py-3 text-sm text-ink placeholder:text-ink-muted transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
                 />
 
                 {/* Gợi ý lý do nhanh (Quick Reason Pills) */}
                 <div className="mt-2 space-y-1">
-                  <span className="text-[11px] font-medium text-slate-500">Gợi ý lý do nhanh:</span>
+                  <span className="text-[11px] font-medium text-ink-muted">Gợi ý lý do nhanh:</span>
                   <div className="flex flex-wrap gap-1.5">
                     {[
                       {
@@ -1741,7 +1783,7 @@ export default function LeaveRequests() {
                         key={idx}
                         type="button"
                         onClick={() => handleInsertQuickReason(pill.text)}
-                        className="px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-medium transition-colors active:scale-95"
+                        className="px-2.5 py-1 rounded-full bg-gold-soft/60 border border-gold/30 hover:bg-gold-soft text-teal text-[11px] font-medium transition-colors active:scale-95 cursor-pointer"
                       >
                         {pill.label}
                       </button>
@@ -1751,31 +1793,28 @@ export default function LeaveRequests() {
               </div>
 
               {/* Nút hành động */}
-              <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
-                <button
+              <div className="pt-4 border-t border-line/60 flex items-center justify-end gap-3">
+                <SecondaryButton
                   type="button"
                   onClick={() => setIsCreateModalOpen(false)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                  className="!text-xs"
                 >
                   Hủy bỏ
-                </button>
-                <button
+                </SecondaryButton>
+                <PrimaryButton
                   type="submit"
                   disabled={createSubmitting}
-                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-semibold rounded-lg shadow-xs active:scale-[0.98] transition-all flex items-center gap-2"
+                  className="!text-xs"
                 >
                   {createSubmitting ? (
                     <>
-                      <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                      <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-teal border-t-transparent" />
                       <span>Đang gửi đơn...</span>
                     </>
                   ) : (
-                    <>
-                      <span>📤</span>
-                      <span>Gửi đơn xin nghỉ</span>
-                    </>
+                    <span>Gửi đơn xin nghỉ</span>
                   )}
-                </button>
+                </PrimaryButton>
               </div>
             </form>
           </div>
@@ -1786,90 +1825,97 @@ export default function LeaveRequests() {
       {/* 9. MODAL XEM CHI TIẾT & DUYỆT / TỪ CHỐI ĐƠN                   */}
       {/* ============================================================ */}
       {detailModalOpen && selectedRequest && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs transition-opacity animate-in fade-in duration-150">
-          <div className="w-full max-w-xl rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden transform transition-all duration-150 scale-100 flex flex-col max-h-[92vh]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="fixed inset-0 bg-teal-deep/40 backdrop-blur-[2px] modal-backdrop"
+            onClick={() => setDetailModalOpen(false)}
+          />
+          <div className="relative z-10 w-full max-w-xl rounded-card-lg bg-surface border border-line/60 shadow-modal modal-panel overflow-hidden flex flex-col max-h-[92vh]">
             {/* Header Modal */}
-            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50/50">
+            <div className="flex items-center justify-between border-b border-line/60 px-6 py-4 bg-surface-subtle/60">
               <div>
                 <div className="flex items-center gap-2">
-                  <h2 className="text-base font-bold text-slate-900">
+                  <h2 className="text-base font-bold text-ink">
                     Chi tiết đơn xin nghỉ #{selectedRequest.id}
                   </h2>
                   {renderStatusBadge(selectedRequest.status)}
                 </div>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-ink-secondary mt-0.5">
                   Ngày gửi: {formatDateTime(selectedRequest.createdAt)}
                 </p>
               </div>
-              <button
-                type="button"
+              <IconButton
+                variant="neutral"
                 onClick={() => setDetailModalOpen(false)}
-                className="h-8 w-8 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center transition-colors"
+                title="Đóng"
+                className="!h-8 !w-8"
               >
-                ✕
-              </button>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </IconButton>
             </div>
 
             {/* Nội dung chi tiết */}
             <div className="flex-1 overflow-y-auto p-6 space-y-4 text-sm">
               {reviewError && (
-                <div className="rounded-lg bg-rose-50 border border-rose-200 p-3 text-xs text-rose-700 flex items-center gap-2">
+                <div className="rounded-xl bg-rose-50 border border-rose-200 p-3 text-xs text-rose-700 flex items-center gap-2">
                   <span>⚠️</span>
                   <span>{reviewError}</span>
                 </div>
               )}
 
               {/* Khối Thông tin người xin */}
-              <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 space-y-2">
-                <div className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+              <div className="rounded-card border border-line bg-surface-subtle/60 p-4 space-y-2">
+                <div className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
                   Thông tin đối tượng xin nghỉ
                 </div>
                 <div className="grid grid-cols-2 gap-3 text-xs">
                   <div>
-                    <span className="text-slate-500">Đối tượng:</span>{' '}
-                    <span className="font-semibold text-slate-800">
+                    <span className="text-ink-secondary">Đối tượng:</span>{' '}
+                    <span className="font-semibold text-ink">
                       {selectedRequest.requesterType === 'Teacher' ? '👩‍🏫 Giáo viên' : '🎓 Học viên'}
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-500">Họ và tên:</span>{' '}
-                    <span className="font-semibold text-slate-900">
+                    <span className="text-ink-secondary">Họ và tên:</span>{' '}
+                    <span className="font-semibold text-ink">
                       {selectedRequest.studentName || selectedRequest.teacherName || '—'}
                     </span>
                     {selectedRequest.studentId && (
-                      <span className="ml-1 font-mono text-[11px] text-slate-500">
+                      <span className="ml-1 font-mono text-[11px] text-ink-muted">
                         (#STU-{selectedRequest.studentId})
                       </span>
                     )}
                   </div>
                   <div>
-                    <span className="text-slate-500">Người gửi đơn:</span>{' '}
-                    <span className="font-medium text-slate-800">
+                    <span className="text-ink-secondary">Người gửi đơn:</span>{' '}
+                    <span className="font-medium text-ink">
                       {selectedRequest.requestedByName || 'Phụ huynh / Học viên'}
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-500">Cơ sở chi nhánh:</span>{' '}
-                    <span className="font-medium text-slate-800">
+                    <span className="text-ink-secondary">Cơ sở chi nhánh:</span>{' '}
+                    <span className="font-medium text-ink">
                       {selectedRequest.branchName || 'Trung tâm'}
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-500">Lớp học:</span>{' '}
-                    <span className="font-medium text-slate-800">
+                    <span className="text-ink-secondary">Lớp học:</span>{' '}
+                    <span className="font-medium text-ink">
                       {selectedRequest.className || 'Nghỉ cả ngày — tất cả các lớp đang học'}
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-500">Ngày xin nghỉ:</span>{' '}
-                    <span className="font-semibold text-blue-700">
+                    <span className="text-ink-secondary">Ngày xin nghỉ:</span>{' '}
+                    <span className="font-semibold text-teal">
                       {formatDateWithWeekday(selectedRequest.leaveDate)}
                     </span>
                   </div>
                 </div>
 
                 {selectedRequest.scheduleId && (
-                  <div className="pt-2 border-t border-slate-200/60 text-xs text-slate-600">
+                  <div className="pt-2 border-t border-line/60 text-xs text-ink-secondary">
                     <span className="font-medium">Buổi học xin nghỉ:</span> Buổi #{selectedRequest.scheduleId}
                   </div>
                 )}
@@ -1877,21 +1923,21 @@ export default function LeaveRequests() {
 
               {/* Khối Lý do xin nghỉ */}
               <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-semibold text-ink-muted uppercase tracking-wider mb-1">
                   Lý do xin nghỉ phép:
                 </label>
-                <div className="rounded-xl border border-slate-200 bg-white p-3.5 text-xs text-slate-800 italic leading-relaxed">
+                <div className="rounded-card border border-line bg-surface p-3.5 text-xs text-ink italic leading-relaxed">
                   &ldquo;{selectedRequest.reason}&rdquo;
                 </div>
               </div>
 
               {/* KHỐI LƯU Ý NGHIỆP VỤ SƯ PHẠM (ĐỒNG BỘ ĐIỂM DANH TỰ ĐỘNG) */}
               {selectedRequest.requesterType === 'Student' && (
-                <div className="rounded-xl border border-blue-200 bg-blue-50/70 p-3.5 text-xs text-blue-900 space-y-1 leading-relaxed">
+                <div className="rounded-card border border-line bg-mint-canvas/70 p-3.5 text-xs text-teal space-y-1 leading-relaxed">
                   <div className="font-semibold flex items-center gap-1.5">
                     <span>⚡</span> Cơ chế đồng bộ Điểm danh tự động (Auto Excused-Absent):
                   </div>
-                  <p className="text-[11px] text-blue-800">
+                  <p className="text-[11px] text-ink-secondary">
                     Khi đơn xin nghỉ này được <strong>&ldquo;DUYỆT&rdquo; (Approved)</strong>, hệ thống sẽ <strong>TỰ ĐỘNG</strong> đánh dấu học viên ở trạng thái <em>&ldquo;Nghỉ có phép&rdquo; (ExcusedAbsent)</em> trên bảng điểm danh của buổi học liên quan. Giáo viên phụ trách không cần tích tay thủ công lại trên trang Điểm danh.
                   </p>
                 </div>
@@ -1899,7 +1945,7 @@ export default function LeaveRequests() {
 
               {/* KHỐI LƯU Ý XỬ LÝ BUỔI DẠY KHI DUYỆT ĐƠN NGHỈ CỦA GIÁO VIÊN */}
               {selectedRequest.requesterType === 'Teacher' && (
-                <div className="rounded-xl border border-amber-300 bg-amber-50/80 p-3.5 text-xs text-amber-900 space-y-1 leading-relaxed">
+                <div className="rounded-card border border-amber-300 bg-amber-50 p-3.5 text-xs text-amber-900 space-y-1 leading-relaxed">
                   <div className="font-semibold flex items-center gap-1.5">
                     <span>⚠️</span> Cơ chế xử lý buổi dạy khi duyệt đơn nghỉ của Giáo viên:
                   </div>
@@ -1912,12 +1958,12 @@ export default function LeaveRequests() {
               {/* KHỐI KẾT QUẢ XÉT DUYỆT (NẾU ĐÃ DUYỆT HOẶC TỪ CHỐI) */}
               {selectedRequest.status !== 'Pending' && (
                 <div
-                  className={`rounded-xl border p-4 space-y-1.5 text-xs ${
+                  className={`rounded-card border p-4 space-y-1.5 text-xs ${
                     selectedRequest.status === 'Approved'
                       ? 'border-emerald-300 bg-emerald-50 text-emerald-900'
                       : selectedRequest.status === 'Rejected'
                       ? 'border-rose-300 bg-rose-50 text-rose-900'
-                      : 'border-slate-200 bg-slate-50 text-slate-700'
+                      : 'border-line bg-surface-subtle text-ink-secondary'
                   }`}
                 >
                   <div className="font-bold flex items-center gap-1.5">
@@ -1942,14 +1988,14 @@ export default function LeaveRequests() {
 
               {/* KHU VỰC PHÊ DUYỆT (CHỈ DÀNH CHO SUPERADMIN & BRANCHMANAGER KHI STATUS == 'PENDING') */}
               {canReview && selectedRequest.status === 'Pending' && (
-                <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-4 space-y-3">
+                <div className="rounded-card border border-amber-200 bg-amber-50/50 p-4 space-y-3">
                   <div className="text-xs font-bold text-amber-900 flex items-center gap-1.5">
                     <span>✍️</span> Xét duyệt đơn xin nghỉ phép
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Ghi chú / Lời nhắn phản hồi: <span className="text-slate-400 font-normal">(Bắt buộc nếu từ chối)</span>
+                    <label className="block text-xs font-semibold text-ink mb-1">
+                      Ghi chú / Lời nhắn phản hồi: <span className="text-ink-muted font-normal">(Bắt buộc nếu từ chối)</span>
                     </label>
                     <textarea
                       value={reviewNote}
@@ -1957,7 +2003,7 @@ export default function LeaveRequests() {
                       rows={2}
                       maxLength={500}
                       placeholder="Nhập ghi chú phản hồi cho phụ huynh/giáo viên..."
-                      className="w-full p-2.5 text-xs bg-white border border-amber-300 rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-100"
+                      className="w-full rounded-2xl border border-line bg-surface px-4 py-3 text-sm text-ink placeholder:text-ink-muted transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
                     />
 
                     {/* Gợi ý phản hồi nhanh */}
@@ -1972,9 +2018,9 @@ export default function LeaveRequests() {
                           key={idx}
                           type="button"
                           onClick={() => setReviewNote(quickText)}
-                          className="px-2 py-0.5 rounded bg-white hover:bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-medium transition-colors"
+                          className="px-2.5 py-0.5 rounded-full bg-surface hover:bg-gold-soft/70 text-teal border border-gold/40 text-[10px] font-medium transition-colors cursor-pointer"
                         >
-                          ⚡ {quickText}
+                          {quickText}
                         </button>
                       ))}
                     </div>
@@ -1984,7 +2030,7 @@ export default function LeaveRequests() {
             </div>
 
             {/* Footer Modal: Các nút hành động */}
-            <div className="border-t border-slate-100 px-6 py-3.5 bg-slate-50 flex items-center justify-between gap-2">
+            <div className="border-t border-line/60 px-6 py-3.5 bg-surface-subtle flex items-center justify-between gap-2">
               <div>
                 {/* Cho phép người tạo hoặc staff hủy đơn khi Pending */}
                 {selectedRequest.status === 'Pending' &&
@@ -1992,7 +2038,7 @@ export default function LeaveRequests() {
                     <button
                       type="button"
                       onClick={() => handleCancelRequest(selectedRequest)}
-                      className="text-xs text-rose-600 hover:underline font-medium"
+                      className="text-xs text-rose-600 hover:underline font-medium cursor-pointer"
                     >
                       Hủy đơn xin nghỉ này
                     </button>
@@ -2003,7 +2049,7 @@ export default function LeaveRequests() {
                   <button
                     type="button"
                     onClick={() => handleCancelRequest(selectedRequest)}
-                    className="px-3 py-1.5 bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 active:scale-[0.98] rounded-lg text-xs font-medium transition-all"
+                    className="px-3 py-1.5 bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 active:scale-[0.98] rounded-full text-xs font-medium transition-all cursor-pointer"
                   >
                     Hủy đơn đã duyệt
                   </button>
@@ -2011,13 +2057,13 @@ export default function LeaveRequests() {
               </div>
 
               <div className="flex items-center gap-2">
-                <button
+                <SecondaryButton
                   type="button"
                   onClick={() => setDetailModalOpen(false)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-200/60 rounded-lg transition-colors"
+                  className="!text-xs"
                 >
                   Đóng
-                </button>
+                </SecondaryButton>
 
                 {canReview && selectedRequest.status === 'Pending' && (
                   <>
@@ -2025,28 +2071,33 @@ export default function LeaveRequests() {
                       type="button"
                       disabled={reviewSubmitting}
                       onClick={() => handleReview('Rejected')}
-                      className="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 font-semibold text-xs rounded-lg active:scale-[0.98] transition-all"
+                      className="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 font-semibold text-xs rounded-full active:scale-[0.98] transition-all inline-flex items-center gap-1.5 cursor-pointer"
                     >
-                      ✕ Từ chối đơn
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                      <span>Từ chối đơn</span>
                     </button>
-                    <button
+                    <PrimaryButton
                       type="button"
                       disabled={reviewSubmitting}
                       onClick={() => handleReview('Approved')}
-                      className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-lg shadow-xs active:scale-[0.98] transition-all flex items-center gap-1.5"
+                      className="!text-xs"
                     >
                       {reviewSubmitting ? (
                         <>
-                          <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                          <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-teal border-t-transparent" />
                           <span>Đang duyệt...</span>
                         </>
                       ) : (
                         <>
-                          <span>✓</span>
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
                           <span>Phê duyệt đơn</span>
                         </>
                       )}
-                    </button>
+                    </PrimaryButton>
                   </>
                 )}
               </div>
@@ -2059,36 +2110,43 @@ export default function LeaveRequests() {
       {/* 10. MODAL XÁC NHẬN HỦY ĐƠN ĐÃ DUYỆT (REVOKE APPROVED LEAVE)   */}
       {/* ============================================================ */}
       {cancelApprovedModal && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-[2px]">
-          <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden modal-content">
-            <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4 bg-rose-50/40">
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4">
+          <div
+            className="fixed inset-0 bg-teal-deep/40 backdrop-blur-[2px] modal-backdrop"
+            onClick={() => !cancelApprovedModal.submitting && setCancelApprovedModal(null)}
+          />
+          <div className="relative z-10 w-full max-w-md rounded-card-lg bg-surface border border-line/60 shadow-modal modal-panel overflow-hidden">
+            <div className="flex items-center justify-between border-b border-line/60 px-5 py-4 bg-rose-50/40">
               <div>
-                <h3 className="text-sm md:text-base font-bold text-slate-900">
+                <h3 className="text-sm md:text-base font-bold text-ink">
                   Hủy đơn nghỉ phép đã duyệt (#{cancelApprovedModal.req.id})
                 </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-ink-secondary mt-0.5">
                   {cancelApprovedModal.req.studentName || cancelApprovedModal.req.teacherName} •{' '}
                   {formatDateWithWeekday(cancelApprovedModal.req.leaveDate)}
                 </p>
               </div>
-              <button
-                type="button"
+              <IconButton
+                variant="neutral"
                 disabled={cancelApprovedModal.submitting}
                 onClick={() => setCancelApprovedModal(null)}
-                className="h-8 w-8 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center"
+                title="Đóng"
+                className="!h-8 !w-8"
               >
-                ✕
-              </button>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </IconButton>
             </div>
 
             <form onSubmit={handleConfirmCancelApproved} className="p-5 space-y-4 text-xs">
               {cancelApprovedModal.error && (
-                <div className="rounded-lg bg-rose-50 border border-rose-200 p-3 text-rose-700 font-medium">
+                <div className="rounded-xl bg-rose-50 border border-rose-200 p-3 text-rose-700 font-medium">
                   ⚠️ {cancelApprovedModal.error}
                 </div>
               )}
 
-              <div className="rounded-xl border border-blue-200 bg-blue-50/80 p-3.5 text-blue-900 leading-relaxed">
+              <div className="rounded-card border border-line bg-mint-canvas/70 p-3.5 text-teal leading-relaxed">
                 {cancelApprovedModal.req.requesterType === 'Teacher' ? (
                   <p>
                     🔄 Các buổi học bị tạm hoãn từ đơn này sẽ được khôi phục lại trạng thái{' '}
@@ -2102,7 +2160,7 @@ export default function LeaveRequests() {
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-700 mb-1">
+                <label className="block font-semibold text-ink mb-1">
                   Lý do hủy đơn đã duyệt <span className="text-rose-500">*</span>
                 </label>
                 <textarea
@@ -2118,23 +2176,23 @@ export default function LeaveRequests() {
                       error: '',
                     }))
                   }
-                  className="w-full p-2.5 bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 text-slate-800"
+                  className="w-full rounded-2xl border border-line bg-surface px-4 py-3 text-sm text-ink placeholder:text-ink-muted transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
-                <button
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-line/60">
+                <SecondaryButton
                   type="button"
                   disabled={cancelApprovedModal.submitting}
                   onClick={() => setCancelApprovedModal(null)}
-                  className="px-4 py-2 rounded-lg border border-slate-300 bg-white font-semibold text-slate-700 hover:bg-slate-50"
+                  className="!text-xs"
                 >
                   Đóng
-                </button>
+                </SecondaryButton>
                 <button
                   type="submit"
                   disabled={cancelApprovedModal.submitting || !cancelApprovedModal.reason.trim()}
-                  className="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold shadow-xs active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 rounded-full bg-rose-600 hover:bg-rose-700 text-white font-semibold shadow-xs active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {cancelApprovedModal.submitting ? 'Đang xử lý...' : 'Xác nhận hủy đơn'}
                 </button>

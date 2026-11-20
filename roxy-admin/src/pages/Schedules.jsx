@@ -2,6 +2,14 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axiosClient from '../api/axiosClient';
 import ConfirmModal from '../components/ConfirmModal';
+import {
+  PageHeader,
+  Card,
+  PrimaryButton,
+  SecondaryButton,
+  IconButton,
+  Badge,
+} from '../components/ui';
 
 export default function Schedules() {
   const navigate = useNavigate();
@@ -416,25 +424,25 @@ export default function Schedules() {
     switch (status) {
       case 'Completed':
         return (
-          <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] px-2 py-0.5 rounded-full font-medium inline-flex items-center gap-1">
+          <Badge variant="emerald">
             <span className="bg-emerald-500 w-1.5 h-1.5 rounded-full" />
             Đã hoàn thành
-          </span>
+          </Badge>
         );
       case 'Cancelled':
         return (
-          <span className="bg-rose-50 text-rose-700 border border-rose-200 line-through text-[11px] px-2 py-0.5 rounded-full font-medium inline-flex items-center gap-1">
+          <Badge variant="rose" className="line-through">
             <span className="bg-rose-500 w-1.5 h-1.5 rounded-full" />
             Đã hủy
-          </span>
+          </Badge>
         );
       case 'Scheduled':
       default:
         return (
-          <span className="bg-blue-50 text-blue-700 border border-blue-200 text-[11px] px-2 py-0.5 rounded-full font-medium inline-flex items-center gap-1">
+          <Badge variant="blue">
             <span className="bg-blue-500 w-1.5 h-1.5 rounded-full" />
             Đã lên lịch
-          </span>
+          </Badge>
         );
     }
   };
@@ -445,19 +453,19 @@ export default function Schedules() {
       key={item.id}
       onClick={() => setDetailSchedule(item)}
       title="Nhấn để xem chi tiết buổi học"
-      className="bg-white rounded-lg p-3 border border-slate-200 shadow-xs hover:border-blue-300 hover:shadow-sm transition-all duration-150 flex flex-col gap-1.5 text-left cursor-pointer"
+      className="bg-surface rounded-card p-3 border border-line/80 shadow-card hover:border-teal/40 hover:shadow-card-hover transition-all duration-150 flex flex-col gap-1.5 text-left cursor-pointer"
     >
       {/* Hàng 1: Giờ học + Badge trạng thái */}
       <div className="flex items-center justify-between gap-1 flex-wrap">
-        <span className="text-xs font-semibold text-slate-700 flex items-center gap-1">
+        <span className="text-xs font-semibold text-ink flex items-center gap-1">
           🕒 {formatTime(item.startTime)} – {formatTime(item.endTime)}
         </span>
         <div className="flex items-center gap-1 flex-wrap">
           {renderStatusBadge(item.status)}
           {item.note && item.note.includes('CẦN GIÁO VIÊN DẠY THAY') && (
-            <span className="bg-amber-100 text-amber-800 border border-amber-300 text-[10px] px-2 py-0.5 rounded-full font-semibold inline-flex items-center gap-1">
+            <Badge variant="amber" className="text-[10px]">
               ⚠️ Cần GV dạy thay
-            </span>
+            </Badge>
           )}
         </div>
       </div>
@@ -469,13 +477,13 @@ export default function Schedules() {
           navigate(`/attendance?scheduleId=${item.id}`);
         }}
         title="Nhấn để điểm danh"
-        className="font-semibold text-blue-700 text-sm leading-snug hover:underline cursor-pointer"
+        className="font-semibold text-teal text-sm leading-snug hover:text-gold-active hover:underline cursor-pointer"
       >
         {item.className}
       </h4>
 
       {/* Hàng 3: Phòng & Cơ sở */}
-      <div className="text-xs text-slate-500 flex flex-wrap items-center gap-x-2 gap-y-1">
+      <div className="text-xs text-ink-secondary flex flex-wrap items-center gap-x-2 gap-y-1">
         <span>🚪 {item.room || 'Chưa xếp phòng'}</span>
         {item.branchName && (
           <>
@@ -486,59 +494,62 @@ export default function Schedules() {
       </div>
 
       {/* Hàng 4: Giáo viên chính & Giáo viên dạy thay */}
-      <div className="text-xs text-slate-600 flex items-center gap-1">
+      <div className="text-xs text-ink-secondary flex items-center gap-1">
         <span>👩‍🏫 GV: {item.mainTeacherName || 'Chưa phân công'}</span>
       </div>
 
       {item.substituteTeacherName && (
-        <div className="bg-amber-50 text-amber-800 border border-amber-200 rounded px-1.5 py-0.5 text-[11px] font-medium flex items-center gap-1">
+        <div className="bg-amber-50 text-amber-800 border border-amber-200 rounded-lg px-2 py-0.5 text-[11px] font-medium flex items-center gap-1">
           <span>⚠️ Dạy thay: {item.substituteTeacherName}</span>
         </div>
       )}
 
       {/* Ghi chú nếu có (tối đa 2 dòng, nhấn vào thẻ để xem đủ) */}
       {item.note && (
-        <p className="text-[11px] text-slate-500 italic bg-slate-50 rounded px-1.5 py-0.5 border border-slate-100 line-clamp-2">
+        <p className="text-[11px] text-ink-secondary italic bg-surface-subtle rounded-lg px-2 py-1 border border-line/60 line-clamp-2">
           💬 {item.note}
         </p>
       )}
 
       {/* Hàng 5: Action Buttons (gọn dạng icon có tooltip) */}
       <div
-        className="mt-1 pt-2 border-t border-slate-100 flex items-center justify-end gap-1"
+        className="mt-1 pt-2 border-t border-line/60 flex items-center justify-end gap-1"
         onClick={(e) => e.stopPropagation()}
       >
-        <button
-          type="button"
+        <IconButton
+          variant="neutral"
           onClick={() => navigate(`/attendance?scheduleId=${item.id}`)}
-          className="inline-flex h-8 w-8 items-center justify-center bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 text-xs font-semibold rounded-md active:scale-95 transition-all cursor-pointer shrink-0"
           title="Điểm danh buổi học này"
-          aria-label="Điểm danh buổi học này"
+          className="!h-8 !w-8 !bg-emerald-50 !border-emerald-200 !text-emerald-700 hover:!bg-emerald-100"
         >
-          ✓
-        </button>
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        </IconButton>
 
         {canCreateEdit && (
           <>
-            <button
-              type="button"
+            <IconButton
+              variant="neutral"
               onClick={() => handleOpenEditModal(item)}
-              className="inline-flex h-8 w-8 items-center justify-center text-slate-500 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors cursor-pointer shrink-0"
               title="Chỉnh sửa buổi học"
-              aria-label="Chỉnh sửa buổi học"
+              className="!h-8 !w-8"
             >
-              ✏️
-            </button>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+              </svg>
+            </IconButton>
             {canDelete && (
-              <button
-                type="button"
+              <IconButton
+                variant="danger"
                 onClick={() => handleDeleteSchedule(item.id)}
-                className="inline-flex h-8 w-8 items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors cursor-pointer shrink-0"
                 title="Xóa buổi học"
-                aria-label="Xóa buổi học"
+                className="!h-8 !w-8"
               >
-                🗑️
-              </button>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </IconButton>
             )}
           </>
         )}
@@ -549,38 +560,31 @@ export default function Schedules() {
   return (
     <div className="space-y-4 max-w-full">
       {/* HEADER TRANG & THANH ĐIỀU HƯỚNG TUẦN */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-200 pb-4">
-        <div>
-          <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900">
-            Lịch học
-          </h1>
-          <p className="text-xs md:text-sm text-slate-500 mt-0.5">
-            Quản lý lịch giảng dạy theo tuần, theo chi nhánh và phân công giáo viên
-          </p>
-        </div>
-
-        {/* Nút Tạo buổi học (SuperAdmin, BranchManager và Teacher) */}
-        {canCreateEdit && (
-          <button
-            type="button"
-            onClick={() => handleOpenCreateModal()}
-            className="inline-flex items-center justify-center gap-1.5 bg-blue-600 text-white font-medium hover:bg-blue-700 active:scale-[0.98] rounded-lg shadow-xs min-h-[40px] px-4 text-xs md:text-sm transition-all cursor-pointer"
-          >
-            <span>+</span>
-            <span>Tạo buổi học</span>
-          </button>
-        )}
-      </div>
+      <PageHeader
+        eyebrow="Thời khóa biểu"
+        title="Lịch học"
+        description="Quản lý lịch giảng dạy theo tuần, theo chi nhánh và phân công giáo viên"
+        actions={
+          canCreateEdit && (
+            <PrimaryButton type="button" onClick={() => handleOpenCreateModal()}>
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              <span>Tạo buổi học</span>
+            </PrimaryButton>
+          )
+        }
+      />
 
       {/* THANH CÔNG CỤ: CHUYỂN TUẦN + BỘ LỌC */}
-      <div className="bg-white rounded-xl p-3.5 border border-slate-200 shadow-xs space-y-3">
+      <Card className="p-4 space-y-3">
         {/* Hàng 1: Điều hướng tuần */}
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-1.5">
             <button
               type="button"
               onClick={handlePrevWeek}
-              className="px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg text-xs font-medium text-slate-700 active:scale-95 transition-all"
+              className="px-3 py-1.5 rounded-full border border-line bg-surface hover:bg-mint-canvas text-teal text-xs font-medium active:scale-95 transition-all cursor-pointer"
               title="Tuần trước"
             >
               ← Tuần trước
@@ -588,7 +592,7 @@ export default function Schedules() {
             <button
               type="button"
               onClick={handleTodayWeek}
-              className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg text-xs font-semibold active:scale-95 transition-all"
+              className="px-3.5 py-1.5 rounded-full bg-gold-soft border border-gold/40 text-teal hover:bg-gold-soft/80 text-xs font-semibold active:scale-95 transition-all cursor-pointer"
               title="Về tuần hôm nay"
             >
               Hôm nay
@@ -596,14 +600,14 @@ export default function Schedules() {
             <button
               type="button"
               onClick={handleNextWeek}
-              className="px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg text-xs font-medium text-slate-700 active:scale-95 transition-all"
+              className="px-3 py-1.5 rounded-full border border-line bg-surface hover:bg-mint-canvas text-teal text-xs font-medium active:scale-95 transition-all cursor-pointer"
               title="Tuần sau"
             >
               Tuần sau →
             </button>
           </div>
 
-          <div className="text-xs md:text-sm font-semibold text-slate-800 flex items-center gap-1">
+          <div className="text-xs md:text-sm font-semibold text-teal flex items-center gap-1.5">
             <span>📅</span>
             <span>
               Tuần: {formatHeaderDate(weekDays[0])} – {formatHeaderDate(weekDays[6])} /{' '}
@@ -613,17 +617,17 @@ export default function Schedules() {
         </div>
 
         {/* Hàng 2: Bộ lọc (Chi nhánh, Lớp, Giáo viên) */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 border-t border-slate-100 text-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 border-t border-line/60 text-xs">
           {/* Lọc Chi nhánh */}
           <div>
-            <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+            <label className="block text-[11px] font-semibold uppercase tracking-wider text-ink-muted mb-1">
               Chi nhánh:
             </label>
             <select
               disabled={isBranchManager}
               value={branchFilter}
               onChange={(e) => setBranchFilter(e.target.value)}
-              className="w-full h-9 rounded-lg border border-slate-300 bg-white px-2.5 text-xs text-slate-800 focus:border-blue-600 focus:outline-none disabled:bg-slate-100 disabled:text-slate-500"
+              className="w-full h-10 rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
             >
               {isSuperAdmin && <option value="">-- Tất cả chi nhánh --</option>}
               {branches.map((b) => (
@@ -636,13 +640,13 @@ export default function Schedules() {
 
           {/* Lọc Lớp học */}
           <div>
-            <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+            <label className="block text-[11px] font-semibold uppercase tracking-wider text-ink-muted mb-1">
               Lớp học:
             </label>
             <select
               value={classFilter}
               onChange={(e) => setClassFilter(e.target.value)}
-              className="w-full h-9 rounded-lg border border-slate-300 bg-white px-2.5 text-xs text-slate-800 focus:border-blue-600 focus:outline-none"
+              className="w-full h-10 rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
             >
               <option value="">-- Tất cả lớp học --</option>
               {classes.map((c) => (
@@ -655,13 +659,13 @@ export default function Schedules() {
 
           {/* Lọc Giáo viên */}
           <div>
-            <label className="block text-[11px] font-semibold text-slate-600 mb-1">
+            <label className="block text-[11px] font-semibold uppercase tracking-wider text-ink-muted mb-1">
               Giáo viên:
             </label>
             <select
               value={teacherFilter}
               onChange={(e) => setTeacherFilter(e.target.value)}
-              className="w-full h-9 rounded-lg border border-slate-300 bg-white px-2.5 text-xs text-slate-800 focus:border-blue-600 focus:outline-none"
+              className="w-full h-10 rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
             >
               <option value="">-- Tất cả giáo viên --</option>
               {teachers.map((t) => (
@@ -672,11 +676,11 @@ export default function Schedules() {
             </select>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* THÔNG BÁO LỖI HOẶC LOADING */}
       {error && (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-xs md:text-sm text-rose-700 flex items-center justify-between">
+        <div className="rounded-card border border-rose-200 bg-rose-50 p-4 text-xs md:text-sm text-rose-700 flex items-center justify-between">
           <span>{error}</span>
           <button
             type="button"
@@ -689,10 +693,10 @@ export default function Schedules() {
       )}
 
       {loading ? (
-        <div className="rounded-xl bg-white border border-slate-200 p-12 text-center text-slate-500 shadow-xs flex flex-col items-center justify-center gap-3">
-          <div className="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin" />
+        <Card className="p-12 text-center text-ink-secondary flex flex-col items-center justify-center gap-3">
+          <div className="w-8 h-8 border-3 border-teal border-t-transparent rounded-full animate-spin" />
           <p className="text-xs md:text-sm">Đang tải lịch học...</p>
-        </div>
+        </Card>
       ) : (
         <>
           {/* 1. GIAO DIỆN DESKTOP (lg: >= 1024px) - LƯỚI 7 CỘT CUỘN NGANG KHI THIẾU CHỖ */}
@@ -706,24 +710,24 @@ export default function Schedules() {
                 return (
                   <div
                     key={dateKey}
-                    className={`min-w-[180px] rounded-xl border flex flex-col min-h-[480px] transition-colors ${
+                    className={`min-w-[180px] rounded-card border flex flex-col min-h-[480px] transition-colors ${
                     isToday
-                      ? 'border-blue-400 bg-blue-50/20 border-t-4 border-t-blue-600 shadow-xs'
-                      : 'border-slate-200 bg-slate-50/40'
+                      ? 'border-teal bg-mint-canvas/70 border-t-4 border-t-teal shadow-card'
+                      : 'border-line/80 bg-surface-subtle/60'
                   }`}
                 >
                   {/* Header cột ngày */}
-                  <div className="p-2.5 text-center border-b border-slate-100 bg-white rounded-t-lg">
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                  <div className="p-2.5 text-center border-b border-line/60 bg-surface rounded-t-card">
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted">
                       {getDayOfWeekName(index)}
                     </p>
                     <div className="mt-1 flex items-center justify-center">
                       {isToday ? (
-                        <span className="bg-blue-600 text-white w-6 h-6 rounded-full inline-flex items-center justify-center text-xs font-bold">
+                        <span className="bg-gold text-teal w-6 h-6 rounded-full inline-flex items-center justify-center text-xs font-bold">
                           {dayObj.getDate()}
                         </span>
                       ) : (
-                        <span className="text-sm font-bold text-slate-900">
+                        <span className="text-sm font-bold text-ink">
                           {dayObj.getDate()}
                         </span>
                       )}
@@ -733,13 +737,13 @@ export default function Schedules() {
                   {/* Danh sách thẻ buổi học trong ngày */}
                   <div className="p-2 space-y-2.5 flex-1 flex flex-col">
                     {daySchedules.length === 0 ? (
-                      <div className="flex-1 min-h-[140px] rounded-lg border border-dashed border-slate-200/80 bg-slate-50/50 flex flex-col items-center justify-center p-2 text-center text-xs text-slate-400">
+                      <div className="flex-1 min-h-[140px] rounded-lg border border-dashed border-line bg-surface-subtle/50 flex flex-col items-center justify-center p-2 text-center text-xs text-ink-muted">
                         <span>Trống lịch</span>
                         {canCreateEdit && (
                           <button
                             type="button"
                             onClick={() => handleOpenCreateModal(dateKey)}
-                            className="mt-1 text-[11px] text-blue-600 hover:underline cursor-pointer"
+                            className="mt-1 text-[11px] font-semibold text-teal hover:text-gold-active hover:underline cursor-pointer"
                           >
                             + Xếp lịch
                           </button>
@@ -770,12 +774,12 @@ export default function Schedules() {
                     key={dateKey}
                     type="button"
                     onClick={() => setSelectedMobileDate(dateKey)}
-                    className={`flex-1 min-w-[52px] py-2 px-1 rounded-xl text-center active:scale-95 transition-all flex flex-col items-center justify-center ${
+                    className={`flex-1 min-w-[52px] py-2 px-1 rounded-xl text-center active:scale-95 transition-all flex flex-col items-center justify-center cursor-pointer ${
                       isSelected
-                        ? 'bg-blue-600 text-white font-semibold shadow-sm'
+                        ? 'bg-teal text-gold font-semibold shadow-card'
                         : isToday
-                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                        : 'bg-white text-slate-700 border border-slate-200'
+                        ? 'bg-gold-soft text-teal border border-gold/40'
+                        : 'bg-surface text-ink-secondary border border-line'
                     }`}
                   >
                     <span className="text-[10px] uppercase font-medium">
@@ -788,8 +792,8 @@ export default function Schedules() {
                       className={`w-1.5 h-1.5 rounded-full mt-0.5 ${
                         hasSchedules
                           ? isSelected
-                            ? 'bg-white'
-                            : 'bg-blue-600'
+                            ? 'bg-gold'
+                            : 'bg-teal'
                           : 'opacity-0'
                       }`}
                     />
@@ -800,7 +804,7 @@ export default function Schedules() {
 
             {/* Tiêu đề ngày đang xem trên mobile */}
             <div className="flex items-center justify-between pt-1">
-              <h3 className="text-xs md:text-sm font-bold text-slate-800">
+              <h3 className="text-xs md:text-sm font-bold text-ink">
                 Lịch học ngày:{' '}
                 {weekDays.find((d) => formatDateISO(d) === selectedMobileDate)
                   ? `${getDayOfWeekName(
@@ -812,7 +816,7 @@ export default function Schedules() {
                 <button
                   type="button"
                   onClick={() => handleOpenCreateModal(selectedMobileDate)}
-                  className="text-xs font-semibold text-blue-600 hover:text-blue-800 cursor-pointer"
+                  className="text-xs font-semibold text-teal hover:text-gold-active cursor-pointer"
                 >
                   + Thêm buổi
                 </button>
@@ -822,18 +826,18 @@ export default function Schedules() {
             {/* Danh sách thẻ buổi học của ngày đang chọn */}
             <div className="space-y-2.5">
               {(schedulesByDate[selectedMobileDate] || []).length === 0 ? (
-                <div className="rounded-xl border border-dashed border-slate-200 bg-white p-8 text-center text-xs text-slate-400 space-y-2">
+                <Card className="border-dashed p-8 text-center text-xs text-ink-muted space-y-2">
                   <p>Không có buổi học nào được lên lịch trong ngày này.</p>
                   {canCreateEdit && (
                     <button
                       type="button"
                       onClick={() => handleOpenCreateModal(selectedMobileDate)}
-                      className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline cursor-pointer"
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-teal hover:text-gold-active hover:underline cursor-pointer"
                     >
                       + Tạo buổi học cho ngày này
                     </button>
                   )}
-                </div>
+                </Card>
               ) : (
                 schedulesByDate[selectedMobileDate].map((s) => renderScheduleCard(s))
               )}
@@ -849,51 +853,54 @@ export default function Schedules() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           {/* Backdrop Scrim */}
           <div
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-[2px] transition-opacity duration-180"
+            className="fixed inset-0 bg-teal-deep/40 backdrop-blur-[2px] modal-backdrop"
             onClick={() => !modalSubmitting && setModalOpen(false)}
           />
 
-          <div className="relative w-full max-w-lg rounded-2xl bg-white p-5 md:p-6 shadow-xl z-10 max-h-[92vh] overflow-y-auto transform-origin-center">
+          <div className="relative z-10 w-full max-w-lg rounded-card-lg bg-surface border border-line/60 p-5 md:p-6 shadow-modal modal-panel max-h-[92vh] overflow-y-auto">
             {/* Header Modal */}
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
-              <h3 className="text-base md:text-lg font-bold text-slate-900">
+            <div className="flex items-center justify-between border-b border-line/60 pb-3 mb-4">
+              <h3 className="text-base md:text-lg font-bold text-ink">
                 {editingSchedule ? 'Chỉnh sửa buổi học' : 'Tạo buổi học mới'}
               </h3>
-              <button
-                type="button"
+              <IconButton
+                variant="neutral"
                 disabled={modalSubmitting}
                 onClick={() => setModalOpen(false)}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100"
+                title="Đóng"
+                className="!h-8 !w-8"
               >
-                ✕
-              </button>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </IconButton>
             </div>
 
             {/* Báo lỗi modal nếu có */}
             {modalError && (
-              <div className="mb-4 rounded-lg bg-rose-50 border border-rose-200 p-3 text-xs text-rose-700">
+              <div className="mb-4 rounded-xl bg-rose-50 border border-rose-200 p-3 text-xs text-rose-700">
                 {modalError}
               </div>
             )}
 
             <form onSubmit={handleModalSubmit} className="space-y-3.5 text-xs md:text-sm">
               {isAttendanceLocked && (
-                <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 leading-relaxed">
+                <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 leading-relaxed">
                   <span className="font-semibold">⚠️ Buổi học đã có dữ liệu điểm danh:</span> Không thể thay đổi ngày học, giờ học hoặc trạng thái buổi học. Bạn chỉ có thể cập nhật phòng học, giáo viên dạy thay hoặc ghi chú.
                 </div>
               )}
 
               {/* 1. Chọn Lớp học (BẮT BUỘC) */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-ink mb-1">
                   Lớp học <span className="text-rose-500">*</span>
                 </label>
                 {editingSchedule ? (
-                  <div className="w-full h-10 rounded-lg border border-slate-200 bg-slate-100 px-3 flex items-center text-slate-700 font-medium">
+                  <div className="w-full h-10 rounded-full border border-line bg-surface-subtle px-4 flex items-center text-ink-secondary font-medium">
                     {editingSchedule.className}
                   </div>
                 ) : isTeacher && availableModalClasses.length === 0 ? (
-                  <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs font-medium text-amber-800">
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs font-medium text-amber-800">
                     Bạn chưa được phân công lớp nào
                   </div>
                 ) : (
@@ -904,7 +911,7 @@ export default function Schedules() {
                       onChange={(e) =>
                         setFormData((prev) => ({ ...prev, classId: e.target.value }))
                       }
-                      className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-slate-800 focus:border-blue-600 focus:outline-none"
+                      className="w-full h-10 rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
                     >
                       <option value="">-- Chọn lớp học --</option>
                       {availableModalClasses.map((cls) => {
@@ -914,7 +921,7 @@ export default function Schedules() {
                             key={cls.id}
                             value={cls.id}
                             disabled={!hasTeacher}
-                            className={!hasTeacher ? 'text-slate-400' : ''}
+                            className={!hasTeacher ? 'text-ink-muted' : ''}
                           >
                             {hasTeacher
                               ? `${cls.className} (${cls.teacherName || 'Đã có GV'})`
@@ -927,7 +934,7 @@ export default function Schedules() {
                     {/* Cảnh báo nếu lớp chưa gán GV */}
                     {formData.classId &&
                       !availableModalClasses.find((c) => c.id === Number(formData.classId))?.teacherId && (
-                        <p className="mt-1 text-[11px] text-amber-700 bg-amber-50 p-2 rounded border border-amber-200">
+                        <p className="mt-1 text-[11px] text-amber-700 bg-amber-50 p-2 rounded-xl border border-amber-200">
                           ⚠️ Lớp này chưa được phân công giáo viên phụ trách. Vui lòng vào trang
                           &quot;Quản lý Lớp học&quot; để phân công giáo viên trước khi xếp lịch.
                         </p>
@@ -938,7 +945,7 @@ export default function Schedules() {
 
               {/* 2. Ngày học */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-ink mb-1">
                   Ngày học <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -949,14 +956,14 @@ export default function Schedules() {
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, studyDate: e.target.value }))
                   }
-                  className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-slate-800 focus:border-blue-600 focus:outline-none disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"
+                  className="w-full h-10 rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
                 />
               </div>
 
               {/* 3. Giờ bắt đầu & Giờ kết thúc (BẮT BUỘC) */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-ink mb-1">
                     Giờ bắt đầu <span className="text-rose-500">*</span>
                   </label>
                   <input
@@ -967,11 +974,11 @@ export default function Schedules() {
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, startTime: e.target.value }))
                     }
-                    className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-slate-800 focus:border-blue-600 focus:outline-none disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"
+                    className="w-full h-10 rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-ink mb-1">
                     Giờ kết thúc <span className="text-rose-500">*</span>
                   </label>
                   <input
@@ -982,14 +989,14 @@ export default function Schedules() {
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, endTime: e.target.value }))
                     }
-                    className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-slate-800 focus:border-blue-600 focus:outline-none disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"
+                    className="w-full h-10 rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
 
               {/* 4. Phòng học */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-ink mb-1">
                   Phòng học
                 </label>
                 <input
@@ -1000,13 +1007,13 @@ export default function Schedules() {
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, room: e.target.value }))
                   }
-                  className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-slate-800 focus:border-blue-600 focus:outline-none"
+                  className="w-full h-10 rounded-full border border-line bg-surface px-4 text-sm text-ink placeholder:text-ink-muted transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
                 />
               </div>
 
               {/* 5. Giáo viên dạy thay (Tùy chọn) */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-ink mb-1">
                   Giáo viên dạy thay (Tùy chọn)
                 </label>
                 <select
@@ -1017,7 +1024,7 @@ export default function Schedules() {
                       substituteTeacherId: e.target.value,
                     }))
                   }
-                  className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-slate-800 focus:border-blue-600 focus:outline-none"
+                  className="w-full h-10 rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
                 >
                   <option value="">-- Không có (Giáo viên chính phụ trách) --</option>
                   {teachers.map((t) => (
@@ -1026,7 +1033,7 @@ export default function Schedules() {
                     </option>
                   ))}
                 </select>
-                <p className="mt-1 text-[11px] text-slate-500">
+                <p className="mt-1 text-[11px] text-ink-muted">
                   Chỉ chọn khi giáo viên chính bận việc hoặc nghỉ phép đột xuất.
                 </p>
               </div>
@@ -1034,7 +1041,7 @@ export default function Schedules() {
               {/* 6. Trạng thái buổi học (Chỉ khi sửa) */}
               {editingSchedule && (
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-ink mb-1">
                     Trạng thái buổi học
                   </label>
                   <select
@@ -1043,7 +1050,7 @@ export default function Schedules() {
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, status: e.target.value }))
                     }
-                    className="w-full h-10 rounded-lg border border-slate-300 bg-white px-3 text-slate-800 focus:border-blue-600 focus:outline-none disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"
+                    className="w-full h-10 rounded-full border border-line bg-surface px-4 text-sm text-ink transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:bg-surface-subtle disabled:text-ink-muted disabled:cursor-not-allowed"
                   >
                     <option value="Scheduled">Đã lên lịch (Scheduled)</option>
                     <option value="Completed">Đã hoàn thành / Đã điểm danh (Completed)</option>
@@ -1054,7 +1061,7 @@ export default function Schedules() {
 
               {/* 7. Ghi chú buổi học */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-semibold text-ink mb-1">
                   Ghi chú dặn dò
                 </label>
                 <textarea
@@ -1065,37 +1072,35 @@ export default function Schedules() {
                   onChange={(e) =>
                     setFormData((prev) => ({ ...prev, note: e.target.value }))
                   }
-                  className="w-full rounded-lg border border-slate-300 bg-white p-2.5 text-slate-800 focus:border-blue-600 focus:outline-none"
+                  className="w-full rounded-2xl border border-line bg-surface px-4 py-3 text-sm text-ink placeholder:text-ink-muted transition-[border-color,box-shadow] duration-150 focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
                 />
               </div>
 
               {/* Footer modal */}
-              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
-                <button
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-line/60">
+                <SecondaryButton
                   type="button"
                   disabled={modalSubmitting}
                   onClick={() => setModalOpen(false)}
-                  className="h-9 px-4 rounded-lg border border-slate-300 bg-white font-medium text-slate-700 hover:bg-slate-50 active:scale-95 transition-all"
                 >
                   Hủy
-                </button>
-                <button
+                </SecondaryButton>
+                <PrimaryButton
                   type="submit"
                   disabled={
                     modalSubmitting ||
                     (!editingSchedule && isTeacher && availableModalClasses.length === 0)
                   }
-                  className="h-9 px-5 rounded-lg bg-blue-600 font-semibold text-white hover:bg-blue-700 active:scale-95 transition-all inline-flex items-center gap-1.5 shadow-xs disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {modalSubmitting ? (
                     <>
-                      <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span className="w-3.5 h-3.5 border-2 border-teal border-t-transparent rounded-full animate-spin" />
                       <span>Đang lưu...</span>
                     </>
                   ) : (
                     <span>{editingSchedule ? 'Cập nhật' : 'Tạo buổi học'}</span>
                   )}
-                </button>
+                </PrimaryButton>
               </div>
             </form>
           </div>
@@ -1112,88 +1117,88 @@ export default function Schedules() {
           aria-labelledby="schedule-detail-title"
         >
           <div
-            className="modal-backdrop fixed inset-0 bg-slate-900/40 backdrop-blur-[2px]"
+            className="fixed inset-0 bg-teal-deep/40 backdrop-blur-[2px] modal-backdrop"
             onClick={() => setDetailSchedule(null)}
           />
-          <div className="modal-panel relative z-10 w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl space-y-4">
-            <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-3">
+          <div className="relative z-10 w-full max-w-md rounded-card-lg bg-surface border border-line/60 p-6 shadow-modal modal-panel space-y-4">
+            <div className="flex items-start justify-between gap-3 border-b border-line/60 pb-3">
               <div>
-                <h3 id="schedule-detail-title" className="text-base font-bold text-slate-900">
+                <h3 id="schedule-detail-title" className="text-base font-bold text-ink">
                   {detailSchedule.className}
                 </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-ink-secondary mt-0.5">
                   📅 {detailSchedule.studyDate} • 🕒 {formatTime(detailSchedule.startTime)} –{' '}
                   {formatTime(detailSchedule.endTime)}
                 </p>
               </div>
-              <button
-                type="button"
+              <IconButton
+                variant="neutral"
                 onClick={() => setDetailSchedule(null)}
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 cursor-pointer"
-                aria-label="Đóng"
+                title="Đóng"
+                className="!h-8 !w-8 shrink-0"
               >
-                ✕
-              </button>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </IconButton>
             </div>
 
-            <div className="space-y-2.5 text-xs md:text-sm text-slate-700">
+            <div className="space-y-2.5 text-xs md:text-sm text-ink">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-slate-500">Trạng thái:</span>
+                <span className="text-ink-secondary">Trạng thái:</span>
                 {renderStatusBadge(detailSchedule.status)}
               </div>
               <div className="flex items-start justify-between gap-3">
-                <span className="text-slate-500 shrink-0">Cơ sở:</span>
+                <span className="text-ink-secondary shrink-0">Cơ sở:</span>
                 <span className="font-medium text-right break-words">
                   {detailSchedule.branchName || '—'}
                 </span>
               </div>
               <div className="flex items-start justify-between gap-3">
-                <span className="text-slate-500 shrink-0">Phòng học:</span>
+                <span className="text-ink-secondary shrink-0">Phòng học:</span>
                 <span className="font-medium text-right">
                   {detailSchedule.room || 'Chưa xếp phòng'}
                 </span>
               </div>
               <div className="flex items-start justify-between gap-3">
-                <span className="text-slate-500 shrink-0">Giáo viên chính:</span>
+                <span className="text-ink-secondary shrink-0">Giáo viên chính:</span>
                 <span className="font-medium text-right">
                   {detailSchedule.mainTeacherName || 'Chưa phân công'}
                 </span>
               </div>
               {detailSchedule.substituteTeacherName && (
                 <div className="flex items-start justify-between gap-3">
-                  <span className="text-slate-500 shrink-0">Giáo viên dạy thay:</span>
+                  <span className="text-ink-secondary shrink-0">Giáo viên dạy thay:</span>
                   <span className="font-medium text-amber-700 text-right">
                     {detailSchedule.substituteTeacherName}
                   </span>
                 </div>
               )}
-              <div className="pt-2 border-t border-slate-100">
-                <p className="text-xs font-semibold text-slate-600 mb-1">Ghi chú buổi học</p>
-                <p className="whitespace-pre-line rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs leading-relaxed text-slate-700">
+              <div className="pt-2 border-t border-line/60">
+                <p className="text-xs font-semibold text-ink-secondary mb-1">Ghi chú buổi học</p>
+                <p className="whitespace-pre-line rounded-xl border border-line bg-surface-subtle p-3 text-xs leading-relaxed text-ink">
                   {detailSchedule.note || 'Không có ghi chú.'}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
-              <button
+            <div className="flex items-center justify-end gap-2 border-t border-line/60 pt-3">
+              <SecondaryButton
                 type="button"
                 onClick={() => setDetailSchedule(null)}
-                className="min-h-[38px] rounded-lg border border-slate-300 bg-white px-4 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 cursor-pointer"
               >
                 Đóng
-              </button>
-              <button
+              </SecondaryButton>
+              <PrimaryButton
                 type="button"
                 onClick={() => {
                   const id = detailSchedule.id;
                   setDetailSchedule(null);
                   navigate(`/attendance?scheduleId=${id}`);
                 }}
-                className="min-h-[38px] rounded-lg bg-blue-600 px-4 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 cursor-pointer"
               >
                 Điểm danh buổi này
-              </button>
+              </PrimaryButton>
             </div>
           </div>
         </div>
