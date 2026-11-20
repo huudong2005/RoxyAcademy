@@ -3,7 +3,7 @@ name: mobile
 description: "Zalo Mini App Roxy Academy (giai đoạn 2): phụ huynh/học viên đăng nhập bằng Zalo, gọi cùng API backend."
 subagent: true
 mainAgent: false
-model: flash
+model: inherit
 tools:
   - grep_search
   - find_by_name

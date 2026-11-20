@@ -3,7 +3,7 @@ name: backend
 description: "Backend Roxy Academy: ASP.NET Core 9 + MSSQL, API, phân quyền theo chi nhánh/vai trò, không đổi schema khi chưa có lệnh."
 subagent: true
 mainAgent: false
-model: flash
+model: inherit
 tools:
   - grep_search
   - find_by_name

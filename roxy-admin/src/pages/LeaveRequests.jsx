@@ -1069,7 +1069,7 @@ export default function LeaveRequests() {
                     <th className="px-4 py-3 max-w-xs">Lý do xin nghỉ</th>
                     <th className="px-4 py-3">Trạng thái</th>
                     <th className="px-4 py-3">Người duyệt &amp; Ghi chú</th>
-                    <th className="px-4 py-3 text-right">Thao tác</th>
+                    <th className="px-4 py-3 text-center whitespace-nowrap">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -1221,8 +1221,8 @@ export default function LeaveRequests() {
                         </td>
 
                         {/* Cột 6: Thao tác */}
-                        <td className="px-4 py-3.5 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                          <div className="flex items-center justify-end gap-1.5">
+                        <td className="px-4 py-3.5 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center justify-center gap-1.5">
                             {/* Phím duyệt nhanh cho SuperAdmin & BranchManager khi Pending */}
                             {canReview && isPending && (
                               <>

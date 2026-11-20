@@ -3,7 +3,7 @@ name: architecture
 description: "Kiến trúc hệ thống Roxy Academy: đối chiếu API/DB đã có với yêu cầu, vẽ sơ đồ hệ thống, luồng phân quyền theo chi nhánh/vai trò."
 subagent: true
 mainAgent: false
-model: flash
+model: inherit
 tools:
   - grep_search
   - find_by_name

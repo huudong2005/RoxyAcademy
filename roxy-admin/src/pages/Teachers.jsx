@@ -591,7 +591,7 @@ export default function Teachers() {
                     <th className="px-2 py-2.5">Trạng thái</th>
                     <th className="px-2 py-2.5">Mật khẩu</th>
                     <th className="px-2 py-2.5">Tạo / Đăng nhập</th>
-                    <th scope="col" className="px-2 py-2.5 text-right whitespace-nowrap sticky right-0 z-20 bg-surface-subtle shadow-[-4px_0_8px_-4px_rgba(30,46,43,0.08)]">Thao tác</th>
+                    <th scope="col" className="px-2 py-2.5 text-center whitespace-nowrap sticky right-0 z-20 bg-surface-subtle shadow-[-4px_0_8px_-4px_rgba(30,46,43,0.08)]">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line/60 text-sm">
@@ -658,10 +658,10 @@ export default function Teachers() {
                       </td>
 
                       <td
-                        className="px-2 py-2.5 whitespace-nowrap text-right sticky right-0 z-10 bg-surface shadow-[-4px_0_8px_-4px_rgba(30,46,43,0.08)]"
+                        className="px-2 py-2.5 whitespace-nowrap text-center sticky right-0 z-10 bg-surface shadow-[-4px_0_8px_-4px_rgba(30,46,43,0.08)]"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <div className="inline-flex items-center justify-end gap-1">
+                        <div className="inline-flex items-center justify-center gap-1">
                           <IconButton
                             variant="neutral"
                             onClick={() => setDetailTarget(t)}

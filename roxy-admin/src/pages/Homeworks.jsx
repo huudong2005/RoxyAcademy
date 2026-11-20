@@ -884,7 +884,7 @@ export default function Homeworks() {
                 <th scope="col" className="px-4 py-3.5">Hạn nộp bài</th>
                 <th scope="col" className="px-4 py-3.5">Tài liệu đính kèm</th>
                 <th scope="col" className="px-4 py-3.5">Tiến độ nộp &amp; Chấm</th>
-                <th scope="col" className="px-4 py-3.5 text-right">Thao tác</th>
+                <th scope="col" className="px-4 py-3.5 text-center whitespace-nowrap">Thao tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
@@ -1013,8 +1013,8 @@ export default function Homeworks() {
                       </td>
 
                       {/* Cột 6: Thao tác */}
-                      <td className="px-4 py-3 whitespace-nowrap text-right">
-                        <div className="inline-flex items-center gap-1.5">
+                      <td className="px-4 py-3 whitespace-nowrap text-center">
+                        <div className="inline-flex items-center justify-center gap-1.5">
                           <button
                             type="button"
                             onClick={() => handleOpenDetail(hw)}

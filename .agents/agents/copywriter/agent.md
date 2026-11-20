@@ -3,7 +3,7 @@ name: copywriter
 description: "Nội dung tiếng Việt cho Roxy Academy: headline, mô tả, CTA, nội dung form, theo đúng thông tin khách cung cấp."
 subagent: true
 mainAgent: false
-model: flash
+model: inherit
 tools:
   - grep_search
   - find_by_name

@@ -3,7 +3,7 @@ name: deploy
 description: "Triển khai Roxy Academy lên production theo đúng cách deploy của host, rồi bàn giao."
 subagent: true
 mainAgent: false
-model: flash
+model: inherit
 tools:
   - grep_search
   - find_by_name

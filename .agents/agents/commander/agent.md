@@ -3,7 +3,7 @@ name: commander
 description: "Chỉ huy dự án Roxy Academy: phân tích BRIEF, chia việc cho 8 sub-agent, nghiệm thu bàn giao. Không tự sửa code."
 subagent: true
 mainAgent: true
-model: flash
+model: inherit
 tools:
   - grep_search
   - find_by_name

@@ -258,10 +258,10 @@ export default function ClassList() {
         type === 'checkbox'
           ? checked
           : type === 'number'
-          ? value === ''
-            ? ''
-            : Number(value)
-          : value,
+            ? value === ''
+              ? ''
+              : Number(value)
+            : value,
     }));
   };
 
@@ -804,7 +804,7 @@ export default function ClassList() {
                 <th scope="col" className="px-2 py-2.5">Hình thức &amp; Lịch</th>
                 <th scope="col" className="px-2 py-2.5">Học phí</th>
                 <th scope="col" className="px-2 py-2.5">Trạng thái</th>
-                <th scope="col" className="px-2 py-2.5 text-right sticky right-0 z-20 bg-surface-subtle shadow-[-4px_0_8px_-4px_rgba(30,46,43,0.08)]">Thao tác</th>
+                <th scope="col" className="px-2 py-2.5 text-center whitespace-nowrap sticky right-0 z-20 bg-surface-subtle shadow-[-4px_0_8px_-4px_rgba(30,46,43,0.08)]">Thao tác</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line/60 bg-surface">
@@ -869,11 +869,10 @@ export default function ClassList() {
                     <td className="px-2 py-2.5 text-ink-secondary">
                       <div className="flex flex-wrap items-center gap-1">
                         <span
-                          className={`inline-flex items-center whitespace-nowrap rounded-full border px-2 py-0.5 text-xs font-mono font-semibold ${
-                            cls.maxStudents && (cls.activeStudentsCount ?? 0) >= cls.maxStudents
+                          className={`inline-flex items-center whitespace-nowrap rounded-full border px-2 py-0.5 text-xs font-mono font-semibold ${cls.maxStudents && (cls.activeStudentsCount ?? 0) >= cls.maxStudents
                               ? 'bg-amber-50 text-amber-800 border-amber-200'
                               : 'bg-surface-subtle text-ink-secondary border-line'
-                          }`}
+                            }`}
                         >
                           {cls.activeStudentsCount ?? 0} / {cls.maxStudents ?? '—'} học viên
                         </span>
@@ -906,8 +905,8 @@ export default function ClassList() {
                     </td>
 
                     {/* Cột 9: Thao tác */}
-                    <td className="px-2 py-2.5 whitespace-nowrap text-right sticky right-0 z-10 bg-surface shadow-[-4px_0_8px_-4px_rgba(30,46,43,0.08)]">
-                      <div className="inline-flex items-center gap-1.5">
+                    <td className="px-2 py-2.5 whitespace-nowrap text-center sticky right-0 z-10 bg-surface shadow-[-4px_0_8px_-4px_rgba(30,46,43,0.08)]">
+                      <div className="inline-flex items-center justify-center gap-1.5">
                         <IconButton
                           variant="neutral"
                           onClick={() => handleOpenDetail(cls)}
@@ -1153,11 +1152,10 @@ export default function ClassList() {
                     required
                     value={formData.maxStudents}
                     onChange={handleChange}
-                    className={`w-full rounded-full border bg-surface px-4 py-2.5 text-sm text-ink focus:outline-none ${
-                      editingClass && Number(formData.maxStudents) < (editingClass.activeStudentsCount ?? 0)
+                    className={`w-full rounded-full border bg-surface px-4 py-2.5 text-sm text-ink focus:outline-none ${editingClass && Number(formData.maxStudents) < (editingClass.activeStudentsCount ?? 0)
                         ? 'border-rose-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-100'
                         : 'border-line focus:border-gold focus:ring-2 focus:ring-gold/25'
-                    }`}
+                      }`}
                   />
                   {editingClass && (
                     <p className="mt-1 text-[11px] text-ink-muted">
@@ -1367,11 +1365,10 @@ export default function ClassList() {
               <button
                 type="button"
                 onClick={() => setDetailTab('students')}
-                className={`py-3 px-4 text-xs md:text-sm font-semibold border-b-2 transition-colors duration-150 cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
-                  detailTab === 'students'
+                className={`py-3 px-4 text-xs md:text-sm font-semibold border-b-2 transition-colors duration-150 cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${detailTab === 'students'
                     ? 'border-teal text-teal'
                     : 'border-transparent text-ink-muted hover:text-ink'
-                }`}
+                  }`}
               >
                 <span>🎓 Học viên trong lớp</span>
                 <Badge variant="gold" className="normal-case tracking-normal px-2 py-0.5 text-[11px]">
@@ -1382,11 +1379,10 @@ export default function ClassList() {
               <button
                 type="button"
                 onClick={() => setDetailTab('progress')}
-                className={`py-3 px-4 text-xs md:text-sm font-semibold border-b-2 transition-colors duration-150 cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
-                  detailTab === 'progress'
+                className={`py-3 px-4 text-xs md:text-sm font-semibold border-b-2 transition-colors duration-150 cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${detailTab === 'progress'
                     ? 'border-teal text-teal'
                     : 'border-transparent text-ink-muted hover:text-ink'
-                }`}
+                  }`}
               >
                 <span>📖 Tiến độ bài học</span>
                 <Badge variant="gold" className="normal-case tracking-normal px-2 py-0.5 text-[11px]">
@@ -1397,11 +1393,10 @@ export default function ClassList() {
               <button
                 type="button"
                 onClick={() => setDetailTab('info')}
-                className={`py-3 px-4 text-xs md:text-sm font-semibold border-b-2 transition-colors duration-150 cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
-                  detailTab === 'info'
+                className={`py-3 px-4 text-xs md:text-sm font-semibold border-b-2 transition-colors duration-150 cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${detailTab === 'info'
                     ? 'border-teal text-teal'
                     : 'border-transparent text-ink-muted hover:text-ink'
-                }`}
+                  }`}
               >
                 <span>ℹ️ Thông tin chung</span>
               </button>
@@ -1494,8 +1489,8 @@ export default function ClassList() {
                                     {loadingBranchStudents
                                       ? 'Đang tải học viên...'
                                       : availableStudents.length === 0
-                                      ? '-- Không còn học viên phù hợp --'
-                                      : '-- Chọn học viên đang học --'}
+                                        ? '-- Không còn học viên phù hợp --'
+                                        : '-- Chọn học viên đang học --'}
                                   </option>
                                   {availableStudents.map((stu) => (
                                     <option key={stu.id} value={stu.id}>
@@ -2054,9 +2049,8 @@ export default function ClassList() {
               <div className="rounded-2xl bg-surface-subtle border border-line px-3.5 py-2.5 text-ink-secondary">
                 Trạng thái mới:{' '}
                 <span
-                  className={`font-bold ${
-                    statusActionModal.targetStatus === 'Active' ? 'text-emerald-700' : 'text-rose-700'
-                  }`}
+                  className={`font-bold ${statusActionModal.targetStatus === 'Active' ? 'text-emerald-700' : 'text-rose-700'
+                    }`}
                 >
                   {statusActionModal.targetStatus === 'Active' ? 'Đang học (Active)' : 'Ngừng học (Dropped)'}
                 </span>
@@ -2094,17 +2088,16 @@ export default function ClassList() {
                 <button
                   type="submit"
                   disabled={statusActionModal.submitting}
-                  className={`px-4 py-2 rounded-full font-semibold text-white active:scale-[0.97] transition-transform duration-150 disabled:opacity-50 cursor-pointer ${
-                    statusActionModal.targetStatus === 'Active'
+                  className={`px-4 py-2 rounded-full font-semibold text-white active:scale-[0.97] transition-transform duration-150 disabled:opacity-50 cursor-pointer ${statusActionModal.targetStatus === 'Active'
                       ? 'bg-emerald-600 hover:bg-emerald-700'
                       : 'bg-rose-600 hover:bg-rose-700'
-                  }`}
+                    }`}
                 >
                   {statusActionModal.submitting
                     ? 'Đang xử lý...'
                     : statusActionModal.targetStatus === 'Active'
-                    ? 'Xác nhận duyệt'
-                    : 'Xác nhận ngừng'}
+                      ? 'Xác nhận duyệt'
+                      : 'Xác nhận ngừng'}
                 </button>
               </div>
             </form>
@@ -2123,11 +2116,10 @@ export default function ClassList() {
           <div className="relative max-w-md w-full bg-surface rounded-card-lg shadow-modal border border-line/60 modal-panel p-6 z-10">
             <div className="flex items-start gap-3.5">
               <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-lg ${
-                  closeClassModal.errorMessage
+                className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-lg ${closeClassModal.errorMessage
                     ? 'bg-rose-100 text-rose-600'
                     : 'bg-amber-100 text-amber-700'
-                }`}
+                  }`}
               >
                 {closeClassModal.errorMessage ? '🚫' : '⚠️'}
               </div>

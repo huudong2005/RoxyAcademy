@@ -319,7 +319,7 @@ export default function Courses() {
                     <th className="px-2 py-2.5 text-center">Số buổi</th>
                     <th className="px-2 py-2.5 text-right">Học phí chuẩn</th>
                     <th className="px-2 py-2.5 text-center">Trạng thái</th>
-                    <th scope="col" className="px-2 py-2.5 text-right whitespace-nowrap sticky right-0 z-20 bg-surface-subtle shadow-[-4px_0_8px_-4px_rgba(30,46,43,0.08)]">Thao tác</th>
+                    <th scope="col" className="px-2 py-2.5 text-center whitespace-nowrap sticky right-0 z-20 bg-surface-subtle shadow-[-4px_0_8px_-4px_rgba(30,46,43,0.08)]">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line/60">
@@ -353,8 +353,8 @@ export default function Courses() {
                           <Badge variant="neutral">Tạm ngưng</Badge>
                         )}
                       </td>
-                      <td className="px-2 py-2.5 whitespace-nowrap text-right sticky right-0 z-10 bg-surface shadow-[-4px_0_8px_-4px_rgba(30,46,43,0.08)]">
-                        <div className="inline-flex items-center justify-end gap-1">
+                      <td className="px-2 py-2.5 whitespace-nowrap text-center sticky right-0 z-10 bg-surface shadow-[-4px_0_8px_-4px_rgba(30,46,43,0.08)]">
+                        <div className="inline-flex items-center justify-center gap-1">
                           <IconButton
                             variant="neutral"
                             onClick={() => handleOpenEdit(c)}

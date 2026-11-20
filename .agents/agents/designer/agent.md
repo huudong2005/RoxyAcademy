@@ -3,7 +3,7 @@ name: designer
 description: "Thiết kế admin UI Roxy Academy: design system, layout, dùng skill apple-design và emil-design-eng."
 subagent: true
 mainAgent: false
-model: flash
+model: inherit
 tools:
   - grep_search
   - find_by_name

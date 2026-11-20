@@ -3,7 +3,7 @@ name: qa
 description: "Kiểm thử Roxy Academy: kiểm tra phân quyền, form, giao diện, mobile trước khi deploy. Không sửa code, chỉ báo lỗi."
 subagent: true
 mainAgent: false
-model: flash
+model: inherit
 tools:
   - grep_search
   - find_by_name

@@ -797,7 +797,7 @@ export default function Grades() {
                     <th className="py-3.5 px-4">Ngày thi</th>
                     <th className="py-3.5 px-4">Điểm số</th>
                     <th className="py-3.5 px-4">Người chấm</th>
-                    <th className="py-3.5 px-4 text-right">Thao tác</th>
+                    <th className="py-3.5 px-4 text-center whitespace-nowrap">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-sm">
@@ -850,10 +850,10 @@ export default function Grades() {
                         {g.gradedByName || '—'}
                       </td>
                       <td
-                        className="py-3.5 px-4 text-right whitespace-nowrap"
+                        className="py-3.5 px-4 text-center whitespace-nowrap"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <div className="inline-flex items-center justify-end gap-1.5">
+                        <div className="inline-flex items-center justify-center gap-1.5">
                           <button
                             type="button"
                             onClick={() => setDetailGrade(g)}

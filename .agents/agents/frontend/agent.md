@@ -3,7 +3,7 @@ name: frontend
 description: "Frontend admin web Roxy Academy: React 19 + Vite + Tailwind 4, code giao diện theo DESIGN.md và API đã có."
 subagent: true
 mainAgent: false
-model: flash
+model: inherit
 tools:
   - grep_search
   - find_by_name

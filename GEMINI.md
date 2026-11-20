@@ -43,3 +43,4 @@
 - **Bàn giao bằng file + checklist.** Mỗi agent chỉ làm đúng phần của mình, ghi rõ input, output, file tạo/sửa, tiêu chí nghiệm thu. Không làm chồng lên phần của agent khác.
 - Commander phân việc và tổng hợp; commander không tự sửa code.
 - QA kiểm tra xong mới deploy: phân quyền, form, tốc độ, mobile, rồi mới lên production và bàn giao.
+- **Luôn gửi kèm lệnh `git add` khi xong việc:** Cuối mỗi lần hoàn thành tác vụ có sửa/tạo file, luôn gửi kèm lệnh `git add` viết trên 1 dòng duy nhất, chỉ liệt kê đúng các file đã chỉnh sửa hoặc tạo mới (không dùng `git add .` hoặc thêm các file không liên quan).
