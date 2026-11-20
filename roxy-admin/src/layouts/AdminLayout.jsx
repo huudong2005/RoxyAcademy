@@ -378,7 +378,7 @@ export default function AdminLayout() {
       {/* KHU VỰC NỘI DUNG CHÍNH */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Top Header Bar */}
-        <header className="flex h-16 items-center justify-between border-b border-line bg-surface/95 backdrop-blur px-4 md:px-8">
+        <header className="relative z-40 flex h-16 items-center justify-between border-b border-line bg-surface/95 backdrop-blur px-4 md:px-8">
           <div className="flex items-center gap-3">
             {/* Hamburger Button trên Mobile (min 44px x 44px touch target) */}
             <button

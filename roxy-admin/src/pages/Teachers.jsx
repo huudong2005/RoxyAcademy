@@ -585,13 +585,13 @@ export default function Teachers() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-line bg-surface-subtle text-[11px] font-semibold uppercase tracking-wider text-ink-muted">
-                    <th className="px-2 py-2.5">Giáo viên</th>
-                    <th className="px-2 py-2.5">Liên hệ</th>
-                    <th className="px-2 py-2.5">Chi nhánh</th>
-                    <th className="px-2 py-2.5">Trạng thái</th>
-                    <th className="px-2 py-2.5">Mật khẩu</th>
-                    <th className="px-2 py-2.5">Tạo / Đăng nhập</th>
-                    <th scope="col" className="px-2 py-2.5 text-center whitespace-nowrap sticky right-0 z-20 bg-surface-subtle shadow-[-4px_0_8px_-4px_rgba(30,46,43,0.08)]">Thao tác</th>
+                    <th className="pl-2.5 pr-1.5 py-2.5">Giáo viên</th>
+                    <th className="px-1.5 py-2.5">Liên hệ</th>
+                    <th className="px-1.5 py-2.5">Chi nhánh</th>
+                    <th className="px-1.5 py-2.5">Trạng thái</th>
+                    <th className="px-1.5 py-2.5">Mật khẩu</th>
+                    <th className="px-1.5 py-2.5 whitespace-nowrap">Tạo / Đăng nhập</th>
+                    <th scope="col" className="pl-1.5 pr-2 py-2.5 text-center whitespace-nowrap sticky right-0 z-20 bg-surface-subtle shadow-[-4px_0_8px_-4px_rgba(30,46,43,0.08)]">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-line/60 text-sm">
@@ -603,36 +603,38 @@ export default function Teachers() {
                         !t.isActive ? 'bg-surface-subtle/60' : ''
                       }`}
                     >
-                      <td className="px-2 py-2.5">
-                        <div className="flex items-center gap-3">
+                      <td className="pl-2.5 pr-1.5 py-2.5">
+                        <div className="flex items-center gap-2.5">
                           <div className="w-9 h-9 rounded-full bg-gold-soft text-teal font-bold text-xs flex items-center justify-center shrink-0">
                             {getInitials(t.fullName)}
                           </div>
                           <div className="min-w-0">
-                            <p className="font-semibold text-ink truncate max-w-[200px]">
+                            <p className="font-semibold text-ink truncate max-w-[140px]" title={t.fullName}>
                               {t.fullName}
                             </p>
-                            <p className="text-xs text-ink-muted">
+                            <p className="text-xs text-ink-muted whitespace-nowrap">
                               ID #{t.id} • {t.preferredLanguage === 'en' ? 'EN' : 'VI'}
                             </p>
                           </div>
                         </div>
                       </td>
 
-                      <td className="px-2 py-2.5">
-                        <p className="font-mono font-medium text-ink tabular-nums">
+                      <td className="px-1.5 py-2.5">
+                        <p className="font-mono font-medium text-ink tabular-nums whitespace-nowrap">
                           {t.phoneNumber}
                         </p>
-                        <p className="text-xs text-ink-secondary truncate max-w-[180px]">
+                        <p className="text-xs text-ink-secondary truncate max-w-[135px]" title={t.email || undefined}>
                           {t.email || '—'}
                         </p>
                       </td>
 
-                      <td className="px-2 py-2.5 text-ink font-medium">
-                        {t.branchName || '—'}
+                      <td className="px-1.5 py-2.5 text-ink font-medium">
+                        <span className="block truncate max-w-[110px]" title={t.branchName || undefined}>
+                          {t.branchName || '—'}
+                        </span>
                       </td>
 
-                      <td className="px-2 py-2.5 whitespace-nowrap min-w-[130px]">
+                      <td className="px-1.5 py-2.5 whitespace-nowrap">
                         {t.isActive ? (
                           <Badge variant="emerald" className="whitespace-nowrap">Đang hoạt động</Badge>
                         ) : (
@@ -640,7 +642,7 @@ export default function Teachers() {
                         )}
                       </td>
 
-                      <td className="px-2 py-2.5 whitespace-nowrap min-w-[140px]">
+                      <td className="px-1.5 py-2.5 whitespace-nowrap">
                         {t.hasPassword ? (
                           <Badge variant="blue" className="whitespace-nowrap">Đã đặt mật khẩu</Badge>
                         ) : (
@@ -648,7 +650,7 @@ export default function Teachers() {
                         )}
                       </td>
 
-                      <td className="px-2 py-2.5 text-xs text-ink-secondary tabular-nums">
+                      <td className="px-1.5 py-2.5 text-xs text-ink-secondary tabular-nums whitespace-nowrap">
                         <p>Tạo: {formatDate(t.createdAt)}</p>
                         <p className="text-ink-muted mt-0.5">
                           {t.lastLoginAt
@@ -658,10 +660,10 @@ export default function Teachers() {
                       </td>
 
                       <td
-                        className="px-2 py-2.5 whitespace-nowrap text-center sticky right-0 z-10 bg-surface shadow-[-4px_0_8px_-4px_rgba(30,46,43,0.08)]"
+                        className="pl-1.5 pr-2 py-2.5 whitespace-nowrap text-center sticky right-0 z-10 bg-surface shadow-[-4px_0_8px_-4px_rgba(30,46,43,0.08)]"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <div className="inline-flex items-center justify-center gap-1">
+                        <div className="inline-flex items-center justify-center gap-0.5">
                           <IconButton
                             variant="neutral"
                             onClick={() => setDetailTarget(t)}

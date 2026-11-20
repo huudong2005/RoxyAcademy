@@ -1143,3 +1143,34 @@ Toàn bộ **8/8 hạng mục** của **Giai đoạn 1N-2 (8 bẫy đồng bộ)
 ## 3. Đo `getBoundingClientRect()` trên trình duyệt (`1440px` & `1280px`) & Kết luận
 - **Giới hạn môi trường sandbox:** Không có trình duyệt/Playwright trong sandbox để mở trang và đo `getBoundingClientRect()` mép phải `<th>` "Thao tác" vs icon cuối cùng sau khi sửa.
 - **Trạng thái hiện tại:** **ĐẠT `npm run lint` + `npm run build` & đối chiếu mã nguồn**; **CHỜ ĐO TRỰC QUAN `getBoundingClientRect()` TRÊN TRÌNH DUYỆT (`1440px` & `1280px`, sai số <= 2px)** trước khi commit `"Trùng tu giao diện R2b-fix: căn lề cột thao tác + nhãn thống kê"`.
+
+
+---
+
+# BÁO CÁO QA — ĐỢT TRÙNG TU GIAO DIỆN R2b-fix3: CẮT NGÀY BẢNG GIÁO VIÊN + MENU NGƯỜI DÙNG BỊ ĐÈ
+**Ngày kiểm tra:** 20/11/2026  
+**Người thực hiện:** QA Agent  
+**Commit gốc:** `d05ec32`  
+**Phạm vi:** Chỉ 2 file (`roxy-admin/src/pages/Teachers.jsx`, `roxy-admin/src/layouts/AdminLayout.jsx`, chưa commit); không sửa backend, DB hay luồng nghiệp vụ.
+
+## 1. Kết quả Lint & Build (`roxy-admin/`)
+- `npm run lint` (`eslint .`): **PASS** (0 error, 0 warning).
+- `npm run build` (`vite build`): **PASS** (`✓ 113 modules transformed`, `✓ built in 397ms`).
+
+## 2. Nguyên nhân gốc rễ (Root Cause)
+1. **Bảng Giáo viên bị tràn khung & cắt ngày tạo (`Teachers.jsx`):** Ở độ rộng màn hình `1438px`/`1440px`, bảng có bề rộng `1147px` > khung chứa `1116px`/`1118px` do đặt `min-w-[130px]` / `min-w-[140px]` ở 2 ô badge (`Trạng thái`, `Mật khẩu`), padding ô `px-2`, và cột `Chi nhánh` không `truncate`. Hệ quả là phát sinh cuộn ngang nội bộ và cột `Thao tác` (`sticky right-0`) trượt đè lên cột `Tạo / Đăng nhập` làm cắt ngày tạo. Cách sửa: bỏ `min-w-[130px]` / `min-w-[140px]`, thu gọn padding ô (`px-1.5` / `pl-2.5 pr-1.5`), thêm `truncate max-w-[110px]` cho `Chi nhánh`, giới hạn `max-w-[140px]` tên giáo viên & `max-w-[135px]` email, và giữ `whitespace-nowrap` cho cột `Tạo / Đăng nhập`.
+2. **Menu người dùng bị nút "Đặt lại" ở `/grades` đè lên (`AdminLayout.jsx` + `Grades.jsx`):** `<header>` có `backdrop-filter: blur(8px)` (`backdrop-blur`) nên tự tạo stacking context mới ở trạng thái `position: static; z-index: auto`, giam `div[role="menu"]` (`absolute z-40`) bên trong stacking context của `<header>`. Trong khi đó `<main>` nằm sau `<header>` trong DOM và nút `"Đặt lại"` có `disabled:opacity-50` (`opacity: 0.5`) cũng tạo stacking context ở `z-index: auto`, nên được vẽ đè lên dropdown (che mục `"Đăng xuất"`). Cách sửa: thêm `relative z-40` vào `<header>` trong `AdminLayout.jsx`.
+
+## 3. Kết quả kiểm tra thực tế trên trình duyệt thật (`1440px` & `1280px`)
+- **Môi trường đo:** Chrome headless + Playwright, Vite dev server `http://localhost:5174` proxy tới API `http://localhost:5123` (đăng nhập `SuperAdmin`).
+
+| Màn hình & Hạng mục | Kết quả `1440px` | Kết quả `1280px` | Số liệu đo DOM thực tế |
+| :--- | :---: | :---: | :--- |
+| **`/teachers` — Cuộn ngang nội bộ bảng** | **PASS** | **PASS** | - `1440px`: `clientWidth = 1118px`, `scrollWidth = 1118px`, `table.offsetWidth = 1118px` (tràn `0px`).<br>- `1280px`: `clientWidth = 958px`, `scrollWidth = 958px`, `table.offsetWidth = 958px` (tràn `0px`). |
+| **`/teachers` — Cột `TẠO / ĐĂNG NHẬP` ở vị trí mặc định** | **PASS** | **PASS** | - `1440px`: mép phải chữ `"Tạo: 13/11/2026"` = `1126.9px` < mép trái cột `Thao tác` = `1207.8px` (không bị đè/cắt).<br>- `1280px`: mép phải chữ `"Tạo: 13/11/2026"` = `1020.2px` < mép trái cột `Thao tác` = `1076.4px` (không bị đè/cắt). |
+| **`/teachers` — Badge trạng thái & mật khẩu 1 dòng** | **PASS** | **PASS** | - `"ĐANG HOẠT ĐỘNG"`: `height = 21.7px`, `1` dòng ở cả `1440px` & `1280px`.<br>- `"ĐÃ ĐẶT MẬT KHẨU"`: `height = 21.7px`, `1` dòng ở cả `1440px` & `1280px`. |
+| **`/grades` — Menu người dùng đè lên nút `"Đặt lại"`** | **PASS** | **PASS** | - `<header>`: `position: relative; z-index: 40`.<br>- Dù vùng menu (`y: 60..254`) giao trực tiếp với nút `"Đặt lại"` (`y: 210..254`, `disabled: true`), `document.elementsFromPoint()` tại toàn bộ 9 điểm mẫu & tâm nút `"Đăng xuất"` đều trả về `div[role="menu"]` trên cùng (`logoutTopmost: true`, `occludedPoints: []`). |
+| **`/students` & `/teachers` — Menu người dùng trên trang có thanh lọc** | **PASS** | **PASS** | - Mở menu người dùng ở cả 2 độ phân giải: `logoutTopmost: true`, `occludedPoints: []`, không bị thanh lọc hay phần tử nào che khuất. |
+
+## 4. Kết luận R2b-fix3
+- **Trạng thái nghiệm thu:** **PASS 100%** ở cả `1440px` và `1280px` (build, lint, bảng `Teachers` hết cuộn ngang & hết cắt ngày, dropdown menu người dùng hiển thị trọn vẹn trên nút `"Đặt lại"` và toàn bộ nội dung). Không còn lỗi chặn, đủ điều kiện để commit.
