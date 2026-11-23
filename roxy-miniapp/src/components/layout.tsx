@@ -13,7 +13,9 @@ import AppHeader from '@/components/AppHeader';
 import BottomNavBar, { type TabKey } from '@/components/BottomNavBar';
 import { AuthProvider, useAuth } from '@/context/authContext';
 import LoginPage from '@/pages/LoginPage';
+import SchedulesPage from '@/pages/SchedulesPage';
 import TabPlaceholderPage from '@/pages/TabPlaceholderPage';
+import TodayPage from '@/pages/TodayPage';
 
 function resolveActiveTab(pathname: string): TabKey {
   if (pathname.startsWith('/schedules')) return '/schedules';
@@ -63,15 +65,15 @@ function AuthenticatedShell() {
         <Routes>
           <Route
             path="/"
-            element={<TabPlaceholderPage tab="/today" />}
+            element={<TodayPage />}
           />
           <Route
             path="/today"
-            element={<TabPlaceholderPage tab="/today" />}
+            element={<TodayPage />}
           />
           <Route
             path="/schedules"
-            element={<TabPlaceholderPage tab="/schedules" />}
+            element={<SchedulesPage />}
           />
           <Route
             path="/homeworks"
