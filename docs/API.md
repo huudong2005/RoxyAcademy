@@ -1584,17 +1584,19 @@ Trong `RoxyAppBE/RoxyAcademy.Api/appsettings.json`, mục `Zalo` chỉ chứa ch
 ---
 
 ### 17.3. Cấu hình CORS cho Zalo Mini App
-Trong `Program.cs`, danh sách origin mặc định của policy `"RoxyCors"` đã bao gồm cả 2 origin của Zalo Mini App:
+Trong `Program.cs`, danh sách origin mặc định của policy `"RoxyCors"` đã bao gồm cả 2 origin của Zalo Mini App và origin dev local:
 ```csharp
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
     ?? [
         "http://localhost:5173",
+        "http://localhost:3000",
         "https://admin.roxy.edu.vn",
         "https://roxy.edu.vn",
         "https://h5.zdn.vn",
         "zbrowser://h5.zdn.vn"
     ];
 ```
+- Ghi chú: Origin `"http://localhost:3000"` chỉ phục vụ môi trường dev local khi chạy Zalo Mini App bằng lệnh `zmp start`.
 
 > **Lưu ý quan trọng khi cấu hình Production:**
 > Nếu trên Production có ghi đè cấu hình `Cors:AllowedOrigins` (qua `appsettings.Production.json` hoặc các biến môi trường `Cors__AllowedOrigins__0`, `Cors__AllowedOrigins__1`, ... trong `web.config`), danh sách bắt buộc **phải bao gồm cả 2 origin `"https://h5.zdn.vn"` và `"zbrowser://h5.zdn.vn"`** (cùng với `"https://admin.roxy.edu.vn"` và `"https://roxy.edu.vn"`), nếu không Zalo Mini App sẽ bị chặn bởi CORS khi gọi API.

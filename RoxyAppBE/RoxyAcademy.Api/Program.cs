@@ -29,6 +29,7 @@ if (string.IsNullOrEmpty(builder.Environment.WebRootPath))
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
     ?? [
         "http://localhost:5173",
+        "http://localhost:3000",
         "https://admin.roxy.edu.vn",
         "https://roxy.edu.vn",
         "https://h5.zdn.vn",

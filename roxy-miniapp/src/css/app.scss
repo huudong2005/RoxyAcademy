@@ -1,0 +1,129 @@
+:root {
+  --color-teal: #2F4F4A;
+  --color-teal-hover: #243F3B;
+  --color-teal-deep: #1E2E2B;
+  --color-gold: #D9A441;
+  --color-gold-hover: #C69232;
+  --color-gold-active: #B58226;
+  --color-gold-soft: #FBF4E4;
+  --color-mint-canvas: #F3F6F4;
+  --color-surface: #FFFFFF;
+  --color-surface-subtle: #F8FAF9;
+  --color-line: #DCE5E0;
+  --color-line-strong: #C5D3CC;
+  --color-ink: #1E2E2B;
+  --color-ink-secondary: #435A55;
+  --color-ink-muted: #6E827D;
+  --radius-card: 1rem;
+  --radius-card-lg: 1.5rem;
+  --radius-pill: 9999px;
+  --shadow-card: 0 2px 10px -2px rgba(30, 46, 43, 0.05), 0 1px 3px 0 rgba(30, 46, 43, 0.04);
+  --shadow-card-hover: 0 10px 24px -6px rgba(30, 46, 43, 0.08), 0 4px 8px -4px rgba(30, 46, 43, 0.04);
+  --shadow-modal: 0 24px 48px -12px rgba(30, 46, 43, 0.18), 0 8px 16px -6px rgba(30, 46, 43, 0.08);
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  color-scheme: light;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(47, 79, 74, 0.32) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: rgba(47, 79, 74, 0.28);
+  border-radius: 9999px;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100dvh;
+  background-color: var(--color-mint-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#app {
+  width: 100%;
+  min-height: 100dvh;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-mint-canvas);
+  font-family: var(--font-sans);
+}
+
+@keyframes tabEnter {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.tab-content,
+.page-enter {
+  animation: tabEnter 200ms ease-out 1;
+}
+
+@keyframes popoverEnter {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.popover-panel {
+  animation: popoverEnter 180ms cubic-bezier(0.23, 1, 0.32, 1) 1;
+}
+
+@keyframes modalEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.modal-panel {
+  transform-origin: center;
+  animation: modalEnter 180ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

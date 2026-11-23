@@ -1,0 +1,19 @@
+{
+  "cwd": ".",
+  "name": "roxy-miniapp",
+  "framework": "react-typescript",
+  "cssPreProcessor": "scss",
+  "includeTailwind": true,
+  "package": "zmp-ui",
+  "stateManagement": "jotai",
+  "newProject": true,
+  "template": "single-view",
+  "theming": {
+    "customColor": true,
+    "color": "#2F4F4A",
+    "darkTheme": false,
+    "iconFonts": true,
+    "fillBars": false,
+    "useUiKits": true
+  }
+}
