@@ -28,6 +28,80 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
   const [permissionDenied, setPermissionDenied] = useState<boolean>(false);
   const [permissionMessage, setPermissionMessage] = useState<string>('');
 
+  const [devPhone, setDevPhone] = useState<string>('');
+  const [devPassword, setDevPassword] = useState<string>('');
+  const [showDevPassword, setShowDevPassword] = useState<boolean>(false);
+  const [devLoading, setDevLoading] = useState<boolean>(false);
+
+  const isLocalhost =
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1');
+  const canShowDevLogin = import.meta.env.DEV && isLocalhost;
+
+  const handleDevLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!import.meta.env.DEV || !canShowDevLogin) return;
+
+    setServerError('');
+    setPermissionDenied(false);
+    setPermissionMessage('');
+
+    const cleanPhone = devPhone.trim();
+    if (!cleanPhone || !devPassword) {
+      setServerError('Vui lòng nhập đầy đủ số điện thoại và mật khẩu.');
+      return;
+    }
+
+    setDevLoading(true);
+    try {
+      const response = await axiosClient.post<LoginResponse>('/Auth/login', {
+        phoneNumber: cleanPhone,
+        password: devPassword,
+      });
+
+      const { accessToken, expiresAt, user } = response.data;
+      await completeLogin({
+        accessToken,
+        expiresAt,
+        user,
+      });
+      onLoginSuccess();
+    } catch (err: any) {
+      const resData = err?.response?.data;
+      const apiMsg = resData?.message;
+      const validationErrors =
+        resData?.errors && typeof resData.errors === 'object'
+          ? ([] as unknown[])
+              .concat(...Object.values(resData.errors))
+              .filter(Boolean)
+              .join(' ')
+          : '';
+
+      if (typeof apiMsg === 'string' && apiMsg.trim()) {
+        setServerError(apiMsg.trim());
+      } else if (validationErrors) {
+        setServerError(validationErrors);
+      } else if (err?.response?.status === 401) {
+        setServerError('Số điện thoại hoặc mật khẩu không chính xác.');
+      } else if (typeof resData?.title === 'string' && resData.title.trim()) {
+        setServerError(resData.title.trim());
+      } else if (typeof resData === 'string' && resData.trim()) {
+        setServerError(resData.trim());
+      } else if (err?.response) {
+        setServerError(
+          `Yêu cầu đăng nhập không hợp lệ (Mã lỗi ${err.response.status}).`
+        );
+      } else {
+        setServerError(
+          'Không thể kết nối đến máy chủ Roxy Academy. Vui lòng kiểm tra kết nối mạng và thử lại.'
+        );
+      }
+    } finally {
+      setDevLoading(false);
+    }
+  };
+
   const handleZaloLogin = async () => {
     setLoading(true);
     setServerError('');
@@ -275,7 +349,7 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
         <div className="mt-6 space-y-3">
           <PrimaryButton
             onClick={handleZaloLogin}
-            disabled={loading}
+            disabled={loading || devLoading}
             className="w-full py-3 text-sm"
           >
             {loading ? (
@@ -313,6 +387,100 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
             Dùng số điện thoại Zalo để nhận diện tài khoản phụ huynh của trung tâm.
           </p>
         </div>
+
+        {import.meta.env.DEV && canShowDevLogin && (
+          <form
+            onSubmit={handleDevLogin}
+            className="mt-6 rounded-card border border-dashed border-line-strong bg-surface-subtle p-4 space-y-3"
+          >
+            <p className="text-xs font-bold text-teal">
+              Đăng nhập thử — chỉ dùng để test trên máy tính
+            </p>
+
+            <div>
+              <label
+                htmlFor="dev-login-phone"
+                className="block text-[11px] font-semibold uppercase tracking-wider text-ink-secondary mb-1"
+              >
+                Số điện thoại
+              </label>
+              <input
+                id="dev-login-phone"
+                type="tel"
+                autoComplete="username"
+                disabled={loading || devLoading}
+                placeholder="Nhập số điện thoại"
+                value={devPhone}
+                onChange={(e) => setDevPhone(e.target.value)}
+                className="w-full rounded-pill border border-line bg-surface px-4 py-2 text-xs text-ink placeholder:text-ink-muted focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:opacity-60"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="dev-login-password"
+                className="block text-[11px] font-semibold uppercase tracking-wider text-ink-secondary mb-1"
+              >
+                Mật khẩu
+              </label>
+              <div className="relative">
+                <input
+                  id="dev-login-password"
+                  type={showDevPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  disabled={loading || devLoading}
+                  placeholder="Nhập mật khẩu"
+                  value={devPassword}
+                  onChange={(e) => setDevPassword(e.target.value)}
+                  className="w-full rounded-pill border border-line bg-surface pl-4 pr-10 py-2 text-xs text-ink placeholder:text-ink-muted focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none disabled:opacity-60"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowDevPassword((prev) => !prev)}
+                  aria-label={showDevPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-ink-muted hover:text-ink-secondary cursor-pointer"
+                >
+                  {showDevPassword ? (
+                    <svg
+                      className="h-4 w-4"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={1.8}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                    </svg>
+                  ) : (
+                    <svg
+                      className="h-4 w-4"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={1.8}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <SecondaryButton
+              type="submit"
+              disabled={loading || devLoading}
+              className="w-full min-h-[40px] py-2 text-xs font-semibold"
+            >
+              {devLoading ? 'Đang đăng nhập...' : 'Đăng nhập thử'}
+            </SecondaryButton>
+          </form>
+        )}
 
         {/* Chân thẻ thông tin hỗ trợ */}
         <div className="mt-6 border-t border-line/70 pt-4 text-center text-[11px] text-ink-muted space-y-1">
