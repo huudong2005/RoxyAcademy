@@ -1495,3 +1495,106 @@ Cung cấp endpoint tải ảnh lên máy chủ và trả về URL công khai (p
 
 - **Lưu ý deploy production (QUAN TRỌNG):**
   - Khi upload code lên production bằng FTP, **KHÔNG** được xóa hoặc ghi đè xóa sạch thư mục `wwwroot/uploads/` (toàn bộ ảnh đã upload của phụ huynh và bảng tin phải được giữ nguyên).
+
+---
+
+## 17. ĐĂNG NHẬP ZALO MINI APP & CẤU HÌNH CORS (ZALO AUTH API)
+
+### 17.1. Đăng nhập qua Zalo Mini App — `POST /api/Auth/zalo-login`
+Cho phép Phụ huynh (`Parent`) và Học viên (`Student`) đăng nhập trực tiếp từ Zalo Mini App bằng `accessToken` và `phoneCode` nhận từ Zalo SDK. Hệ thống xác thực số điện thoại với Zalo Open API, đối chiếu số điện thoại đã đăng ký tại trung tâm, tự động liên kết `ZaloId` ở lần đăng nhập đầu tiên và cấp JWT access token dùng chung với các API khác.
+
+- **Quyền truy cập:** `[AllowAnonymous]` (Chỉ chấp nhận tài khoản có vai trò `Parent` hoặc `Student`).
+- **Request Body:**
+  ```json
+  {
+    "accessToken": "<zalo_user_access_token>",
+    "phoneCode": "<zalo_phone_token_code>"
+  }
+  ```
+  - `accessToken` (`string`, bắt buộc, không rỗng): Access token của người dùng Zalo lấy từ `getAccessToken()`.
+  - `phoneCode` (`string`, bắt buộc, không rỗng): Token đổi số điện thoại lấy từ `getPhoneNumber()`.
+- **Luồng xử lý tại Backend:**
+  1. Kiểm tra cấu hình `Zalo:AppSecret` trên máy chủ. Nếu chưa cấu hình (rỗng), ghi log lỗi và trả về `500 Internal Server Error`: `{ "message": "Máy chủ chưa cấu hình Zalo" }`.
+  2. Gọi Zalo Open API để xác thực và lấy số điện thoại + Zalo User ID:
+     - Gọi `GET https://graph.zalo.me/v2.0/me/info` với headers `access_token`, `code`, `secret_key` để giải mã `phoneCode` lấy số điện thoại (`data.number`).
+     - Nếu response chưa có Zalo User ID, gọi tiếp `GET https://graph.zalo.me/v2.0/me?fields=id,name` với headers `access_token` và `appsecret_proof` (HMAC-SHA256 hex lowercase của `accessToken` với khóa `AppSecret`) để lấy `id`.
+     - Nếu Zalo trả về lỗi, mã hết hạn hoặc không hợp lệ -> trả về `400 Bad Request` (không làm lộ `secret_key` hay lỗi thô ra client).
+  3. Chuẩn hóa số điện thoại từ định dạng quốc tế của Zalo (`84xxxxxxxxx` hoặc `+84xxxxxxxxx`) về dạng 10 chữ số bắt đầu bằng `0` (`^0\d{9}$`).
+  4. Tra cứu bảng `Users` theo `PhoneNumber` đã chuẩn hóa:
+     - Không tìm thấy -> `404 Not Found` (**không tự tạo tài khoản mới**).
+     - Tài khoản bị khóa (`!user.IsActive`) -> `401 Unauthorized`.
+     - Vai trò khác `Parent` và `Student` (`SuperAdmin`, `BranchManager`, `Teacher`) -> `403 Forbidden`.
+     - Nếu `user.ZaloId` đã có và khác Zalo User ID vừa lấy (hoặc Zalo User ID đó đã gắn với một tài khoản khác trong DB) -> `400 Bad Request`.
+     - Nếu `user.ZaloId` đang `null` -> gán `user.ZaloId = zaloUserId` và lưu DB.
+  5. Cập nhật `LastLoginAt = DateTime.UtcNow` và cấp JWT token qua `TokenService.CreateAccessToken(user)`.
+- **Response:**
+  - `200 OK` (`LoginResponse` — giống hệt `POST /api/Auth/login`):
+    ```json
+    {
+      "accessToken": "eyJhbGciOiJIUzI1NiIs...",
+      "expiresAt": "2026-11-23T12:00:00Z",
+      "user": {
+        "id": 18,
+        "fullName": "Trần Văn An",
+        "role": "Parent",
+        "branchId": 1,
+        "preferredLanguage": "vi",
+        "phoneNumber": "0912345678",
+        "email": "an.tran@example.com",
+        "avatarUrl": null
+      }
+    }
+    ```
+  - `400 Bad Request`:
+    - Thiếu `accessToken` hoặc `phoneCode`: `{ "message": "Vui lòng cung cấp đầy đủ accessToken và phoneCode từ Zalo." }`
+    - Mã Zalo không hợp lệ hoặc hết hạn: `{ "message": "Mã xác thực Zalo không hợp lệ hoặc đã hết hạn, vui lòng thử lại." }`
+    - Số điện thoại từ Zalo không đúng chuẩn 10 số VN: `{ "message": "Số điện thoại từ Zalo không hợp lệ." }`
+    - Xung đột liên kết Zalo: `{ "message": "Tài khoản Zalo này đã liên kết với một số điện thoại khác." }`
+  - `401 Unauthorized`: Tài khoản bị khóa (`IsActive == false`): `{ "message": "Sai số điện thoại hoặc mật khẩu." }`
+  - `403 Forbidden`: Tài khoản là `SuperAdmin`, `BranchManager`, hoặc `Teacher`: `{ "message": "Chỉ tài khoản Phụ huynh và Học viên mới được đăng nhập qua Zalo Mini App." }`
+  - `404 Not Found`: Số điện thoại chưa có trong hệ thống: `{ "message": "Số điện thoại chưa được đăng ký tại trung tâm, vui lòng liên hệ trung tâm." }`
+  - `500 Internal Server Error`: Máy chủ chưa cấu hình `Zalo:AppSecret`: `{ "message": "Máy chủ chưa cấu hình Zalo" }`
+
+---
+
+### 17.2. Cấu hình Zalo (`Zalo:AppId` & `Zalo:AppSecret`) — Không commit secret
+Trong `RoxyAppBE/RoxyAcademy.Api/appsettings.json`, mục `Zalo` chỉ chứa chuỗi rỗng làm placeholder (tuyệt đối không điền giá trị thật vào file commit lên Git):
+```json
+"Zalo": {
+  "AppId": "",
+  "AppSecret": ""
+}
+```
+
+**Cách cấu hình giá trị thật:**
+- **Môi trường Local (Development) — dùng .NET User Secrets:**
+  ```bash
+  cd RoxyAppBE/RoxyAcademy.Api
+  dotnet user-secrets set "Zalo:AppId" "<ZALO_APP_ID_THẬT>"
+  dotnet user-secrets set "Zalo:AppSecret" "<ZALO_APP_SECRET_THẬT>"
+  ```
+- **Môi trường Production (IIS / Hosting) — dùng biến môi trường trong `web.config`:**
+  ```xml
+  <environmentVariables>
+    <environmentVariable name="Zalo__AppId" value="<ZALO_APP_ID_THẬT>" />
+    <environmentVariable name="Zalo__AppSecret" value="<ZALO_APP_SECRET_THẬT>" />
+  </environmentVariables>
+  ```
+
+---
+
+### 17.3. Cấu hình CORS cho Zalo Mini App
+Trong `Program.cs`, danh sách origin mặc định của policy `"RoxyCors"` đã bao gồm cả 2 origin của Zalo Mini App:
+```csharp
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? [
+        "http://localhost:5173",
+        "https://admin.roxy.edu.vn",
+        "https://roxy.edu.vn",
+        "https://h5.zdn.vn",
+        "zbrowser://h5.zdn.vn"
+    ];
+```
+
+> **Lưu ý quan trọng khi cấu hình Production:**
+> Nếu trên Production có ghi đè cấu hình `Cors:AllowedOrigins` (qua `appsettings.Production.json` hoặc các biến môi trường `Cors__AllowedOrigins__0`, `Cors__AllowedOrigins__1`, ... trong `web.config`), danh sách bắt buộc **phải bao gồm cả 2 origin `"https://h5.zdn.vn"` và `"zbrowser://h5.zdn.vn"`** (cùng với `"https://admin.roxy.edu.vn"` và `"https://roxy.edu.vn"`), nếu không Zalo Mini App sẽ bị chặn bởi CORS khi gọi API.

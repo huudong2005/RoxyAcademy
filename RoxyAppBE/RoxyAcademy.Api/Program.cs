@@ -25,12 +25,14 @@ if (string.IsNullOrEmpty(builder.Environment.WebRootPath))
     builder.Environment.WebRootFileProvider = new PhysicalFileProvider(contentWebRoot);
 }
 
-// 1. Cấu hình CORS - Giới hạn đúng các origin hợp lệ của hệ thống (dev + production)
+// 1. Cấu hình CORS - Giới hạn đúng các origin hợp lệ của hệ thống (dev + production + Zalo Mini App)
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
     ?? [
         "http://localhost:5173",
         "https://admin.roxy.edu.vn",
-        "https://roxy.edu.vn"
+        "https://roxy.edu.vn",
+        "https://h5.zdn.vn",
+        "zbrowser://h5.zdn.vn"
     ];
 
 builder.Services.AddCors(options =>
@@ -43,6 +45,7 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.AddHttpClient();
 builder.Services.AddControllers();
 builder.Services.AddOpenApi(options =>
 {

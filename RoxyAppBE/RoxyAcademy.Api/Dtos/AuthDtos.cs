@@ -11,6 +11,15 @@ public class LoginRequest
     public string Password { get; set; } = "";
 }
 
+public class ZaloLoginRequest
+{
+    [Required(ErrorMessage = "AccessToken là bắt buộc.")]
+    public string AccessToken { get; set; } = "";
+
+    [Required(ErrorMessage = "PhoneCode là bắt buộc.")]
+    public string PhoneCode { get; set; } = "";
+}
+
 public record UserInfo(
     int Id,
     string FullName,
