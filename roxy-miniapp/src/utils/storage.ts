@@ -51,6 +51,25 @@ function removeFallbackLocal(keys: string[]): void {
   }
 }
 
+function withZmpTimeout<T>(promise: Promise<T>, ms = 1000): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error('ZMP_STORAGE_TIMEOUT'));
+    }, ms);
+
+    promise.then(
+      (val) => {
+        clearTimeout(timer);
+        resolve(val);
+      },
+      (err) => {
+        clearTimeout(timer);
+        reject(err);
+      }
+    );
+  });
+}
+
 export async function saveStorageData(data: Record<string, any>): Promise<void> {
   if (STORAGE_KEYS.ACCESS_TOKEN in data) {
     cachedToken = data[STORAGE_KEYS.ACCESS_TOKEN] || null;
@@ -65,7 +84,7 @@ export async function saveStorageData(data: Record<string, any>): Promise<void> 
   writeFallbackLocal(data);
 
   try {
-    await setStorage({ data });
+    await withZmpTimeout(setStorage({ data }), 1000);
   } catch {
     // Fallback to localStorage already saved when running outside Zalo WebView
   }
@@ -75,7 +94,7 @@ export async function loadStorageData(keys: string[]): Promise<Record<string, an
   const result: Record<string, any> = {};
 
   try {
-    const zmpData = await getStorage({ keys });
+    const zmpData = await withZmpTimeout(getStorage({ keys }), 1000);
     if (zmpData && typeof zmpData === 'object') {
       Object.assign(result, zmpData);
     }
@@ -123,7 +142,7 @@ export async function clearStorageKeys(keys: string[]): Promise<void> {
   removeFallbackLocal(keys);
 
   try {
-    await removeStorage({ keys });
+    await withZmpTimeout(removeStorage({ keys }), 1000);
   } catch {
     // Fallback to localStorage already cleared
   }
