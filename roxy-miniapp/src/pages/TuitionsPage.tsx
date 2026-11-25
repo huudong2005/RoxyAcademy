@@ -1286,7 +1286,7 @@ export default function TuitionsPage() {
                     id="payment-amount-input"
                     type="number"
                     min={1}
-                    step={1000}
+                    step={1}
                     value={amountInput}
                     onChange={(e) => setAmountInput(e.target.value)}
                     required
