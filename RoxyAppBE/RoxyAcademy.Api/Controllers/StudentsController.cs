@@ -21,18 +21,18 @@ public class StudentsController(RoxyDbContext db, IPasswordHasher<AppUser> hashe
 
     private static string? Clean(string? s) => string.IsNullOrWhiteSpace(s) ? null : s.Trim();
 
-    private static string? ValidateDob(DateOnly? dob, bool checkAgeRange = false)
+    private static string? ValidateDob(DateOnly? dob, bool checkMinAge = false, bool checkMaxAge = false)
     {
         if (dob == null) return null;
         var today = DateOnly.FromDateTime(DateTime.UtcNow.AddHours(7));
         if (dob > today) return "Ngày sinh không được ở tương lai.";
         if (dob.Value.Year < 1990) return "Ngày sinh không hợp lệ.";
-        if (checkAgeRange)
+        if (checkMinAge || checkMaxAge)
         {
             var age = today.Year - dob.Value.Year;
             if (dob.Value > today.AddYears(-age)) age--;
-            if (age < 5) return "Trung tâm chỉ nhận trẻ từ 5 tuổi.";
-            if (age > 11) return "Trung tâm chỉ nhận trẻ đến 11 tuổi.";
+            if (checkMinAge && age < 5) return "Trung tâm chỉ nhận trẻ từ 5 tuổi.";
+            if (checkMaxAge && age > 11) return "Trung tâm chỉ nhận trẻ đến 11 tuổi.";
         }
         return null;
     }
@@ -167,7 +167,7 @@ public class StudentsController(RoxyDbContext db, IPasswordHasher<AppUser> hashe
     [Authorize(Roles = "SuperAdmin,BranchManager,Parent")]
     public async Task<ActionResult<StudentDto>> CreateStudent(CreateStudentRequest req)
     {
-        var dobError = ValidateDob(req.DOB, checkAgeRange: true);
+        var dobError = ValidateDob(req.DOB, checkMinAge: true, checkMaxAge: true);
         if (dobError != null) return BadRequest(new { message = dobError });
 
         var (parentId, parentError) = await ResolveParentAsync(req.ParentId);
@@ -231,7 +231,8 @@ public class StudentsController(RoxyDbContext db, IPasswordHasher<AppUser> hashe
         if (string.IsNullOrWhiteSpace(req.FullName))
             return BadRequest(new { message = "Họ tên học viên là bắt buộc." });
 
-        var dobError = ValidateDob(req.DOB);
+        var dobChanged = req.DOB != student.Dob;
+        var dobError = ValidateDob(req.DOB, checkMinAge: dobChanged);
         if (dobError != null) return BadRequest(new { message = dobError });
 
         await using var tx = await db.Database.BeginTransactionAsync();
