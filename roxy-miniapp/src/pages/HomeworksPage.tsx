@@ -12,7 +12,7 @@ import {
   fetchStudentHomeworks,
   fetchStudentSubmissions,
   submitHomework,
-  uploadHomeworkImage,
+  uploadHomeworkFile,
 } from '@/api/academicApi';
 import {
   AlertTriangleOutlineIcon,
@@ -76,6 +76,21 @@ function formatScoreValue(score?: number | null): string {
 
 function isLikelyImageUrl(url: string): boolean {
   return /\.(jpg|jpeg|png|webp)(\?.*)?$/i.test(url.trim());
+}
+
+function isLikelyDocumentUrl(url: string): boolean {
+  return /\.(pdf|doc|docx|xls|xlsx)(\?.*)?$/i.test(url.trim());
+}
+
+function getFileNameFromUrl(url: string): string {
+  const clean = url.trim().split('?')[0].split('#')[0];
+  const parts = clean.split('/');
+  const last = parts[parts.length - 1] || '';
+  try {
+    return decodeURIComponent(last) || 'Tệp đính kèm';
+  } catch {
+    return last || 'Tệp đính kèm';
+  }
 }
 
 export default function HomeworksPage() {
@@ -254,20 +269,20 @@ export default function HomeworksPage() {
     setSubmitSuccessMsg('');
 
     if (file.size > MAX_UPLOAD_BYTES) {
-      setUploadError('Dung lượng ảnh vượt quá 5MB. Vui lòng chọn ảnh nhỏ hơn.');
+      setUploadError('Dung lượng tệp vượt quá 5MB. Vui lòng chọn tệp nhỏ hơn.');
       return;
     }
 
     setUploadingImage(true);
     try {
-      const uploadedUrl = await uploadHomeworkImage(file);
+      const uploadedUrl = await uploadHomeworkFile(file);
       setSubmissionUrlInput(uploadedUrl);
     } catch (err: any) {
       const apiMsg = err?.response?.data?.message || err?.message;
       setUploadError(
         typeof apiMsg === 'string' && apiMsg.trim()
           ? apiMsg.trim()
-          : 'Không thể tải ảnh lên. Vui lòng thử lại.'
+          : 'Không thể tải tệp lên. Vui lòng thử lại.'
       );
     } finally {
       setUploadingImage(false);
@@ -997,12 +1012,12 @@ export default function HomeworksPage() {
                 />
               </div>
 
-              {/* Nút chọn ảnh chụp bài làm */}
+              {/* Nút chọn tệp bài làm */}
               <div className="space-y-2">
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+                  accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.xls,.xlsx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                   onChange={handleImageFileChange}
                   className="hidden"
                 />
@@ -1017,10 +1032,13 @@ export default function HomeworksPage() {
                   <UploadOutlineIcon className="h-4 w-4" />
                   <span>
                     {uploadingImage
-                      ? 'Đang tải ảnh lên...'
-                      : 'Chọn ảnh chụp bài làm'}
+                      ? 'Đang tải tệp lên...'
+                      : 'Chọn tệp bài làm'}
                   </span>
                 </SecondaryButton>
+                <p className="text-[11px] text-ink-muted">
+                  Nhận ảnh, PDF, Word, Excel (tối đa 5MB)
+                </p>
 
                 {uploadError && (
                   <p className="text-[11px] font-medium text-rose-700">
@@ -1036,6 +1054,25 @@ export default function HomeworksPage() {
                         alt="Ảnh bài làm đã chọn"
                         className="max-h-40 w-full rounded object-contain"
                       />
+                    </div>
+                  )}
+
+                {submissionUrlInput.trim() &&
+                  !isLikelyImageUrl(submissionUrlInput) &&
+                  isLikelyDocumentUrl(submissionUrlInput) && (
+                    <div className="flex items-center justify-between gap-2 rounded-card border border-line bg-surface-subtle px-3 py-2 text-xs">
+                      <span className="truncate font-medium text-ink">
+                        {getFileNameFromUrl(submissionUrlInput)}
+                      </span>
+                      <a
+                        href={submissionUrlInput.trim()}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex shrink-0 items-center gap-1 font-semibold text-teal hover:underline"
+                      >
+                        <span>Mở tệp</span>
+                        <ExternalLinkOutlineIcon className="h-3.5 w-3.5" />
+                      </a>
                     </div>
                   )}
               </div>

@@ -17,7 +17,7 @@ public class UploadsController(IWebHostEnvironment env) : ControllerBase
         "general"
     };
 
-    private static readonly HashSet<string> AllowedExtensions = new(StringComparer.Ordinal)
+    private static readonly HashSet<string> AllowedImageExtensions = new(StringComparer.Ordinal)
     {
         ".jpg",
         ".jpeg",
@@ -25,12 +25,21 @@ public class UploadsController(IWebHostEnvironment env) : ControllerBase
         ".webp"
     };
 
-    private static readonly HashSet<string> AllowedContentTypes = new(StringComparer.Ordinal)
+    private static readonly HashSet<string> AllowedImageContentTypes = new(StringComparer.Ordinal)
     {
         "image/jpeg",
         "image/jpg",
         "image/png",
         "image/webp"
+    };
+
+    private static readonly Dictionary<string, string> AllowedDocumentContentTypes = new(StringComparer.Ordinal)
+    {
+        [".pdf"] = "application/pdf",
+        [".doc"] = "application/msword",
+        [".docx"] = "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        [".xls"] = "application/vnd.ms-excel",
+        [".xlsx"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     };
 
     [HttpPost("image")]
@@ -68,16 +77,26 @@ public class UploadsController(IWebHostEnvironment env) : ControllerBase
 
         var ext = Path.GetExtension(file.FileName)?.ToLowerInvariant();
         var contentType = file.ContentType?.Trim().ToLowerInvariant();
+        var isGeneralFolder = string.Equals(safeFolder, "general", StringComparison.Ordinal);
 
-        if (string.IsNullOrEmpty(ext)
-            || !AllowedExtensions.Contains(ext)
-            || string.IsNullOrEmpty(contentType)
-            || !AllowedContentTypes.Contains(contentType))
+        var isValidImage = !string.IsNullOrEmpty(ext)
+            && !string.IsNullOrEmpty(contentType)
+            && AllowedImageExtensions.Contains(ext)
+            && AllowedImageContentTypes.Contains(contentType);
+
+        var isValidDocument = isGeneralFolder
+            && !string.IsNullOrEmpty(ext)
+            && !string.IsNullOrEmpty(contentType)
+            && AllowedDocumentContentTypes.TryGetValue(ext, out var expectedContentType)
+            && string.Equals(contentType, expectedContentType, StringComparison.Ordinal);
+
+        if (!isValidImage && !isValidDocument)
         {
-            return BadRequest(new
-            {
-                message = "Định dạng tệp không hợp lệ. Chỉ chấp nhận ảnh JPG, JPEG, PNG hoặc WEBP."
-            });
+            var errorMessage = isGeneralFolder
+                ? "Định dạng tệp không hợp lệ. Thư mục general chấp nhận ảnh (JPG, JPEG, PNG, WEBP) hoặc tài liệu (PDF, DOC, DOCX, XLS, XLSX)."
+                : "Định dạng tệp không hợp lệ. Chỉ chấp nhận ảnh JPG, JPEG, PNG hoặc WEBP.";
+
+            return BadRequest(new { message = errorMessage });
         }
 
         var webRoot = !string.IsNullOrWhiteSpace(env.WebRootPath)

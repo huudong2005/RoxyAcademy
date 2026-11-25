@@ -1465,18 +1465,24 @@ Quét các ghi danh đang hoạt động (`StudentClass.Status == "Active"`) ở
 
 ---
 
-## 16. PHÂN HỆ TẢI ẢNH (UPLOADS API)
+## 16. PHÂN HỆ TẢI TỆP (UPLOADS API)
 
-Cung cấp endpoint tải ảnh lên máy chủ và trả về URL công khai (phục vụ tĩnh qua `wwwroot/uploads/`) để dùng cho bằng chứng chuyển khoản thanh toán, ảnh bài đăng bảng tin, v.v.
+Cung cấp endpoint tải tệp lên máy chủ và trả về URL công khai (phục vụ tĩnh qua `wwwroot/uploads/`) để dùng cho bằng chứng chuyển khoản thanh toán, ảnh bài đăng bảng tin, tệp nộp bài tập/tài liệu dùng chung, v.v.
 
-### 16.1. Upload ảnh — `POST /api/Uploads/image`
+### 16.1. Upload ảnh / tài liệu — `POST /api/Uploads/image`
 
 - **Quyền truy cập:** Đã đăng nhập (`SuperAdmin`, `BranchManager`, `Teacher`, `Parent`, `Student`). Chưa đăng nhập trả về `401 Unauthorized`.
 - **Request (`multipart/form-data`):**
-  - `file` (`IFormFile`, bắt buộc): Tệp ảnh cần tải lên.
+  - `file` (`IFormFile`, bắt buộc): Tệp cần tải lên.
   - `folder` (`string`, tùy chọn — nhận qua form field hoặc query string): Thư mục con lưu trữ. Chỉ chấp nhận 1 trong 3 giá trị: `payments`, `newsfeed`, `general`. Mặc định là `general`.
 - **Giới hạn & Kiểm tra hợp lệ:**
-  - Định dạng cho phép: chỉ nhận `.jpg`, `.jpeg`, `.png`, `.webp` (kiểm tra **cả đuôi file** và **`Content-Type`**: `image/jpeg`, `image/jpg`, `image/png`, `image/webp`).
+  - Thư mục `payments`, `newsfeed`: chỉ nhận ảnh `.jpg`, `.jpeg`, `.png`, `.webp` (kiểm tra **cả đuôi file** và **`Content-Type`**: `image/jpeg`, `image/jpg`, `image/png`, `image/webp`).
+  - Thư mục `general`: ngoài các định dạng ảnh trên, chấp nhận thêm tài liệu (kiểm tra **cả đuôi file** và **`Content-Type` tương ứng**):
+    - `.pdf` → `application/pdf`
+    - `.doc` → `application/msword`
+    - `.docx` → `application/vnd.openxmlformats-officedocument.wordprocessingml.document`
+    - `.xls` → `application/vnd.ms-excel`
+    - `.xlsx` → `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`
   - Dung lượng tối đa: **5MB** (`5 * 1024 * 1024` bytes).
   - Tên file lưu trữ được sinh ngẫu nhiên (`{Guid:N}{ext}`), không sử dụng tên file gốc của client.
 - **Response:**
@@ -1489,7 +1495,8 @@ Cung cấp endpoint tải ảnh lên máy chủ và trả về URL công khai (p
   - `400 Bad Request`:
     - Thiếu file hoặc file rỗng: `{ "message": "Vui lòng chọn tệp ảnh để tải lên." }`
     - Vượt quá 5MB: `{ "message": "Dung lượng ảnh vượt quá giới hạn cho phép (tối đa 5MB)." }`
-    - Sai đuôi file hoặc sai `Content-Type`: `{ "message": "Định dạng tệp không hợp lệ. Chỉ chấp nhận ảnh JPG, JPEG, PNG hoặc WEBP." }`
+    - Sai đuôi file hoặc sai `Content-Type` (thư mục `payments`, `newsfeed`): `{ "message": "Định dạng tệp không hợp lệ. Chỉ chấp nhận ảnh JPG, JPEG, PNG hoặc WEBP." }`
+    - Sai đuôi file hoặc sai `Content-Type` (thư mục `general`): `{ "message": "Định dạng tệp không hợp lệ. Thư mục general chấp nhận ảnh (JPG, JPEG, PNG, WEBP) hoặc tài liệu (PDF, DOC, DOCX, XLS, XLSX)." }`
     - `folder` ngoài whitelist (`payments`, `newsfeed`, `general`): `{ "message": "Thư mục lưu ảnh không hợp lệ. Chỉ chấp nhận: payments, newsfeed, general." }`
   - `401 Unauthorized`: Chưa đăng nhập hoặc token không hợp lệ.
 

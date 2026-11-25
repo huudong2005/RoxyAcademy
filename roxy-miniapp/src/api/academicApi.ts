@@ -254,9 +254,9 @@ export async function submitHomework(
 }
 
 /**
- * Upload ảnh chụp bài làm: POST /Uploads/image?folder=general (field: file).
+ * Upload tệp bài làm (ảnh hoặc tài liệu): POST /Uploads/image?folder=general (field: file).
  */
-export async function uploadHomeworkImage(file: File): Promise<string> {
+export async function uploadHomeworkFile(file: File): Promise<string> {
   const formData = new FormData();
   formData.append('file', file);
 
@@ -272,7 +272,7 @@ export async function uploadHomeworkImage(file: File): Promise<string> {
 
   const url = res.data?.url;
   if (!url || typeof url !== 'string') {
-    throw new Error('Máy chủ không trả về đường dẫn ảnh.');
+    throw new Error('Máy chủ không trả về đường dẫn tệp.');
   }
   return url;
 }
