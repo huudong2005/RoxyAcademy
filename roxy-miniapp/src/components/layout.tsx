@@ -17,6 +17,7 @@ import LoginPage from '@/pages/LoginPage';
 import SchedulesPage from '@/pages/SchedulesPage';
 import TabPlaceholderPage from '@/pages/TabPlaceholderPage';
 import TodayPage from '@/pages/TodayPage';
+import TuitionsPage from '@/pages/TuitionsPage';
 
 function resolveActiveTab(pathname: string): TabKey {
   if (pathname.startsWith('/schedules')) return '/schedules';
@@ -82,7 +83,7 @@ function AuthenticatedShell() {
           />
           <Route
             path="/tuitions"
-            element={<TabPlaceholderPage tab="/tuitions" />}
+            element={<TuitionsPage />}
           />
           <Route
             path="/account"

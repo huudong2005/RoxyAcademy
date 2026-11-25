@@ -1,15 +1,21 @@
 import axiosClient from '@/api/axiosClient';
 import type {
   AttendanceDto,
+  CreateLeaveRequestPayload,
   GradeDto,
   HomeworkDto,
   HomeworkSubmissionDto,
   HomeworkWithSubmission,
+  LeaveActionResponse,
+  LeaveRequestDto,
+  PaymentDto,
   ScheduleDto,
   ScheduleWithAttendance,
   StudentClassDto,
   SubmitHomeworkPayload,
   SubmitHomeworkResponse,
+  SubmitPaymentPayload,
+  SubmitPaymentResponse,
   TuitionDto,
 } from '@/types/academic';
 
@@ -300,4 +306,135 @@ export async function fetchStudentGrades(
       }
       return (b.createdAt || '').localeCompare(a.createdAt || '');
     });
+}
+
+// ==================== HỌC PHÍ & BÁO THANH TOÁN ====================
+
+/**
+ * Lấy danh sách học phí của học viên: GET /Tuitions?studentId=.
+ * Sắp xếp theo DueDate tăng dần.
+ */
+export async function fetchStudentTuitions(
+  studentId: number
+): Promise<TuitionDto[]> {
+  const res = await axiosClient.get('/Tuitions', {
+    params: { studentId },
+  });
+  const list = unwrapArray<TuitionDto>(res.data);
+  return list
+    .filter((t) => t && Number(t.studentId) === Number(studentId))
+    .sort((a, b) => {
+      const da = (a.dueDate || '').trim();
+      const db = (b.dueDate || '').trim();
+      if (da !== db) {
+        if (!da) return 1;
+        if (!db) return -1;
+        return da.localeCompare(db);
+      }
+      return a.id - b.id;
+    });
+}
+
+/**
+ * Lấy lịch sử giao dịch thanh toán của 1 khoản thu: GET /Payments?tuitionId=.
+ */
+export async function fetchTuitionPayments(
+  tuitionId: number
+): Promise<PaymentDto[]> {
+  const res = await axiosClient.get('/Payments', {
+    params: { tuitionId },
+  });
+  const list = unwrapArray<PaymentDto>(res.data);
+  return list.sort((a, b) =>
+    (b.createdAt || '').localeCompare(a.createdAt || '')
+  );
+}
+
+/**
+ * Phụ huynh báo đã chuyển khoản: POST /Payments.
+ * Trạng thái tạo ra là PendingConfirm.
+ */
+export async function submitPaymentReport(
+  payload: SubmitPaymentPayload
+): Promise<SubmitPaymentResponse> {
+  const res = await axiosClient.post<SubmitPaymentResponse>('/Payments', {
+    tuitionId: payload.tuitionId,
+    amount: payload.amount,
+    paymentMethod: 'BankTransfer',
+    transactionCode: payload.transactionCode?.trim() || null,
+    proofImageUrl: payload.proofImageUrl?.trim() || null,
+    note: payload.note?.trim() || null,
+    paidAt: new Date().toISOString(),
+  });
+  return res.data;
+}
+
+/**
+ * Upload ảnh chứng từ chuyển khoản: POST /Uploads/image?folder=payments (field: file).
+ * Chỉ nhận ảnh jpg/jpeg/png/webp, tối đa 5MB.
+ */
+export async function uploadPaymentProof(file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const res = await axiosClient.post<{ url?: string }>(
+    '/Uploads/image?folder=payments',
+    formData,
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }
+  );
+
+  const url = res.data?.url;
+  if (!url || typeof url !== 'string') {
+    throw new Error('Máy chủ không trả về đường dẫn ảnh chứng từ.');
+  }
+  return url;
+}
+
+// ==================== XIN NGHỈ HỌC ====================
+
+/**
+ * Lấy danh sách đơn xin nghỉ của học viên: GET /LeaveRequests?studentId=.
+ * Sắp xếp mới nhất lên đầu.
+ */
+export async function fetchStudentLeaveRequests(
+  studentId: number
+): Promise<LeaveRequestDto[]> {
+  const res = await axiosClient.get('/LeaveRequests', {
+    params: { studentId },
+  });
+  const list = unwrapArray<LeaveRequestDto>(res.data);
+  return list
+    .filter((lr) => lr && Number(lr.studentId) === Number(studentId))
+    .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+}
+
+/**
+ * Tạo đơn xin nghỉ 1 ngày cho học viên: POST /LeaveRequests.
+ * Không gửi ClassId/ScheduleId/RequesterType (backend tự suy ra).
+ */
+export async function createLeaveRequest(
+  payload: CreateLeaveRequestPayload
+): Promise<LeaveActionResponse> {
+  const res = await axiosClient.post<LeaveActionResponse>('/LeaveRequests', {
+    studentId: payload.studentId,
+    leaveDate: payload.leaveDate,
+    reason: payload.reason.trim(),
+  });
+  return res.data;
+}
+
+/**
+ * Hủy đơn xin nghỉ đang Pending: PUT /LeaveRequests/{id}/cancel (body rỗng).
+ */
+export async function cancelLeaveRequest(
+  id: number
+): Promise<LeaveActionResponse> {
+  const res = await axiosClient.put<LeaveActionResponse>(
+    `/LeaveRequests/${id}/cancel`
+  );
+  return res.data;
 }

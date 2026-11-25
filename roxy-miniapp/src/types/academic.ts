@@ -130,12 +130,22 @@ export interface GradeDto {
   updatedAt?: string | null;
 }
 
+export type TuitionStatus =
+  | 'Unpaid'
+  | 'PartiallyPaid'
+  | 'Paid'
+  | 'Overdue'
+  | 'Cancelled'
+  | string;
+
 export interface TuitionDto {
   id: number;
   studentId: number;
   studentName?: string | null;
   classId?: number | null;
   className?: string | null;
+  branchId?: number | null;
+  branchName?: string | null;
   title: string;
   amount: number;
   totalAmount?: number;
@@ -143,12 +153,94 @@ export interface TuitionDto {
   finalAmount: number;
   paidAmount: number;
   remainingAmount: number;
-  status: string;
+  status: TuitionStatus;
   isOverdue: boolean;
   dueDate?: string | null;
   isCancelled: boolean;
   note?: string | null;
+  createdAt?: string | null;
   pendingAmount?: number;
+}
+
+export type PaymentStatus =
+  | 'PendingConfirm'
+  | 'Confirmed'
+  | 'Rejected'
+  | string;
+
+export interface PaymentDto {
+  id: number;
+  tuitionId: number;
+  amount: number;
+  paymentMethod: string;
+  status: PaymentStatus;
+  transactionCode?: string | null;
+  proofImageUrl?: string | null;
+  paidAt?: string | null;
+  confirmedBy?: number | null;
+  confirmedByName?: string | null;
+  confirmedAt?: string | null;
+  note?: string | null;
+  createdAt: string;
+  tuitionTitle?: string | null;
+  studentName?: string | null;
+}
+
+export interface SubmitPaymentPayload {
+  tuitionId: number;
+  amount: number;
+  transactionCode?: string | null;
+  proofImageUrl?: string | null;
+  note?: string | null;
+}
+
+export interface SubmitPaymentResponse {
+  message: string;
+  id: number;
+  status: string;
+  amount: number;
+}
+
+export type LeaveRequestStatus =
+  | 'Pending'
+  | 'Approved'
+  | 'Rejected'
+  | 'Cancelled'
+  | string;
+
+export interface LeaveRequestDto {
+  id: number;
+  requesterType: string;
+  studentId?: number | null;
+  studentName?: string | null;
+  teacherId?: number | null;
+  teacherName?: string | null;
+  classId?: number | null;
+  className?: string | null;
+  branchId?: number | null;
+  branchName?: string | null;
+  scheduleId?: number | null;
+  leaveDate: string; // 'YYYY-MM-DD'
+  reason: string;
+  status: LeaveRequestStatus;
+  requestedBy: number;
+  requestedByName?: string | null;
+  reviewedBy?: number | null;
+  reviewedByName?: string | null;
+  reviewedAt?: string | null;
+  reviewNote?: string | null;
+  createdAt: string;
+}
+
+export interface CreateLeaveRequestPayload {
+  studentId: number;
+  leaveDate: string; // 'YYYY-MM-DD'
+  reason: string;
+}
+
+export interface LeaveActionResponse {
+  message: string;
+  id?: number;
 }
 
 export interface AttendanceBadgeMeta {
@@ -282,9 +374,37 @@ export function getMondayOfWeek(d: Date): Date {
   return copy;
 }
 
-export function formatVnd(amount?: number | null): string {
+export function formatCurrency(amount?: number | null): string {
   const num = typeof amount === 'number' && !Number.isNaN(amount) ? amount : 0;
   return `${num.toLocaleString('vi-VN')} đ`;
+}
+
+export function formatVnd(amount?: number | null): string {
+  return formatCurrency(amount);
+}
+
+/**
+ * Định dạng ISO DateTime sang ngày giờ địa phương VN (dd/MM/yyyy HH:mm).
+ * Nếu chuỗi từ server không có hậu tố múi giờ (UTC naive), gắn 'Z' để chuyển đúng sang local VN.
+ */
+export function formatDateTimeLocalVn(dateStr?: string | null): string {
+  if (!dateStr) return '—';
+  const trimmed = dateStr.trim();
+  if (!trimmed) return '—';
+  const hasTimezone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(trimmed);
+  const normalized =
+    !hasTimezone && trimmed.includes('T') ? `${trimmed}Z` : trimmed;
+  const parsed = new Date(normalized);
+  if (Number.isNaN(parsed.getTime())) {
+    return formatDateDdMmYyyy(trimmed);
+  }
+  return parsed.toLocaleString('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }
 
 export function getHomeworkSubmissionStatusMeta(
@@ -363,5 +483,56 @@ export function getExamTypeLabel(examType?: string | null): string {
       return 'Khác';
     default:
       return examType || 'Khác';
+  }
+}
+
+export function getTuitionStatusMeta(status?: string | null): {
+  label: string;
+  variant: BadgeVariant;
+} {
+  switch (status) {
+    case 'Paid':
+      return { label: 'Đã đóng đủ', variant: 'emerald' };
+    case 'PartiallyPaid':
+      return { label: 'Đóng một phần', variant: 'blue' };
+    case 'Overdue':
+      return { label: 'Quá hạn', variant: 'rose' };
+    case 'Cancelled':
+      return { label: 'Đã hủy', variant: 'neutral' };
+    case 'Unpaid':
+    default:
+      return { label: 'Chưa đóng', variant: 'amber' };
+  }
+}
+
+export function getPaymentStatusMeta(status?: string | null): {
+  label: string;
+  variant: BadgeVariant;
+} {
+  switch (status) {
+    case 'Confirmed':
+      return { label: 'Đã xác nhận', variant: 'emerald' };
+    case 'Rejected':
+      return { label: 'Bị từ chối', variant: 'rose' };
+    case 'PendingConfirm':
+    default:
+      return { label: 'Chờ xác nhận', variant: 'amber' };
+  }
+}
+
+export function getLeaveRequestStatusMeta(status?: string | null): {
+  label: string;
+  variant: BadgeVariant;
+} {
+  switch (status) {
+    case 'Approved':
+      return { label: 'Đã duyệt', variant: 'emerald' };
+    case 'Rejected':
+      return { label: 'Từ chối', variant: 'rose' };
+    case 'Cancelled':
+      return { label: 'Đã hủy', variant: 'neutral' };
+    case 'Pending':
+    default:
+      return { label: 'Chờ duyệt', variant: 'amber' };
   }
 }
