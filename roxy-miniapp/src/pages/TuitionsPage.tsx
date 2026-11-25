@@ -157,7 +157,7 @@ export default function TuitionsPage() {
   const [subTab, setSubTab] = useState<SubTabType>('tuitions');
 
   // ==================== STATE HỌC PHÍ ====================
-  const [tuitionsLoading, setTuitionsLoading] = useState(false);
+  const [tuitionsLoading, setTuitionsLoading] = useState(true);
   const [tuitionsError, setTuitionsError] = useState('');
   const [tuitions, setTuitions] = useState<TuitionDto[]>([]);
   const [tuitionFilter, setTuitionFilter] = useState<TuitionFilterType>('all');
@@ -207,6 +207,7 @@ export default function TuitionsPage() {
   const loadTuitions = useCallback(async (): Promise<TuitionDto[]> => {
     if (!activeStudent) {
       setTuitions([]);
+      setTuitionsLoading(false);
       return [];
     }
     setTuitionsLoading(true);
@@ -605,17 +606,33 @@ export default function TuitionsPage() {
               <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted">
                 Còn phải đóng
               </p>
-              <p className="mt-1 text-lg font-bold text-teal tabular-nums">
-                {formatCurrency(tuitionSummary.remainingTotal)}
-              </p>
+              {tuitionsLoading ? (
+                <div className="mt-2 h-6 w-24 animate-pulse rounded bg-line" />
+              ) : tuitionsError ? (
+                <p className="mt-1 text-lg font-bold text-teal tabular-nums">
+                  —
+                </p>
+              ) : (
+                <p className="mt-1 text-lg font-bold text-teal tabular-nums">
+                  {formatCurrency(tuitionSummary.remainingTotal)}
+                </p>
+              )}
             </Card>
             <Card className="p-4">
               <p className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted">
                 Đã đóng
               </p>
-              <p className="mt-1 text-lg font-bold text-emerald-700 tabular-nums">
-                {formatCurrency(tuitionSummary.paidTotal)}
-              </p>
+              {tuitionsLoading ? (
+                <div className="mt-2 h-6 w-24 animate-pulse rounded bg-line" />
+              ) : tuitionsError ? (
+                <p className="mt-1 text-lg font-bold text-emerald-700 tabular-nums">
+                  —
+                </p>
+              ) : (
+                <p className="mt-1 text-lg font-bold text-emerald-700 tabular-nums">
+                  {formatCurrency(tuitionSummary.paidTotal)}
+                </p>
+              )}
             </Card>
           </div>
 
