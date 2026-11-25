@@ -6,7 +6,7 @@ export default () => {
   return defineConfig({
     root: "./src",
     base: "",
-    envDir: "..",
+    envDir: ".",
     plugins: [zaloMiniApp(), react()],
     build: {
       assetsInlineLimit: 0,
