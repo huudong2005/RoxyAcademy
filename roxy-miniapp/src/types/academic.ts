@@ -66,6 +66,68 @@ export interface HomeworkDto {
   dueDate?: string | null;
   createdByName?: string | null;
   createdAt?: string | null;
+  branchId?: number | null;
+  branchName?: string | null;
+}
+
+export type HomeworkSubmissionStatus =
+  | 'Pending'
+  | 'Submitted'
+  | 'Reviewed'
+  | string;
+
+export interface HomeworkSubmissionDto {
+  id: number;
+  homeworkId: number;
+  classId: number;
+  studentId: number;
+  studentName?: string | null;
+  status: HomeworkSubmissionStatus;
+  submissionUrl?: string | null;
+  studentNote?: string | null;
+  submittedAt?: string | null;
+  teacherFeedback?: string | null;
+  reviewedAt?: string | null;
+  homeworkTitle?: string | null;
+  dueDate?: string | null;
+  score?: number | null;
+}
+
+export interface HomeworkWithSubmission extends HomeworkDto {
+  submission: HomeworkSubmissionDto | null;
+}
+
+export interface SubmitHomeworkPayload {
+  submissionUrl?: string | null;
+  studentNote?: string | null;
+}
+
+export interface SubmitHomeworkResponse {
+  message: string;
+  score?: number | null;
+  teacherFeedback?: string | null;
+  reviewedAt?: string | null;
+  status?: string;
+}
+
+export type ExamType = 'Quiz' | 'Midterm' | 'Final' | 'Daily' | 'Other' | string;
+
+export interface GradeDto {
+  id: number;
+  studentId: number;
+  studentName?: string | null;
+  classId: number;
+  className?: string | null;
+  examName: string;
+  examType: ExamType;
+  examDate?: string | null;
+  score?: number | null;
+  maxScore: number;
+  teacherComment?: string | null;
+  gradedBy?: number | null;
+  gradedByName?: string | null;
+  createdAt: string;
+  updatedAt?: string | null;
 }
 
 export interface TuitionDto {
@@ -223,4 +285,83 @@ export function getMondayOfWeek(d: Date): Date {
 export function formatVnd(amount?: number | null): string {
   const num = typeof amount === 'number' && !Number.isNaN(amount) ? amount : 0;
   return `${num.toLocaleString('vi-VN')} đ`;
+}
+
+export function getHomeworkSubmissionStatusMeta(
+  status?: HomeworkSubmissionStatus | null
+): { label: string; variant: BadgeVariant } {
+  switch (status) {
+    case 'Submitted':
+      return { label: 'Đã nộp', variant: 'blue' };
+    case 'Reviewed':
+      return { label: 'Đã chấm', variant: 'emerald' };
+    default:
+      return { label: 'Chưa nộp', variant: 'amber' };
+  }
+}
+
+/**
+ * Chuẩn hóa chuỗi ngày/DateTime từ API sang 'YYYY-MM-DD' theo giờ địa phương,
+ * tránh lệch ngày khi backend trả về ISO có hoặc không có múi giờ.
+ */
+export function extractLocalYyyyMmDd(dateStr?: string | null): string | null {
+  if (!dateStr) return null;
+  const trimmed = dateStr.trim();
+  if (!trimmed) return null;
+
+  const hasTimezone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(trimmed);
+  if (hasTimezone) {
+    const parsed = new Date(trimmed);
+    if (!Number.isNaN(parsed.getTime())) {
+      return toLocalYyyyMmDd(parsed);
+    }
+  }
+
+  const datePart = trimmed.split('T')[0];
+  if (/^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
+    return datePart;
+  }
+  return null;
+}
+
+/**
+ * Quá hạn = dueDate < hôm nay và chưa nộp (không phải Submitted / Reviewed).
+ */
+export function isHomeworkOverdue(
+  dueDate?: string | null,
+  status?: HomeworkSubmissionStatus | null,
+  todayYyyyMmDd: string = toLocalYyyyMmDd(new Date())
+): boolean {
+  if (status === 'Submitted' || status === 'Reviewed') return false;
+  const dueYyyyMmDd = extractLocalYyyyMmDd(dueDate);
+  if (!dueYyyyMmDd) return false;
+  return dueYyyyMmDd < todayYyyyMmDd;
+}
+
+export const EXAM_TYPE_OPTIONS: ReadonlyArray<{
+  value: ExamType;
+  label: string;
+}> = [
+  { value: 'Quiz', label: 'Kiểm tra ngắn' },
+  { value: 'Midterm', label: 'Giữa kỳ' },
+  { value: 'Final', label: 'Cuối kỳ' },
+  { value: 'Daily', label: 'Thường xuyên' },
+  { value: 'Other', label: 'Khác' },
+];
+
+export function getExamTypeLabel(examType?: string | null): string {
+  switch (examType) {
+    case 'Quiz':
+      return 'Kiểm tra ngắn';
+    case 'Midterm':
+      return 'Giữa kỳ';
+    case 'Final':
+      return 'Cuối kỳ';
+    case 'Daily':
+      return 'Thường xuyên';
+    case 'Other':
+      return 'Khác';
+    default:
+      return examType || 'Khác';
+  }
 }

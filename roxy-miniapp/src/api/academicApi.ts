@@ -1,10 +1,15 @@
 import axiosClient from '@/api/axiosClient';
 import type {
   AttendanceDto,
+  GradeDto,
   HomeworkDto,
+  HomeworkSubmissionDto,
+  HomeworkWithSubmission,
   ScheduleDto,
   ScheduleWithAttendance,
   StudentClassDto,
+  SubmitHomeworkPayload,
+  SubmitHomeworkResponse,
   TuitionDto,
 } from '@/types/academic';
 
@@ -157,4 +162,142 @@ export async function fetchCurrentMonthTuitionsForStudent(
     const due = (t.dueDate || '').trim();
     return due.startsWith(currentYearMonth);
   });
+}
+
+/**
+ * Lấy danh sách bài tập của học viên: gọi GET /Homeworks và lọc client-side theo classIds.
+ * Sắp xếp theo hạn nộp (dueDate) tăng dần (bài chưa đặt hạn nộp xếp sau cùng).
+ */
+export async function fetchStudentHomeworks(
+  classIds: Set<number>
+): Promise<HomeworkDto[]> {
+  if (classIds.size === 0) return [];
+  const res = await axiosClient.get('/Homeworks');
+  const list = unwrapArray<HomeworkDto>(res.data);
+  return list
+    .filter((hw) => hw && classIds.has(hw.classId))
+    .sort((a, b) => {
+      const da = a.dueDate ? a.dueDate.trim() : '';
+      const db = b.dueDate ? b.dueDate.trim() : '';
+      if (!da && !db) return a.id - b.id;
+      if (!da) return 1;
+      if (!db) return -1;
+      return da.localeCompare(db);
+    });
+}
+
+/**
+ * Lấy bài nộp của 1 học viên cho 1 bài tập cụ thể.
+ * Lưu ý: Backend bỏ qua tham số studentId đối với role Parent/Student, nên bắt buộc lọc client-side.
+ */
+export async function fetchStudentSubmissions(
+  homeworkId: number,
+  studentId: number
+): Promise<HomeworkSubmissionDto[]> {
+  const res = await axiosClient.get('/HomeworkSubmissions', {
+    params: { homeworkId },
+  });
+  const list = unwrapArray<HomeworkSubmissionDto>(res.data);
+  return list.filter(
+    (s) => s && Number(s.studentId) === Number(studentId)
+  );
+}
+
+/**
+ * Gắn trạng thái nộp bài của học viên vào từng bài tập theo batch nhỏ để kiểm soát request.
+ */
+export async function attachSubmissionsForHomeworks(
+  homeworks: HomeworkDto[],
+  studentId: number,
+  concurrency = 5
+): Promise<HomeworkWithSubmission[]> {
+  const results: HomeworkWithSubmission[] = homeworks.map((hw) => ({
+    ...hw,
+    submission: null,
+  }));
+
+  for (let i = 0; i < homeworks.length; i += concurrency) {
+    const batch = homeworks.slice(i, i + concurrency);
+    await Promise.all(
+      batch.map(async (hw, offset) => {
+        try {
+          const subs = await fetchStudentSubmissions(hw.id, studentId);
+          if (subs.length > 0) {
+            results[i + offset].submission = subs[0];
+          }
+        } catch {
+          // Giữ submission = null nếu lỗi tạm thời ở 1 bài tập
+        }
+      })
+    );
+  }
+
+  return results;
+}
+
+/**
+ * Nộp bài tập (hoặc nộp lại): PUT /HomeworkSubmissions/{id}/submit.
+ * Trả về nguyên response từ server (gồm message, score, teacherFeedback, status...).
+ */
+export async function submitHomework(
+  submissionId: number,
+  payload: SubmitHomeworkPayload
+): Promise<SubmitHomeworkResponse> {
+  const res = await axiosClient.put<SubmitHomeworkResponse>(
+    `/HomeworkSubmissions/${submissionId}/submit`,
+    {
+      submissionUrl: payload.submissionUrl ?? null,
+      studentNote: payload.studentNote ?? null,
+    }
+  );
+  return res.data;
+}
+
+/**
+ * Upload ảnh chụp bài làm: POST /Uploads/image?folder=general (field: file).
+ */
+export async function uploadHomeworkImage(file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const res = await axiosClient.post<{ url?: string }>(
+    '/Uploads/image?folder=general',
+    formData,
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }
+  );
+
+  const url = res.data?.url;
+  if (!url || typeof url !== 'string') {
+    throw new Error('Máy chủ không trả về đường dẫn ảnh.');
+  }
+  return url;
+}
+
+/**
+ * Lấy danh sách điểm số của học viên: GET /Grades?studentId=.
+ * Sắp xếp mới nhất lên đầu (examDate giảm dần, createdAt giảm dần).
+ */
+export async function fetchStudentGrades(
+  studentId: number
+): Promise<GradeDto[]> {
+  const res = await axiosClient.get('/Grades', {
+    params: { studentId },
+  });
+  const list = unwrapArray<GradeDto>(res.data);
+  return list
+    .filter((g) => g && Number(g.studentId) === Number(studentId))
+    .sort((a, b) => {
+      const dateA = (a.examDate || '').trim();
+      const dateB = (b.examDate || '').trim();
+      if (dateA !== dateB) {
+        if (!dateA) return 1;
+        if (!dateB) return -1;
+        return dateB.localeCompare(dateA);
+      }
+      return (b.createdAt || '').localeCompare(a.createdAt || '');
+    });
 }
