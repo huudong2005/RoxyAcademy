@@ -12,10 +12,10 @@ import logo from '@/assets/logo-roxy-v2.svg';
 import AppHeader from '@/components/AppHeader';
 import BottomNavBar, { type TabKey } from '@/components/BottomNavBar';
 import { AuthProvider, useAuth } from '@/context/authContext';
+import AccountPage from '@/pages/AccountPage';
 import HomeworksPage from '@/pages/HomeworksPage';
 import LoginPage from '@/pages/LoginPage';
 import SchedulesPage from '@/pages/SchedulesPage';
-import TabPlaceholderPage from '@/pages/TabPlaceholderPage';
 import TodayPage from '@/pages/TodayPage';
 import TuitionsPage from '@/pages/TuitionsPage';
 
@@ -87,7 +87,7 @@ function AuthenticatedShell() {
           />
           <Route
             path="/account"
-            element={<TabPlaceholderPage tab="/account" />}
+            element={<AccountPage />}
           />
           <Route path="*" element={<Navigate to="/today" replace />} />
         </Routes>

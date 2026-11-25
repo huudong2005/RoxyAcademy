@@ -29,6 +29,7 @@ interface AuthContextValue {
     expiresAt: string;
     user: UserInfo;
   }) => Promise<void>;
+  updateUser: (nextUser: UserInfo) => Promise<void>;
   refreshProfileAndStudents: () => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -76,6 +77,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setActiveStudentId(null);
     } finally {
       setStudentsLoading(false);
+    }
+  }, []);
+
+  const updateUser = useCallback(async (nextUser: UserInfo) => {
+    setUser(nextUser);
+    const currentSession = await loadAuthSession();
+    if (currentSession.accessToken && currentSession.expiresAt) {
+      await saveAuthSession({
+        accessToken: currentSession.accessToken,
+        expiresAt: currentSession.expiresAt,
+        user: nextUser,
+      });
     }
   }, []);
 
@@ -217,6 +230,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         activeStudent,
         selectStudent,
         completeLogin,
+        updateUser,
         refreshProfileAndStudents,
         logout,
       }}

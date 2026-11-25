@@ -536,3 +536,143 @@ export function getLeaveRequestStatusMeta(status?: string | null): {
       return { label: 'Chờ duyệt', variant: 'amber' };
   }
 }
+
+// ==================== BẢN TIN, THÔNG BÁO, CƠ SỞ & TÀI KHOẢN ====================
+
+export interface NewsfeedDto {
+  id: number;
+  title: string;
+  content: string;
+  imageUrl?: string | null;
+  branchName?: string | null;
+  isPinned: boolean;
+  createdByName?: string | null;
+  createdAt: string;
+}
+
+export type NotificationType =
+  | 'Newsfeed'
+  | 'Attendance'
+  | 'Tuition'
+  | 'Payment'
+  | 'Leave'
+  | 'Grade'
+  | 'Homework'
+  | 'Message'
+  | 'Schedule'
+  | 'System'
+  | string;
+
+export interface NotificationDto {
+  id: number;
+  userId?: number;
+  title: string;
+  body?: string | null;
+  type: NotificationType;
+  refId?: number | null;
+  isRead: boolean;
+  readAt?: string | null;
+  createdAt: string;
+}
+
+export interface BranchDto {
+  id: number;
+  branchName: string;
+  address: string;
+  phone?: string | null;
+  isActive: boolean;
+}
+
+export interface UpdateMePayload {
+  phoneNumber: string;
+  email?: string | null;
+  avatarUrl?: string | null;
+}
+
+export interface ChangePasswordPayload {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface ActionMessageResponse {
+  message?: string;
+}
+
+/**
+ * Parse chuỗi thời gian từ backend (mặc định là UTC nếu thiếu múi giờ Z / +HH:mm / -HH:mm).
+ */
+export function parseUtcDate(dateStr?: string | null): Date | null {
+  if (!dateStr) return null;
+  const trimmed = dateStr.trim();
+  if (!trimmed) return null;
+
+  const hasTimezone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(trimmed);
+  const normalized = hasTimezone ? trimmed : `${trimmed}Z`;
+  const parsed = new Date(normalized);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed;
+}
+
+/**
+ * Định dạng thời gian tương đối tiếng Việt từ chuỗi UTC:
+ * "Vừa xong", "X phút trước", "X giờ trước", "X ngày trước", hoặc ngày VN (dd/MM/yyyy) nếu >= 7 ngày.
+ */
+export function formatRelativeTimeVi(dateStr?: string | null): string {
+  const parsed = parseUtcDate(dateStr);
+  if (!parsed) return '—';
+
+  const diffSeconds = Math.floor((Date.now() - parsed.getTime()) / 1000);
+  if (diffSeconds < 60) {
+    return 'Vừa xong';
+  }
+
+  const diffMinutes = Math.floor(diffSeconds / 60);
+  if (diffMinutes < 60) {
+    return `${diffMinutes} phút trước`;
+  }
+
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) {
+    return `${diffHours} giờ trước`;
+  }
+
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 7) {
+    return `${diffDays} ngày trước`;
+  }
+
+  return parsed.toLocaleDateString('vi-VN', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+}
+
+export function getNotificationTypeMeta(type?: string | null): {
+  label: string;
+  variant: BadgeVariant;
+} {
+  switch (type) {
+    case 'Newsfeed':
+      return { label: 'Bảng tin', variant: 'gold' };
+    case 'Attendance':
+      return { label: 'Điểm danh', variant: 'teal' };
+    case 'Tuition':
+      return { label: 'Học phí', variant: 'amber' };
+    case 'Payment':
+      return { label: 'Thanh toán', variant: 'emerald' };
+    case 'Leave':
+      return { label: 'Xin nghỉ', variant: 'blue' };
+    case 'Grade':
+      return { label: 'Điểm số', variant: 'emerald' };
+    case 'Homework':
+      return { label: 'Bài tập', variant: 'blue' };
+    case 'Message':
+      return { label: 'Tin nhắn', variant: 'teal' };
+    case 'Schedule':
+      return { label: 'Lịch học', variant: 'gold' };
+    case 'System':
+    default:
+      return { label: 'Hệ thống', variant: 'neutral' };
+  }
+}

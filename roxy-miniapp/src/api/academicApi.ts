@@ -1,6 +1,9 @@
 import axiosClient from '@/api/axiosClient';
 import type {
+  ActionMessageResponse,
   AttendanceDto,
+  BranchDto,
+  ChangePasswordPayload,
   CreateLeaveRequestPayload,
   GradeDto,
   HomeworkDto,
@@ -8,6 +11,8 @@ import type {
   HomeworkWithSubmission,
   LeaveActionResponse,
   LeaveRequestDto,
+  NewsfeedDto,
+  NotificationDto,
   PaymentDto,
   ScheduleDto,
   ScheduleWithAttendance,
@@ -17,7 +22,9 @@ import type {
   SubmitPaymentPayload,
   SubmitPaymentResponse,
   TuitionDto,
+  UpdateMePayload,
 } from '@/types/academic';
+import type { UserInfo } from '@/types/auth';
 
 function unwrapArray<T>(data: any): T[] {
   if (Array.isArray(data)) return data;
@@ -435,6 +442,92 @@ export async function cancelLeaveRequest(
 ): Promise<LeaveActionResponse> {
   const res = await axiosClient.put<LeaveActionResponse>(
     `/LeaveRequests/${id}/cancel`
+  );
+  return res.data;
+}
+
+// ==================== BẢN TIN, THÔNG BÁO, CƠ SỞ & TÀI KHOẢN ====================
+
+/**
+ * Lấy danh sách bản tin: GET /Newsfeeds (không tham số).
+ * Server tự lọc theo phụ huynh, bài ghim lên trước rồi tới ngày tạo.
+ */
+export async function fetchNewsfeeds(): Promise<NewsfeedDto[]> {
+  const res = await axiosClient.get('/Newsfeeds');
+  const list = unwrapArray<NewsfeedDto>(res.data);
+  return list.sort((a, b) => {
+    if (a.isPinned !== b.isPinned) {
+      return a.isPinned ? -1 : 1;
+    }
+    return (b.createdAt || '').localeCompare(a.createdAt || '');
+  });
+}
+
+/**
+ * Lấy danh sách thông báo của tài khoản hiện tại: GET /Notifications (?unreadOnly=true).
+ */
+export async function fetchMyNotifications(
+  unreadOnly?: boolean
+): Promise<NotificationDto[]> {
+  const res = await axiosClient.get('/Notifications', {
+    params: unreadOnly ? { unreadOnly: true } : undefined,
+  });
+  const list = unwrapArray<NotificationDto>(res.data);
+  return list.sort((a, b) =>
+    (b.createdAt || '').localeCompare(a.createdAt || '')
+  );
+}
+
+/**
+ * Đánh dấu 1 thông báo là đã đọc: PUT /Notifications/{id}/read.
+ */
+export async function markNotificationRead(id: number): Promise<void> {
+  await axiosClient.put(`/Notifications/${id}/read`);
+}
+
+/**
+ * Đánh dấu tất cả thông báo là đã đọc: PUT /Notifications/read-all.
+ */
+export async function markAllNotificationsRead(): Promise<ActionMessageResponse> {
+  const res = await axiosClient.put<ActionMessageResponse>(
+    '/Notifications/read-all'
+  );
+  return res.data;
+}
+
+/**
+ * Lấy danh sách cơ sở đang hoạt động: GET /Branches (chỉ giữ isActive === true).
+ */
+export async function fetchBranches(): Promise<BranchDto[]> {
+  const res = await axiosClient.get('/Branches');
+  const list = unwrapArray<BranchDto>(res.data);
+  return list.filter((b) => b && b.isActive === true);
+}
+
+/**
+ * Cập nhật thông tin liên hệ của bản thân: PUT /Auth/me.
+ */
+export async function updateMe(payload: UpdateMePayload): Promise<UserInfo> {
+  const res = await axiosClient.put<UserInfo>('/Auth/me', {
+    phoneNumber: payload.phoneNumber.trim(),
+    email: payload.email?.trim() ? payload.email.trim() : null,
+    avatarUrl: payload.avatarUrl?.trim() ? payload.avatarUrl.trim() : null,
+  });
+  return res.data;
+}
+
+/**
+ * Đổi mật khẩu: POST /Auth/change-password.
+ */
+export async function changePassword(
+  payload: ChangePasswordPayload
+): Promise<ActionMessageResponse> {
+  const res = await axiosClient.post<ActionMessageResponse>(
+    '/Auth/change-password',
+    {
+      currentPassword: payload.currentPassword,
+      newPassword: payload.newPassword,
+    }
   );
   return res.data;
 }
