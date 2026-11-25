@@ -713,6 +713,25 @@ export default function Students() {
     return age >= 0 ? `(${age} tuổi)` : '';
   };
 
+  // Helper định dạng YYYY-MM-DD theo local date (tránh lệch ngày do UTC)
+  const formatLocalDate = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  // Giới hạn ngày sinh khi tạo mới: trẻ từ 5–11 tuổi tính từ ngày hiện tại
+  const getDobBounds = () => {
+    const today = new Date();
+    const minDate = new Date(today.getFullYear() - 11, today.getMonth(), today.getDate());
+    const maxDate = new Date(today.getFullYear() - 5, today.getMonth(), today.getDate());
+    return {
+      min: formatLocalDate(minDate),
+      max: formatLocalDate(maxDate),
+    };
+  };
+
   // Helper định dạng ngày DD/MM/YYYY
   const formatDate = (dateStr) => {
     if (!dateStr) return '—';
@@ -1689,10 +1708,16 @@ export default function Students() {
                   </label>
                   <input
                     type="date"
+                    {...(!editingStudent ? getDobBounds() : {})}
                     value={formData.dob}
                     onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
                     className="w-full rounded-full border border-line bg-surface px-4 py-2.5 text-sm text-ink focus:border-gold focus:ring-2 focus:ring-gold/25 focus:outline-none"
                   />
+                  {!editingStudent && (
+                    <p className="mt-1 text-[11px] text-ink-muted">
+                      Trung tâm chỉ nhận trẻ từ 5–11 tuổi.
+                    </p>
+                  )}
                 </div>
 
                 {/* Giới tính */}

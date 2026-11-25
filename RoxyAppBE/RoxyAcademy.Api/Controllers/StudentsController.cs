@@ -21,12 +21,19 @@ public class StudentsController(RoxyDbContext db, IPasswordHasher<AppUser> hashe
 
     private static string? Clean(string? s) => string.IsNullOrWhiteSpace(s) ? null : s.Trim();
 
-    private static string? ValidateDob(DateOnly? dob)
+    private static string? ValidateDob(DateOnly? dob, bool checkAgeRange = false)
     {
         if (dob == null) return null;
         var today = DateOnly.FromDateTime(DateTime.UtcNow.AddHours(7));
         if (dob > today) return "Ngày sinh không được ở tương lai.";
         if (dob.Value.Year < 1990) return "Ngày sinh không hợp lệ.";
+        if (checkAgeRange)
+        {
+            var age = today.Year - dob.Value.Year;
+            if (dob.Value > today.AddYears(-age)) age--;
+            if (age < 5) return "Trung tâm chỉ nhận trẻ từ 5 tuổi.";
+            if (age > 11) return "Trung tâm chỉ nhận trẻ đến 11 tuổi.";
+        }
         return null;
     }
 
@@ -160,7 +167,7 @@ public class StudentsController(RoxyDbContext db, IPasswordHasher<AppUser> hashe
     [Authorize(Roles = "SuperAdmin,BranchManager,Parent")]
     public async Task<ActionResult<StudentDto>> CreateStudent(CreateStudentRequest req)
     {
-        var dobError = ValidateDob(req.DOB);
+        var dobError = ValidateDob(req.DOB, checkAgeRange: true);
         if (dobError != null) return BadRequest(new { message = dobError });
 
         var (parentId, parentError) = await ResolveParentAsync(req.ParentId);
